@@ -17,7 +17,7 @@ interface InstallationGalleryProps {
 }
 
 export default function InstallationGallery({ photos }: InstallationGalleryProps) {
-  const [selectedImage, setSelectedImage] = useState<Photo | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState(-1)
 
   if (!photos || photos.length === 0) return null
 
@@ -28,7 +28,7 @@ export default function InstallationGallery({ photos }: InstallationGalleryProps
   const renderPhoto = (photo: Photo, index: number) => (
     <ScrollAnimationWrapper key={index} delay={index * 150}>
       <figure className={styles.figure}>
-        <div className={styles.imageWrapper} onClick={() => setSelectedImage(photo)}>
+        <div className={styles.imageWrapper} onClick={() => setSelectedIndex(index)}>
           <Image
             src={photo.image_url}
             alt={photo.caption || `시공 사진 ${index + 1}`}
@@ -56,10 +56,11 @@ export default function InstallationGallery({ photos }: InstallationGalleryProps
       </section>
 
       <ImageLightbox
-        imageUrl={selectedImage?.image_url || ''}
-        alt={selectedImage?.caption || '시공 사진 확대'}
-        isOpen={!!selectedImage}
-        onClose={() => setSelectedImage(null)}
+        photos={photos.map(p => ({ image_url: p.image_url, caption: p.caption }))}
+        currentIndex={selectedIndex}
+        isOpen={selectedIndex >= 0}
+        onClose={() => setSelectedIndex(-1)}
+        onIndexChange={setSelectedIndex}
       />
     </>
   )
