@@ -15,8 +15,9 @@ interface ImageUploaderProps {
   maxSizeMB?: number
   acceptTypes?: string
   onDelete?: () => void
-  multiple?: boolean                         // 신규 추가
-  onMultiUploadComplete?: (urls: string[]) => void  // 신규 추가
+  multiple?: boolean
+  onMultiUploadComplete?: (urls: string[]) => void
+  onUploadReplace?: (oldUrl: string, newUrl: string) => void  // blob→실제URL 교체용
 }
 
 export default function ImageUploader({
@@ -28,7 +29,8 @@ export default function ImageUploader({
   acceptTypes = 'image/*',
   onDelete,
   multiple = false,
-  onMultiUploadComplete
+  onMultiUploadComplete,
+  onUploadReplace
 }: ImageUploaderProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -165,15 +167,31 @@ export default function ImageUploader({
     setIsUploading(true)
     setProgress(0)
     
-    const urls: string[] = []
+    // 즉시 미리보기: Object URL로 사진을 바로 표시
+    const useOptimistic = !!onUploadReplace
+    const previews = files.map(f => ({ file: f, previewUrl: URL.createObjectURL(f) }))
+    
+    if (useOptimistic && onMultiUploadComplete) {
+      // 즉시 preview URL로 사진 표시 (사용자 체감 0초)
+      onMultiUploadComplete(previews.map(p => p.previewUrl))
+    }
+    
+    // 백그라운드: 압축 + 업로드
+    const uploadedUrls: string[] = []
     const failedNames: string[] = []
     const total = files.length
     
     for (let i = 0; i < total; i++) {
-      const file = files[i]
+      const { file, previewUrl: blobUrl } = previews[i]
       try {
         const url = await uploadSingleFile(file)
-        if (url) urls.push(url)
+        if (url) {
+          uploadedUrls.push(url)
+          // blob URL → 실제 Supabase URL로 교체 (사용자에겐 보이지 않음)
+          if (useOptimistic && onUploadReplace) {
+            onUploadReplace(blobUrl, url)
+          }
+        }
         setProgress(Math.round(((i + 1) / total) * 100))
       } catch (err) {
         logError('Multi upload error:', err)
@@ -181,8 +199,9 @@ export default function ImageUploader({
       }
     }
     
-    if (onMultiUploadComplete && urls.length > 0) {
-      onMultiUploadComplete(urls)
+    // 비-옵티미스틱 모드 (onUploadReplace 미제공 시 기존 동작 유지)
+    if (!useOptimistic && onMultiUploadComplete && uploadedUrls.length > 0) {
+      onMultiUploadComplete(uploadedUrls)
     }
     
     if (failedNames.length > 0) {
@@ -314,9 +333,9 @@ export default function ImageUploader({
       
       {displayUrl ? (
         <div className={styles.previewContainer}>
-          {previewUrl ? (
+          {previewUrl || displayUrl.startsWith('blob:') ? (
              // eslint-disable-next-line @next/next/no-img-element
-            <img src={previewUrl} alt="Preview" className={styles.previewImage} />
+            <img src={previewUrl || displayUrl} alt="Preview" className={styles.previewImage} />
           ) : (
             <Image 
               src={displayUrl} 
