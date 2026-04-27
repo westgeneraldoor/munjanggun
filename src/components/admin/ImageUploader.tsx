@@ -18,6 +18,8 @@ interface ImageUploaderProps {
   multiple?: boolean
   onMultiUploadComplete?: (urls: string[]) => void
   onUploadReplace?: (oldUrl: string, newUrl: string) => void  // blob→실제URL 교체용
+  compressionMaxDimension?: number   // 압축 최대 크기 (px)
+  compressionQuality?: number        // JPEG 품질 (0~1)
 }
 
 export default function ImageUploader({
@@ -30,7 +32,9 @@ export default function ImageUploader({
   onDelete,
   multiple = false,
   onMultiUploadComplete,
-  onUploadReplace
+  onUploadReplace,
+  compressionMaxDimension = 1600,
+  compressionQuality = 0.8
 }: ImageUploaderProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -224,8 +228,8 @@ export default function ImageUploader({
     }
 
     try {
-      // 업로드 전 이미지 압축 (원본 5~10MB → 200~500KB)
-      const compressedFile = await compressImage(file)
+      // 업로드 전 이미지 압축 (prop으로 전달된 크기/품질 사용)
+      const compressedFile = await compressImage(file, compressionMaxDimension, compressionQuality)
 
       // 파일명 충돌 방지: 타임스탬프_원래이름
       const timestamp = Date.now()

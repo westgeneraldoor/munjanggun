@@ -64,6 +64,7 @@ function getImageBrightness(
 
 export default function CollectionCard({ collection }: CollectionCardProps) {
   const [textTheme, setTextTheme] = useState<'light' | 'dark'>('dark')
+  const [imgLoaded, setImgLoaded] = useState(false)
   const analyzed = useRef(false)
 
   const handleBrightness = useCallback((theme: 'light' | 'dark') => {
@@ -88,7 +89,8 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
             alt={`${collection.name} 컬렉션`}
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
-            className={styles.image}
+            className={`${styles.image} ${imgLoaded ? styles.imageLoaded : ''}`}
+            onLoad={() => setImgLoaded(true)}
           />
         ) : (
           <div className={styles.placeholder}>

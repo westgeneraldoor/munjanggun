@@ -29,22 +29,35 @@ export default function ImageLightbox({
   const touchEndX = useRef(0)
   const [swipeOffset, setSwipeOffset] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null)
+  const [imgLoaded, setImgLoaded] = useState(false)
 
   const total = photos.length
+
+  // 사진 변경 시 로드 상태 리셋 + 슬라이드 애니메이션
+  useEffect(() => {
+    setImgLoaded(false)
+    if (slideDirection) {
+      const timer = setTimeout(() => setSlideDirection(null), 350)
+      return () => clearTimeout(timer)
+    }
+  }, [currentIndex, slideDirection])
 
   const goToPrev = useCallback(() => {
     if (currentIndex > 0 && !isAnimating) {
       setIsAnimating(true)
+      setSlideDirection('right')
       onIndexChange(currentIndex - 1)
-      setTimeout(() => setIsAnimating(false), 300)
+      setTimeout(() => setIsAnimating(false), 350)
     }
   }, [currentIndex, isAnimating, onIndexChange])
 
   const goToNext = useCallback(() => {
     if (currentIndex < total - 1 && !isAnimating) {
       setIsAnimating(true)
+      setSlideDirection('left')
       onIndexChange(currentIndex + 1)
-      setTimeout(() => setIsAnimating(false), 300)
+      setTimeout(() => setIsAnimating(false), 350)
     }
   }, [currentIndex, total, isAnimating, onIndexChange])
 
@@ -84,7 +97,6 @@ export default function ImageLightbox({
   const handleTouchMove = (e: React.TouchEvent) => {
     touchEndX.current = e.touches[0].clientX
     const diff = touchEndX.current - touchStartX.current
-    // 끝에서 더 가면 저항감 (offset을 줄임)
     const atStart = currentIndex === 0 && diff > 0
     const atEnd = currentIndex === total - 1 && diff < 0
     setSwipeOffset(atStart || atEnd ? diff * 0.3 : diff)
@@ -107,12 +119,20 @@ export default function ImageLightbox({
   const currentPhoto = photos[currentIndex]
   if (!currentPhoto) return null
 
+  // 슬라이드 애니메이션 클래스 결정
+  const slideClass = slideDirection === 'left'
+    ? styles.slideFromRight
+    : slideDirection === 'right'
+      ? styles.slideFromLeft
+      : ''
+
   return (
     <div
       className={styles.overlay}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onClick={onClose}
     >
       {/* 닫기 버튼 */}
       <button className={styles.closeButton} onClick={onClose} aria-label="닫기">
@@ -121,24 +141,50 @@ export default function ImageLightbox({
 
       {/* 이미지 영역 */}
       <div
-        className={styles.imageContainer}
+        className={`${styles.imageContainer} ${slideClass}`}
         style={{
-          transform: `translateX(${swipeOffset}px)`,
-          transition: swipeOffset === 0 ? 'transform 0.3s ease' : 'none',
+          transform: swipeOffset !== 0 ? `translateX(${swipeOffset}px)` : undefined,
+          transition: swipeOffset === 0 ? undefined : 'none',
         }}
+        onClick={(e) => e.stopPropagation()}
       >
         <Image
+          key={currentIndex}
           src={currentPhoto.image_url}
           alt={currentPhoto.caption || `시공 사진 ${currentIndex + 1}`}
           fill
           quality={85}
           sizes="100vw"
-          className={styles.image}
-          onClick={(e) => e.stopPropagation()}
+          className={`${styles.image} ${imgLoaded ? styles.imageLoaded : ''}`}
+          onLoad={() => setImgLoaded(true)}
         />
       </div>
 
-      {/* 데스크톱 좌우 화살표 */}
+      {/* 인접 사진 프리로드 (숨겨진 이미지) */}
+      <div className={styles.preloadHidden}>
+        {currentIndex > 0 && (
+          <Image
+            src={photos[currentIndex - 1].image_url}
+            alt=""
+            width={1}
+            height={1}
+            quality={85}
+            sizes="1px"
+          />
+        )}
+        {currentIndex < total - 1 && (
+          <Image
+            src={photos[currentIndex + 1].image_url}
+            alt=""
+            width={1}
+            height={1}
+            quality={85}
+            sizes="1px"
+          />
+        )}
+      </div>
+
+      {/* 좌우 화살표 (모바일 + 데스크톱 모두 표시) */}
       {currentIndex > 0 && (
         <button
           className={`${styles.navButton} ${styles.prevButton}`}
@@ -148,7 +194,7 @@ export default function ImageLightbox({
           }}
           aria-label="이전 사진"
         >
-          <ChevronLeft size={28} />
+          <ChevronLeft size={24} />
         </button>
       )}
       {currentIndex < total - 1 && (
@@ -160,12 +206,12 @@ export default function ImageLightbox({
           }}
           aria-label="다음 사진"
         >
-          <ChevronRight size={28} />
+          <ChevronRight size={24} />
         </button>
       )}
 
       {/* 하단 인디케이터 + 캡션 */}
-      <div className={styles.bottomInfo}>
+      <div className={styles.bottomInfo} onClick={(e) => e.stopPropagation()}>
         {currentPhoto.caption && (
           <p className={styles.caption}>{currentPhoto.caption}</p>
         )}

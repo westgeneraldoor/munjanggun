@@ -18,6 +18,15 @@ interface InstallationGalleryProps {
 
 export default function InstallationGallery({ photos }: InstallationGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(-1)
+  const [loadedSet, setLoadedSet] = useState<Set<number>>(new Set())
+
+  const handleImageLoad = (index: number) => {
+    setLoadedSet(prev => {
+      const next = new Set(prev)
+      next.add(index)
+      return next
+    })
+  }
 
   if (!photos || photos.length === 0) return null
 
@@ -33,8 +42,9 @@ export default function InstallationGallery({ photos }: InstallationGalleryProps
             src={photo.image_url}
             alt={photo.caption || `시공 사진 ${index + 1}`}
             fill
-            className={styles.image}
+            className={`${styles.image} ${loadedSet.has(index) ? styles.imageLoaded : ''}`}
             sizes="(max-width: 768px) 50vw, 400px"
+            onLoad={() => handleImageLoad(index)}
           />
         </div>
         {photo.caption && (

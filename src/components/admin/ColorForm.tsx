@@ -383,6 +383,8 @@ export default function ColorForm({ collectionId, collectionSlug, initialData }:
               folderPath={`photos/${collectionSlug}/${slug || 'temp'}`}
               onUploadComplete={handlePhotoUpload}
               multiple={true}
+              compressionMaxDimension={1000}
+              compressionQuality={0.7}
               onMultiUploadComplete={(urls) => {
                 setPhotos(prev => [
                   ...prev,

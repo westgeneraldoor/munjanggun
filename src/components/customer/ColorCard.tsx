@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import styles from './ColorCard.module.css'
@@ -13,6 +16,8 @@ interface ColorCardProps {
 }
 
 export default function ColorCard({ color, collectionSlug }: ColorCardProps) {
+  const [loaded, setLoaded] = useState(false)
+
   return (
     <Link href={`/color/${collectionSlug}/${color.slug}`} className={styles.card}>
       <div className={styles.imageWrapper}>
@@ -22,7 +27,8 @@ export default function ColorCard({ color, collectionSlug }: ColorCardProps) {
             alt={`${color.name} 텍스처`}
             fill
             sizes="(max-width: 768px) 50vw, 25vw"
-            className={styles.image}
+            className={`${styles.image} ${loaded ? styles.imageLoaded : ''}`}
+            onLoad={() => setLoaded(true)}
           />
         ) : (
           <div className={styles.placeholder}>{color.name}</div>

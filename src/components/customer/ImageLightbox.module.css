@@ -13,6 +13,7 @@
   touch-action: pan-y;
 }
 
+/* 이미지 컨테이너 */
 .imageContainer {
   position: relative;
   width: 100%;
@@ -24,8 +25,56 @@
 .image {
   object-fit: contain;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
+.imageLoaded {
+  opacity: 1;
+}
+
+/* 프리로드 숨김 영역 */
+.preloadHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 슬라이드 애니메이션 */
+.slideFromRight {
+  animation: slideInFromRight 0.35s ease both;
+}
+
+.slideFromLeft {
+  animation: slideInFromLeft 0.35s ease both;
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(60px);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-60px);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* 닫기 버튼 */
 .closeButton {
   position: absolute;
   top: var(--space-4);
@@ -44,7 +93,7 @@
   opacity: 1;
 }
 
-/* 좌우 네비게이션 버튼 (데스크톱) */
+/* 좌우 네비게이션 버튼 */
 .navButton {
   position: absolute;
   top: 50%;
@@ -54,8 +103,6 @@
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 50%;
-  width: 48px;
-  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -72,21 +119,39 @@
 }
 
 .prevButton {
-  left: var(--space-4);
+  left: var(--space-3);
 }
 
 .nextButton {
-  right: var(--space-4);
+  right: var(--space-3);
 }
 
-/* 모바일: 화살표 숨김 (스와이프 사용) */
+/* 모바일: 작은 버튼 */
 @media (max-width: 768px) {
   .navButton {
-    display: none;
+    width: 36px;
+    height: 36px;
+    opacity: 0.5;
+  }
+
+  .prevButton {
+    left: var(--space-2);
+  }
+
+  .nextButton {
+    right: var(--space-2);
   }
 
   .imageContainer {
     max-height: 80vh;
+  }
+}
+
+/* 데스크톱: 큰 버튼 */
+@media (min-width: 769px) {
+  .navButton {
+    width: 48px;
+    height: 48px;
   }
 }
 
