@@ -33,16 +33,6 @@
   opacity: 1;
 }
 
-/* 프리로드 숨김 영역 */
-.preloadHidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
-}
-
 /* 슬라이드 애니메이션 */
 .slideFromRight {
   animation: slideInFromRight 0.35s ease both;

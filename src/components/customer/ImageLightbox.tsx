@@ -34,14 +34,39 @@ export default function ImageLightbox({
 
   const total = photos.length
 
-  // 사진 변경 시 로드 상태 리셋 + 슬라이드 애니메이션
+  // 사진 변경 시 로드 상태 리셋
   useEffect(() => {
     setImgLoaded(false)
+  }, [currentIndex])
+
+  // 슬라이드 애니메이션 종료 후 클래스 제거
+  useEffect(() => {
     if (slideDirection) {
       const timer = setTimeout(() => setSlideDirection(null), 350)
       return () => clearTimeout(timer)
     }
-  }, [currentIndex, slideDirection])
+  }, [slideDirection])
+
+  // 인접 사진 프리로드 (Next.js 최적화 URL 기반)
+  useEffect(() => {
+    if (!isOpen) return
+    const links: HTMLLinkElement[] = []
+
+    const preload = (src: string) => {
+      const nextUrl = `/_next/image?url=${encodeURIComponent(src)}&w=1080&q=85`
+      const link = document.createElement('link')
+      link.rel = 'prefetch'
+      link.as = 'image'
+      link.href = nextUrl
+      document.head.appendChild(link)
+      links.push(link)
+    }
+
+    if (currentIndex > 0) preload(photos[currentIndex - 1].image_url)
+    if (currentIndex < total - 1) preload(photos[currentIndex + 1].image_url)
+
+    return () => { links.forEach(l => l.remove()) }
+  }, [isOpen, currentIndex, photos, total])
 
   const goToPrev = useCallback(() => {
     if (currentIndex > 0 && !isAnimating) {
@@ -158,30 +183,6 @@ export default function ImageLightbox({
           className={`${styles.image} ${imgLoaded ? styles.imageLoaded : ''}`}
           onLoad={() => setImgLoaded(true)}
         />
-      </div>
-
-      {/* 인접 사진 프리로드 (숨겨진 이미지) */}
-      <div className={styles.preloadHidden}>
-        {currentIndex > 0 && (
-          <Image
-            src={photos[currentIndex - 1].image_url}
-            alt=""
-            width={1}
-            height={1}
-            quality={85}
-            sizes="1px"
-          />
-        )}
-        {currentIndex < total - 1 && (
-          <Image
-            src={photos[currentIndex + 1].image_url}
-            alt=""
-            width={1}
-            height={1}
-            quality={85}
-            sizes="1px"
-          />
-        )}
       </div>
 
       {/* 좌우 화살표 (모바일 + 데스크톱 모두 표시) */}
