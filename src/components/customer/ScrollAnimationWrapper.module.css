@@ -1,0 +1,21 @@
+.wrapper {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity var(--transition-gallery), transform var(--transition-gallery);
+  /* transition-delay is set inline */
+  break-inside: avoid;
+}
+
+.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* prefers-reduced-motion 처리 - globals.css에서 일괄 적용되어 있지만 확실히 하기 위해 */
+@media (prefers-reduced-motion: reduce) {
+  .wrapper {
+    opacity: 1;
+    transform: none;
+    transition: none !important;
+  }
+}

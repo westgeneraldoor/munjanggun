@@ -1,66 +1,57 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import { createClient } from '@/lib/supabase/server'
+import CollectionCard from '@/components/customer/CollectionCard'
+import HomeHero from '@/components/customer/HomeHero'
+import CTABar from '@/components/customer/CTABar'
+import ScrollRestorer from '@/components/customer/ScrollRestorer'
+import styles from './page.module.css'
 
-export default function Home() {
+export const revalidate = 0
+
+export default async function Home() {
+  const supabase = await createClient()
+
+  // Fetch site settings
+  const { data: siteSettings } = await supabase
+    .schema('colorbook')
+    .from('site_settings')
+    .select('reservation_url, store_url')
+    .single()
+
+  // Fetch published collections (with thumbnail)
+  const { data: collections } = await supabase
+    .schema('colorbook')
+    .from('collections')
+    .select('id, name, slug, description, thumbnail_url')
+    .eq('status', 'published')
+    .order('display_order')
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+    <main className={styles.main}>
+      <ScrollRestorer />
+      <HomeHero />
+
+      <div className={styles.content}>
+        {(collections || []).length > 0 ? (
+          <div className={styles.collectionGrid}>
+            {(collections || []).map(collection => (
+              <CollectionCard
+                key={collection.id}
+                collection={collection}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className={styles.emptyState}>
+            <p className={styles.emptyText}>현재 준비 중인 컬렉션입니다.</p>
+            <p className={styles.emptySubtext}>곧 만나보세요!</p>
+          </div>
+        )}
+      </div>
+
+      <CTABar
+        reservationUrl={siteSettings?.reservation_url || null}
+        storeUrl={siteSettings?.store_url || null}
+      />
+    </main>
+  )
 }

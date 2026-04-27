@@ -1,0 +1,36 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  padding: var(--space-1) var(--space-3); /* 4px 10px */
+  font-size: var(--text-xs); /* 11px */
+  font-weight: var(--font-semibold);
+  letter-spacing: 0.5px;
+  line-height: var(--leading-normal);
+}
+
+.published {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--color-success);
+}
+
+.draft {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--color-warning);
+}
+
+.badgeButton {
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.badgeButton:hover:not(:disabled) {
+  filter: brightness(1.2);
+}
+
+.badgeButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

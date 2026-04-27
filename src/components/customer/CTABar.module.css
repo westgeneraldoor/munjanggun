@@ -1,0 +1,119 @@
+.container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, var(--color-bg) 60%, transparent);
+  padding: var(--space-6) var(--space-5) var(--space-4);
+  display: flex;
+  gap: var(--space-3);
+  z-index: 50;
+  /* 모바일 안전 영역 대응 */
+  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0));
+  transition: opacity var(--transition-slow), transform var(--transition-slow);
+}
+
+.hidden {
+  opacity: 0;
+  transform: translateY(100%);
+  pointer-events: none;
+}
+
+.button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px; /* 모바일 타겟 크기 */
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  text-decoration: none;
+  transition: var(--transition-fast);
+  transition-property: background-color, transform, opacity;
+  cursor: pointer;
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 600px;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: var(--space-4);
+    background: color-mix(in srgb, var(--color-bg) 90%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .container.hidden {
+    transform: translateX(-50%) translateY(100%);
+  }
+
+  .button {
+    height: 36px;
+  }
+
+  .shareButton {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+  }
+}
+
+.button:active {
+  transform: scale(0.97);
+}
+
+.primary {
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground);
+}
+
+.primary:hover {
+  background-color: var(--color-accent-hover);
+}
+
+.secondary {
+  background-color: transparent;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+}
+
+.secondary:hover {
+  background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.shareButton {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-full);
+  background-color: transparent;
+  color: var(--color-accent);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  transition-property: background-color, color, border-color, transform;
+  padding: 0;
+}
+
+.shareButton:hover {
+  background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.shareButton:active {
+  transform: scale(0.93);
+}
+
+.shareButton.shared {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
