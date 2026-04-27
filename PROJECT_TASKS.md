@@ -1,5 +1,5 @@
 # 문장군 디지털 컬러북 — 전체 태스크 현황
-📅 마지막 업데이트: 2026-04-24 09:57
+📅 마지막 업데이트: 2026-04-27 13:08
 
 ## Phase 1: 기획
 - [x] 오피스아워 — 아이디어 검증 (PROJECT_BRIEF.md)
@@ -48,7 +48,7 @@
 - [x] Next.js 16 params Promise 마이그레이션 (동적 라우트 4개) ✅ 오더 #009
 - [x] Auth 관리자 계정 수동 생성 ✅
 - [x] `.env.local` 실제 Supabase 키 설정 ✅ (MCP 경유)
-- [ ] Vercel 배포 + 환경 변수 등록
+- [x] Vercel 배포 + 환경 변수 등록 ✅ (2026-04-24)
 - [ ] 카카오톡 인앱 브라우저 호환 테스트 (실기기)
 - [ ] EVAL-01 ~ EVAL-13 전수 검사
 
@@ -65,6 +65,18 @@
 - [x] CTA 공유 버튼 — Web Share API + URL 복사 폴백 (✅ 오더 #012)
 - [x] CTA 데스크탑 — max-width 600px + 중앙정렬 + 플로팅 바 ✅ 총괄 직접 (2026-04-24)
 - [ ] 데스크탑 UI 전면 개편 — 좌우분할/Masonry 갤러리/정보중복해소 (🔴 오더 #013)
+
+## Phase 6: 성능 최적화 (이미지 로딩 전면 개편)
+- [x] next.config.ts qualities 설정 [75, 85] ✅ (2026-04-27)
+- [x] 전역 unoptimized 제거 + sizes/quality 속성 최적화 (HeroTexture, ColorCard, CollectionCard, InstallationGallery, Admin:ColorList) ✅
+- [x] 이미지 페이드인 트랜지션 (ColorCard, CollectionCard, InstallationGallery) ✅
+- [x] 라이트박스 스와이프 슬라이드 네비게이션 ✅
+- [x] 라이트박스 슬라이드 애니메이션 + 모바일 화살표 ✅
+- [x] 인접 사진 프리로드 (link rel=prefetch 방식) ✅
+- [x] 시공사진 업로드 압축 분리 — 1000px/70% (텍스처 1600px/80% 유지) ✅
+- [x] 기존 시공사진 124장 일괄 재압축 — sharp 스크립트 (35MB → 5MB, 86% 절감) ✅
+- [x] 사진 전환 시 사라짐 버그 수정 — useEffect 분리 ✅
+- [x] 프리로드 방식 교체 — Hidden Image(1px) → link prefetch ✅
 
 ---
 ## 마일스톤 기록
@@ -98,4 +110,10 @@
 | 2026-04-24 | 오더 #014 발행 | #013 수정 4건 — Masonry+비네팅+뒤로가기+라이트박스 |
 | 2026-04-24 | 오더 #014 검수통과 | 작업자 OK + 총괄 직접 3건(Grid→Flex, 모바일 뒤로가기, 지그재그 offset calc) |
 | 2026-04-24 | Phase 5 UX 완료 | 데스크탑 좌우분할+CTA플로팅+지그재그갤러리+라이트박스+공유버튼+폰트 |
+| 2026-04-24 | Vercel 프로덕션 배포 | favicon + CTA 접근성 수정 후 최초 배포 |
+| 2026-04-27 | 이미지 전역 최적화 | unoptimized 제거, sizes/quality 설정, qualities [75,85] |
+| 2026-04-27 | 라이트박스 고도화 | 스와이프 슬라이드 + 프리로드 + 모바일 화살표 + 페이드인 |
+| 2026-04-27 | 시공사진 압축 분리 | 신규 업로드: 1000px/70%, 텍스처: 1600px/80% 유지 |
+| 2026-04-27 | **기존 사진 일괄 재압축** | 124장 35MB → 5MB (86% 절감) — sharp 로컬 스크립트 |
+| 2026-04-27 | **Phase 6 성능 최적화 완료** 🏁 | 이미지 로딩 전면 개편 + Vercel 배포 |
 
