@@ -39,6 +39,72 @@ export default function ImageUploader({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
 
+  // 이미지 리사이즈 & 압축 (브라우저 메모리 절약 + 업로드 속도 개선)
+  const compressImage = (file: File, maxDimension = 1600, quality = 0.8): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      // 이미 작은 파일은 압축 불필요 (500KB 이하)
+      if (file.size <= 500 * 1024) {
+        resolve(file)
+        return
+      }
+
+      const img = document.createElement('img')
+      const url = URL.createObjectURL(file)
+
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+
+        let { width, height } = img
+
+        // 최대 치수 초과 시 비율 유지 리사이즈
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round(height * (maxDimension / width))
+            width = maxDimension
+          } else {
+            width = Math.round(width * (maxDimension / height))
+            height = maxDimension
+          }
+        }
+
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          resolve(file) // canvas 실패 시 원본 반환
+          return
+        }
+
+        ctx.drawImage(img, 0, 0, width, height)
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              resolve(file)
+              return
+            }
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            })
+            resolve(compressedFile)
+          },
+          'image/jpeg',
+          quality
+        )
+      }
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url)
+        reject(new Error('이미지 로드 실패'))
+      }
+
+      img.src = url
+    })
+  }
+
   // URL에서 파일명 추출하여 스토리지 경로 구하기
   const getStoragePathFromUrl = (url: string) => {
     try {
@@ -139,19 +205,22 @@ export default function ImageUploader({
     }
 
     try {
+      // 업로드 전 이미지 압축 (원본 5~10MB → 200~500KB)
+      const compressedFile = await compressImage(file)
+
       // 파일명 충돌 방지: 타임스탬프_원래이름
       const timestamp = Date.now()
-      let safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '')
+      let safeName = compressedFile.name.replace(/[^a-zA-Z0-9.\-_]/g, '')
       // 한글 등 비영문 파일명일 경우 safeName이 빈 문자열이 될 수 있음
       if (!safeName || safeName.startsWith('.')) {
-        const ext = file.type.split('/')[1] || 'jpg'
+        const ext = compressedFile.type.split('/')[1] || 'jpg'
         safeName = `upload_${timestamp.toString(36)}.${ext}`
       }
       const filePath = `${folderPath.replace(/\/$/, '')}/${timestamp}_${safeName}`
 
       const { data, error: uploadError } = await supabase.storage
         .from(bucketName)
-        .upload(filePath, file, {
+        .upload(filePath, compressedFile, {
           cacheControl: '3600',
           upsert: false
         })
@@ -255,7 +324,7 @@ export default function ImageUploader({
               width={400} 
               height={300} 
               className={styles.previewImage}
-              unoptimized
+              loading="lazy"
             />
           )}
           
