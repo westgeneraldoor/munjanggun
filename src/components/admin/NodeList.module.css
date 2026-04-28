@@ -1,0 +1,315 @@
+.container {
+  padding: var(--space-6);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+
+.title {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--admin-text);
+  margin: 0;
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 40px;
+  padding: 0 var(--space-4);
+  background-color: var(--admin-accent);
+  color: var(--admin-text);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.addBtn:hover {
+  background-color: var(--admin-accent-hover);
+}
+
+/* Tabs */
+.tabsContainer {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  border-bottom: 1px solid var(--admin-border);
+  padding-bottom: var(--space-2);
+  overflow-x: auto;
+}
+
+.tab {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  color: var(--admin-text-sub);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition-fast);
+}
+
+.tab:hover {
+  color: var(--admin-text);
+}
+
+.tab.active {
+  color: var(--admin-accent);
+  border-bottom-color: var(--admin-accent);
+  font-weight: var(--font-bold);
+}
+
+.tabAddBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2) var(--space-3);
+  color: var(--admin-text-sub);
+  background: transparent;
+  border: 1px dashed var(--admin-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  margin-left: var(--space-2);
+}
+
+.tabAddBtn:hover {
+  color: var(--admin-text);
+  border-color: var(--admin-text-sub);
+}
+
+/* List */
+.listContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.listItem {
+  display: flex;
+  align-items: center;
+  background-color: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  gap: var(--space-4);
+  transition: var(--transition-fast);
+}
+
+.listItem:hover {
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.orderControls {
+  display: flex;
+  flex-direction: column;
+  color: var(--admin-text-muted);
+}
+
+.orderBtn {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orderBtn:hover:not(:disabled) {
+  color: var(--admin-accent);
+}
+
+.orderBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.itemContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.itemName {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--admin-text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.itemLink {
+  color: inherit;
+  text-decoration: none;
+}
+.itemLink:hover {
+  text-decoration: underline;
+}
+
+.nodeTypeBadge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: var(--admin-surface-elevated);
+  color: var(--admin-text-sub);
+  text-transform: uppercase;
+  font-weight: var(--font-bold);
+  letter-spacing: 0.5px;
+}
+
+.itemMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--admin-text-sub);
+  font-size: var(--text-sm);
+}
+
+.itemActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background-color: transparent;
+  color: var(--admin-text-sub);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.actionBtn:hover {
+  background-color: var(--admin-surface-elevated);
+  color: var(--admin-text);
+}
+
+.actionBtn.deleteBtn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16) var(--space-6);
+  background-color: var(--admin-surface);
+  border: 1px dashed var(--admin-border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.emptyIcon {
+  color: var(--admin-text-muted);
+  margin-bottom: var(--space-4);
+}
+
+.emptyTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--admin-text);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.emptyText {
+  font-size: var(--text-base);
+  color: var(--admin-text-sub);
+  margin: 0 0 var(--space-6) 0;
+}
+
+.loadingState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-16);
+  color: var(--admin-text-sub);
+}
+
+/* Tab Action Bar */
+.tabActionBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+  gap: var(--space-3);
+}
+
+.tabActionLabel {
+  font-size: var(--text-sm);
+  color: var(--admin-text-sub);
+  white-space: nowrap;
+}
+
+.tabActionLabel strong {
+  color: var(--admin-text);
+}
+
+.tabActionButtons {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.tabActionBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  font-size: 13px;
+  color: var(--admin-text-sub);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  text-decoration: none;
+}
+
+.tabActionBtn:hover:not(:disabled) {
+  background-color: var(--admin-surface-elevated);
+  color: var(--admin-text);
+  border-color: var(--admin-border);
+}
+
+.tabActionBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.tabDeleteBtn:hover:not(:disabled) {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.itemSlug {
+  font-family: monospace;
+}

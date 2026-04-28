@@ -1,8 +1,9 @@
 ---
 document_type: "Design System"
-version: "1.0.0"
-last_updated: "2026-04-21"
-source_prd: "PRD_v1.1.md"
+version: "2.0.0"
+last_updated: "2026-04-28"
+source_prd: "PRD_v2.0.md"
+previous_version: "1.0.0"
 platform: "mobile-first"
 dark_mode: true
 dark_mode_default: true
@@ -15,13 +16,13 @@ llm_directives:
   color_hardcoding: "NEVER use hardcoded hex values. ALWAYS use CSS variables (var(--token-name))."
   spacing_rule: "ALL spacing must be multiples of 4px grid. Use --space-N tokens only."
   accessibility: "ALL text-background combinations must pass WCAG AA (4.5:1 for normal, 3:1 for large)."
-  inline_style: "NO inline styles for layout/design. Exception: Framer Motion style/animate props."
+  inline_style: "NO inline styles for layout/design."
   admin_customer_separation: "Customer components use dark tokens. Admin components use admin-* tokens. NEVER mix."
 ---
 
-# 문장군 디지털 컬러북 — Design System
+# 문장군 디지털 쇼룸 — Design System
 
-> Version: 1.0.0 | Date: 2026-04-21 | Platform: Mobile-First | Stack: CSS Variables (Next.js)
+> Version: 2.0.0 | Date: 2026-04-28 | Platform: Mobile-First | Stack: CSS Variables (Next.js)
 
 ---
 
@@ -452,14 +453,54 @@ height: 100dvh;
 - 플레이스홀더: `var(--color-text-muted)`
 - Error 상태: 테두리 `var(--color-error)`
 
-### 컬러 카드 (고객 페이지)
+### 노드 카드 (NodeCard — 범용, v2 신규)
+
+> v1의 ColorCard를 대체. listing/detail 모두 동일 카드 컴포넌트로 렌더링.
 
 - 배경: `var(--color-surface)`
 - 테두리: `1px solid var(--color-border)`
 - Radius: `--radius-lg` (12px)
-- 이미지 Aspect Ratio: `3:4` (세로형 — 텍스처를 크게 보여줌)
+- 이미지 Aspect Ratio: `3:4` (세로형 — 텍스처/디자인을 크게 보여줌)
+- 하단 정보: name + card_subtitle
 - 하단 정보 패딩: `12px 14px 14px`
 - 호버: `translateY(-6px)` + `shadow-lg` + `border-color: accent`
+- listing 카드: 우측 하단 화살표 아이콘 (드릴다운 암시)
+- detail 카드: 화살표 없음
+
+```css
+.node-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: transform var(--transition-normal),
+              box-shadow var(--transition-normal),
+              border-color var(--transition-normal);
+}
+.node-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-accent);
+}
+```
+
+### 히어로 섹션 (HeroSection — v2 신규)
+
+> 메인 페이지 및 listing 노드의 선택적 히어로. 이미지 슬라이더 또는 영상 자동재생.
+
+- 모드: 이미지 1장 | 이미지 복수 (자동 슬라이딩) | 영상 (자동재생, muted)
+- 높이: `100dvh` (메인/상세 히어로) 또는 `60dvh` (listing 히어로)
+- 오버레이: 상단 문구 + 메인 문구 + 하단 문구 (CSS gradient overlay)
+- 오버레이 그라디언트: `linear-gradient(to top, rgba(12,12,14,0.7) 0%, transparent 50%)`
+- 슬라이더 전환: `--duration-slow` (400ms), fade 또는 slide
+- 영상 폴백: `autoplay muted loop playsinline` (카카오톡 인앱 호환)
+- 영상 실패 시: 첫 번째 hero_media 이미지로 fallback
+
+### 상세 페이지 히어로 (DetailHero — v1 유지)
+
+- 이미지: `object-fit: cover`, 너비 100%, 높이 `100dvh`
+- 하단 그라디언트: `linear-gradient(to top, var(--color-bg) 0%, transparent 60%)`
+- 스크롤 인디케이터: 하단 중앙 캐버런 애니메이션
 
 ### 상태 뱃지 (어드민)
 
@@ -467,6 +508,7 @@ height: 100dvh;
 |------------|-----------------|------|
 | `published` | **공개** | `--color-success` 배경 15% + 텍스트 |
 | `draft` | **초안** | `--color-warning` 배경 15% + 텍스트 |
+| — | **고객 미노출** | `--color-info` 배경 15% + 텍스트 (하위 노드 0개일 때) |
 
 - 형태: 알약형 (`--radius-full`)
 - 패딩: `4px 10px`
@@ -481,6 +523,10 @@ height: 100dvh;
   background: rgba(245, 158, 11, 0.15);
   color: var(--color-warning);
 }
+.badge-no-children {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--color-info);
+}
 ```
 
 ### CTA 바 (고객 페이지 하단)
@@ -493,13 +539,35 @@ height: 100dvh;
 - Primary 버튼: "무료 방문실측 예약"
 - Secondary 버튼: "브랜드스토어"
 
-### 컬렉션 태그 (상세 페이지)
+### 컨텍스트 태그 (상세 페이지 — 부모 노드명 표시)
+
+> v1의 컬렉션 태그 확장. 부모 노드 이름을 표시하여 위치 컨텍스트 제공.
 
 - 형태: 알약형 (`--radius-full`), border
 - 스타일: `1px solid rgba(196,162,101,0.3)`
 - 텍스트: `--text-xs`, `--font-medium`, `letter-spacing: 2px`, uppercase
 - 색상: `--color-accent`
 - 패딩: `4px 12px`
+
+### 어드민 전용 컴포넌트 (v2 신규)
+
+#### NodeForm (노드 편집기)
+- 레이아웃: 상단 타입 선택 (listing/detail) → 타입별 필드 동적 표시
+- listing 선택 시: 히어로 설정 영역 표시 (HeroConfigurator)
+- detail 선택 시: tagline, description, 갤러리 관리 영역 표시
+- 배경: `var(--admin-surface)`, 테두리: `var(--admin-border)`
+
+#### DragDropList (드래그앤드롭 정렬)
+- 드래그 핸들: 좌측 그립 아이콘 (6점 도트)
+- 드래그 중 상태: `opacity: 0.5` + `border: 2px dashed var(--admin-accent)`
+- 드롭 타겟: `background: rgba(196,162,101,0.08)` 하이라이트
+
+#### HeroConfigurator (히어로 설정 UI)
+- hero_enabled 토글 스위치
+- 이미지 복수 업로드 + 정렬
+- 영상 URL 입력
+- 상단/메인/하단 문구 입력
+- 미리보기 영역
 
 ---
 
@@ -535,15 +603,16 @@ height: 100dvh;
 
 ## 10. 명시적 Out-of-Scope (이 디자인 시스템이 다루지 않는 것)
 
-> ⛔ 아래 항목은 v1.0에서 의도적으로 제외한다. 에이전트는 구현하지 않는다.
+> ⛔ 아래 항목은 v2.0에서 의도적으로 제외한다. 에이전트는 구현하지 않는다.
 
 - **[DS-X001]** 다크/라이트 토글 UI — 고객=다크, 어드민=라이트 고정
 - **[DS-X002]** 3D 효과 / WebGL 기반 비주얼
 - **[DS-X003]** 복잡한 SVG 일러스트레이션 가이드라인
-- **[DS-X004]** 비디오/오디오 플레이어 커스텀 스킨
-- **[DS-X005]** 이메일 템플릿 전용 스타일
-- **[DS-X006]** 인쇄(Print) 전용 스타일
-- **[DS-X007]** 다국어(i18n) 토큰 — 한국어 단일 언어
+- **[DS-X004]** 이메일 템플릿 전용 스타일
+- **[DS-X005]** 인쇄(Print) 전용 스타일
+- **[DS-X006]** 다국어(i18n) 토큰 — 한국어 단일 언어
+- **[DS-X007]** 카드 템플릿 시스템 — v2.1로 이관 (MVP에서는 단일 카드 디자인)
+- **[DS-X008]** 섹션 빌더/비주얼 에디터 — v2.2+로 이관
 
 ---
 
@@ -552,7 +621,7 @@ height: 100dvh;
 ```mermaid
 graph TD
   DT["Design Tokens"] --> C["Colors (Dark/Light)"]
-  DT --> T["Typography (Pretendard)"]
+  DT --> T["Typography (Pretendard + Playfair)"]
   DT --> S["Spacing (4px Grid)"]
   DT --> SH["Shape & Shadow"]
   DT --> A["Animation & Easing"]
@@ -563,21 +632,32 @@ graph TD
   SH --> |radius·shadow| COMP
   A --> |duration·easing| COMP
 
-  COMP --> CARD["ColorCard"]
+  COMP --> NCARD["NodeCard (범용)"]
+  COMP --> HERO["HeroSection (슬라이더/영상)"]
+  COMP --> DHERO["DetailHero (풀스크린)"]
   COMP --> CTA["CTA Bar"]
   COMP --> BTN["Button (5종)"]
   COMP --> INP["Input"]
-  COMP --> BADGE["Badge (공개/초안)"]
-  COMP --> TAG["Collection Tag"]
   COMP --> GAL["Gallery Item"]
+  COMP --> TAG["Context Tag"]
 
-  CARD --> |조합| CUST["고객 페이지"]
+  NCARD --> |조합| CUST["고객 페이지"]
+  HERO --> |조합| CUST
+  DHERO --> |조합| CUST
   CTA --> |조합| CUST
   GAL --> |조합| CUST
   TAG --> |조합| CUST
 
+  COMP --> NFORM["NodeForm"]
+  COMP --> DND["DragDropList"]
+  COMP --> HCONF["HeroConfigurator"]
+  COMP --> BADGE["Badge (공개/초안/미노출)"]
+
   BTN --> |조합| ADMIN["어드민 페이지"]
   INP --> |조합| ADMIN
+  NFORM --> |조합| ADMIN
+  DND --> |조합| ADMIN
+  HCONF --> |조합| ADMIN
   BADGE --> |조합| ADMIN
 
   CUST --> |다크 토큰| DARK["var(--color-*)"]
@@ -599,8 +679,12 @@ graph TD
 - [ ] **DS-EVAL-07:** 포커스 링(`:focus-visible`)이 모든 인터랙티브 요소에 적용되었는가?
 - [ ] **DS-EVAL-08:** Pretendard(본문) 및 Playfair Display(영문 Display) 폰트가 정상 로드되고, 폴백 폰트가 작동하는가?
 - [ ] **DS-EVAL-09:** Ghost 버튼이 다크 배경에서 시각적으로 구분 가능한가? (`rgba(255,255,255,0.06)` 배경)
-- [ ] **DS-EVAL-10:** 상태 뱃지가 한글(공개/초안)로 표시되는가?
+- [ ] **DS-EVAL-10:** 상태 뱃지가 한글(공개/초안/고객 미노출)로 표시되는가?
 - [ ] **DS-EVAL-11:** 카카오톡 인앱 브라우저에서 히어로 높이가 `100dvh`로 정상 표시되는가?
+- [ ] **DS-EVAL-12:** NodeCard가 listing/detail 구분 없이 범용으로 렌더링되는가?
+- [ ] **DS-EVAL-13:** HeroSection 이미지 슬라이더 전환이 `--duration-slow`를 사용하는가?
+- [ ] **DS-EVAL-14:** HeroSection 영상 자동재생 실패 시 정지 이미지 fallback이 작동하는가?
+- [ ] **DS-EVAL-15:** 어드민 DragDropList에서 드래그 중 시각 피드백(opacity + dashed border)이 표시되는가?
 
 ---
 
@@ -609,10 +693,11 @@ graph TD
 > 바이브코딩 세션 시작 시 이 블록을 붙여넣으세요.
 
 ```
-문장군 디지털 컬러북 디자인 시스템 v1.0:
+문장군 디지털 쇼룸 디자인 시스템 v2.0:
 
 무드: 다크 미니멀 갤러리 — UI는 사라지고, 소재만 남는다
 플랫폼: 모바일 퍼스트 (고객=다크 고정 / 어드민=라이트 고정)
+아키텍처: 만능 노드 CMS — listing 노드(카드 그리드) + detail 노드(상세 페이지)
 
 고객 컬러 (다크):
 - Accent: #C4A265 (샴페인 골드) / Hover: #D4B275
@@ -629,6 +714,13 @@ graph TD
 - 한글 + 본문: Pretendard Variable (CDN, sans-serif) → --font-sans
 아이콘: Lucide React — 16/20/24/32px
 
+핵심 컴포넌트 (v2):
+- NodeCard: 범용 카드 (listing/detail 공용), radius 12px, 이미지 3:4
+- HeroSection: 이미지 슬라이더/영상 자동재생, listing 히어로 60dvh / 메인 100dvh
+- DetailHero: 상세 풀스크린 히어로 100dvh
+- StatusBadge: 공개/초안/고객미노출 3종
+- NodeForm + DragDropList + HeroConfigurator (어드민)
+
 핵심 규칙:
 - 버튼 radius: 8px, 높이: 44px(모바일)/36px(데스크탑)
 - 카드 radius: 12px, 이미지 3:4 비율
@@ -636,11 +728,10 @@ graph TD
 - 컬러 하드코딩 금지 — 반드시 var(--color-*) 사용
 - 텍스트 대비비 WCAG AA(4.5:1) 필수
 - Ghost 버튼: rgba(255,255,255,0.06) 배경 (투명X)
-- 상태 뱃지: 한글 (공개/초안)
 - 히어로 높이: 100dvh (카톡 인앱 호환)
 - hover: 150ms ease / 갤러리 등장: 600ms ease-out
 - --font-display는 영문 포인트 요소에만 사용 (남용 금지)
-- 금지: 100vh, 인라인 스타일, any 타입, 하드코딩 컬러
+- 금지: 100vh, 인라인 스타일, any 타입, 하드코딩 컬러, Framer Motion
 
 이 규칙을 모든 컴포넌트에 일관되게 적용해줘.
 ```
@@ -651,4 +742,5 @@ graph TD
 
 | 버전 | 날짜 | 변경 내용 |
 |------|------|----------|
+| 2.0.0 | 2026-04-28 | **v2 업데이트.** PRD_v2.0 연동. 컬러북→쇼룸 명칭 변경. ColorCard→NodeCard 범용화. HeroSection(슬라이더/영상), DetailHero, HeroConfigurator, NodeForm, DragDropList 추가. 상태 뱃지에 '고객 미노출' 추가. 토큰 의존성 그래프 재작성. AI Evals 15개로 확장. Framer Motion 제거(Intersection Observer 전용). |
 | 1.0.0 | 2026-04-21 | 최초 작성. 다크 미니멀 갤러리 테마 확정. 고객(다크)/어드민(라이트) 분리. Ghost 버튼 배경 추가. 뱃지 한글화. |

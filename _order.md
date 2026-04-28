@@ -1,285 +1,199 @@
-# 작업지시서 #014 — 🟡 데스크탑 UI 수정 4건 (Masonry 수정 + 비네팅 + 뒤로가기 + 라이트박스)
-📅 발행: 2026-04-24 10:10
-🤖 추천 모델: Gemini Pro
-⏱️ 예상 시간: ~25분
+# 작업지시서 #018 — 🔴 V2 Phase 2-1: 어드민 노드 목록 + CRUD
+📅 발행: 2026-04-28 13:03
+🤖 추천 모델: Claude Sonnet
+⏱️ 예상 시간: ~40분
 
 ## 환경 확인 (필수)
-- GEMINI.md 읽고 코딩 규칙 확인
-- lucide-react v1.8.0 설치됨 — 아이콘 사용 가능
+- GEMINI.md 읽고 코딩 규칙 + 브랜치 전략 확인 → **v2-cms 브랜치에서 작업**
+- `docs/DESIGN_SYSTEM.md` 읽고 어드민 토큰 + 컴포넌트 규칙 확인
+- Supabase 프로젝트 ID: `cebafroyvmllbyivevjd`
+- showroom 스키마에 25개 노드 + 126개 갤러리가 이미 존재
 
 ## 배경
-오더 #013 결과물에 대한 사장님 로컬 테스트 피드백 4건 수정.
+Phase 1에서 DB 기반이 완성되었다. 이제 관리자가 노드 트리를 관리할 수 있는 어드민 CMS를 구축한다.
+이 오더에서는 **노드 목록 + 기본 CRUD + 정렬**을 구현한다.
+노드 편집 상세 폼(히어로/갤러리)은 다음 오더에서 구현.
 
 ---
 
-## 이슈 1: Masonry 지그재그 안 됨 (🔴 핵심)
+## 작업 내용
 
-### 원인
-`InstallationGallery`에서 각 `<figure>`를 `ScrollAnimationWrapper`(`<div>`)로 감싸고 있는데,
-이 래퍼 div에 `break-inside: avoid`가 없어 CSS `columns: 2`가 올바르게 동작하지 않음.
+### Step 1: 어드민 사이드바 업데이트
 
-### 수정 파일: `src/components/customer/ScrollAnimationWrapper.module.css`
+`src/components/admin/AdminSidebar.tsx`의 navItems에 "노드 관리" 추가:
 
-`.wrapper`에 `break-inside: avoid` 추가:
-```css
-.wrapper {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity var(--transition-gallery), transform var(--transition-gallery);
-  /* transition-delay is set inline */
-  break-inside: avoid;  /* ← 추가: CSS columns 내부에서 깨짐 방지 */
+```typescript
+const navItems = [
+  { name: '노드 관리', path: '/admin/nodes', icon: FolderTree },  // 🆕
+  { name: '컬렉션 관리', path: '/admin/collections', icon: Package },  // V1 유지
+  { name: '사이트 설정', path: '/admin/settings', icon: Settings },
+]
+```
+
+- `FolderTree`를 lucide-react에서 import
+- V1 "컬렉션 관리"는 삭제하지 않고 유지 (V1 호환)
+
+### Step 2: /admin 리다이렉트
+
+`src/app/admin/page.tsx`를 수정하여 `/admin/nodes`로 리다이렉트:
+
+```typescript
+import { redirect } from 'next/navigation'
+export default function AdminPage() {
+  redirect('/admin/nodes')
 }
 ```
 
-> 이 한 줄로 모바일+데스크탑 모두 Masonry 정상 동작.
-> break-inside: avoid는 columns 밖에서는 영향 없으므로 다른 곳의 ScrollAnimationWrapper에 부작용 없음.
+### Step 3: 노드 목록 페이지 — `src/app/admin/nodes/page.tsx`
 
----
+기존 placeholder를 실제 구현으로 교체. 이 페이지가 V2 어드민의 핵심.
 
-## 이슈 2: 데스크탑 왼쪽 이미지가 밋밋함 (비네팅 + 컬러명)
-
-### 방향
-데스크탑에서 HeroTexture 오버레이를 완전 숨기지 말고:
-- 가장자리 비네팅(어두운 테두리 효과) 유지
-- 좌하단에 컬러명만 작게 표시 (컬렉션태그, 태그라인은 숨김 유지)
-
-### 수정 파일: `src/components/customer/HeroTexture.module.css`
-
-현재 데스크탑 미디어쿼리에서 `.info`, `.gradient`, `.scrollCue` 전부 `display: none`으로 되어 있음.
-
-변경:
-```css
-/* 데스크탑 좌우분할 */
-@media (min-width: 1024px) {
-  /* 오버레이 정보는 유지하되 위치와 스타일 조정 */
-  .info {
-    /* display: none 제거 — 대신 좌하단 미니멀 배치 */
-    bottom: var(--space-6);
-    left: var(--space-6);
-    right: auto;  /* 전체 너비가 아닌 좌측 정렬 */
-  }
-
-  /* 컬렉션태그, 태그라인은 데스크탑에서도 숨김 유지 */
-  /* (이미 .collectionTag와 .tagline에 display:none 적용됨) */
-
-  /* 컬러명을 데스크탑에서 더 작게 */
-  .colorName {
-    font-size: var(--text-lg);
-    font-weight: var(--font-semibold);
-  }
-
-  /* 그라데이션 → 비네팅으로 변경 */
-  .gradient {
-    /* display: none 제거 — 비네팅 효과 */
-    background: radial-gradient(
-      ellipse at center,
-      transparent 50%,
-      rgba(0, 0, 0, 0.3) 100%
-    );
-  }
-
-  /* textLight/textDark 그라데이션 오버라이드 — 비네팅은 항상 어두움 */
-  .gradient.textLight,
-  .gradient.textDark {
-    background: radial-gradient(
-      ellipse at center,
-      transparent 50%,
-      rgba(0, 0, 0, 0.3) 100%
-    );
-  }
-
-  /* 스크롤 유도는 데스크탑에서 숨김 유지 */
-  .scrollCue {
-    display: none;
-  }
-}
+**UI 구조:**
+```
+┌──────────────────────────────────────┐
+│ 📂 노드 관리                    [+ 탭 추가] │
+├──────────────────────────────────────┤
+│ [탭1] [탭2] [탭3] [탭4]              │  ← 최상위 노드(listing) 탭
+├──────────────────────────────────────┤
+│ 탭1의 자식 노드 목록:                 │
+│ ┌──────────────────────────────┐    │
+│ │ 🟢 올리브그린  [detail] ↕ ✏️ 🗑  │    │  ← 자식 노드 행
+│ │ 🟢 로얄블루    [detail] ↕ ✏️ 🗑  │    │
+│ │ 🔴 시트러스    [draft]  ↕ ✏️ 🗑  │    │
+│ └──────────────────────────────┘    │
+│                          [+ 노드 추가] │
+└──────────────────────────────────────┘
 ```
 
----
+**기능 요구사항:**
+1. **탭 표시:** 최상위 노드(parent_id IS NULL)를 탭으로 표시, display_order순
+2. **자식 목록:** 선택된 탭의 자식 노드를 리스트로 표시
+3. **각 행 정보:** 이름, 타입 뱃지(listing/detail), 상태 뱃지(published/draft), 이미지 썸네일(있으면)
+4. **정렬 버튼:** 위/아래 화살표로 display_order 변경 (드래그앤드롭 대신 화살표 버튼 — 구현 단순)
+5. **상태 토글:** 클릭으로 draft ↔ published 전환
+6. **삭제 버튼:** ConfirmModal 사용하여 확인 후 삭제 (CASCADE로 자식도 삭제됨)
+7. **탭 추가:** 최상위 listing 노드 추가 (이름, slug 입력 모달)
+8. **자식 추가:** 선택된 탭 아래에 자식 노드 추가 (이름, slug, 타입 선택 모달)
+9. **편집 버튼:** `/admin/nodes/[id]`로 이동 (상세 편집은 다음 오더)
 
-## 이슈 3: 데스크탑 뒤로가기 버튼 없음
+**데이터 쿼리 패턴 (showroom 클라이언트 사용):**
+```typescript
+import { createShowroomClient } from '@/lib/supabase/client'
 
-### 수정 파일: `src/app/color/[collectionSlug]/[colorSlug]/page.tsx`
+// 최상위 노드 (탭)
+const { data: tabs } = await supabase
+  .from('nodes')
+  .select('*')
+  .is('parent_id', null)
+  .order('display_order')
 
-오른쪽 패널(`.rightPane`) 최상단에 뒤로가기 링크 추가:
-```tsx
-<div className={styles.rightPane}>
-  {/* ← 데스크탑 뒤로가기 추가 */}
-  <Link href={`/collection/${collectionSlug}`} className={styles.backNav}>
-    ← {collection.name}
-  </Link>
-
-  <ColorInfo ... />
-  ...
-</div>
+// 선택된 탭의 자식
+const { data: children } = await supabase
+  .from('nodes')
+  .select('*')
+  .eq('parent_id', selectedTabId)
+  .order('display_order')
 ```
 
-### 수정 파일: `src/app/color/[collectionSlug]/[colorSlug]/color-detail.module.css`
+### Step 4: 추가 모달 컴포넌트 — `src/components/admin/NodeAddModal.tsx` 🆕
 
-```css
-/* 데스크탑 상단 뒤로가기 — 모바일에서는 숨김 */
-.backNav {
-  display: none;
-}
+간단한 모달 폼:
+- 이름 (필수)
+- slug (이름에서 자동 생성, 수정 가능)
+- 타입 선택 (listing / detail) — 탭 추가 시에는 listing 고정
+- 확인/취소 버튼
 
-@media (min-width: 1024px) {
-  .backNav {
-    display: inline-block;
-    padding: var(--space-4) var(--space-6);
-    color: var(--color-text-sub);
-    font-size: var(--text-sm);
-    text-decoration: none;
-    transition: color var(--transition-fast);
-  }
+**slug 자동 생성 규칙:**
+- 한글은 그대로 사용 가능 (encodeURIComponent는 라우팅에서 처리)
+- 공백 → 하이픈(-) 변환
+- 소문자 변환
+- 특수문자 제거
 
-  .backNav:hover {
-    color: var(--color-accent);
-  }
-}
-```
+### Step 5: 노드 목록 컴포넌트 — `src/components/admin/NodeList.tsx` 🆕
 
-> 뒤로가기 목적지: `/collection/[collectionSlug]` (해당 컬렉션 페이지)
-> 모바일에서는 하단의 기존 `.bottomNav`가 그 역할을 함
+'use client' 컴포넌트. V1의 CollectionList.tsx 패턴을 참조하되 showroom 스키마 사용.
 
----
+**핵심 기능:**
+- `createShowroomClient()` 사용
+- 노드 CRUD: insert, update, delete
+- 정렬 변경: display_order swap
+- 상태 토글: status update
+- 모든 mutation 후 목록 refetch
+- 로딩/에러 상태 표시
 
-## 이슈 4: 모바일 시공사진 풀스크린 확대
+### Step 6: CSS 스타일
 
-### 신규 파일: `src/components/customer/ImageLightbox.tsx`
+`src/components/admin/NodeList.module.css` 🆕 생성:
+- 어드민 라이트 토큰 사용 (`var(--admin-*)`)
+- V1 CollectionList/ColorList의 스타일 패턴 참조
+- 탭 바, 노드 행, 뱃지, 액션 버튼 스타일
+- 모바일 반응형
 
-간단한 풀스크린 오버레이 컴포넌트:
-- Props: `{ imageUrl: string; alt: string; isOpen: boolean; onClose: () => void }`
-- `isOpen` 시 fixed 오버레이 + 이미지 object-fit: contain으로 전체 표시
-- 배경 탭 또는 X 버튼으로 닫기
-- lucide-react의 `X` 아이콘 사용
-- body 스크롤 잠금 (isOpen일 때)
-
-### 신규 파일: `src/components/customer/ImageLightbox.module.css`
-
-```css
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  background-color: rgba(0, 0, 0, 0.95);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-4);
-  animation: fadeIn 0.2s ease;
-}
-
-.image {
-  object-fit: contain;
-}
-
-.closeButton {
-  position: absolute;
-  top: var(--space-4);
-  right: var(--space-4);
-  background: none;
-  border: none;
-  color: var(--color-text);
-  cursor: pointer;
-  padding: var(--space-2);
-  z-index: 101;
-  opacity: 0.7;
-  transition: opacity var(--transition-fast);
-}
-
-.closeButton:hover {
-  opacity: 1;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-```
-
-### 수정 파일: `src/components/customer/InstallationGallery.tsx`
-
-갤러리를 `'use client'`로 변환 + 이미지 클릭 핸들러 추가:
-- 상단에 `'use client'` 추가
-- `useState`로 선택된 이미지 관리
-- 각 `imageWrapper`에 `onClick` → `setSelectedImage(photo)`
-- `cursor: pointer` CSS 추가
-- 하단에 `<ImageLightbox>` 렌더링
-
-> ⚠️ 현재 InstallationGallery는 서버 컴포넌트(use client 없음).
-> `'use client'` 추가해야 useState 사용 가능. Image 컴포넌트는 client에서도 동작.
-
-### 수정 파일: `src/components/customer/InstallationGallery.module.css`
-
-`.imageWrapper`에 추가:
-```css
-.imageWrapper {
-  cursor: pointer;  /* 추가 */
-}
-```
-
-> 데스크탑에서는 라이트박스 없이 그대로 표시해도 됨 (좌우 분할에서 이미 크게 보이므로).
-> 하지만 일관성을 위해 모바일+데스크탑 모두 적용해도 괜찮음.
+`src/components/admin/NodeAddModal.module.css` 🆕 생성:
+- V1 ConfirmModal 스타일 참조
 
 ---
 
 ## 대상 파일
-- `src/components/customer/ScrollAnimationWrapper.module.css` — break-inside 1줄 추가
-- `src/components/customer/HeroTexture.module.css` — 데스크탑 비네팅+컬러명
-- `src/app/color/[collectionSlug]/[colorSlug]/page.tsx` — 뒤로가기 링크 추가
-- `src/app/color/[collectionSlug]/[colorSlug]/color-detail.module.css` — 뒤로가기 스타일
-- `src/components/customer/InstallationGallery.tsx` — 'use client' + 라이트박스 연동
-- `src/components/customer/InstallationGallery.module.css` — cursor: pointer
-- `src/components/customer/ImageLightbox.tsx` — 신규 생성
-- `src/components/customer/ImageLightbox.module.css` — 신규 생성
+- `src/components/admin/AdminSidebar.tsx` — navItems에 노드관리 추가
+- `src/app/admin/page.tsx` — /admin/nodes 리다이렉트
+- `src/app/admin/nodes/page.tsx` — placeholder → 실제 구현
+- `src/components/admin/NodeList.tsx` — 🆕 핵심 컴포넌트
+- `src/components/admin/NodeList.module.css` — 🆕
+- `src/components/admin/NodeAddModal.tsx` — 🆕
+- `src/components/admin/NodeAddModal.module.css` — 🆕
 
-## 참고 파일 (읽기만)
-- `src/components/customer/HeroTexture.tsx` — Props 확인
-- `src/components/customer/ScrollAnimationWrapper.tsx` — 래퍼 구조 확인
-- `src/lib/logger.ts` — logError import 경로
+## 참고 파일 (읽기만 — V1 패턴 참조)
+- `src/components/admin/CollectionList.tsx` — CRUD + 정렬 패턴 참조
+- `src/components/admin/ColorList.tsx` — 자식 목록 패턴 참조
+- `src/components/admin/ConfirmModal.tsx` — 삭제 확인 모달 재사용
+- `src/components/admin/StatusBadge.tsx` — 상태 뱃지 재사용
+- `src/components/admin/AdminSidebar.module.css` — 사이드바 스타일 참조
+- `docs/DESIGN_SYSTEM.md` — 어드민 토큰 (`--admin-*`)
+- `src/types/database.ts` — showroom.nodes 타입
 
 ## 핵심 규칙
-- 컬러 하드코딩 금지 → `var(--color-*)` 토큰 사용
-- 간격: 4px 배수만 (`--space-N` 토큰)
-- `100vh` 금지 → `100dvh` 사용
-- `any` 타입 금지
-- `console.error` 직접 호출 금지 → `logError()` 사용
-- `next/image` 필수
+- **어드민 = 라이트 토큰** (`var(--admin-*)`) — 다크 토큰 혼용 금지
+- `any` 타입 금지 — `Database['showroom']['Tables']['nodes']['Row']` 등 사용
+- `console.log` / `console.error` 금지 → `logError()` 사용
+- 컬러 하드코딩 금지 → CSS 변수 사용
+- V1 컴포넌트(ConfirmModal, StatusBadge) 재사용 가능
+- 간격: 4px 배수 (`--space-N`)
 
 ## ⚠️ 금지
-- HeroTexture.tsx 컴포넌트 로직 변경 금지 (CSS만 수정)
-- ColorInfo 수정 금지
-- CTABar 수정 금지
-- 홈 페이지(/), 컬렉션 페이지 수정 금지
-- globals.css, 디자인 토큰 수정 금지
-- 어드민 영역 일체 수정 금지
+- V1 컴포넌트(CollectionList, ColorList, CollectionForm, ColorForm) 수정 금지
+- V1 라우트(/admin/collections) 수정 금지
+- globals.css 수정 금지
+- 고객 페이지 파일 수정 금지
+- colorbook 스키마 접근 금지 — showroom만 사용
+- 드래그앤드롭 라이브러리 설치 금지 — 화살표 버튼으로 정렬
 
 ## 완료 기준
+- [ ] `/admin` 접속 시 `/admin/nodes`로 리다이렉트
+- [ ] 사이드바에 "노드 관리" 메뉴 표시 + 활성 상태 하이라이트
+- [ ] 최상위 노드 4개가 탭으로 표시됨
+- [ ] 탭 클릭 시 해당 탭의 자식 노드 목록 표시
+- [ ] 각 노드 행에 이름, 타입뱃지, 상태뱃지 표시
+- [ ] 탭 추가 기능 동작 (이름, slug 입력 → DB 저장)
+- [ ] 자식 노드 추가 기능 동작
+- [ ] 삭제 기능 동작 (ConfirmModal 확인 후)
+- [ ] 정렬 변경 동작 (화살표 버튼)
+- [ ] 상태 토글 동작 (draft ↔ published)
+- [ ] 편집 버튼 클릭 → /admin/nodes/[id]로 이동
 - [ ] `npm run build` 에러 없이 통과
-- [ ] `npm run lint` 에러 0건
-- [ ] **Masonry:** 모바일+데스크탑 시공사진이 2열 지그재그 배치 (좌→우 순서)
-- [ ] **데스크탑 왼쪽:** 비네팅 + 좌하단 컬러명 표시
-- [ ] **데스크탑 우상단:** ← 컬렉션명 뒤로가기 링크 표시 + 클릭 동작
-- [ ] **모바일:** 시공사진 탭 → 풀스크린 라이트박스 → X 또는 배경 탭으로 닫기
-- [ ] 라이트박스 열릴 때 배경 스크롤 잠금
+- [ ] `npm run lint` 에러 0건 (V1 기존 제외)
+- [ ] 어드민 라이트 토큰만 사용 확인
 
 ---
 ## 작업 결과 (작업자가 작성)
-- 수정 파일:
-  - `src/components/customer/ScrollAnimationWrapper.module.css`
-  - `src/components/customer/HeroTexture.module.css`
-  - `src/app/color/[collectionSlug]/[colorSlug]/page.tsx`
-  - `src/app/color/[collectionSlug]/[colorSlug]/color-detail.module.css`
-  - `src/components/customer/InstallationGallery.tsx`
-  - `src/components/customer/InstallationGallery.module.css`
-  - `src/components/customer/ImageLightbox.tsx` (생성)
-  - `src/components/customer/ImageLightbox.module.css` (생성)
-- 변경 요약:
-  - Masonry 레이아웃에서 2열이 정상적으로 유지되도록 `ScrollAnimationWrapper.module.css`의 `.wrapper`에 `break-inside: avoid` 추가.
-  - 데스크탑 해상도(`min-width: 1024px`)에서 `HeroTexture`의 전체 숨김 처리를 제거하고, 좌하단 미니멀 배치 및 배경 비네팅 효과가 나오도록 CSS 수정.
-  - 데스크탑에서 컬렉션 목록으로 돌아갈 수 있도록 상세 페이지의 우측 패널 상단에 뒤로가기 `Link` 추가.
-  - 모바일에서 시공 사진 클릭 시 전체 화면으로 볼 수 있도록 `ImageLightbox` 컴포넌트 신규 작성 및 `InstallationGallery`에 연동. 사진 클릭 시 body 스크롤 잠금 적용.
-- 자체 확인:
-  - `npm run lint` 에러 0건 확인 완료.
-  - `npm run build` 빌드 에러 없음 확인 완료.
-  - 지정된 규칙(var 토큰 사용, 100dvh, logError 등) 준수 완료.
+- 수정 파일: `src/components/admin/AdminSidebar.tsx`, `src/app/admin/page.tsx`, `src/app/admin/nodes/page.tsx`, `src/lib/supabase/client.ts`
+- 새로 생성한 파일: `src/components/admin/NodeList.tsx`, `src/components/admin/NodeList.module.css`, `src/components/admin/NodeAddModal.tsx`, `src/components/admin/NodeAddModal.module.css`
+- 변경 요약: 
+  - 사이드바에 "노드 관리" 메뉴 추가 및 `/admin` 리다이렉트를 `/admin/nodes`로 변경
+  - `NodeList` 컴포넌트를 통해 최상위 노드를 탭으로, 자식 노드를 목록으로 표시
+  - CRUD 기능(정렬, 상태 토글, 삭제) 구현 및 `NodeAddModal`에서 탭/자식 추가 구현(slug 자동 변환)
+  - 타입 안정성을 위해 `createShowroomClient` 개선 및 쿼리에 `.schema('showroom')` 명시
+- 자체 확인: 
+  - `npm run lint` 0 errors
+  - `npm run build` 성공 (Exit code: 0)
+  - Admin 라이트 토큰(`var(--admin-*)`) 적용 완료

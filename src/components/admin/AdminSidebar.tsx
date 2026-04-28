@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Package, Settings, LogOut, Menu, X } from 'lucide-react'
+import { Package, Settings, LogOut, Menu, X, FolderTree } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import styles from './AdminSidebar.module.css'
 
@@ -27,6 +27,7 @@ export default function AdminSidebar() {
   }
 
   const navItems = [
+    { name: '노드 관리', path: '/admin/nodes', icon: FolderTree },
     { name: '컬렉션 관리', path: '/admin/collections', icon: Package },
     { name: '사이트 설정', path: '/admin/settings', icon: Settings },
   ]

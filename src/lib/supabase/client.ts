@@ -11,3 +11,13 @@ export function createClient(): SupabaseClient<Database, "colorbook"> {
     }
   )
 }
+
+export function createShowroomClient() {
+  return createBrowserClient<Database, "showroom">(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      db: { schema: 'showroom' }
+    }
+  )
+}

@@ -1,0 +1,140 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: var(--space-4);
+}
+
+.modal {
+  background-color: var(--admin-surface);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--admin-shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--admin-text);
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--admin-text-sub);
+  cursor: pointer;
+  padding: var(--space-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+
+.closeBtn:hover {
+  background-color: var(--admin-surface-elevated);
+  color: var(--admin-text);
+}
+
+.form {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--admin-text);
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-md);
+  background-color: var(--admin-bg);
+  color: var(--admin-text);
+  font-size: var(--text-base);
+  transition: border-color var(--transition-fast);
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--admin-border);
+  background-color: var(--admin-surface-elevated);
+}
+
+.cancelBtn,
+.submitBtn {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.cancelBtn {
+  background-color: transparent;
+  color: var(--admin-text-sub);
+  border: 1px solid var(--admin-border);
+}
+
+.cancelBtn:hover:not(:disabled) {
+  background-color: var(--admin-border);
+  color: var(--admin-text);
+}
+
+.submitBtn {
+  background-color: var(--admin-accent);
+  color: var(--admin-text);
+  border: none;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background-color: var(--admin-accent-hover);
+}
+
+.submitBtn:disabled,
+.cancelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

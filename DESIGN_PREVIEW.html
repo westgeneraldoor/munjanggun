@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="customer">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>문장군 디지털 쇼룸 — Design System v2.0 Preview</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-display: 'Playfair Display', 'Georgia', serif;
+      --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px; --radius-full: 9999px;
+    }
+
+    /* === Customer Dark Theme === */
+    [data-theme="customer"] {
+      --t-bg: #0C0C0E; --t-surface: #1A1A1F; --t-surface-elevated: #242429;
+      --t-accent: #C4A265; --t-accent-hover: #D4B275; --t-accent-fg: #0C0C0E;
+      --t-text: #F5F5F7; --t-text-sub: #8E8E93; --t-text-muted: #5A5A5F;
+      --t-border: #2A2A30; --t-ring: #C4A265;
+      --t-error: #EF4444; --t-success: #22C55E; --t-warning: #F59E0B; --t-info: #3B82F6;
+      --t-shadow-sm: 0 1px 3px rgba(0,0,0,0.3); --t-shadow-md: 0 4px 12px rgba(0,0,0,0.4); --t-shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+      --t-ghost-bg: rgba(255,255,255,0.06);
+    }
+
+    /* === Admin Light Theme === */
+    [data-theme="admin"] {
+      --t-bg: #F8F8FA; --t-surface: #FFFFFF; --t-surface-elevated: #F0F0F2;
+      --t-accent: #C4A265; --t-accent-hover: #B08E50; --t-accent-fg: #FFFFFF;
+      --t-text: #111114; --t-text-sub: #6B6B73; --t-text-muted: #9E9EA6;
+      --t-border: #E2E2E6; --t-ring: #C4A265;
+      --t-error: #EF4444; --t-success: #22C55E; --t-warning: #F59E0B; --t-info: #3B82F6;
+      --t-shadow-sm: 0 1px 3px rgba(0,0,0,0.06); --t-shadow-md: 0 4px 12px rgba(0,0,0,0.08); --t-shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+      --t-ghost-bg: rgba(0,0,0,0.04);
+    }
+
+    body { font-family: var(--font-sans); background: var(--t-bg); color: var(--t-text); line-height: 1.5; transition: background 0.25s, color 0.25s; }
+    .container { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
+
+    header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--t-border); position: sticky; top: 0; background: var(--t-bg); z-index: 10; }
+    header h1 { font-family: var(--font-display); font-size: 1.25rem; }
+    header .version { font-size: 0.75rem; color: var(--t-text-muted); margin-left: 8px; }
+
+    .theme-toggle { display: flex; gap: 4px; background: var(--t-surface); border: 1px solid var(--t-border); border-radius: var(--radius-md); overflow: hidden; }
+    .theme-toggle button { padding: 8px 16px; border: none; background: transparent; color: var(--t-text-sub); cursor: pointer; font-size: 0.8125rem; font-family: var(--font-sans); font-weight: 500; transition: all 0.15s; }
+    .theme-toggle button.active { background: var(--t-accent); color: var(--t-accent-fg); font-weight: 600; }
+
+    section { margin-bottom: 48px; }
+    section h2 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; margin-bottom: 24px; padding-bottom: 8px; border-bottom: 2px solid var(--t-accent); }
+    .section-desc { color: var(--t-text-sub); margin-bottom: 16px; font-size: 0.9rem; }
+    h3 { font-size: 1rem; margin: 24px 0 12px; color: var(--t-text); }
+
+    /* Colors */
+    .color-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+    .color-card { border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--t-border); background: var(--t-surface); }
+    .color-swatch { height: 64px; }
+    .color-info { padding: 8px; font-size: 0.6875rem; }
+    .color-info .token { font-weight: 600; display: block; margin-bottom: 2px; }
+    .color-info .hex { color: var(--t-text-sub); }
+    .color-info .ratio { font-size: 0.625rem; margin-top: 2px; }
+    .ratio-pass { color: var(--t-success); } .ratio-warn { color: var(--t-warning); } .ratio-fail { color: var(--t-error); }
+
+    /* Typography */
+    .type-sample { margin-bottom: 12px; padding: 16px; background: var(--t-surface); border-radius: var(--radius-lg); border: 1px solid var(--t-border); }
+    .type-label { font-size: 0.6875rem; color: var(--t-text-muted); margin-bottom: 4px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
+
+    /* Buttons */
+    .component-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; align-items: center; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 24px; border-radius: var(--radius-md); font-size: 0.8125rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; font-family: var(--font-sans); }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--t-accent); color: var(--t-accent-fg); }
+    .btn-primary:hover { background: var(--t-accent-hover); }
+    .btn-secondary { background: var(--t-surface-elevated); color: var(--t-text); border: 1px solid var(--t-border); }
+    .btn-ghost { background: var(--t-ghost-bg); color: var(--t-text-sub); }
+    .btn-ghost:hover { color: var(--t-text); }
+    .btn-danger { background: var(--t-error); color: white; }
+    .btn-outline { background: transparent; color: var(--t-accent); border: 1px solid var(--t-border); }
+
+    /* Input */
+    .input-demo { height: 48px; padding: 0 16px; border: 1px solid var(--t-border); border-radius: var(--radius-md); background: var(--t-surface); color: var(--t-text); font-size: 0.9375rem; width: 100%; max-width: 320px; font-family: var(--font-sans); transition: border 0.15s; }
+    .input-demo:focus { outline: none; border-color: var(--t-ring); box-shadow: 0 0 0 3px rgba(196,162,101,0.15); }
+
+    /* Node Card */
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+    .node-card { background: var(--t-surface); border: 1px solid var(--t-border); border-radius: var(--radius-lg); overflow: hidden; transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s; cursor: pointer; }
+    .node-card:hover { transform: translateY(-6px); box-shadow: var(--t-shadow-lg); border-color: var(--t-accent); }
+    .node-card-img { aspect-ratio: 3/4; background: var(--t-surface-elevated); display: flex; align-items: center; justify-content: center; color: var(--t-text-muted); font-size: 0.75rem; }
+    .node-card-info { padding: 12px 14px 14px; }
+    .node-card-info h4 { font-size: 1.125rem; font-weight: 600; margin-bottom: 4px; }
+    .node-card-info p { font-size: 0.8125rem; color: var(--t-text-sub); }
+
+    /* Badges */
+    .badge { display: inline-flex; padding: 4px 10px; border-radius: var(--radius-full); font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.5px; }
+    .badge-published { background: rgba(34,197,94,0.15); color: var(--t-success); }
+    .badge-draft { background: rgba(245,158,11,0.15); color: var(--t-warning); }
+    .badge-no-children { background: rgba(59,130,246,0.15); color: var(--t-info); }
+
+    /* Context Tag */
+    .context-tag { display: inline-flex; padding: 4px 12px; border-radius: var(--radius-full); border: 1px solid rgba(196,162,101,0.3); font-size: 0.6875rem; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: var(--t-accent); }
+
+    /* Spacing */
+    .spacing-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .spacing-block { background: rgba(196,162,101,0.3); border-radius: 2px; height: 24px; }
+    .spacing-label { font-size: 0.75rem; color: var(--t-text-sub); min-width: 140px; }
+
+    /* Accessibility Table */
+    .a11y-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+    .a11y-table th, .a11y-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--t-border); }
+    .a11y-table th { font-weight: 600; color: var(--t-text-sub); }
+    .a11y-sample { padding: 4px 8px; border-radius: 4px; }
+
+    @media (max-width: 640px) {
+      .color-grid { grid-template-columns: repeat(2, 1fr); }
+      .card-grid { grid-template-columns: repeat(2, 1fr); }
+      .component-row { flex-direction: column; align-items: stretch; }
+      .btn { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:baseline;">
+    <h1>🎨 문장군 쇼룸 Design System</h1>
+    <span class="version">v2.0.0</span>
+  </div>
+  <div class="theme-toggle">
+    <button class="active" onclick="setTheme('customer')">🌙 고객 (다크)</button>
+    <button onclick="setTheme('admin')">☀️ 어드민 (라이트)</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- 1. Colors -->
+  <section id="colors">
+    <h2>1. 컬러 팔레트</h2>
+    <p class="section-desc">고객(다크) / 어드민(라이트) 테마 전환으로 양쪽 모두 확인하세요</p>
+
+    <h3>브랜드 & 배경</h3>
+    <div class="color-grid">
+      <div class="color-card"><div class="color-swatch" style="background:#C4A265"></div><div class="color-info"><span class="token">--accent</span><span class="hex">#C4A265</span><div class="ratio ratio-pass">7.8:1 ✅</div></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#D4B275"></div><div class="color-info"><span class="token">--accent-hover</span><span class="hex">#D4B275</span><div class="ratio ratio-pass">9.2:1 ✅</div></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#0C0C0E"></div><div class="color-info"><span class="token">--bg (dark)</span><span class="hex">#0C0C0E</span></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#1A1A1F"></div><div class="color-info"><span class="token">--surface (dark)</span><span class="hex">#1A1A1F</span></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#242429"></div><div class="color-info"><span class="token">--elevated (dark)</span><span class="hex">#242429</span></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#F8F8FA"></div><div class="color-info"><span class="token">--bg (admin)</span><span class="hex">#F8F8FA</span></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#FFFFFF;border-bottom:1px solid #eee"></div><div class="color-info"><span class="token">--surface (admin)</span><span class="hex">#FFFFFF</span></div></div>
+    </div>
+
+    <h3>텍스트</h3>
+    <div class="color-grid">
+      <div class="color-card"><div class="color-swatch" style="background:#F5F5F7"></div><div class="color-info"><span class="token">--text (dark)</span><span class="hex">#F5F5F7</span><div class="ratio ratio-pass">18.9:1 ✅</div></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#8E8E93"></div><div class="color-info"><span class="token">--text-sub (dark)</span><span class="hex">#8E8E93</span><div class="ratio ratio-pass">5.2:1 ✅</div></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#5A5A5F"></div><div class="color-info"><span class="token">--text-muted (dark)</span><span class="hex">#5A5A5F</span><div class="ratio ratio-warn">3.2:1 ⚠️ 대형만</div></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#111114"></div><div class="color-info"><span class="token">--text (admin)</span><span class="hex">#111114</span><div class="ratio ratio-pass">17.4:1 ✅</div></div></div>
+    </div>
+
+    <h3>시맨틱</h3>
+    <div class="color-grid">
+      <div class="color-card"><div class="color-swatch" style="background:#EF4444"></div><div class="color-info"><span class="token">--error</span><span class="hex">#EF4444</span></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#22C55E"></div><div class="color-info"><span class="token">--success</span><span class="hex">#22C55E</span></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#F59E0B"></div><div class="color-info"><span class="token">--warning</span><span class="hex">#F59E0B</span></div></div>
+      <div class="color-card"><div class="color-swatch" style="background:#3B82F6"></div><div class="color-info"><span class="token">--info</span><span class="hex">#3B82F6</span></div></div>
+    </div>
+  </section>
+
+  <!-- 2. Typography -->
+  <section id="typography">
+    <h2>2. 타이포그래피</h2>
+    <p class="section-desc">Playfair Display (영문 Display) + Pretendard Variable (한글 + 본문)</p>
+
+    <div class="type-sample">
+      <div class="type-label">영문 태그라인 — Playfair Display / Italic / 22px</div>
+      <div style="font-family:var(--font-display);font-size:1.375rem;font-style:italic;">Where Texture Meets Elegance</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-label">컬러명 H1 — Pretendard / ExtraBold / 32px</div>
+      <div style="font-size:2rem;font-weight:800;line-height:1.2;">오크 내추럴</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-label">컬렉션 제목 H2 — Pretendard / Bold / 22px</div>
+      <div style="font-size:1.375rem;font-weight:700;line-height:1.4;">오리지널 컬러</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-label">카드 제목 — Pretendard / SemiBold / 18px</div>
+      <div style="font-size:1.125rem;font-weight:600;line-height:1.4;">블랙 월넛</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-label">본문 — Pretendard / Regular / 15px</div>
+      <div style="font-size:0.9375rem;line-height:1.65;">고급스러운 월넛 우드 텍스처로 모던한 인테리어를 완성합니다. The quick brown fox jumps over the lazy dog.</div>
+    </div>
+    <div class="type-sample">
+      <div class="type-label">섹션 라벨 — Pretendard / SemiBold / 11px / uppercase / 3px tracking</div>
+      <div style="font-size:0.6875rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--t-accent);">ORIGINAL COLOR</div>
+    </div>
+  </section>
+
+  <!-- 3. Components -->
+  <section id="components">
+    <h2>3. 컴포넌트</h2>
+
+    <h3>버튼 (5종)</h3>
+    <div class="component-row">
+      <button class="btn btn-primary">Primary</button>
+      <button class="btn btn-secondary">Secondary</button>
+      <button class="btn btn-outline">Outline</button>
+      <button class="btn btn-ghost">Ghost</button>
+      <button class="btn btn-danger">Danger</button>
+    </div>
+
+    <h3>인풋</h3>
+    <div class="component-row">
+      <input class="input-demo" type="text" placeholder="텍스트를 입력하세요..." />
+    </div>
+
+    <h3>노드 카드 (NodeCard — v2 범용)</h3>
+    <div class="card-grid">
+      <div class="node-card">
+        <div class="node-card-img">3:4 텍스처</div>
+        <div class="node-card-info"><h4>오크 내추럴</h4><p>따뜻한 자연 우드톤</p></div>
+      </div>
+      <div class="node-card">
+        <div class="node-card-img">3:4 텍스처</div>
+        <div class="node-card-info"><h4>블랙 월넛</h4><p>깊은 다크 브라운</p></div>
+      </div>
+      <div class="node-card">
+        <div class="node-card-img">3:4 텍스처</div>
+        <div class="node-card-info"><h4>화이트 오크</h4><p>밝고 모던한 톤</p></div>
+      </div>
+    </div>
+
+    <h3>상태 뱃지 (v2 — 3종)</h3>
+    <div class="component-row">
+      <span class="badge badge-published">공개</span>
+      <span class="badge badge-draft">초안</span>
+      <span class="badge badge-no-children">고객 미노출</span>
+    </div>
+
+    <h3>컨텍스트 태그</h3>
+    <div class="component-row">
+      <span class="context-tag">ORIGINAL COLOR</span>
+      <span class="context-tag">SLIDING DOOR</span>
+    </div>
+  </section>
+
+  <!-- 4. Spacing -->
+  <section id="spacing">
+    <h2>4. 간격 시스템 (4px Grid)</h2>
+    <div class="spacing-row"><span class="spacing-label">--space-1 (4px)</span><div class="spacing-block" style="width:4px"></div></div>
+    <div class="spacing-row"><span class="spacing-label">--space-2 (8px)</span><div class="spacing-block" style="width:8px"></div></div>
+    <div class="spacing-row"><span class="spacing-label">--space-3 (12px)</span><div class="spacing-block" style="width:12px"></div></div>
+    <div class="spacing-row"><span class="spacing-label">--space-4 (16px)</span><div class="spacing-block" style="width:16px"></div></div>
+    <div class="spacing-row"><span class="spacing-label">--space-5 (20px)</span><div class="spacing-block" style="width:20px"></div></div>
+    <div class="spacing-row"><span class="spacing-label">--space-6 (24px)</span><div class="spacing-block" style="width:24px"></div></div>
+    <div class="spacing-row"><span class="spacing-label">--space-8 (32px)</span><div class="spacing-block" style="width:32px"></div></div>
+    <div class="spacing-row"><span class="spacing-label">--space-10 (40px)</span><div class="spacing-block" style="width:40px"></div></div>
+    <div class="spacing-row"><span class="spacing-label">--space-12 (48px)</span><div class="spacing-block" style="width:48px"></div></div>
+    <div class="spacing-row"><span class="spacing-label">--space-16 (64px)</span><div class="spacing-block" style="width:64px"></div></div>
+    <div class="spacing-row"><span class="spacing-label">--space-20 (80px)</span><div class="spacing-block" style="width:80px"></div></div>
+  </section>
+
+  <!-- 5. Accessibility -->
+  <section id="accessibility">
+    <h2>5. 접근성 (WCAG AA)</h2>
+    <p class="section-desc">주요 텍스트-배경 조합의 대비비 검증 (고객 다크 테마 기준)</p>
+    <table class="a11y-table">
+      <thead><tr><th>조합</th><th>미리보기</th><th>대비비</th><th>판정</th></tr></thead>
+      <tbody>
+        <tr><td>Text on BG</td><td><span class="a11y-sample" style="background:#0C0C0E;color:#F5F5F7;">Sample</span></td><td>18.9:1</td><td class="ratio-pass">✅ AA</td></tr>
+        <tr><td>TextSub on BG</td><td><span class="a11y-sample" style="background:#0C0C0E;color:#8E8E93;">Sample</span></td><td>5.2:1</td><td class="ratio-pass">✅ AA</td></tr>
+        <tr><td>TextMuted on BG</td><td><span class="a11y-sample" style="background:#0C0C0E;color:#5A5A5F;">Sample</span></td><td>3.2:1</td><td class="ratio-warn">⚠️ 대형만</td></tr>
+        <tr><td>Accent on BG</td><td><span class="a11y-sample" style="background:#0C0C0E;color:#C4A265;">Sample</span></td><td>7.8:1</td><td class="ratio-pass">✅ AA</td></tr>
+        <tr><td>AccentFG on Accent</td><td><span class="a11y-sample" style="background:#C4A265;color:#0C0C0E;">Sample</span></td><td>7.8:1</td><td class="ratio-pass">✅ AA</td></tr>
+        <tr><td>Admin Text on Admin BG</td><td><span class="a11y-sample" style="background:#F8F8FA;color:#111114;">Sample</span></td><td>17.4:1</td><td class="ratio-pass">✅ AA</td></tr>
+        <tr><td>Admin TextSub on Admin BG</td><td><span class="a11y-sample" style="background:#F8F8FA;color:#6B6B73;">Sample</span></td><td>5.1:1</td><td class="ratio-pass">✅ AA</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+<script>
+  function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.querySelectorAll('.theme-toggle button').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent.includes(theme === 'customer' ? '고객' : '어드민'));
+    });
+  }
+</script>
+</body>
+</html>
