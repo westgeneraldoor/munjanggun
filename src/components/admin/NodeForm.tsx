@@ -271,6 +271,7 @@ export default function NodeForm({ node, heroMedia: initialHeroMedia, galleryPho
       }
 
       alert('저장되었습니다.')
+      router.back()
       router.refresh()
     } catch (err: unknown) {
       logError('Save error:', err)
@@ -596,7 +597,7 @@ export default function NodeForm({ node, heroMedia: initialHeroMedia, galleryPho
         <button 
           type="button" 
           className={styles.cancelBtn} 
-          onClick={() => router.push('/admin/nodes')}
+          onClick={() => router.back()}
           disabled={isLoading}
         >
           취소

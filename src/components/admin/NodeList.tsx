@@ -25,9 +25,28 @@ type Node = {
 }
 
 export default function NodeList() {
-  const [currentParentId, setCurrentParentId] = useState<string | null>(null)
+  const [currentParentId, setCurrentParentId] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('admin_nodes_parentId')
+      return saved ? JSON.parse(saved) : null
+    }
+    return null
+  })
   const [nodes, setNodes] = useState<Node[]>([])
-  const [breadcrumb, setBreadcrumb] = useState<{id: string, name: string}[]>([])
+  const [breadcrumb, setBreadcrumb] = useState<{id: string, name: string}[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('admin_nodes_breadcrumb')
+      return saved ? JSON.parse(saved) : []
+    }
+    return []
+  })
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('admin_nodes_parentId', JSON.stringify(currentParentId))
+      sessionStorage.setItem('admin_nodes_breadcrumb', JSON.stringify(breadcrumb))
+    }
+  }, [currentParentId, breadcrumb])
   const [isLoading, setIsLoading] = useState(true)
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
