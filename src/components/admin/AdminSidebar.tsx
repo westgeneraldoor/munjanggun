@@ -11,16 +11,15 @@ export default function AdminSidebar() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
-  const supabase = createClient()
+  const toggleSidebar = () => setIsOpen(!isOpen)
 
   // Do not show sidebar on login page
   if (pathname === '/admin/login') {
     return null
   }
 
-  const toggleSidebar = () => setIsOpen(!isOpen)
-
   const handleLogout = async () => {
+    const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/admin/login')
     router.refresh()

@@ -43,7 +43,6 @@ export default function ImageUploader({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const supabase = createClient()
 
   // 이미지 리사이즈 & 압축 (브라우저 메모리 절약 + 업로드 속도 개선)
   const compressImage = (file: File, maxDimension = 1600, quality = 0.8): Promise<File> => {
@@ -241,6 +240,7 @@ export default function ImageUploader({
         safeName = `upload_${timestamp.toString(36)}.${ext}`
       }
       const filePath = `${folderPath.replace(/\/$/, '')}/${timestamp}_${safeName}`
+      const supabase = createClient()
 
       const { data, error: uploadError } = await supabase.storage
         .from(bucketName)
@@ -279,6 +279,7 @@ export default function ImageUploader({
       if (currentImageUrl) {
         const oldPath = getStoragePathFromUrl(currentImageUrl)
         if (oldPath) {
+          const supabase = createClient()
           await supabase.storage.from(bucketName).remove([oldPath])
         }
       }
@@ -308,6 +309,7 @@ export default function ImageUploader({
       try {
         const path = getStoragePathFromUrl(currentImageUrl)
         if (path) {
+          const supabase = createClient()
           await supabase.storage.from(bucketName).remove([path])
         }
       } catch (err) {
@@ -350,6 +352,7 @@ export default function ImageUploader({
               height={300} 
               className={styles.previewImage}
               loading="lazy"
+              unoptimized={true}
             />
           )}
           

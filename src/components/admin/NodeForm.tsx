@@ -270,7 +270,7 @@ export default function NodeForm({ node, heroMedia: initialHeroMedia, galleryPho
         }
       }
 
-      router.push('/admin/nodes')
+      alert('저장되었습니다.')
       router.refresh()
     } catch (err: unknown) {
       logError('Save error:', err)

@@ -14,55 +14,55 @@ interface GalleryPhoto {
 
 interface GalleryManagerProps {
   photos: GalleryPhoto[]
-  onPhotosChange: (photos: GalleryPhoto[]) => void
+  onPhotosChange: React.Dispatch<React.SetStateAction<GalleryPhoto[]>>
   nodeSlug: string
 }
 
 export default function GalleryManager({ photos, onPhotosChange, nodeSlug }: GalleryManagerProps) {
-  // 최신 photos 상태를 ref로 추적하여 onUploadReplace 비동기 콜백에서 Stale Closure 문제 방지
-  const photosRef = React.useRef(photos)
-  React.useEffect(() => {
-    photosRef.current = photos
-  }, [photos])
-
   const handlePhotoUpload = (url: string) => {
-    onPhotosChange([
-      ...photos,
+    onPhotosChange(prev => [
+      ...prev,
       {
         image_url: url,
         caption: null,
-        display_order: photos.length
+        display_order: prev.length
       }
     ])
   }
 
   const handleRemovePhoto = (index: number) => {
-    const newPhotos = photos.filter((_, i) => i !== index).map((p, i) => ({ ...p, display_order: i }))
-    onPhotosChange(newPhotos)
+    onPhotosChange(prev => prev.filter((_, i) => i !== index).map((p, i) => ({ ...p, display_order: i })))
   }
 
   const handleMoveUp = (index: number) => {
     if (index === 0) return
-    const newPhotos = [...photos]
-    const temp = newPhotos[index - 1]
-    newPhotos[index - 1] = { ...newPhotos[index], display_order: index - 1 }
-    newPhotos[index] = { ...temp, display_order: index }
-    onPhotosChange(newPhotos)
+    onPhotosChange(prev => {
+      const newPhotos = [...prev]
+      const temp = newPhotos[index - 1]
+      newPhotos[index - 1] = { ...newPhotos[index], display_order: index - 1 }
+      newPhotos[index] = { ...temp, display_order: index }
+      return newPhotos
+    })
   }
 
   const handleMoveDown = (index: number) => {
     if (index === photos.length - 1) return
-    const newPhotos = [...photos]
-    const temp = newPhotos[index + 1]
-    newPhotos[index + 1] = { ...newPhotos[index], display_order: index + 1 }
-    newPhotos[index] = { ...temp, display_order: index }
-    onPhotosChange(newPhotos)
+    onPhotosChange(prev => {
+      if (index === prev.length - 1) return prev
+      const newPhotos = [...prev]
+      const temp = newPhotos[index + 1]
+      newPhotos[index + 1] = { ...newPhotos[index], display_order: index + 1 }
+      newPhotos[index] = { ...temp, display_order: index }
+      return newPhotos
+    })
   }
 
   const handleCaptionChange = (index: number, caption: string) => {
-    const newPhotos = [...photos]
-    newPhotos[index].caption = caption || null
-    onPhotosChange(newPhotos)
+    onPhotosChange(prev => {
+      const newPhotos = [...prev]
+      newPhotos[index] = { ...newPhotos[index], caption: caption || null }
+      return newPhotos
+    })
   }
 
   return (
@@ -73,9 +73,11 @@ export default function GalleryManager({ photos, onPhotosChange, nodeSlug }: Gal
             <ImageUploader
               folderPath={`photos/${nodeSlug || 'temp'}`}
               onUploadComplete={(url) => {
-                const newPhotos = [...photos]
-                newPhotos[index].image_url = url
-                onPhotosChange(newPhotos)
+                onPhotosChange(prev => {
+                  const newPhotos = [...prev]
+                  newPhotos[index] = { ...newPhotos[index], image_url: url }
+                  return newPhotos
+                })
               }}
               currentImageUrl={photo.image_url}
               onDelete={() => handleRemovePhoto(index)}
@@ -128,17 +130,17 @@ export default function GalleryManager({ photos, onPhotosChange, nodeSlug }: Gal
             compressionMaxDimension={1000}
             compressionQuality={0.7}
             onMultiUploadComplete={(urls) => {
-              onPhotosChange([
-                ...photos,
+              onPhotosChange(prev => [
+                ...prev,
                 ...urls.map((url, i) => ({
                   image_url: url,
                   caption: null,
-                  display_order: photos.length + i
+                  display_order: prev.length + i
                 }))
               ])
             }}
             onUploadReplace={(oldUrl, newUrl) => {
-              onPhotosChange(photosRef.current.map(p =>
+              onPhotosChange(prev => prev.map(p =>
                 p.image_url === oldUrl ? { ...p, image_url: newUrl } : p
               ))
             }}
