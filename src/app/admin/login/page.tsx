@@ -27,7 +27,7 @@ export default function AdminLogin() {
       setError('이메일 또는 비밀번호가 올바르지 않습니다')
       setLoading(false)
     } else {
-      router.push('/admin/collections')
+      router.push('/admin/nodes')
       router.refresh()
     }
   }

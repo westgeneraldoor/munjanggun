@@ -19,6 +19,12 @@ interface GalleryManagerProps {
 }
 
 export default function GalleryManager({ photos, onPhotosChange, nodeSlug }: GalleryManagerProps) {
+  // 최신 photos 상태를 ref로 추적하여 onUploadReplace 비동기 콜백에서 Stale Closure 문제 방지
+  const photosRef = React.useRef(photos)
+  React.useEffect(() => {
+    photosRef.current = photos
+  }, [photos])
+
   const handlePhotoUpload = (url: string) => {
     onPhotosChange([
       ...photos,
@@ -132,7 +138,7 @@ export default function GalleryManager({ photos, onPhotosChange, nodeSlug }: Gal
               ])
             }}
             onUploadReplace={(oldUrl, newUrl) => {
-              onPhotosChange(photos.map(p =>
+              onPhotosChange(photosRef.current.map(p =>
                 p.image_url === oldUrl ? { ...p, image_url: newUrl } : p
               ))
             }}

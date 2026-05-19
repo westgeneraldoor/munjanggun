@@ -28,7 +28,6 @@ export default function AdminSidebar() {
 
   const navItems = [
     { name: '노드 관리', path: '/admin/nodes', icon: FolderTree },
-    { name: '컬렉션 관리', path: '/admin/collections', icon: Package },
     { name: '사이트 설정', path: '/admin/settings', icon: Settings },
   ]
 
