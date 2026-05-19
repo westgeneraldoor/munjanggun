@@ -7,164 +7,7 @@ export type Json =
   | Json[]
 
 export interface Database {
-  colorbook: {
-    Tables: {
-      site_settings: {
-        Row: {
-          id: string
-          site_title: string | null
-          site_description: string | null
-          og_image_url: string | null
-          reservation_url: string | null
-          store_url: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          site_title?: string | null
-          site_description?: string | null
-          og_image_url?: string | null
-          reservation_url?: string | null
-          store_url?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          site_title?: string | null
-          site_description?: string | null
-          og_image_url?: string | null
-          reservation_url?: string | null
-          store_url?: string | null
-          updated_at?: string | null
-        }
-      }
-      collections: {
-        Row: {
-          id: string
-          name: string
-          slug: string
-          description: string | null
-          thumbnail_url: string | null
-          display_order: number
-          status: 'draft' | 'published'
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          name: string
-          slug: string
-          description?: string | null
-          thumbnail_url?: string | null
-          display_order?: number
-          status?: 'draft' | 'published'
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          name?: string
-          slug?: string
-          description?: string | null
-          thumbnail_url?: string | null
-          display_order?: number
-          status?: 'draft' | 'published'
-          created_at?: string | null
-          updated_at?: string | null
-        }
-      }
-      colors: {
-        Row: {
-          id: string
-          collection_id: string
-          name: string
-          slug: string
-          tagline: string | null
-          description: string | null
-          texture_image_url: string | null
-          display_order: number
-          status: 'draft' | 'published'
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          collection_id: string
-          name: string
-          slug: string
-          tagline?: string | null
-          description?: string | null
-          texture_image_url: string | null
-          display_order?: number
-          status?: 'draft' | 'published'
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          collection_id?: string
-          name?: string
-          slug?: string
-          tagline?: string | null
-          description?: string | null
-          texture_image_url?: string | null
-          display_order?: number
-          status?: 'draft' | 'published'
-          created_at?: string | null
-          updated_at?: string | null
-        }
-      }
-      installation_photos: {
-        Row: {
-          id: string
-          color_id: string
-          image_url: string
-          caption: string | null
-          display_order: number
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          color_id: string
-          image_url: string
-          caption?: string | null
-          display_order?: number
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          color_id?: string
-          image_url?: string
-          caption?: string | null
-          display_order?: number
-          created_at?: string | null
-        }
-      }
-      preview_tokens: {
-        Row: {
-          id: string
-          color_id: string
-          token: string
-          expires_at: string
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          color_id: string
-          token: string
-          expires_at: string
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          color_id?: string
-          token?: string
-          expires_at?: string
-          created_at?: string | null
-        }
-      }
-    }
-  }
+
   showroom: {
     Tables: {
       site_settings: {
@@ -177,9 +20,13 @@ export interface Database {
           store_url: string | null
           hero_enabled: boolean
           hero_video_url: string | null
+          hero_mobile_video_url: string | null
           hero_title: string | null
           hero_subtitle: string | null
           hero_description: string | null
+          hero_slide_interval: number
+          hero_slide_transition: string | null
+          card_text_position: string | null
           updated_at: string
         }
         Insert: {
@@ -191,9 +38,13 @@ export interface Database {
           store_url?: string | null
           hero_enabled?: boolean
           hero_video_url?: string | null
+          hero_mobile_video_url?: string | null
           hero_title?: string | null
           hero_subtitle?: string | null
           hero_description?: string | null
+          hero_slide_interval?: number
+          hero_slide_transition?: string | null
+          card_text_position?: string | null
           updated_at?: string
         }
         Update: {
@@ -205,9 +56,13 @@ export interface Database {
           store_url?: string | null
           hero_enabled?: boolean
           hero_video_url?: string | null
+          hero_mobile_video_url?: string | null
           hero_title?: string | null
           hero_subtitle?: string | null
           hero_description?: string | null
+          hero_slide_interval?: number
+          hero_slide_transition?: string | null
+          card_text_position?: string | null
           updated_at?: string
         }
       }
@@ -224,11 +79,15 @@ export interface Database {
           card_subtitle: string | null
           hero_enabled: boolean
           hero_video_url: string | null
+          hero_mobile_video_url: string | null
           hero_title: string | null
           hero_subtitle: string | null
           hero_description: string | null
+          hero_slide_interval: number
+          hero_slide_transition: string | null
           tagline: string | null
           description: string | null
+          card_text_position: string | null
           created_at: string
           updated_at: string
         }
@@ -244,11 +103,15 @@ export interface Database {
           card_subtitle?: string | null
           hero_enabled?: boolean
           hero_video_url?: string | null
+          hero_mobile_video_url?: string | null
           hero_title?: string | null
           hero_subtitle?: string | null
           hero_description?: string | null
+          hero_slide_interval?: number
+          hero_slide_transition?: string | null
           tagline?: string | null
           description?: string | null
+          card_text_position?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -264,11 +127,15 @@ export interface Database {
           card_subtitle?: string | null
           hero_enabled?: boolean
           hero_video_url?: string | null
+          hero_mobile_video_url?: string | null
           hero_title?: string | null
           hero_subtitle?: string | null
           hero_description?: string | null
+          hero_slide_interval?: number
+          hero_slide_transition?: string | null
           tagline?: string | null
           description?: string | null
+          card_text_position?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -278,6 +145,9 @@ export interface Database {
           id: string
           node_id: string
           image_url: string
+          mobile_image_url: string | null
+          device_type: string
+          media_type: string
           display_order: number
           created_at: string
         }
@@ -285,6 +155,9 @@ export interface Database {
           id?: string
           node_id: string
           image_url: string
+          mobile_image_url?: string | null
+          device_type?: string
+          media_type?: string
           display_order?: number
           created_at?: string
         }
@@ -292,6 +165,9 @@ export interface Database {
           id?: string
           node_id?: string
           image_url?: string
+          mobile_image_url?: string | null
+          device_type?: string
+          media_type?: string
           display_order?: number
           created_at?: string
         }
@@ -300,18 +176,27 @@ export interface Database {
         Row: {
           id: string
           image_url: string
+          mobile_image_url: string | null
+          device_type: string
+          media_type: string
           display_order: number
           created_at: string
         }
         Insert: {
           id?: string
           image_url: string
+          mobile_image_url?: string | null
+          device_type?: string
+          media_type?: string
           display_order?: number
           created_at?: string
         }
         Update: {
           id?: string
           image_url?: string
+          mobile_image_url?: string | null
+          device_type?: string
+          media_type?: string
           display_order?: number
           created_at?: string
         }

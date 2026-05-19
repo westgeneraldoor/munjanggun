@@ -23,7 +23,7 @@ interface ImageUploaderProps {
 }
 
 export default function ImageUploader({
-  bucketName = 'colorbook-images',
+  bucketName = 'showroom-images',
   folderPath,
   onUploadComplete,
   currentImageUrl,
@@ -85,6 +85,7 @@ export default function ImageUploader({
 
         ctx.drawImage(img, 0, 0, width, height)
 
+        const mimeType = file.type === 'image/webp' ? 'image/webp' : 'image/jpeg'
         canvas.toBlob(
           (blob) => {
             if (!blob) {
@@ -92,19 +93,19 @@ export default function ImageUploader({
               return
             }
             const compressedFile = new File([blob], file.name, {
-              type: 'image/jpeg',
+              type: mimeType,
               lastModified: Date.now(),
             })
             resolve(compressedFile)
           },
-          'image/jpeg',
+          mimeType,
           quality
         )
       }
 
       img.onerror = () => {
         URL.revokeObjectURL(url)
-        reject(new Error('이미지 로드 실패'))
+        resolve(file)
       }
 
       img.src = url
@@ -256,9 +257,10 @@ export default function ImageUploader({
         .getPublicUrl(data.path)
 
       return publicUrlData.publicUrl
-    } catch (err) {
+    } catch (err: unknown) {
       logError('Single upload error:', err)
-      throw err
+      const message = err instanceof Error ? err.message : '알 수 없는 오류'
+      throw new Error(`업로드 실패 (${file.name}): ${message}`)
     }
   }
 

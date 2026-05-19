@@ -36,6 +36,7 @@ export default function ImageLightbox({
 
   // 사진 변경 시 로드 상태 리셋
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setImgLoaded(false)
   }, [currentIndex])
 

@@ -8,11 +8,17 @@ export default async function SettingsPage() {
   const supabase = await createClient()
   
   const { data: settings } = await supabase
-    .schema('colorbook')
+    .schema('showroom')
     .from('site_settings')
     .select('*')
     .eq('id', 'singleton')
     .single()
+
+  const { data: heroMedia } = await supabase
+    .schema('showroom')
+    .from('site_hero_media')
+    .select('*')
+    .order('display_order', { ascending: true })
 
   return (
     <div className={styles.container}>
@@ -21,7 +27,7 @@ export default async function SettingsPage() {
       </div>
 
       <div className={styles.content}>
-        <SiteSettingsForm initialData={settings} />
+        <SiteSettingsForm initialData={settings} heroMedia={heroMedia || []} />
       </div>
     </div>
   )

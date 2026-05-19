@@ -1,6 +1,23 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    viewTransition: true,
+  },
+  async redirects() {
+    return [
+      {
+        source: '/collections/:slug',
+        destination: '/:slug',
+        permanent: true,
+      },
+      {
+        source: '/colors/:slug',
+        destination: '/:slug',
+        permanent: true,
+      },
+    ];
+  },
   images: {
     qualities: [75, 85],
     remotePatterns: [

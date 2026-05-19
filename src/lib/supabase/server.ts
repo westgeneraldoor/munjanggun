@@ -3,14 +3,14 @@ import { SupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { Database } from '@/types/database'
 
-export async function createClient(): Promise<SupabaseClient<Database, "colorbook">> {
+export async function createClient(): Promise<SupabaseClient<Database, "showroom">> {
   const cookieStore = await cookies()
 
-  return createServerClient<Database, "colorbook">(
+  return createServerClient<Database, "showroom">(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      db: { schema: 'colorbook' },
+      db: { schema: 'showroom' },
       cookies: {
         getAll() {
           return cookieStore.getAll()

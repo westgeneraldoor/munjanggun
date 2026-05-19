@@ -1,14 +1,16 @@
 .wrapper {
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity var(--transition-gallery), transform var(--transition-gallery);
+  transform: translateY(32px) scale(0.96);
+  filter: blur(4px);
+  transition: opacity var(--transition-gallery), transform var(--transition-gallery), filter var(--transition-gallery);
   /* transition-delay is set inline */
   break-inside: avoid;
 }
 
 .visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
+  filter: blur(0px);
 }
 
 /* prefers-reduced-motion 처리 - globals.css에서 일괄 적용되어 있지만 확실히 하기 위해 */
@@ -16,6 +18,7 @@
   .wrapper {
     opacity: 1;
     transform: none;
+    filter: none;
     transition: none !important;
   }
 }

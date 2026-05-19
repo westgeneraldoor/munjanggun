@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Share2, Check } from 'lucide-react'
+import Link from 'next/link'
+import { Share2, Check, Home } from 'lucide-react'
 import { logError } from '@/lib/logger'
 import styles from './CTABar.module.css'
 
@@ -64,6 +65,9 @@ export default function CTABar({ reservationUrl, storeUrl, hideUntilScroll = fal
 
   return (
     <div className={`${styles.container} ${!isVisible ? styles.hidden : ''}`}>
+      <Link href="/" className={styles.homeButton} aria-label="홈으로 이동">
+        <Home size={20} />
+      </Link>
       {reservationUrl && (
         <a
           href={reservationUrl}
@@ -71,7 +75,7 @@ export default function CTABar({ reservationUrl, storeUrl, hideUntilScroll = fal
           rel="noopener noreferrer"
           className={`${styles.button} ${styles.primary}`}
         >
-          무료 방문실측 예약
+          무료방문견적
         </a>
       )}
       {storeUrl && (

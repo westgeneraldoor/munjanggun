@@ -138,3 +138,13 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.inputError {
+  border-color: #ef4444 !important;
+}
+
+.slugWarning {
+  font-size: var(--text-xs);
+  color: #ef4444;
+  margin-top: var(--space-1);
+}

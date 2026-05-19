@@ -38,56 +38,78 @@
   background-color: var(--admin-accent-hover);
 }
 
-/* Tabs */
-.tabsContainer {
-  display: flex;
-  gap: var(--space-2);
-  margin-bottom: var(--space-6);
-  border-bottom: 1px solid var(--admin-border);
-  padding-bottom: var(--space-2);
-  overflow-x: auto;
-}
-
-.tab {
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--text-base);
-  font-weight: var(--font-medium);
-  color: var(--admin-text-sub);
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: var(--transition-fast);
-}
-
-.tab:hover {
-  color: var(--admin-text);
-}
-
-.tab.active {
-  color: var(--admin-accent);
-  border-bottom-color: var(--admin-accent);
-  font-weight: var(--font-bold);
-}
-
-.tabAddBtn {
+/* Breadcrumbs */
+.breadcrumb {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: var(--space-2) var(--space-3);
-  color: var(--admin-text-sub);
-  background: transparent;
-  border: 1px dashed var(--admin-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  margin-left: var(--space-2);
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  margin-bottom: var(--space-4);
+  font-size: var(--text-base);
+  flex-wrap: wrap;
 }
 
-.tabAddBtn:hover {
+.breadcrumbItem {
+  background: none;
+  border: none;
+  color: var(--admin-text-sub);
+  cursor: pointer;
+  font-size: var(--text-base);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+
+.breadcrumbItem:hover {
+  background-color: var(--admin-surface-elevated);
   color: var(--admin-text);
-  border-color: var(--admin-text-sub);
+}
+
+.breadcrumbCurrent {
+  color: var(--admin-text);
+  font-weight: var(--font-bold);
+  cursor: default;
+}
+
+.breadcrumbCurrent:hover {
+  background: none;
+}
+
+.breadcrumbSeparator {
+  color: var(--admin-text-muted);
+  font-size: var(--text-sm);
+  user-select: none;
+}
+
+.breadcrumbEdit {
+  display: flex;
+  align-items: center;
+  color: var(--admin-text-muted);
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+
+.breadcrumbEdit:hover {
+  color: var(--admin-accent);
+  background-color: var(--admin-surface-elevated);
+}
+
+/* 드릴다운 버튼 (listing 노드 이름) */
+.drillDownBtn {
+  background: none;
+  border: none;
+  color: var(--admin-text);
+  font-size: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+  padding: 0;
+  transition: var(--transition-fast);
+}
+
+.drillDownBtn:hover {
+  color: var(--admin-accent);
+  text-decoration: underline;
 }
 
 /* List */
@@ -249,66 +271,7 @@
   color: var(--admin-text-sub);
 }
 
-/* Tab Action Bar */
-.tabActionBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--admin-surface);
-  border: 1px solid var(--admin-border);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-4);
-  gap: var(--space-3);
-}
 
-.tabActionLabel {
-  font-size: var(--text-sm);
-  color: var(--admin-text-sub);
-  white-space: nowrap;
-}
-
-.tabActionLabel strong {
-  color: var(--admin-text);
-}
-
-.tabActionButtons {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.tabActionBtn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-1) var(--space-2);
-  font-size: 13px;
-  color: var(--admin-text-sub);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  text-decoration: none;
-}
-
-.tabActionBtn:hover:not(:disabled) {
-  background-color: var(--admin-surface-elevated);
-  color: var(--admin-text);
-  border-color: var(--admin-border);
-}
-
-.tabActionBtn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.tabDeleteBtn:hover:not(:disabled) {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: var(--color-error);
-  border-color: rgba(239, 68, 68, 0.2);
-}
 
 .itemSlug {
   font-family: monospace;

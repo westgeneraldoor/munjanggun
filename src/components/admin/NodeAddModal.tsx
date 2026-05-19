@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { createShowroomClient } from '@/lib/supabase/client'
 import { logError } from '@/lib/logger'
+import { generateSlug, validateSlug } from '@/lib/utils'
 import styles from './NodeAddModal.module.css'
 
 interface NodeAddModalProps {
@@ -25,12 +26,8 @@ export default function NodeAddModal({ isOpen, onClose, onSuccess, parentId, dis
   // slug 자동 생성 로직
   useEffect(() => {
     if (name) {
-      const generatedSlug = name
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9가-힣\-]/g, '')
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSlug(generatedSlug)
+      setSlug(generateSlug(name))
     } else {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSlug('')
@@ -56,6 +53,12 @@ export default function NodeAddModal({ isOpen, onClose, onSuccess, parentId, dis
     
     if (!name.trim() || !slug.trim()) {
       alert('이름과 슬러그를 입력해주세요.')
+      return
+    }
+
+    const slugValidation = validateSlug(slug)
+    if (!slugValidation.valid) {
+      alert(slugValidation.message || '유효하지 않은 슬러그입니다.')
       return
     }
 
@@ -128,11 +131,14 @@ export default function NodeAddModal({ isOpen, onClose, onSuccess, parentId, dis
               type="text"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              className={styles.input}
-              placeholder="예: sink, olive-green"
+              className={`${styles.input} ${slug && !validateSlug(slug).valid ? styles.inputError : ''}`}
+              placeholder="예: modern, classic-goshi"
               required
               disabled={isSubmitting}
             />
+            {slug && !validateSlug(slug).valid && (
+              <p className={styles.slugWarning}>{validateSlug(slug).message || '영문 slug를 직접 입력해주세요'}</p>
+            )}
           </div>
 
           {parentId !== null && (
@@ -163,7 +169,7 @@ export default function NodeAddModal({ isOpen, onClose, onSuccess, parentId, dis
             <button 
               type="submit" 
               className={styles.submitBtn}
-              disabled={isSubmitting}
+              disabled={isSubmitting || (slug ? !validateSlug(slug).valid : true)}
             >
               {isSubmitting ? '추가 중...' : '추가하기'}
             </button>

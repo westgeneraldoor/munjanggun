@@ -17,3 +17,11 @@ export function generateSlug(text: string): string {
     // 앞뒤 하이픈 제거
     .replace(/^-+|-+$/g, '')
 }
+
+export function validateSlug(slug: string): { valid: boolean; message?: string } {
+  if (!slug.trim()) return { valid: false, message: '슬러그를 입력해주세요.' }
+  if (/[가-힣]/.test(slug)) return { valid: false, message: '영문, 숫자, 하이픈(-)만 사용 가능합니다.' }
+  if (!/^[a-z0-9]/.test(slug)) return { valid: false, message: '영문 소문자 또는 숫자로 시작해야 합니다.' }
+  if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/.test(slug)) return { valid: false, message: '영문 소문자, 숫자, 하이픈만 사용하세요.' }
+  return { valid: true }
+}

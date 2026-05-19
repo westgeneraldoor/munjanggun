@@ -4,12 +4,13 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Edit2, Trash2, FolderPlus, FilePlus, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Image as ImageIcon, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Edit2, Trash2, FolderPlus, FilePlus, ChevronUp, ChevronDown, Image as ImageIcon, FolderInput } from 'lucide-react'
 import { createShowroomClient } from '@/lib/supabase/client'
 import { logError } from '@/lib/logger'
 import StatusBadge from '@/components/admin/StatusBadge'
 import ConfirmModal from '@/components/admin/ConfirmModal'
 import NodeAddModal from '@/components/admin/NodeAddModal'
+import NodeMoveModal from '@/components/admin/NodeMoveModal'
 import styles from './NodeList.module.css'
 
 type Node = {
@@ -24,12 +25,10 @@ type Node = {
 }
 
 export default function NodeList() {
-  const [tabs, setTabs] = useState<Node[]>([])
-  const [children, setChildren] = useState<Node[]>([])
-  const [selectedTabId, setSelectedTabId] = useState<string | null>(null)
-  
-  const [isLoadingTabs, setIsLoadingTabs] = useState(true)
-  const [isLoadingChildren, setIsLoadingChildren] = useState(false)
+  const [currentParentId, setCurrentParentId] = useState<string | null>(null)
+  const [nodes, setNodes] = useState<Node[]>([])
+  const [breadcrumb, setBreadcrumb] = useState<{id: string, name: string}[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [addModalParentId, setAddModalParentId] = useState<string | null>(null)
@@ -39,81 +38,65 @@ export default function NodeList() {
   const [deletingNode, setDeletingNode] = useState<Node | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  const [isMoveModalOpen, setIsMoveModalOpen] = useState(false)
+  const [movingNode, setMovingNode] = useState<Node | null>(null)
+
   const router = useRouter()
   const supabase = createShowroomClient()
 
-  const fetchTabs = async () => {
-    setIsLoadingTabs(true)
+  const fetchNodes = async (parentId: string | null) => {
+    setIsLoading(true)
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .schema('showroom')
         .from('nodes')
         .select('*')
-        .is('parent_id', null)
         .order('display_order')
 
-      if (error) throw error
-      
-      setTabs(data || [])
-      
-      if (data && data.length > 0 && !selectedTabId) {
-        setSelectedTabId(data[0].id)
-      } else if (!data || data.length === 0) {
-        setSelectedTabId(null)
+      if (parentId === null) {
+        query = query.is('parent_id', null)
+      } else {
+        query = query.eq('parent_id', parentId)
       }
-    } catch (err) {
-      logError('탭 로딩 실패:', err)
-    } finally {
-      setIsLoadingTabs(false)
-    }
-  }
 
-  const fetchChildren = async (parentId: string) => {
-    setIsLoadingChildren(true)
-    try {
-      const { data, error } = await supabase
-        .schema('showroom')
-        .from('nodes')
-        .select('*')
-        .eq('parent_id', parentId)
-        .order('display_order')
-
+      const { data, error } = await query
       if (error) throw error
-      
-      setChildren(data || [])
+      setNodes(data || [])
     } catch (err) {
-      logError('자식 노드 로딩 실패:', err)
+      logError('노드 로딩 실패:', err)
     } finally {
-      setIsLoadingChildren(false)
+      setIsLoading(false)
     }
   }
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchTabs()
+    fetchNodes(currentParentId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [currentParentId])
 
-  useEffect(() => {
-    if (selectedTabId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      fetchChildren(selectedTabId)
+  const handleDrillDown = (node: Node) => {
+    if (node.type !== 'listing') return
+    setBreadcrumb(prev => [...prev, { id: node.id, name: node.name }])
+    setCurrentParentId(node.id)
+  }
+
+  const handleBreadcrumbClick = (index: number) => {
+    if (index === -1) {
+      setBreadcrumb([])
+      setCurrentParentId(null)
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setChildren([])
+      const target = breadcrumb[index]
+      setBreadcrumb(prev => prev.slice(0, index + 1))
+      setCurrentParentId(target.id)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTabId])
+  }
 
   const handleStatusToggle = async (node: Node) => {
     const newStatus = node.status === 'draft' ? 'published' : 'draft'
     
     // Optimistic UI update
-    if (node.parent_id === null) {
-      setTabs(tabs.map(t => t.id === node.id ? { ...t, status: newStatus } : t))
-    } else {
-      setChildren(children.map(c => c.id === node.id ? { ...c, status: newStatus } : c))
-    }
+    setNodes(nodes.map(n => n.id === node.id ? { ...n, status: newStatus } : n))
 
     try {
       const { error } = await supabase
@@ -127,23 +110,19 @@ export default function NodeList() {
     } catch (err) {
       logError('상태 변경 실패:', err)
       // Revert Optimistic UI
-      if (node.parent_id === null) {
-        setTabs(tabs.map(t => t.id === node.id ? { ...t, status: node.status } : t))
-      } else {
-        setChildren(children.map(c => c.id === node.id ? { ...c, status: node.status } : c))
-      }
+      setNodes(nodes.map(n => n.id === node.id ? { ...n, status: node.status } : n))
       alert('상태 변경에 실패했습니다.')
     }
   }
 
-  const handleOrderChange = async (index: number, direction: 'up' | 'down', list: Node[], isTab: boolean) => {
+  const handleOrderChange = async (index: number, direction: 'up' | 'down') => {
     if (
       (direction === 'up' && index === 0) || 
-      (direction === 'down' && index === list.length - 1)
+      (direction === 'down' && index === nodes.length - 1)
     ) return
 
     const newIndex = direction === 'up' ? index - 1 : index + 1
-    const newList = [...list]
+    const newList = [...nodes]
     const temp = newList[index]
     newList[index] = newList[newIndex]
     newList[newIndex] = temp
@@ -152,11 +131,7 @@ export default function NodeList() {
     const updatedList = newList.map((item, i) => ({ ...item, display_order: i }))
 
     // Optimistic update
-    if (isTab) {
-      setTabs(updatedList)
-    } else {
-      setChildren(updatedList)
-    }
+    setNodes(updatedList)
 
     try {
       // Update in DB
@@ -171,8 +146,7 @@ export default function NodeList() {
       logError('순서 변경 실패:', err)
       alert('순서 변경에 실패했습니다.')
       // Revert on error
-      if (isTab) fetchTabs()
-      else if (selectedTabId) fetchChildren(selectedTabId)
+      fetchNodes(currentParentId)
     }
   }
 
@@ -181,12 +155,6 @@ export default function NodeList() {
     setIsDeleting(true)
 
     try {
-      // Note: In Supabase, if we set up foreign keys with ON DELETE CASCADE,
-      // deleting a node will automatically delete its children, hero_media, gallery_photos, etc.
-      // Assuming ON DELETE CASCADE is set.
-      
-      // We should ideally delete images from storage too if they exist.
-      // But for simplicity in this order, we just delete the node record.
       const { error } = await supabase
         .schema('showroom')
         .from('nodes')
@@ -195,18 +163,7 @@ export default function NodeList() {
 
       if (error) throw error
 
-      if (deletingNode.parent_id === null) {
-        // We deleted a tab
-        if (selectedTabId === deletingNode.id) {
-          setSelectedTabId(null)
-        }
-        await fetchTabs()
-      } else {
-        // We deleted a child
-        if (selectedTabId) {
-          await fetchChildren(selectedTabId)
-        }
-      }
+      await fetchNodes(currentParentId)
 
       setIsDeleteModalOpen(false)
       setDeletingNode(null)
@@ -219,30 +176,22 @@ export default function NodeList() {
     }
   }
 
-  const handleAddTab = () => {
-    setAddModalParentId(null)
-    setAddModalOrder(tabs.length)
-    setIsAddModalOpen(true)
-  }
-
-  const handleAddChild = () => {
-    if (!selectedTabId) return
-    setAddModalParentId(selectedTabId)
-    setAddModalOrder(children.length)
+  const handleAddNode = () => {
+    setAddModalParentId(currentParentId)
+    setAddModalOrder(nodes.length)
     setIsAddModalOpen(true)
   }
 
   const handleAddSuccess = () => {
-    if (addModalParentId === null) {
-      fetchTabs()
-    } else {
-      fetchChildren(addModalParentId)
-    }
+    fetchNodes(currentParentId)
     router.refresh()
   }
 
-  if (isLoadingTabs) {
-    return <div className={styles.loadingState}>로딩 중...</div>
+  const handleMoveSuccess = () => {
+    fetchNodes(currentParentId)
+    setIsMoveModalOpen(false)
+    setMovingNode(null)
+    router.refresh()
   }
 
   return (
@@ -251,174 +200,133 @@ export default function NodeList() {
         <h1 className={styles.title}>노드 관리</h1>
       </div>
 
-      <div className={styles.tabsContainer}>
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            className={`${styles.tab} ${selectedTabId === tab.id ? styles.active : ''}`}
-            onClick={() => setSelectedTabId(tab.id)}
-          >
-            {tab.name}
-            {tab.status === 'draft' && ' (초안)'}
-          </button>
+      <div className={styles.breadcrumb}>
+        <button 
+          className={`${styles.breadcrumbItem} ${breadcrumb.length === 0 ? styles.breadcrumbCurrent : ''}`}
+          onClick={() => handleBreadcrumbClick(-1)}
+        >
+          🏠 홈
+        </button>
+        {breadcrumb.map((item, index) => (
+          <React.Fragment key={item.id}>
+            <span className={styles.breadcrumbSeparator}>/</span>
+            <button
+              className={`${styles.breadcrumbItem} ${index === breadcrumb.length - 1 ? styles.breadcrumbCurrent : ''}`}
+              onClick={() => handleBreadcrumbClick(index)}
+            >
+              {item.name}
+            </button>
+            {index === breadcrumb.length - 1 && (
+              <Link href={`/admin/nodes/${item.id}`} className={styles.breadcrumbEdit} title="편집">
+                <Edit2 size={14} />
+              </Link>
+            )}
+          </React.Fragment>
         ))}
-        <button className={styles.tabAddBtn} onClick={handleAddTab} title="탭 추가">
-          <FolderPlus size={18} /> 탭 추가
+      </div>
+
+      <div className={styles.header} style={{ marginBottom: '8px' }}>
+        <h2 className={styles.title} style={{ fontSize: '18px' }}>
+          {breadcrumb.length > 0 ? `${breadcrumb[breadcrumb.length - 1].name}의 하위 노드` : '최상위 노드'}
+        </h2>
+        <button className={styles.addBtn} onClick={handleAddNode}>
+          <FilePlus size={18} />
+          <span>노드 추가</span>
         </button>
       </div>
 
-      {/* 선택된 탭 관리 액션 바 */}
-      {selectedTabId && (() => {
-        const selectedTab = tabs.find(t => t.id === selectedTabId)
-        const selectedIndex = tabs.findIndex(t => t.id === selectedTabId)
-        if (!selectedTab) return null
-        return (
-          <div className={styles.tabActionBar}>
-            <span className={styles.tabActionLabel}>탭: <strong>{selectedTab.name}</strong></span>
-            <div className={styles.tabActionButtons}>
-              <button
-                className={styles.tabActionBtn}
-                onClick={() => handleOrderChange(selectedIndex, 'up', tabs, true)}
-                disabled={selectedIndex === 0}
-                title="왼쪽으로"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                className={styles.tabActionBtn}
-                onClick={() => handleOrderChange(selectedIndex, 'down', tabs, true)}
-                disabled={selectedIndex === tabs.length - 1}
-                title="오른쪽으로"
-              >
-                <ChevronRight size={16} />
-              </button>
-              <button
-                className={styles.tabActionBtn}
-                onClick={() => handleStatusToggle(selectedTab)}
-                title={selectedTab.status === 'draft' ? '공개하기' : '초안으로'}
-              >
-                {selectedTab.status === 'draft' ? <ToggleLeft size={16} /> : <ToggleRight size={16} />}
-                <span>{selectedTab.status === 'draft' ? '공개' : '초안'}</span>
-              </button>
-              <Link
-                href={`/admin/nodes/${selectedTab.id}`}
-                className={styles.tabActionBtn}
-                title="편집"
-              >
-                <Edit2 size={16} />
-                <span>편집</span>
-              </Link>
-              <button
-                className={`${styles.tabActionBtn} ${styles.tabDeleteBtn}`}
-                onClick={() => {
-                  setDeletingNode(selectedTab)
-                  setIsDeleteModalOpen(true)
-                }}
-                title="삭제"
-              >
-                <Trash2 size={16} />
-                <span>삭제</span>
-              </button>
-            </div>
-          </div>
-        )
-      })()}
-
-      {tabs.length > 0 && selectedTabId && (
-        <div className={styles.listContainer}>
-          <div className={styles.header} style={{ marginBottom: '8px' }}>
-            <h2 className={styles.title} style={{ fontSize: '18px' }}>자식 노드 목록</h2>
-            <button className={styles.addBtn} onClick={handleAddChild}>
-              <FilePlus size={18} />
-              <span>자식 노드 추가</span>
-            </button>
-          </div>
-
-          {isLoadingChildren ? (
-            <div className={styles.loadingState}>자식 노드 로딩 중...</div>
-          ) : children.length === 0 ? (
-            <div className={styles.emptyState}>
-              <FilePlus size={48} className={styles.emptyIcon} />
-              <h2 className={styles.emptyTitle}>자식 노드가 없습니다</h2>
-              <p className={styles.emptyText}>하위 카테고리나 상세 페이지를 추가해보세요.</p>
-              <button className={styles.addBtn} onClick={handleAddChild}>
-                자식 노드 추가하기
-              </button>
-            </div>
-          ) : (
-            children.map((child, index) => (
-              <div key={child.id} className={styles.listItem}>
-                <div className={styles.orderControls}>
-                  <button 
-                    className={styles.orderBtn} 
-                    onClick={() => handleOrderChange(index, 'up', children, false)}
-                    disabled={index === 0}
-                  >
-                    <ChevronUp size={20} />
-                  </button>
-                  <button 
-                    className={styles.orderBtn} 
-                    onClick={() => handleOrderChange(index, 'down', children, false)}
-                    disabled={index === children.length - 1}
-                  >
-                    <ChevronDown size={20} />
-                  </button>
-                </div>
-                
-                {child.image_url ? (
-                  <Image src={child.image_url} alt={child.name} width={40} height={40} style={{ borderRadius: 4, objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ width: 40, height: 40, borderRadius: 4, backgroundColor: 'var(--admin-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--admin-text-muted)' }}>
-                    <ImageIcon size={20} />
-                  </div>
-                )}
-                
-                <div className={styles.itemContent}>
-                  <h3 className={styles.itemName}>
-                    <Link href={`/admin/nodes/${child.id}`} className={styles.itemLink}>
-                      {child.name}
-                    </Link>
-                    <span className={styles.nodeTypeBadge}>{child.type}</span>
-                    <StatusBadge 
-                      status={child.status as 'draft' | 'published'} 
-                      onClick={() => handleStatusToggle(child)} 
-                    />
-                  </h3>
-                  <div className={styles.itemMeta}>
-                    <span className={styles.itemSlug}>/{child.slug}</span>
-                  </div>
-                </div>
-
-                <div className={styles.itemActions}>
-                  <Link 
-                    href={`/admin/nodes/${child.id}`}
-                    className={styles.actionBtn}
-                    title="편집"
-                  >
-                    <Edit2 size={18} />
-                  </Link>
-                  <button 
-                    className={`${styles.actionBtn} ${styles.deleteBtn}`}
-                    onClick={() => {
-                      setDeletingNode(child)
-                      setIsDeleteModalOpen(true)
-                    }}
-                    title="삭제"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      )}
-
-      {tabs.length === 0 && (
+      {isLoading ? (
+        <div className={styles.loadingState}>로딩 중...</div>
+      ) : nodes.length === 0 ? (
         <div className={styles.emptyState}>
           <FolderPlus size={48} className={styles.emptyIcon} />
-          <h2 className={styles.emptyTitle}>생성된 탭이 없습니다</h2>
-          <p className={styles.emptyText}>최상위 카테고리(탭)를 먼저 추가해주세요.</p>
+          <h2 className={styles.emptyTitle}>노드가 없습니다</h2>
+          <p className={styles.emptyText}>
+            {breadcrumb.length > 0 ? '하위 노드를 추가해보세요.' : '최상위 노드(탭)를 추가해주세요.'}
+          </p>
+          <button className={styles.addBtn} onClick={handleAddNode}>
+            노드 추가하기
+          </button>
+        </div>
+      ) : (
+        <div className={styles.listContainer}>
+          {nodes.map((node, index) => (
+            <div key={node.id} className={styles.listItem}>
+              <div className={styles.orderControls}>
+                <button 
+                  className={styles.orderBtn} 
+                  onClick={() => handleOrderChange(index, 'up')}
+                  disabled={index === 0}
+                >
+                  <ChevronUp size={20} />
+                </button>
+                <button 
+                  className={styles.orderBtn} 
+                  onClick={() => handleOrderChange(index, 'down')}
+                  disabled={index === nodes.length - 1}
+                >
+                  <ChevronDown size={20} />
+                </button>
+              </div>
+              
+              {node.image_url ? (
+                <Image src={node.image_url} alt={node.name} width={40} height={40} style={{ borderRadius: 4, objectFit: 'cover' }} />
+              ) : (
+                <div style={{ width: 40, height: 40, borderRadius: 4, backgroundColor: 'var(--admin-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--admin-text-muted)' }}>
+                  <ImageIcon size={20} />
+                </div>
+              )}
+              
+              <div className={styles.itemContent}>
+                <h3 className={styles.itemName}>
+                  {node.type === 'listing' ? (
+                    <button className={styles.drillDownBtn} onClick={() => handleDrillDown(node)}>
+                      📁 {node.name}
+                    </button>
+                  ) : (
+                    <Link href={`/admin/nodes/${node.id}`} className={styles.itemLink}>
+                      {node.name}
+                    </Link>
+                  )}
+                  <span className={styles.nodeTypeBadge}>{node.type}</span>
+                  <StatusBadge status={node.status as 'draft' | 'published'} onClick={() => handleStatusToggle(node)} />
+                </h3>
+                <div className={styles.itemMeta}>
+                  <span className={styles.itemSlug}>/{node.slug}</span>
+                </div>
+              </div>
+
+              <div className={styles.itemActions}>
+                <button 
+                  className={styles.actionBtn}
+                  onClick={() => {
+                    setMovingNode(node)
+                    setIsMoveModalOpen(true)
+                  }}
+                  title="이동"
+                >
+                  <FolderInput size={18} />
+                </button>
+                <Link 
+                  href={`/admin/nodes/${node.id}`}
+                  className={styles.actionBtn}
+                  title="편집"
+                >
+                  <Edit2 size={18} />
+                </Link>
+                <button 
+                  className={`${styles.actionBtn} ${styles.deleteBtn}`}
+                  onClick={() => {
+                    setDeletingNode(node)
+                    setIsDeleteModalOpen(true)
+                  }}
+                  title="삭제"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -439,6 +347,13 @@ export default function NodeList() {
         onCancel={() => setIsDeleteModalOpen(false)}
         isDestructive={true}
         isLoading={isDeleting}
+      />
+
+      <NodeMoveModal
+        isOpen={isMoveModalOpen}
+        node={movingNode}
+        onClose={() => setIsMoveModalOpen(false)}
+        onSuccess={handleMoveSuccess}
       />
     </div>
   )

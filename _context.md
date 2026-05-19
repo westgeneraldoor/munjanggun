@@ -1,32 +1,31 @@
 # 프로젝트 컨텍스트
-📅 마지막 업데이트: 2026-04-28
-📋 마지막 오더: #018
+📅 마지막 업데이트: 2026-05-06
+📋 마지막 오더: #050 (ScrollToTop + CTA홈버튼 + 모바일브레드크럼)
 
 ## 현재 상태
-V2 Phase 2-1 완료. 어드민 노드 관리(목록/CRUD/탭관리) 동작 확인. Supabase showroom 스키마 Exposed + GRANT 완료. 노드 편집 폼(Phase 2-2) 진입 대기.
+**Phase 5-B 완료** → 폴리싱 진행 중
 
 ## 최근 완료 (최대 5건)
-- #018 V2 Phase 2-1: 노드 목록 + CRUD ✅ (4/5) — 탭관리+자식CRUD+정렬 (2026-04-28)
-- #017 V2 Phase 1-2: 데이터 마이그레이션 ✅ (5/5) — 25노드+126갤러리 (2026-04-28)
-- #016 V2 Phase 1-1: showroom 스키마 생성 ✅ (5/5) — 6테이블+RLS+함수 (2026-04-28)
-- #015 V2 Phase 0: 기반 설정 ✅ (5/5) — 브랜치+디렉토리+placeholder (2026-04-28)
-- V2 PRD + 디자인시스템 확정 (2026-04-28)
+- #052 Phase 4 안전망 및 접근성 추가 ✅ (2026-05-19)
+- #051 CTA바 울트라미니멀 리디자인+모바일브레드크럼 골드통일 ✅5/5 (2026-05-06)
+- #051+ 그리드: 4개=CSS Grid 2열(3열 카드사이즈 공식 그대로 grid-template-columns에 적용, center) ✅ (2026-05-06)
+- #050 ScrollToTop+CTA홈버튼+모바일브레드크럼 ⚠️4.5/5 통과 (2026-05-06)
+- #049 공유요소전환 제거+텍스트only 히어로 ✅5/5 통과 (2026-05-02)
 
 ## 핵심 결정 (최대 5개)
-- Supabase Exposed schemas: showroom 추가 필수 | 사유: PostgREST 406 방지
-- GRANT 패턴: 공식 문서 전체 권한 부여 (anon/authenticated/service_role) | 사유: 커스텀 스키마 접근
-- V2 브랜치 전략: v2-cms 브랜치 분리 | 사유: V1 프로덕션 실사용 중
-- DB 마이그레이션: UUID 보존 전략 | 사유: 매핑 테이블 불필요
-- Supabase 클라이언트: 모든 쿼리에 .schema('showroom') 명시 필수 | 사유: 멀티스키마 환경
+- **Phase 5-B = View Transitions API** | Next.js 16 실험적 지원, Progressive Enhancement
+- **카드 그리드: 4=3열, 5~6=3열, 7+=4열** | 마지막줄 1개 방지
+- **공유요소전환 제거, 페이드+슬라이드 통일** | 카드(라운드)→히어로(직각) 형태차이로 부자연스러움
+- **ScrollToTop.module.css 미정의 토큰** | `--color-surface-elevated-hover` 다음 폴리싱 때 수정
+- **총괄은 직접 코드 수정 안 한다** | 검수→기록→오더 순서 필수
 
-## 다음 할 일 (우선순위 순)
-1. 🔄 **Phase 2-2: 노드 편집 폼 + 히어로/갤러리**
-2. ⬜ Phase 3: 고객 Catch-all 라우팅
-
-## 현재 이슈
-- 노드 편집 페이지(/admin/nodes/[id]) 미구현 → Phase 2-2에서 구현 예정
+## 다음 할 일
+1. 🟡 Phase 4 잔여 — EVAL-01~21 전수 검사 / 카카오톡 인앱 테스트 / 이미지 로딩 성능
+2. 🟡 Phase 5-C 검토 — 소재 인터랙션 or 추가 폴리싱
+3. 🟢 ScrollToTop 호버 토큰 수정 (비치명적, 폴리싱 합산)
 
 ## 교훈 & 주의사항
-- ⚠️ Supabase 커스텀 스키마 사용 시 반드시: (1) Dashboard Exposed schemas 추가 (2) GRANT 전체 부여 (3) 코드에서 .schema() 명시
-- ⚠️ 빌드 성공 ≠ 동작 성공. 인프라 설정 누락은 빌드에 안 잡힘
-- ⚠️ 총괄 오더에 인프라 체크리스트 필수 포함할 것
+- ⚠️ viewTransition은 experimental — 실패 시 폴백 자연스러움
+- ⚠️ 카카오톡 인앱: Android=Chrome(OK), iOS=Safari 18+(OK)
+- ⚠️ 미정의 CSS 변수는 빌드에서 안 잡힘 — 수동 확인 필요
+- ⚠️ **CSS Grid 열 사이즈 = 기존 width 공식 직접 대입** — max-width/퍼센트 그리드 제한은 뷰포트별 깨짐. `grid-template-columns: repeat(N, calc(...))` + `justify-content: center`가 정답

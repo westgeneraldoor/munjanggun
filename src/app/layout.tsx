@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ViewTransition } from 'react';
 import { Playfair_Display } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
@@ -14,7 +15,7 @@ const playfairDisplay = Playfair_Display({
 export async function generateMetadata(): Promise<Metadata> {
   const supabase = await createClient()
   const { data: siteSettings } = await supabase
-    .schema('colorbook')
+    .schema('showroom')
     .from('site_settings')
     .select('site_title, site_description, og_image_url')
     .single()
@@ -40,7 +41,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={playfairDisplay.variable}>
-      <body>{children}</body>
+      <body>
+        <ViewTransition>
+          {children}
+        </ViewTransition>
+      </body>
     </html>
   );
 }

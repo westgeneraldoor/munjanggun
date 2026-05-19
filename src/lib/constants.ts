@@ -8,3 +8,7 @@ export const IMAGE_COMPRESSION = {
 } as const;
 
 export const PREVIEW_TOKEN_EXPIRY_HOURS = 72;
+
+export const EMPTY_STATE_TITLE = '현재 준비 중입니다.';
+export const EMPTY_STATE_SUBTITLE = '곧 만나보세요!';
+export const GALLERY_SECTION_TITLE = '갤러리';

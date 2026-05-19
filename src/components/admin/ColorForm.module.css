@@ -272,3 +272,13 @@
 .copyBtn:hover {
   background-color: var(--admin-accent-hover);
 }
+
+.inputError {
+  border-color: #ef4444 !important;
+}
+
+.slugWarning {
+  font-size: var(--text-xs);
+  color: #ef4444;
+  margin-top: var(--space-1);
+}

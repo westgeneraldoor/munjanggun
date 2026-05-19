@@ -1,0 +1,144 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-4);
+}
+
+.modal {
+  background-color: var(--admin-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--admin-shadow-lg);
+  padding: var(--space-6);
+  width: 100%;
+  max-width: 450px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: modal-fade-in var(--transition-fast);
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--admin-text);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.message {
+  font-size: var(--text-base);
+  color: var(--admin-text-sub);
+  margin: 0 0 var(--space-4) 0;
+  line-height: var(--leading-relaxed);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-y: auto;
+  margin-bottom: var(--space-6);
+  padding-right: var(--space-2);
+}
+
+.listItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--admin-border);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.listItem:hover {
+  background-color: var(--admin-surface-hover);
+}
+
+.listItem.selected {
+  background-color: rgba(var(--admin-accent-rgb), 0.1);
+  border-color: var(--admin-accent);
+}
+
+.listItem input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.itemName {
+  font-size: var(--text-base);
+  color: var(--admin-text);
+  font-weight: var(--font-medium);
+}
+
+.itemDesc {
+  font-size: var(--text-sm);
+  color: var(--admin-text-muted);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  margin-top: auto;
+}
+
+.cancelBtn {
+  height: 40px;
+  padding: 0 var(--space-6);
+  border: none;
+  background-color: transparent;
+  color: var(--admin-text-sub);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.cancelBtn:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.04);
+  color: var(--admin-text);
+}
+
+.confirmBtn {
+  height: 40px;
+  padding: 0 var(--space-6);
+  border: none;
+  background-color: var(--admin-accent);
+  color: var(--admin-text);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.confirmBtn:hover:not(:disabled) {
+  background-color: var(--admin-accent-hover);
+}
+
+.cancelBtn:disabled,
+.confirmBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

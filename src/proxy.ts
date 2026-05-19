@@ -41,7 +41,7 @@ export async function proxy(request: NextRequest) {
 
   // If user is already logged in, they shouldn't access the login page
   if (isLoginRoute && user) {
-    return NextResponse.redirect(new URL('/admin/collections', request.url))
+    return NextResponse.redirect(new URL('/admin/nodes', request.url))
   }
 
   return supabaseResponse
