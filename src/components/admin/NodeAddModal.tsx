@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { X } from 'lucide-react'
 import { createShowroomClient } from '@/lib/supabase/client'
 import { logError } from '@/lib/logger'
@@ -15,42 +15,38 @@ interface NodeAddModalProps {
   displayOrder: number
 }
 
-export default function NodeAddModal({ isOpen, onClose, onSuccess, parentId, displayOrder }: NodeAddModalProps) {
+type NodeAddModalContentProps = Omit<NodeAddModalProps, 'isOpen'>
+
+export default function NodeAddModal(props: NodeAddModalProps) {
+  if (!props.isOpen) return null
+
+  return (
+    <NodeAddModalContent
+      key={`${props.parentId ?? 'root'}-${props.displayOrder}`}
+      onClose={props.onClose}
+      onSuccess={props.onSuccess}
+      parentId={props.parentId}
+      displayOrder={props.displayOrder}
+    />
+  )
+}
+
+function NodeAddModalContent({ onClose, onSuccess, parentId, displayOrder }: NodeAddModalContentProps) {
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
-  const [type, setType] = useState('listing')
+  const [type, setType] = useState(parentId === null ? 'listing' : 'detail')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const supabase = createShowroomClient()
 
-  // slug 자동 생성 로직
-  useEffect(() => {
-    if (name) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSlug(generateSlug(name))
-    } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSlug('')
-    }
-  }, [name])
-
-  // 모달 열릴 때 초기화
-  useEffect(() => {
-    if (isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setName('')
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSlug('')
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setType(parentId === null ? 'listing' : 'detail')
-    }
-  }, [isOpen, parentId])
-
-  if (!isOpen) return null
+  const handleNameChange = (value: string) => {
+    setName(value)
+    setSlug(value ? generateSlug(value) : '')
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!name.trim() || !slug.trim()) {
       alert('이름과 슬러그를 입력해주세요.')
       return
@@ -63,7 +59,7 @@ export default function NodeAddModal({ isOpen, onClose, onSuccess, parentId, dis
     }
 
     setIsSubmitting(true)
-    
+
     try {
       const { error } = await supabase
         .schema('showroom')
@@ -72,21 +68,20 @@ export default function NodeAddModal({ isOpen, onClose, onSuccess, parentId, dis
           parent_id: parentId,
           name: name.trim(),
           slug: slug.trim(),
-          type: parentId === null ? 'listing' : type, // 최상위는 listing 고정
+          type: parentId === null ? 'listing' : type,
           display_order: displayOrder,
-          status: 'draft', // 기본값 초안
-          hero_enabled: false
+          status: 'draft',
+          hero_enabled: false,
         })
 
       if (error) {
-        // Unique constraint violation (code 23505) for slug
         if (error.code === '23505') {
           alert('이미 존재하는 슬러그입니다. 다른 슬러그를 입력해주세요.')
           throw error
         }
         throw error
       }
-      
+
       onSuccess()
       onClose()
     } catch (err: unknown) {
@@ -108,7 +103,7 @@ export default function NodeAddModal({ isOpen, onClose, onSuccess, parentId, dis
             <X size={20} />
           </button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
             <label htmlFor="name" className={styles.label}>이름 *</label>
@@ -116,7 +111,7 @@ export default function NodeAddModal({ isOpen, onClose, onSuccess, parentId, dis
               id="name"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => handleNameChange(e.target.value)}
               className={styles.input}
               placeholder="예: 싱크대, 올리브그린"
               required
@@ -158,16 +153,16 @@ export default function NodeAddModal({ isOpen, onClose, onSuccess, parentId, dis
           )}
 
           <div className={styles.actions}>
-            <button 
-              type="button" 
-              className={styles.cancelBtn} 
+            <button
+              type="button"
+              className={styles.cancelBtn}
               onClick={onClose}
               disabled={isSubmitting}
             >
               취소
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className={styles.submitBtn}
               disabled={isSubmitting || (slug ? !validateSlug(slug).valid : true)}
             >

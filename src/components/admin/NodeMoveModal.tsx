@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { createShowroomClient } from '@/lib/supabase/client'
 import { logError } from '@/lib/logger'
 import styles from './NodeMoveModal.module.css'
@@ -12,74 +12,95 @@ type SimpleNode = {
   type: string
 }
 
+type MovableNode = {
+  id: string
+  name: string
+  parent_id: string | null
+}
+
 interface NodeMoveModalProps {
   isOpen: boolean
-  node: { id: string; name: string; parent_id: string | null } | null
+  node: MovableNode | null
   onClose: () => void
   onSuccess: () => void
 }
 
-export default function NodeMoveModal({ isOpen, node, onClose, onSuccess }: NodeMoveModalProps) {
-  const [targetParentId, setTargetParentId] = useState<string | null | undefined>(undefined)
+type NodeMoveModalContentProps = Omit<NodeMoveModalProps, 'isOpen'> & {
+  node: MovableNode
+}
+
+export default function NodeMoveModal(props: NodeMoveModalProps) {
+  if (!props.isOpen || !props.node) return null
+
+  return (
+    <NodeMoveModalContent
+      key={props.node.id}
+      node={props.node}
+      onClose={props.onClose}
+      onSuccess={props.onSuccess}
+    />
+  )
+}
+
+function NodeMoveModalContent({ node, onClose, onSuccess }: NodeMoveModalContentProps) {
+  const [targetParentId, setTargetParentId] = useState<string | null | undefined>(node.parent_id)
   const [candidates, setCandidates] = useState<SimpleNode[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-  const supabase = createShowroomClient()
-
-  const fetchCandidates = async () => {
-    setIsLoading(true)
-    try {
-      const { data, error } = await supabase
-        .schema('showroom')
-        .from('nodes')
-        .select('id, name, parent_id, type')
-        .eq('type', 'listing')
-
-      if (error) throw error
-
-      if (data && node) {
-        // 순환 참조 방지
-        const getDescendantIds = (nodeId: string, allNodes: SimpleNode[]): string[] => {
-          const children = allNodes.filter(n => n.parent_id === nodeId)
-          return [nodeId, ...children.flatMap(c => getDescendantIds(c.id, allNodes))]
-        }
-
-        const descendants = getDescendantIds(node.id, data)
-        const validCandidates = data.filter(n => !descendants.includes(n.id))
-        setCandidates(validCandidates)
-      }
-    } catch (err) {
-      logError('이동 가능한 노드 목록 로딩 실패:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const supabase = useMemo(() => createShowroomClient(), [])
 
   useEffect(() => {
-    if (isOpen && node) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTargetParentId(node.parent_id)
-      fetchCandidates()
-    } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCandidates([])
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTargetParentId(undefined)
+    let cancelled = false
+
+    const fetchCandidates = async () => {
+      setIsLoading(true)
+      try {
+        const { data, error } = await supabase
+          .schema('showroom')
+          .from('nodes')
+          .select('id, name, parent_id, type')
+          .eq('type', 'listing')
+
+        if (error) throw error
+
+        if (data && !cancelled) {
+          const getDescendantIds = (nodeId: string, allNodes: SimpleNode[]): string[] => {
+            const children = allNodes.filter(n => n.parent_id === nodeId)
+            return [nodeId, ...children.flatMap(c => getDescendantIds(c.id, allNodes))]
+          }
+
+          const descendants = getDescendantIds(node.id, data)
+          const validCandidates = data.filter(n => !descendants.includes(n.id))
+          setCandidates(validCandidates)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          logError('이동 가능한 노드 목록 로딩 실패:', err)
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, node])
+
+    void fetchCandidates()
+
+    return () => {
+      cancelled = true
+    }
+  }, [node.id, supabase])
 
   const handleConfirm = async () => {
-    if (!node || targetParentId === undefined) return
+    if (targetParentId === undefined) return
     setIsSaving(true)
 
     try {
       const showroomDb = supabase.schema('showroom')
 
-      // 목적지의 자식 수 조회 (display_order 결정)
       let countQuery = showroomDb.from('nodes').select('*', { count: 'exact', head: true })
-      
+
       if (targetParentId === null) {
         countQuery = countQuery.is('parent_id', null)
       } else {
@@ -90,12 +111,11 @@ export default function NodeMoveModal({ isOpen, node, onClose, onSuccess }: Node
 
       if (countError) throw countError
 
-      // 이동
       const { error: updateError } = await showroomDb
         .from('nodes')
         .update({
           parent_id: targetParentId,
-          display_order: count || 0
+          display_order: count || 0,
         })
         .eq('id', node.id)
 
@@ -110,8 +130,6 @@ export default function NodeMoveModal({ isOpen, node, onClose, onSuccess }: Node
     }
   }
 
-  if (!isOpen || !node) return null
-
   return (
     <div className={styles.overlay} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div className={styles.modal}>
@@ -119,7 +137,6 @@ export default function NodeMoveModal({ isOpen, node, onClose, onSuccess }: Node
         <p className={styles.message}>&apos;{node.name}&apos; 노드를 어디로 이동할까요?</p>
 
         <div className={styles.list}>
-          {/* 최상위(탭) 옵션 */}
           <label className={`${styles.listItem} ${targetParentId === null ? styles.selected : ''}`}>
             <input
               type="radio"
@@ -129,7 +146,7 @@ export default function NodeMoveModal({ isOpen, node, onClose, onSuccess }: Node
               disabled={node.parent_id === null}
             />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div className={styles.itemName}>📌 최상위 (탭)</div>
+              <div className={styles.itemName}>최상위 (탭)</div>
               {node.parent_id === null && <div className={styles.itemDesc}>(현재 위치)</div>}
             </div>
           </label>

@@ -30,15 +30,9 @@ export default function ImageLightbox({
   const [swipeOffset, setSwipeOffset] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
   const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null)
-  const [imgLoaded, setImgLoaded] = useState(false)
+  const [loadedIndex, setLoadedIndex] = useState<number | null>(null)
 
   const total = photos.length
-
-  // 사진 변경 시 로드 상태 리셋
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setImgLoaded(false)
-  }, [currentIndex])
 
   // 슬라이드 애니메이션 종료 후 클래스 제거
   useEffect(() => {
@@ -144,6 +138,7 @@ export default function ImageLightbox({
 
   const currentPhoto = photos[currentIndex]
   if (!currentPhoto) return null
+  const isCurrentImageLoaded = loadedIndex === currentIndex
 
   // 슬라이드 애니메이션 클래스 결정
   const slideClass = slideDirection === 'left'
@@ -181,8 +176,8 @@ export default function ImageLightbox({
           fill
           quality={85}
           sizes="100vw"
-          className={`${styles.image} ${imgLoaded ? styles.imageLoaded : ''}`}
-          onLoad={() => setImgLoaded(true)}
+          className={`${styles.image} ${isCurrentImageLoaded ? styles.imageLoaded : ''}`}
+          onLoad={() => setLoadedIndex(currentIndex)}
         />
       </div>
 

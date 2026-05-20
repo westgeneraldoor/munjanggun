@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local/generated artifacts that are not application source.
+    ".vercel/**",
+    ".agents/**",
+    ".claude/**",
+    ".gemini/**",
+    "promo-video/**",
+    "lint_output.txt",
   ]),
 ]);
 

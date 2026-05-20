@@ -8,13 +8,120 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: rgba(245, 158, 11, 0.9); /* warning color */
+  background-color: color-mix(in srgb, var(--color-warning) 90%, transparent);
   color: var(--color-text);
-  padding: 12px 20px;
+  padding: var(--space-3) var(--space-5);
   text-align: center;
   font-size: var(--text-sm);
   font-weight: var(--font-bold);
   backdrop-filter: blur(8px);
+}
+
+.previewContent {
+  width: min(100%, 800px);
+  margin: 0 auto;
+  padding: var(--space-6);
+  color: var(--color-text);
+}
+
+.previewTitle {
+  font-size: var(--text-3xl);
+  line-height: var(--leading-tight);
+  margin-bottom: var(--space-2);
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.metaBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: var(--space-1) var(--space-2);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-sub);
+  font-size: var(--text-sm);
+}
+
+.mediaBlock {
+  margin-bottom: var(--space-6);
+}
+
+.sectionTitle {
+  font-size: var(--text-lg);
+  line-height: var(--leading-snug);
+  margin-bottom: var(--space-3);
+}
+
+.imageFrame,
+.portraitFrame,
+.squareFrame {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.imageFrame {
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md);
+}
+
+.portraitFrame {
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-sm);
+}
+
+.squareFrame {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+}
+
+.previewImage {
+  object-fit: cover;
+}
+
+.tagline {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  line-height: var(--leading-snug);
+  margin-bottom: var(--space-2);
+}
+
+.description {
+  margin-bottom: var(--space-6);
+  color: var(--color-text-sub);
+  line-height: var(--leading-relaxed);
+  white-space: pre-wrap;
+}
+
+.heroGrid,
+.galleryGrid {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.heroGrid {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.galleryGrid {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.childList {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: var(--space-5);
+  color: var(--color-text-sub);
+  line-height: var(--leading-relaxed);
 }
 
 .expiredContainer {

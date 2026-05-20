@@ -46,7 +46,7 @@ export default function ImageUploader({
 
   // 이미지 리사이즈 & 압축 (브라우저 메모리 절약 + 업로드 속도 개선)
   const compressImage = (file: File, maxDimension = 1600, quality = 0.8): Promise<File> => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       // 이미 작은 파일은 압축 불필요 (500KB 이하)
       if (file.size <= 500 * 1024) {
         resolve(file)

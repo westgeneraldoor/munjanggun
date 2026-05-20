@@ -65,6 +65,7 @@ export interface Database {
           card_text_position?: string | null
           updated_at?: string
         }
+        Relationships: []
       }
       nodes: {
         Row: {
@@ -139,6 +140,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       hero_media: {
         Row: {
@@ -171,6 +173,7 @@ export interface Database {
           display_order?: number
           created_at?: string
         }
+        Relationships: []
       }
       site_hero_media: {
         Row: {
@@ -200,6 +203,7 @@ export interface Database {
           display_order?: number
           created_at?: string
         }
+        Relationships: []
       }
       gallery_photos: {
         Row: {
@@ -226,6 +230,7 @@ export interface Database {
           display_order?: number
           created_at?: string
         }
+        Relationships: []
       }
       preview_tokens: {
         Row: {
@@ -249,6 +254,14 @@ export interface Database {
           expires_at?: string
           created_at?: string
         }
+        Relationships: []
+      }
+    }
+    Views: Record<string, never>
+    Functions: {
+      get_preview_payload: {
+        Args: { p_token: string }
+        Returns: Json
       }
     }
   }

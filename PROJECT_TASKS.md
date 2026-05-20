@@ -1,121 +1,136 @@
-# 문장군 디지털 쇼룸 V2 — 전체 태스크 현황
-📅 마지막 업데이트: 2026-04-30
+# 문장군 디지털 쇼룸 V2 작업 현황
 
-> V1 히스토리는 `_archive.md`에 보관
+마지막 업데이트: 2026-05-20
+현재 기준 브랜치: `v2-cms`
+현재 정리 브랜치: `codex-v2-cms-cleanup`
 
-## V2 Phase 0: 기반 설정 ✅
-- [x] Git 브랜치 `v2-cms` 생성 (main 보호) ✅ 오더 #015
-- [x] package.json 수정 (sharp→dependencies, 프로젝트명) ✅ 오더 #015
-- [x] 디렉토리 구조 추가 (PRD 5.4 — v1 파일 유지, 병렬 추가) ✅ 오더 #015
-- [x] constants.ts 생성 (예약 slug, 압축 설정, 최대 깊이) ✅ 오더 #015
-- [x] catch-all [...slugs] 라우트 placeholder ✅ 오더 #015
-- [x] 어드민 /nodes/ 라우트 placeholder ✅ 오더 #015
+> V1 디지털 컬러북 히스토리는 `_archive.md`에 보관한다.
 
-## V2 Phase 1: 데이터베이스 & 인증
-- [x] showroom 스키마 생성 (nodes, hero_media, site_hero_media, gallery_photos, preview_tokens, site_settings) ✅ 오더 #016
-- [x] `is_node_visible()` PostgreSQL 함수 (WITH RECURSIVE CTE) ✅ 오더 #016
-- [x] 제약 조건 + 인덱스 (slug 유니크, 타입/상태 CHECK) ✅ 오더 #016
-- [x] RLS 정책 (anon=is_node_visible, authenticated=전체) ✅ 오더 #016
-- [x] TypeScript 타입 재생성 ✅ 오더 #016
-- [x] V1→V2 데이터 마이그레이션 스크립트 [F-012] ✅ 오더 #017
-- [x] 마이그레이션 실행 + 검증 (25 nodes, 126 gallery_photos) ✅ 오더 #017
+## 기준선 정리
 
-## V2 Phase 2: 어드민 CMS
-- [x] 어드민 레이아웃 + auth guard 리팩토링 [F-005] ✅ 오더 #018
-- [x] /admin → /admin/nodes 리다이렉트 ✅ 오더 #018
-- [x] 노드 관리 CRUD + 타입 전환 [F-006] ✅ 오더 #018
-- [x] 탭(최상위 노드) 정렬/상태/삭제 관리 ✅ 오더 #018 (핫픽스)
-- [x] Supabase Exposed schemas + GRANT 설정 ✅ 핫픽스 (PostgREST 406 해결)
-- [x] 노드 편집 폼 (이름/슬러그/설명/썸네일) [F-006] ✅ 오더 #019
-- [x] 히어로 설정 UI (복수 이미지/영상 + 문구) [F-006] ✅ 오더 #019
-- [x] 이미지 업로더 + 자동 압축 [F-007] ✅ V1 ImageUploader 재사용
-- [x] 갤러리 관리 (복수 업로드 + 정렬) [F-006] ✅ 오더 #019
-- [x] 미리보기 워크플로우 (토큰 URL) [F-008] ✅ 오더 #020
-- [x] 사이트 설정 (메인 히어로 포함) [F-011] ✅ 오더 #020
-- [x] 노드 부모 이동(Reparenting) 기능 ✅ 핫픽스 오더 #021
-- [x] NodeList 폴더 탐색기 리팩토링 (탭 바 → 빵크럼+드릴다운) ✅ 핫픽스 오더 #022
+- [x] `v2-cms`를 현재 운영 기준으로 확정
+- [x] V1/V2 문서 혼선 확인
+- [x] README를 V2 디지털 쇼룸 기준으로 교체
+- [x] `_context.md`를 2026-05-20 기준으로 갱신
+- [x] 생성 산출물과 실제 소스 기준을 분리
+- [x] Supabase advisor 기준 위험 항목 문서화
+- [x] lint/build 검증 완료
+- [x] Supabase preview token RLS 하드닝 마이그레이션 설계
+
+## V2 Phase 0: 기반 설정
+
+- [x] Git 브랜치 `v2-cms` 생성
+- [x] package.json 정리
+- [x] V2 디렉터리 구조 추가
+- [x] constants.ts 생성
+- [x] catch-all `[...slugs]` 라우트 기반 구성
+- [x] `/admin/nodes` 라우트 기반 구성
+
+## V2 Phase 1: 데이터베이스와 인증
+
+- [x] `showroom` 스키마 생성
+- [x] `nodes`, `hero_media`, `site_hero_media`, `gallery_photos`, `preview_tokens`, `site_settings` 구성
+- [x] `is_node_visible()` PostgreSQL 함수 구성
+- [x] slug/status 제약과 인덱스 구성
+- [x] RLS 기본 정책 구성
+- [x] TypeScript DB 타입 생성
+- [x] V1에서 V2로 데이터 마이그레이션
+- [x] 마이그레이션 검증
+- [x] `preview_tokens` anon 정책 최소 권한화
+- [x] FK 인덱스 누락 여부 재점검
+
+### Supabase advisor 메모
+
+- `showroom.preview_tokens`의 anon 직접 읽기 정책은 제거하고, 토큰 기반 미리보기는 `showroom.get_preview_payload(p_token)` RPC로 처리한다.
+- `showroom.is_node_visible(uuid)`는 exposed schema의 SECURITY DEFINER 함수이며 anon/authenticated에서 직접 RPC 실행 가능 경고가 있다. RLS 내부 전용이라면 직접 실행 권한을 회수하거나 private schema로 옮기는 방안을 검토한다.
+- `showroom.get_preview_payload(text)`는 의도적으로 노출된 SECURITY DEFINER RPC다. anon은 토큰 테이블을 직접 읽을 수 없고, 이 함수로 정확한 토큰 하나에 대한 preview payload만 받을 수 있다.
+- `showroom.gallery_photos.node_id`, `showroom.hero_media.node_id`, `showroom.preview_tokens.node_id`는 FK 인덱스 보강 대상이며 마이그레이션에 포함한다.
+
+## V2 Phase 2: 관리자 CMS
+
+- [x] 관리자 레이아웃과 auth guard
+- [x] `/admin`에서 `/admin/nodes` 리다이렉트
+- [x] 노드 CRUD와 상태 전환
+- [x] 최상위 노드 정렬과 삭제 관리
+- [x] Supabase exposed schema와 grant 설정
+- [x] 노드 편집 폼
+- [x] 히어로 설정 UI
+- [x] 이미지 업로드와 자동 정렬
+- [x] 갤러리 관리
+- [x] 미리보기 토큰 생성 워크플로우
+- [x] 사이트 설정 관리
+- [x] 노드 부모 이동 기능
+- [x] NodeList 헤더 탐색 리팩터링
 
 ## V2 Phase 3: 고객 페이지
-- [x] 메인 페이지 (히어로 + 탭 그리드) [F-001] ✅ 오더 #023
-- [x] catch-all [...slugs] 라우트 + 노드 해석 로직 [F-002, F-003] ✅ 오더 #023
-- [x] 범용 리스트 페이지 (선택적 히어로 + 카드 그리드) [F-002] ✅ 오더 #024
-- [x] 범용 상세 페이지 (히어로 + 정보 + 갤러리 + CTA) [F-003] ✅ 오더 #024
-- [x] 스크롤 애니메이션 [F-004] ✅ 오더 #024
-- [x] 라이트박스 [F-013] (v1 ImageLightbox 재사용) ✅ 오더 #024
-- [x] CTA 바 [F-010] ✅ V1 재사용
-- [x] 동적 OG 메타 태그 [F-009] ✅ 오더 #025
-- [x] 토큰 미리보기 페이지 ✅ 오더 #025
-- [x] V1 URL 301 리다이렉트 (next.config.ts) ✅ 오더 #025
-- [x] V1 전용 라우트/컴포넌트 정리 삭제 ✅ 오더 #025 (14개 파일)
 
-## V2 Phase 3 피드백 핫픽스
-- [x] 히어로 이미지 업로드 버그 (stale closure) ✅ 오더 #026
-- [x] 텍스트만 히어로 표시 ✅ 오더 #026
-- [x] 카드 부제(card_subtitle) 표시 ✅ 오더 #026
-- [x] 히어로 시스템 업그레이드 (슬라이드 롤링 + 모바일/데스크탑 분리 + 시간 설정) ✅ 오더 #027
-- [x] 데스크탑 반응형 + 유동 카드 그리드 ✅ 오더 #028
-- [x] 카드 텍스트 위치 옵션 (오버레이/아래) ✅ 오더 #029
-- [x] 카드 텍스트 위치 부모 일괄 적용 + 고객 브레드크럼 ✅ 오더 #030 + #030-fix
-- [x] 데스크탑 상세 좌우분할 + 히어로 텍스트 축소 + 브레드크럼 골드 ✅ 오더 #031
-- [x] 히어로 설정 UI 개편 (데스크탑/모바일 분리) + 전환 효과 (fade/slide) ✅ 오더 #032
-- [x] 히어로 DB 리팩토링(device_type) + 어드민 4섹션 UI + 영상→문구불가 ✅ 오더 #033
-- [x] 고객 무한루프 슬라이드 + 문구없으면 그라데이션/화살표 해제 + 새 DB 대응 ✅ 오더 #034
-- [x] 어드민 가드레일: Slug 한글 차단 + 히어로 활성화 보호 + placeholder 제거 ✅ 오더 #035
+- [x] 메인 페이지 V2 전환
+- [x] catch-all 라우트와 노드 해석 로직
+- [x] 범용 리스트 페이지
+- [x] 범용 상세 페이지
+- [x] 스크롤 애니메이션
+- [x] 라이트박스
+- [x] CTA 바
+- [x] 동적 OG 메타 태그
+- [x] 토큰 미리보기 페이지
+- [x] V1 URL 301 리다이렉트
+- [x] V1 전용 라우트와 컴포넌트 정리
 
-## V2 Phase 4: 검증 & 폴리싱
-- [x] V1 잔재 일소 (layout.tsx/proxy.ts 스키마+경로 수정, V1 컴포넌트 삭제, Supabase 기본스키마 전환) ✅ 오더 #036
-- [x] 코드 위생 (100dvh fallback, ScrollRestorer, emptyState 상수화) ✅ 오더 #036
-- [x] Playfair Display 실적용 + LQIP 블러 프리뷰 ✅ 오더 #037
-- [x] 한글 slug 데이터 정리 ✅ 완료
-- [ ] EVAL-01 ~ EVAL-21 전수 검사
+## V2 Phase 4: 검증과 안정화
+
+- [x] V1 잔재 정리
+- [x] 코드 위생 개선
+- [x] Playfair Display 적용과 LQIP 프리뷰
+- [x] slug 데이터 정리
+- [x] 에러 핸들링
+- [x] 접근성 기본 확인
+- [ ] EVAL-01 ~ EVAL-21 필수 검증
 - [ ] 카카오톡 인앱 브라우저 호환 테스트
 - [ ] 이미지 로딩 성능 확인
-- [x] 에러 핸들링 (네트워크 실패, 이미지 fallback)
-- [x] 접근성 확인 (alt, 키보드 네비게이션)
-- [ ] 최종 빌드 → Vercel 배포 (v2-cms → main merge)
+- [ ] 최종 빌드 후 배포 기준 확인
 
-## V2 Phase 5-A: "시네마틱 갤러리" 체험 고도화
-- [x] 전략 논의: 🅰️시네마틱갤러리 → 🅱️매끄러운전환 → 🅲️소재인터랙션 순서 확정 ✅
-- [x] Step 1: 카드 스태거드 리빌 + 호버 강화 ✅ 오더 #038
-- [x] Step 2: 갤러리 시네마틱 스크롤 (호버줌 + delay 오프셋 + 골드 구분선) ✅ 오더 #039
-- [x] Step 3: 히어로 켄번즈 + 페이지 미세 연출 ✅ 오더 #040
-- [x] 핫픽스: 히어로 UX 4건(텍스트only+가드레일+Storage RLS+갤러리여백) ✅ #041
-- [x] Step 4: 히어로 문구 프리미엄 고도화(골드세퍼레이터+fadeUp+clamp타이틀+글로우) ✅ #042
-- [x] Step 5: CTABar 프리미엄(글라스모피즘+볼록글라스+오목프레스+샤인스윕) ✅ #043→#044
-- [x] 그리드 규칙 변경: 4=3열, 5~6=3열, 7+=4열 ✅ 직접수정
+## V2 Phase 5-A: 시네마틱 갤러리 경험
 
-## V2 Phase 5-B: "매끄러운 전환" (View Transitions)
-- [x] Step 1: 기반 설정 + 페이지 페이드 전환 ✅ 오더 #045
-- [x] Step 2: 카드→페이지 공유 요소 전환 ✅ 오더 #046
-- [x] 핫픽스: listing 카드 이중 애니메이션 충돌 수정 ✅ 오더 #047
-- [x] Step 3: 전환 방향 + 폴리싱 ✅ 오더 #048
-- [x] 공유 요소 전환 → 폐기 (페이드+슬라이드 통일) ✅ 오더 #049
-- [x] 텍스트 only 히어로 빈공간 수정 ✅ 오더 #049
-- [x] ScrollToTop 버튼 + CTA 홈 버튼 + 모바일 브레드크럼 전체경로 ✅ 오더 #050
-- [x] CTA 바 울트라 미니멀 리디자인 + 모바일 브레드크럼 골드 통일 ✅ 오더 #051
-- [x] 그리드 4개=2열 (3열 카드사이즈 유지, 중앙 2+2 배치) ✅ 즉시수정
+- [x] 카드 스태거 리빌과 호버 강화
+- [x] 갤러리 시네마틱 스크롤
+- [x] 히어로 캔버스와 페이지 미세 연출
+- [x] 히어로 문구 고도화
+- [x] CTA 바 프리미엄 정리
+- [x] 그리드 규칙 정리
 
----
+## V2 Phase 5-B: 매끄러운 전환
+
+- [x] View Transitions API 기반 설정
+- [x] 페이지 전환
+- [x] 카드와 페이지 공유 요소 전환
+- [x] listing 카드 이중 애니메이션 충돌 수정
+- [x] 전환 방향과 이미지 정리
+- [x] 공유 요소 전환 줄이기
+- [x] ScrollToTop 버튼과 CTA 앵커 버튼
+- [x] CTA 바와 힌트 라인 미니멀 리디자인
+- [x] 4개 그리드 2열 중앙 배치 보정
+
+## 이번 정리 작업
+
+- [x] V2 기준선 문서화
+- [x] ESLint ignore 범위 보강
+- [x] `ScrollToTop` hover 토큰 추가
+- [x] `ImageLightbox` lint disable 제거
+- [x] 미리보기 페이지 CSS Module 정리
+- [x] Supabase RLS/advisor 위험 항목 문서화
+- [x] lint/build 실행
+
 ## 마일스톤 기록
+
 | 날짜 | 마일스톤 | 비고 |
-|------|---------|------|
-| 2026-04-27 | **V1 완료 & 배포** 🏁 | Phase 6까지 완료, Vercel 프로덕션 |
-| 2026-04-28 | V2 PRD 확정 | PRD v2.1.0 (감찰보고서 반영) |
-| 2026-04-28 | V2 디자인시스템 확정 | DS v2.0.0 |
-| 2026-04-28 | **V2 개발 시작** | Phase 0 오더 #015 발행 |
-| 2026-04-28 | **V2 Phase 0 완료** 🏁 | 브랜치+디렉토리+placeholder, 빌드통과 |
-| 2026-04-28 | **V2 Phase 1-1 완료** | showroom 스키마 6테이블+함수+RLS12개+인덱스4개, V1 무손상 |
-| 2026-04-28 | **V2 Phase 1 전체 완료** 🏁 | 데이터 마이그레이션 25노드+126갤러리, UUID보존 |
-| 2026-04-28 | **V2 Phase 2-1 완료** | 노드 목록+CRUD+탭관리, Exposed schemas 핫픽스 |
-| 2026-04-28 | **V2 Phase 2-2 완료** | 노드 편집폼+히어로설정+갤러리관리, 6파일 신규 |
-| 2026-04-28 | **V2 Phase 2 전체 완료** 🏁 | 미리보기 워크플로우+사이트설정 완료, 어드민 CMS 완성 |
-| 2026-04-28 | 핫픽스 #021 | 노드 부모 이동(Reparenting) — NodeMoveModal+순환참조방지 |
-| 2026-04-28 | 핫픽스 #022 | NodeList 폴더 탐색기 리팩토링 — 빵크럼+드릴다운 무제한 깊이 탐색 |
-| 2026-04-28 | **V2 Phase 3-1 완료** | 메인 페이지 V2 전환 + catch-all 라우터 + NodeCard/NodeHero/HomeHeroV2 |
-| 2026-04-28 | **V2 Phase 3-2 완료** | NodeInfo+NodeGallery+ScrollAnimation+Lightbox 연동 |
-| 2026-04-28 | **V2 Phase 3 전체 완료** 🏁 | OG 메타+301+V1 정리, 고객 페이지 완성 |
-| 2026-04-30 | **V2 Phase 3 핫픽스 완료** 🏁 | #026~#031, 히어로/카드/그리드/좌우분할/크럼 전체 피드백 반영 |
-| 2026-04-30 | **암행어사 종합 감찰 분석** | 15건 중 5즉시/5조건부/2강력수용/3기각 |
-| 2026-04-30 | **V2 Phase 5-A 완료** 🏁 | 시네마틱 갤러리 #038~#044 |
-| 2026-05-02 | **V2 Phase 5-B 기본 완료** | View Transitions #045~#048 |
-| 2026-05-06 | **V2 Phase 5-B 완료** 🏁 | #049 공유전환폐기+히어로수정, #050 ScrollToTop+홈버튼+브레드크럼 |
+| --- | --- | --- |
+| 2026-04-27 | V1 완료 및 배포 | 디지털 컬러북 MVP |
+| 2026-04-28 | V2 PRD 확정 | 페이지 빌더형 디지털 쇼룸 |
+| 2026-04-28 | V2 개발 시작 | `v2-cms` |
+| 2026-04-28 | V2 Phase 1 완료 | showroom 스키마와 마이그레이션 |
+| 2026-04-28 | V2 Phase 2 완료 | 관리자 CMS |
+| 2026-04-28 | V2 Phase 3 완료 | 고객 페이지 |
+| 2026-04-30 | V2 Phase 5-A 완료 | 시네마틱 갤러리 |
+| 2026-05-06 | V2 Phase 5-B 완료 | View Transitions |
+| 2026-05-19 | Phase 4 안전망 및 접근성 보강 | #052 |
+| 2026-05-20 | V2 교통정리 시작 | 문서/린트/코드 부채 정리 |

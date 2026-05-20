@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Package, Settings, LogOut, Menu, X, FolderTree } from 'lucide-react'
+import { Settings, LogOut, Menu, X, FolderTree } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import styles from './AdminSidebar.module.css'
 

@@ -1,11 +1,12 @@
 // TODO: V2 Phase N에서 구현
-
-export async function resolveSlugChain(_slugs: string[]) {
+export async function resolveSlugChain(slugs: string[]) {
+  void slugs
   // placeholder
-  return null;
+  return null
 }
 
-export function buildNodeUrl(_node: unknown) {
+export function buildNodeUrl(node: unknown) {
+  void node
   // placeholder
-  return '';
+  return ''
 }

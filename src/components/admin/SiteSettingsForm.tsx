@@ -10,7 +10,7 @@ import styles from './SiteSettingsForm.module.css'
 
 interface SiteSettingsData {
   id?: string
-  site_title: string | null
+  site_title: string
   site_description: string | null
   og_image_url: string | null
   reservation_url: string | null
@@ -96,12 +96,13 @@ export default function SiteSettingsForm({ initialData, heroMedia: initialHeroMe
 
     try {
       const showroomDb = supabase.schema('showroom')
+      const siteTitle = title.trim() || '문장군 디지털 쇼룸'
 
       const { error: upsertError } = await showroomDb
         .from('site_settings')
         .upsert({
           id: 'singleton',
-          site_title: title || null,
+          site_title: siteTitle,
           site_description: description || null,
           og_image_url: ogImageUrl,
           reservation_url: reservationUrl || null,

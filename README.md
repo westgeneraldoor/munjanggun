@@ -1,76 +1,85 @@
-# 문장군 디지털 컬러북 (Munjanggun Digital Colorbook)
+# 문장군 디지털 쇼룸
 
-영업사원이 카카오톡 링크 하나로 전송하는, 현장 컬러북의 한계를 넘어서는 **프리미엄 디지털 쇼룸**입니다. 중문 필름 컬러의 고화질 텍스처와 실제 시공 사례를 몰입감 있게 제공하여 고객의 최종 결정을 돕습니다.
+문장군의 방문 중문, 도어, 디자인 요소, 컬러 요소를 고객 상담 현장에서 바로 보여주기 위한 **디지털 쇼룸**입니다.
 
----
+이 프로젝트는 처음에는 고객이 종이 컬러북을 직접 보지 못하는 상황을 보완하기 위한 "디지털 컬러북" MVP로 시작했습니다. 운영 과정에서 고객 반응과 영업부 사용성이 모두 좋아졌고, 이후 문장군의 전체 상품군을 직접 구성하고 확장할 수 있는 페이지 빌더형 쇼룸으로 발전했습니다.
 
-## 🌟 주요 특징
+## 현재 기준
 
-### 📱 고객 경험 (Customer Facing)
-- **몰입형 상세 페이지**: 뷰포트를 가득 채우는 고화질 텍스처와 매거진 스타일의 시공 갤러리.
-- **프리미엄 애니메이션**: Intersection Observer를 활용한 부드러운 스크롤 페이드인/슬라이드 업 효과.
-- **카카오톡 최적화**: 컬러별 동적 OG(Open Graph) 적용으로 공유 시 미리보기 이미지 자동 생성 및 인앱 브라우저 완벽 호환(`100dvh` 적용).
-- **원클릭 액션**: 하단 고정 CTA 바를 통한 실측 예약 및 브랜드스토어 즉시 연결.
+- 운영 기준 브랜치: `v2-cms`
+- 현재 정리 브랜치: `codex-v2-cms-cleanup`
+- V1 디지털 컬러북 기록: `_archive.md`
+- V2 기획 기준: `PRD_v2.0.md`, `docs/PROJECT_BRIEF_v2.md`
+- 작업 현황 기준: `_context.md`, `PROJECT_TASKS.md`
 
-### 🛠 관리자 도구 (Admin CMS)
-- **콘텐츠 관리**: 개발자 도움 없이 직접 컬렉션과 컬러 정보를 추가, 수정, 삭제 가능.
-- **이미지 파이프라인**: Supabase Storage 연동 및 드래그앤드롭 기반의 시공 사진 업로드 및 순서 재정렬.
-- **미리보기 워크플로우**: 공개 전 토큰 기반 미리보기 URL을 생성하여 팀원과 공유 및 검토 가능.
-- **사이트 설정**: OG 이미지, 예약 링크, 스토어 주소 등 사이트 전역 설정을 대시보드에서 관리.
+`master`는 V1 컬러북 히스토리에 가깝고, 현재 제품 기준은 V2 디지털 쇼룸입니다. 새 기능과 문서 업데이트는 V2 기준으로 진행합니다.
 
----
+## 핵심 기능
 
-## 🛠 기술 스택
+- 고객용 쇼룸: `/`, `/:slug`, `/parent/child` 형태의 무한 깊이 노드 탐색
+- 관리자 CMS: `/admin/nodes`, `/admin/settings`에서 노드, 히어로, 갤러리, 사이트 설정 관리
+- 미리보기 링크: `/preview/[token]`으로 비공개 노드 검수
+- 이미지 운영: Supabase Storage 기반 이미지 업로드와 노출
+- 공유 최적화: 동적 메타데이터와 V1 URL 301 리다이렉트
 
-- **Frontend**: Next.js 16 (App Router), TypeScript (Strict), Lucide React
-- **Styling**: Vanilla CSS (디자인 토큰 기반 CSS Variables)
-- **Backend/DB**: Supabase (PostgreSQL, Storage, Auth)
-- **Deployment**: Vercel
-- **Optimization**: Intersection Observer API (애니메이션), Metadata API (동적 OG), Next/Image (이미지 최적화)
+## 기술 스택
 
----
+- Frontend: Next.js 16 App Router, React 19, TypeScript
+- Styling: CSS Modules, global CSS design tokens
+- Backend: Supabase PostgreSQL, Storage, Auth
+- Deployment: Vercel
 
-## 🏗 프로젝트 구조
+## 주요 구조
 
 ```text
-munjanggun/
-├── src/
-│   ├── app/            # Next.js App Router (페이지, 라우팅, 글로벌 스타일)
-│   ├── components/     # 고객(customer)/어드민(admin) 분리된 재사용 컴포넌트
-│   ├── lib/            # Supabase 클라이언트, 유틸리티, 로거
-│   └── types/          # 데이터베이스 및 전역 타입 정의
-├── docs/               # PRD, 디자인 시스템 등 설계 문서
-└── public/             # 정적 에셋
+src/
+  app/
+    page.tsx                 # 쇼룸 홈
+    [...slugs]/page.tsx      # 노드 기반 고객 페이지
+    preview/[token]/page.tsx # 비공개 미리보기
+    admin/                   # 관리자 CMS
+  components/
+    customer/                # 고객 화면 컴포넌트
+    admin/                   # 관리자 화면 컴포넌트
+  lib/
+    supabase/                # Supabase 클라이언트
+    constants.ts             # 예약 링크, 깊이 제한 등 전역 상수
+  types/
+    database.ts              # Supabase 타입
+docs/
+  DESIGN_SYSTEM.md
+  PROJECT_BRIEF.md
+  PROJECT_BRIEF_v2.md
 ```
 
----
-
-## 🚀 시작하기
-
-### 1. 환경 변수 설정
-`.env.local` 파일을 생성하고 아래 정보를 입력합니다.
+## 환경 변수
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-NEXT_PUBLIC_SITE_URL=your_deployment_url
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SITE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
 ```
 
-### 2. 의존성 설치 및 실행
+`SUPABASE_SERVICE_ROLE_KEY`는 관리자성 서버 작업이나 RLS 우회가 필요한 서버 전용 코드에서만 사용해야 합니다. 클라이언트 코드에 노출되면 안 됩니다.
+
+## 실행
+
 ```bash
 npm install
 npm run dev
 ```
 
----
+검증은 아래 명령을 기준으로 합니다.
 
-## 🎨 디자인 원칙
-- **Dark Minimal Gallery**: 프리미엄 가구 갤러리 느낌의 어두운 테마와 절제된 폰트 사용.
-- **High Contrast**: WCAG AA 접근성 기준 준수 (대비비 4.5:1 이상).
-- **Responsive**: 모바일 퍼스트 디자인 및 다양한 디바이스 해상도 대응.
+```bash
+npm run lint
+npm run build
+```
 
----
+## 운영 메모
 
-## 📄 라이선스
-본 프로젝트는 **문장군(Munjanggun)**의 내부 자산으로, 허가되지 않은 복제 및 배포를 금지합니다.
+- Supabase 기본 운영 스키마는 `showroom`입니다.
+- V1 `colorbook` 스키마는 히스토리와 이전 데이터 확인 용도로만 봅니다.
+- 생성물과 외부 도구 산출물(`.next`, `.vercel`, `.agents`, 영상 산출물 등)은 소스 기준 문서가 아닙니다.
+- 미리보기 토큰은 편의 기능이지만 보안 표면이 있으므로 RLS 정책과 만료 정책을 함께 확인해야 합니다.
