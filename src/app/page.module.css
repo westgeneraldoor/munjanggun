@@ -1,0 +1,74 @@
+.main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--color-bg);
+  position: relative;
+  /* CTA fixed 대응 하단 여백 */
+  padding-bottom: 80px;
+}
+
+.content {
+  flex: 1;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6) var(--space-6);
+}
+
+@media (min-width: 1024px) {
+  .content {
+    padding: var(--space-8) var(--space-8) var(--space-6);
+  }
+}
+
+.emptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+  gap: var(--space-4);
+  color: var(--color-text-sub);
+}
+
+.emptyText {
+  font-size: var(--text-lg);
+  font-weight: var(--font-medium);
+  margin: 0;
+}
+
+.emptySubtext {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.nodeGrid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-4);
+  --gap: var(--space-4);
+}
+
+.nodeGrid[data-cols="1"] > * { width: 100%; max-width: 600px; }
+.nodeGrid[data-cols="2"] > * { width: calc(50% - var(--gap) / 2); }
+.nodeGrid[data-cols="3"] > * { width: calc(33.333% - var(--gap) * 2 / 3); }
+.nodeGrid[data-cols="4"] > * { width: calc(25% - var(--gap) * 3 / 4); }
+
+@media (max-width: 768px) {
+  .nodeGrid > * { width: calc(50% - var(--gap) / 2) !important; max-width: none !important; }
+}
+
+@media (min-width: 768px) {
+  .nodeGrid {
+    gap: var(--space-6);
+    --gap: var(--space-6);
+  }
+  .nodeGrid[data-cols="2"] > * { max-width: calc(33.333% - var(--gap) * 2 / 3); }
+  .nodeGrid[data-cols="2"] { justify-content: center; }
+}

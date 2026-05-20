@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1080, height=1440" />
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <style>
+    :root {
+      --bg: #0A0A0A;
+      --fg: #F5F5F5;
+      --accent: #C8A876;
+      --sub: #666666;
+      --bg-card: #141414;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 1080px; height: 1440px; overflow: hidden;
+      background: var(--bg); color: var(--fg);
+      font-family: 'Pretendard Variable', sans-serif;
+    }
+    .scene {
+      position: absolute; top: 0; left: 0;
+      width: 1080px; height: 1440px;
+      overflow: hidden; background: var(--bg);
+    }
+    .sc { width: 100%; height: 100%; display: flex; flex-direction: column; box-sizing: border-box; }
+    .font-pl { font-family: 'Playfair Display', serif; }
+
+    /* Scene 1: Hook */
+    #scene-1 { z-index: 10; }
+    .s1-glow {
+      position: absolute; top: 40%; left: 50%; width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(200,168,118,0.08) 0%, transparent 70%);
+      transform: translate(-50%, -50%); border-radius: 50%;
+    }
+    .s1-ghost {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-size: 500px; font-weight: 900; color: rgba(255,255,255,0.025);
+      white-space: nowrap; letter-spacing: -0.05em;
+    }
+    .s1-wrap { justify-content: center; align-items: center; padding: 80px; gap: 30px; position: relative; z-index: 2; }
+    .s1-num { font-size: 280px; font-weight: 900; letter-spacing: -0.05em; line-height: 1; }
+    .s1-unit { font-size: 100px; font-weight: 900; color: var(--accent); vertical-align: super; }
+    .s1-rule { width: 120px; height: 3px; background: var(--accent); }
+    .s1-sub { font-size: 42px; font-weight: 500; color: #999; text-align: center; line-height: 1.6; }
+
+    /* Scene 2: Limitation */
+    #scene-2 { z-index: 20; }
+    .s2-wrap { justify-content: flex-start; padding: 140px 100px; gap: 30px; position: relative; }
+    .s2-num { font-size: 140px; font-weight: 900; color: rgba(200,168,118,0.15); position: absolute; top: 80px; right: 100px; }
+    .s2-tag { font-size: 28px; font-weight: 600; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; }
+    .s2-title { font-size: 80px; font-weight: 900; line-height: 1.25; }
+    .s2-desc { font-size: 38px; font-weight: 400; color: #888; line-height: 1.5; }
+    .s2-chip-area {
+      position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%);
+      width: 200px; height: 260px;
+    }
+    .s2-chip {
+      width: 200px; height: 260px; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8); border: 3px solid #333;
+    }
+    .s2-chip img { width: 100%; height: 100%; object-fit: cover; }
+    .s2-chip-label {
+      position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%);
+      font-size: 24px; color: #555; white-space: nowrap;
+    }
+
+    /* Scene 3: Texture Reveal */
+    #scene-3 { z-index: 30; }
+    .s3-tex {
+      position: absolute; top: -10%; left: -10%; width: 120%; height: 120%;
+      background: url('https://cebafroyvmllbyivevjd.supabase.co/storage/v1/object/public/colorbook-images/textures/original-color/1776921237551_KakaoTalk_20260423_141016847.jpg') center/cover;
+    }
+    .s3-light {
+      position: absolute; top: 0; left: -60%; width: 40%; height: 140%;
+      background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%);
+      transform: skewX(-15deg);
+    }
+    .s3-overlay {
+      position: absolute; bottom: 0; left: 0; width: 100%; height: 55%;
+      background: linear-gradient(to top, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0.6) 50%, transparent 100%);
+    }
+    .s3-wrap {
+      justify-content: flex-end; padding: 0 100px 140px; gap: 20px;
+      position: relative; z-index: 2;
+    }
+    .s3-tag { font-size: 30px; font-weight: 600; color: var(--accent); letter-spacing: 0.12em; font-style: italic; }
+    .s3-title { font-size: 78px; font-weight: 900; line-height: 1.25; }
+    .s3-desc { font-size: 36px; font-weight: 400; color: #BBB; line-height: 1.5; max-width: 700px; }
+
+    /* Scene 4: Before/After */
+    #scene-4 { z-index: 40; }
+    .s4-split { display: flex; width: 100%; height: 100%; position: relative; }
+    .s4-left {
+      width: 50%; height: 100%;
+      background: url('https://cebafroyvmllbyivevjd.supabase.co/storage/v1/object/public/colorbook-images/textures/original-color/1776921237551_KakaoTalk_20260423_141016847.jpg') center/cover;
+    }
+    .s4-right {
+      width: 50%; height: 100%;
+      background: url('https://cebafroyvmllbyivevjd.supabase.co/storage/v1/object/public/colorbook-images/photos/original-color/ds64/1776921282908_KakaoTalk_20260423_141016847_01.jpg') center/cover;
+    }
+    .s4-divider {
+      position: absolute; top: 0; left: 50%; width: 4px; height: 100%;
+      background: var(--accent); transform: translateX(-50%); z-index: 3;
+    }
+    .s4-divider-knob {
+      position: absolute; top: 50%; left: 50%; width: 60px; height: 60px;
+      background: var(--accent); border-radius: 50%;
+      transform: translate(-50%, -50%); z-index: 4;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; color: #000; font-weight: 700;
+    }
+    .s4-label-l, .s4-label-r {
+      position: absolute; top: 60px; font-size: 26px; font-weight: 700;
+      letter-spacing: 0.1em; z-index: 5; padding: 12px 24px;
+      background: rgba(10,10,10,0.7); border-radius: 8px;
+    }
+    .s4-label-l { left: 60px; color: var(--accent); }
+    .s4-label-r { right: 60px; color: var(--fg); }
+    .s4-box {
+      position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
+      z-index: 5; background: rgba(10,10,10,0.85); border: 1px solid rgba(200,168,118,0.3);
+      padding: 40px 60px; border-radius: 20px; text-align: center;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    }
+    .s4-box-num { font-size: 100px; font-weight: 900; color: rgba(200,168,118,0.15); position: absolute; top: -30px; right: 30px; }
+    .s4-box-title { font-size: 55px; font-weight: 900; line-height: 1.3; }
+
+    /* Scene 5: Grid Showcase */
+    #scene-5 { z-index: 50; }
+    .s5-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr;
+      width: 100%; height: 75%; gap: 6px; padding: 6px;
+    }
+    .s5-cell { overflow: hidden; position: relative; }
+    .s5-cell img { width: 100%; height: 100%; object-fit: cover; }
+    .s5-bottom {
+      height: 25%; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; gap: 16px; padding: 40px;
+    }
+    .s5-main { font-size: 65px; font-weight: 900; text-align: center; }
+    .s5-sub { font-size: 34px; color: #888; text-align: center; }
+
+    /* Scene 6: Finale */
+    #scene-6 { z-index: 60; }
+    .s6-wrap { justify-content: center; align-items: center; padding: 80px; gap: 0; position: relative; }
+    .s6-border-svg {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%); z-index: 1;
+    }
+    .s6-card {
+      width: 800px; padding: 100px 80px;
+      display: flex; flex-direction: column; align-items: center; gap: 20px;
+      position: relative; z-index: 2;
+    }
+    .s6-pre { font-size: 26px; color: var(--accent); letter-spacing: 0.2em; font-weight: 600; }
+    .s6-brand { font-size: 90px; font-weight: 900; letter-spacing: 0.05em; }
+    .s6-en { font-size: 50px; font-style: italic; color: var(--accent); letter-spacing: 0.08em; }
+    .s6-btn {
+      margin-top: 50px; padding: 30px 80px;
+      background: var(--accent); color: #000;
+      font-size: 38px; font-weight: 800; border-radius: 100px;
+      position: relative; overflow: hidden;
+    }
+    .s6-shine {
+      position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+      transform: skewX(-20deg);
+    }
+    .s6-glow {
+      position: absolute; top: 50%; left: 50%; width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(200,168,118,0.06) 0%, transparent 70%);
+      transform: translate(-50%, -50%); border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <div id="root" data-composition-id="main" data-start="0" data-duration="15" data-width="1080" data-height="1440">
+
+    <!-- Scene 1: Hook (0~2.5s) -->
+    <div id="scene-1" class="scene clip" data-start="0" data-duration="2.5" data-track-index="1">
+      <div class="s1-glow" id="s1-glow"></div>
+      <div class="s1-ghost" id="s1-ghost">5cm</div>
+      <div class="sc s1-wrap">
+        <div id="s1-num"><span class="s1-num">5</span><span class="s1-unit">cm</span></div>
+        <div class="s1-rule" id="s1-rule"></div>
+        <div class="s1-sub" id="s1-sub">이 조각 하나로,<br>현관의 분위기를 결정하셨나요?</div>
+      </div>
+    </div>
+
+    <!-- Scene 2: Limitation (2.2~5.0s) -->
+    <div id="scene-2" class="scene clip" data-start="2.2" data-duration="2.8" data-track-index="2">
+      <div class="sc s2-wrap">
+        <div class="s2-num" id="s2-bg-num">01</div>
+        <div class="s2-tag" id="s2-tag">THE LIMITATION</div>
+        <div class="s2-title" id="s2-title">지금까지의 선택,<br>이게 전부였습니다.</div>
+        <div class="s2-desc" id="s2-desc">작은 컬러 칩 하나로<br>내 집의 분위기를 상상해야 했던 시간</div>
+        <div class="s2-chip-area">
+          <div class="s2-chip" id="s2-chip" style="background: url('https://cebafroyvmllbyivevjd.supabase.co/storage/v1/object/public/colorbook-images/textures/original-color/1776921237551_KakaoTalk_20260423_141016847.jpg') center/cover;">
+          </div>
+          <div class="s2-chip-label" id="s2-chip-label">올리브그린 DS64</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scene 3: Texture Reveal (4.7~8.0s) -->
+    <div id="scene-3" class="scene clip" data-start="4.7" data-duration="3.3" data-track-index="3">
+      <div class="s3-tex" id="s3-tex"></div>
+      <div class="s3-light" id="s3-light"></div>
+      <div class="s3-overlay"></div>
+      <div class="sc s3-wrap">
+        <div class="s3-tag font-pl" id="s3-tag">Feel the Real Texture</div>
+        <div class="s3-title" id="s3-title">진짜 텍스처를<br>눈 앞에서.</div>
+        <div class="s3-desc" id="s3-desc">빛에 따라 변하는 입체적 디테일,<br>화면으로 먼저 경험하세요</div>
+      </div>
+    </div>
+
+    <!-- Scene 4: Before/After (7.7~10.5s) -->
+    <div id="scene-4" class="scene clip" data-start="7.7" data-duration="2.8" data-track-index="4">
+      <div class="s4-split">
+        <div class="s4-left" id="s4-left"></div>
+        <div class="s4-right" id="s4-right"></div>
+        <div class="s4-divider" id="s4-divider"></div>
+        <div class="s4-divider-knob" id="s4-knob">⇔</div>
+        <div class="s4-label-l" id="s4-ll">TEXTURE</div>
+        <div class="s4-label-r" id="s4-lr">INSTALLED</div>
+      </div>
+      <div class="s4-box" id="s4-box">
+        <div class="s4-box-num">02</div>
+        <div class="s4-box-title">화면 그대로,<br>시공 그대로.</div>
+      </div>
+    </div>
+
+    <!-- Scene 5: Grid Showcase (10.2~12.5s) -->
+    <div id="scene-5" class="scene clip" data-start="10.2" data-duration="2.3" data-track-index="5">
+      <div class="s5-grid">
+        <div class="s5-cell" id="s5-c1"><img src="https://cebafroyvmllbyivevjd.supabase.co/storage/v1/object/public/colorbook-images/textures/original-color/1776921237551_KakaoTalk_20260423_141016847.jpg" /></div>
+        <div class="s5-cell" id="s5-c2"><img src="https://cebafroyvmllbyivevjd.supabase.co/storage/v1/object/public/colorbook-images/textures/original-color/1777012672636_DS45.jpg" /></div>
+        <div class="s5-cell" id="s5-c3"><img src="https://cebafroyvmllbyivevjd.supabase.co/storage/v1/object/public/colorbook-images/textures/original-color/1777012665353_DS46.jpg" /></div>
+        <div class="s5-cell" id="s5-c4"><img src="https://cebafroyvmllbyivevjd.supabase.co/storage/v1/object/public/colorbook-images/textures/premium-wood/1777011011842_EW615.jpg" /></div>
+        <div class="s5-cell" id="s5-c5"><img src="https://cebafroyvmllbyivevjd.supabase.co/storage/v1/object/public/colorbook-images/textures/valren/1777010964978_PX449.jpg" /></div>
+        <div class="s5-cell" id="s5-c6"><img src="https://cebafroyvmllbyivevjd.supabase.co/storage/v1/object/public/colorbook-images/textures/original-color/1777012680780_DS36.jpg" /></div>
+      </div>
+      <div class="s5-bottom">
+        <div class="s5-main" id="s5-main">21가지 컬러, <span style="color:var(--accent);">4개 컬렉션</span></div>
+        <div class="s5-sub" id="s5-sub">당신의 공간에 맞는 컬러를 찾아보세요</div>
+      </div>
+    </div>
+
+    <!-- Scene 6: Finale (12.2~15.0s) -->
+    <div id="scene-6" class="scene clip" data-start="12.2" data-duration="2.8" data-track-index="1">
+      <div class="s6-glow" id="s6-glow"></div>
+      <svg class="s6-border-svg" width="820" height="560" viewBox="0 0 820 560" fill="none">
+        <rect id="s6-rect" x="2" y="2" width="816" height="556" rx="38" stroke="#C8A876" stroke-width="2" stroke-dasharray="2744" stroke-dashoffset="2744" />
+      </svg>
+      <div class="sc s6-wrap">
+        <div class="s6-card">
+          <div class="s6-pre" id="s6-pre">PREMIUM DIGITAL SHOWROOM</div>
+          <div class="s6-brand" id="s6-brand">문장군</div>
+          <div class="s6-en font-pl" id="s6-en">Munjanggun</div>
+          <div class="s6-btn" id="s6-btn">
+            지금 경험하기
+            <div class="s6-shine" id="s6-shine"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+
+    /* === Scene 1: Hook === */
+    tl.from("#s1-glow", { scale: 0.3, opacity: 0, duration: 2.5, ease: "power1.out" }, 0);
+    tl.from("#s1-ghost", { scale: 1.5, opacity: 0, duration: 2.0, ease: "power2.out" }, 0);
+    tl.from("#s1-num", { scale: 3, opacity: 0, duration: 0.6, ease: "expo.out" }, 0.2);
+    tl.from("#s1-rule", { scaleX: 0, duration: 0.5, ease: "power3.out" }, 0.7);
+    tl.from("#s1-sub", { y: 40, opacity: 0, duration: 0.7, ease: "power2.out" }, 0.9);
+
+    /* === Transition 1→2: Zoom Punch === */
+    tl.from("#scene-2", { scale: 3, opacity: 0, duration: 0.35, ease: "expo.out" }, 2.2);
+
+    /* === Scene 2: Limitation === */
+    tl.from("#s2-bg-num", { x: 100, opacity: 0, duration: 0.8, ease: "power3.out" }, 2.4);
+    tl.from("#s2-tag", { x: -60, opacity: 0, duration: 0.5, ease: "power3.out" }, 2.5);
+    tl.from("#s2-title", { y: 50, opacity: 0, duration: 0.7, ease: "back.out(1.2)" }, 2.7);
+    tl.from("#s2-desc", { y: 30, opacity: 0, duration: 0.6, ease: "power2.out" }, 3.0);
+    tl.from("#s2-chip", { scale: 0, rotation: -15, duration: 0.6, ease: "back.out(2)" }, 3.2);
+    tl.from("#s2-chip-label", { opacity: 0, duration: 0.4, ease: "power1.out" }, 3.6);
+
+    /* === Transition 2→3: Scale up through chip === */
+    tl.from("#scene-3", { scale: 0.05, opacity: 0, duration: 0.5, ease: "expo.out" }, 4.7);
+
+    /* === Scene 3: Texture Reveal === */
+    tl.to("#s3-tex", { scale: 1.15, duration: 3.3, ease: "none" }, 4.7);
+    tl.to("#s3-light", { left: "160%", duration: 2.5, ease: "power1.inOut" }, 5.0);
+    tl.from("#s3-tag", { x: -80, opacity: 0, duration: 0.7, ease: "power3.out" }, 5.3);
+    tl.from("#s3-title", { y: 60, opacity: 0, duration: 0.8, ease: "expo.out" }, 5.6);
+    tl.from("#s3-desc", { y: 40, opacity: 0, duration: 0.6, ease: "power2.out" }, 6.0);
+
+    /* === Transition 3→4: Crossfade === */
+    tl.from("#scene-4", { opacity: 0, duration: 0.5, ease: "power1.inOut" }, 7.7);
+
+    /* === Scene 4: Before/After === */
+    tl.from("#s4-left", { x: "-100%", duration: 0.7, ease: "power3.out" }, 7.9);
+    tl.from("#s4-right", { x: "100%", duration: 0.7, ease: "power3.out" }, 7.9);
+    tl.from("#s4-divider", { scaleY: 0, transformOrigin: "top center", duration: 0.5, ease: "expo.out" }, 8.4);
+    tl.from("#s4-knob", { scale: 0, duration: 0.4, ease: "back.out(3)" }, 8.7);
+    tl.from("#s4-ll", { x: -40, opacity: 0, duration: 0.4, ease: "power2.out" }, 8.5);
+    tl.from("#s4-lr", { x: 40, opacity: 0, duration: 0.4, ease: "power2.out" }, 8.5);
+    tl.from("#s4-box", { scale: 0, duration: 0.6, ease: "back.out(1.5)" }, 9.0);
+
+    /* === Transition 4→5: Scale down === */
+    tl.from("#scene-5", { opacity: 0, duration: 0.4, ease: "none" }, 10.2);
+
+    /* === Scene 5: Grid Showcase === */
+    tl.from("#s5-c1", { clipPath: "inset(100% 0 0 0)", duration: 0.3, ease: "power3.out" }, 10.3);
+    tl.from("#s5-c2", { clipPath: "inset(0 100% 0 0)", duration: 0.3, ease: "power3.out" }, 10.4);
+    tl.from("#s5-c3", { clipPath: "inset(0 0 100% 0)", duration: 0.3, ease: "power3.out" }, 10.5);
+    tl.from("#s5-c4", { clipPath: "inset(0 0 0 100%)", duration: 0.3, ease: "power3.out" }, 10.6);
+    tl.from("#s5-c5", { clipPath: "inset(100% 0 0 0)", duration: 0.3, ease: "power3.out" }, 10.7);
+    tl.from("#s5-c6", { clipPath: "inset(0 100% 0 0)", duration: 0.3, ease: "power3.out" }, 10.8);
+    tl.from("#s5-main", { y: 40, opacity: 0, duration: 0.6, ease: "back.out(1.5)" }, 11.0);
+    tl.from("#s5-sub", { y: 20, opacity: 0, duration: 0.5, ease: "power2.out" }, 11.2);
+
+    /* === Transition 5→6: Crossfade === */
+    tl.from("#scene-6", { opacity: 0, duration: 0.5, ease: "power1.inOut" }, 12.2);
+
+    /* === Scene 6: Finale === */
+    tl.from("#s6-glow", { scale: 0.5, opacity: 0, duration: 2.0, ease: "power1.out" }, 12.2);
+    // Border draw
+    tl.to("#s6-rect", { strokeDashoffset: 0, duration: 1.5, ease: "power2.inOut" }, 12.4);
+    tl.from("#s6-pre", { y: -30, opacity: 0, duration: 0.5, ease: "power3.out" }, 12.7);
+    tl.from("#s6-brand", { scale: 0.8, opacity: 0, duration: 0.6, ease: "expo.out" }, 12.9);
+    tl.from("#s6-en", { y: 20, opacity: 0, duration: 0.5, ease: "power2.out" }, 13.1);
+    tl.from("#s6-btn", { scale: 0.7, opacity: 0, duration: 0.5, ease: "back.out(2)" }, 13.4);
+    tl.to("#s6-shine", { left: "200%", duration: 1.0, ease: "power2.inOut" }, 13.8);
+
+    // Final fade out (only scene with exit animation)
+    tl.to("#scene-6", { opacity: 0, duration: 0.5, ease: "none" }, 14.5);
+
+    window.__timelines["main"] = tl;
+  </script>
+</body>
+</html>

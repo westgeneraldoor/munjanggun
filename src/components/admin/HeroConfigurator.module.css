@@ -1,0 +1,204 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background-color: var(--admin-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  border: 1px solid var(--admin-border);
+}
+
+.photosList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.slideCard {
+  background-color: var(--admin-surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  border: 1px solid var(--admin-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.slideHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--admin-border);
+  padding-bottom: var(--space-2);
+}
+
+.slideTitle {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--admin-text);
+  margin: 0;
+}
+
+.slideActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.orderActions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.actionBtn {
+  background: none;
+  border: none;
+  color: var(--admin-text-sub);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.actionBtn:hover:not(:disabled) {
+  background-color: var(--admin-surface-elevated);
+  color: var(--admin-text);
+}
+
+.actionBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.deleteBtn {
+  color: var(--color-error);
+}
+
+.deleteBtn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.addPhotoSection {
+  margin-top: var(--space-2);
+  padding: var(--space-4);
+  border: 2px dashed var(--admin-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background-color: var(--admin-surface);
+  transition: var(--transition-fast);
+}
+
+.addPhotoSection:hover {
+  border-color: var(--admin-accent);
+  background-color: var(--admin-surface-elevated);
+}
+
+.mediaSplit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+@media (max-width: 768px) {
+  .mediaSplit {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mediaBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background-color: var(--admin-bg);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--admin-border);
+}
+
+.mediaLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--admin-text);
+}
+
+.mediaHint {
+  font-size: var(--text-xs);
+  color: var(--admin-text-sub);
+  margin: 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--admin-surface);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--admin-surface-elevated);
+  cursor: pointer;
+  user-select: none;
+  transition: var(--transition-fast);
+}
+
+.sectionHeader:hover {
+  background-color: var(--admin-hover);
+}
+
+.sectionTitle {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--admin-text);
+  margin: 0;
+}
+
+.sectionContent {
+  padding: var(--space-4);
+  border-top: 1px solid var(--admin-border);
+}
+
+.addHint {
+  font-size: var(--text-sm);
+  color: var(--admin-text-sub);
+  margin-bottom: var(--space-2);
+}
+
+.videoBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.videoInput {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--admin-bg);
+  color: var(--admin-text);
+  font-size: var(--text-sm);
+  transition: var(--transition-fast);
+}
+
+.videoInput:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 2px rgba(var(--admin-accent-rgb), 0.1);
+}
