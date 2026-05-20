@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicShowroomClient } from '@/lib/supabase/public'
 import { Database } from '@/types/database'
 import styles from './preview.module.css'
 
@@ -32,7 +32,7 @@ function toPreviewPayload(value: unknown): PreviewPayload | null {
 
 export default async function PreviewPage(props: PageProps) {
   const { token } = await props.params
-  const supabase = await createClient()
+  const supabase = createPublicShowroomClient()
 
   const { data, error } = await supabase.rpc('get_preview_payload', {
     p_token: token,
