@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicShowroomClient } from '@/lib/supabase/public'
 import NodeCard from '@/components/customer/NodeCard'
 import HomeHeroV2 from '@/components/customer/HomeHeroV2'
 import { getOptimalCols } from '@/lib/grid-utils'
@@ -10,8 +10,7 @@ import { EMPTY_STATE_TITLE, EMPTY_STATE_SUBTITLE } from '@/lib/constants'
 import styles from './page.module.css'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const supabase = await createClient()
-  const showroomDb = supabase.schema('showroom')
+  const showroomDb = createPublicShowroomClient().schema('showroom')
 
   const { data: siteSettings } = await showroomDb
     .from('site_settings')
@@ -25,32 +24,32 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export const revalidate = 0
+export const revalidate = 60
 
 export default async function Home() {
-  const supabase = await createClient()
-  const showroomDb = supabase.schema('showroom')
+  const showroomDb = createPublicShowroomClient().schema('showroom')
 
-  // Fetch site settings
-  const { data: siteSettings } = await showroomDb
-    .from('site_settings')
-    .select('*')
-    .eq('id', 'singleton')
-    .single()
+  const [settingsResult, heroMediaResult, rootNodesResult] = await Promise.all([
+    showroomDb
+      .from('site_settings')
+      .select('*')
+      .eq('id', 'singleton')
+      .single(),
+    showroomDb
+      .from('site_hero_media')
+      .select('*')
+      .order('display_order', { ascending: true }),
+    showroomDb
+      .from('nodes')
+      .select('id, name, slug, tagline, card_subtitle, image_url, type, status, card_text_position')
+      .is('parent_id', null)
+      .eq('status', 'published')
+      .order('display_order'),
+  ])
 
-  // Fetch site hero media
-  const { data: siteHeroMedia } = await showroomDb
-    .from('site_hero_media')
-    .select('*')
-    .order('display_order', { ascending: true })
-
-  // Fetch published root nodes
-  const { data: rootNodes } = await showroomDb
-    .from('nodes')
-    .select('id, name, slug, tagline, card_subtitle, image_url, type, status, card_text_position')
-    .is('parent_id', null)
-    .eq('status', 'published')
-    .order('display_order')
+  const siteSettings = settingsResult.data
+  const siteHeroMedia = heroMediaResult.data
+  const rootNodes = rootNodesResult.data
 
   const heroHasContent = (siteHeroMedia && siteHeroMedia.length > 0) || siteSettings?.hero_video_url || siteSettings?.hero_mobile_video_url || siteSettings?.hero_title || siteSettings?.hero_subtitle || siteSettings?.hero_description
 
@@ -70,7 +69,7 @@ export default async function Home() {
         {(rootNodes || []).length > 0 ? (
           <div className={styles.nodeGrid} data-cols={getOptimalCols(rootNodes?.length || 0)}>
             {(rootNodes || []).map((node, idx) => (
-              <ScrollAnimationWrapper key={node.id} delay={idx * 150}>
+              <ScrollAnimationWrapper key={node.id} delay={Math.min(idx * 40, 160)}>
                 <NodeCard 
                   node={node} 
                   textPosition={(siteSettings?.card_text_position as 'overlay' | 'below') || 'overlay'} 

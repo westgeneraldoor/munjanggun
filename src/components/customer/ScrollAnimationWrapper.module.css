@@ -1,8 +1,8 @@
 .wrapper {
   opacity: 0;
-  transform: translateY(32px) scale(0.96);
-  filter: blur(4px);
-  transition: opacity var(--transition-gallery), transform var(--transition-gallery), filter var(--transition-gallery);
+  transform: translateY(18px) scale(0.985);
+  filter: blur(2px);
+  transition: opacity 360ms var(--ease-out), transform 360ms var(--ease-out), filter 360ms var(--ease-out);
   /* transition-delay is set inline */
   break-inside: avoid;
 }

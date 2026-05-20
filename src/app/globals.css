@@ -152,13 +152,58 @@ body {
 
 /* === View Transitions (Progressive Enhancement) === */
 ::view-transition-old(root) {
-  animation: vt-fade-out var(--duration-normal) var(--ease-default);
+  animation: vt-fade-out 180ms var(--ease-out);
   z-index: 0;
 }
 
 ::view-transition-new(root) {
-  animation: vt-fade-in var(--duration-normal) var(--ease-default);
+  animation: vt-fade-in 220ms var(--ease-out);
   z-index: 1;
+}
+
+::view-transition-old(.page-soft-exit) {
+  animation: vt-fade-out 140ms var(--ease-out);
+}
+
+::view-transition-new(.page-soft-enter) {
+  animation: vt-fade-in 220ms var(--ease-out);
+}
+
+::view-transition-old(.nav-forward) {
+  --vt-slide: -28px;
+  animation:
+    vt-fade-out 140ms var(--ease-out),
+    vt-slide-out 260ms var(--ease-out);
+}
+
+::view-transition-new(.nav-forward) {
+  --vt-slide: 28px;
+  animation:
+    vt-fade-in 220ms 60ms var(--ease-out) both,
+    vt-slide-in 280ms var(--ease-out) both;
+}
+
+::view-transition-old(.nav-back) {
+  --vt-slide: 28px;
+  animation:
+    vt-fade-out 140ms var(--ease-out),
+    vt-slide-out 260ms var(--ease-out);
+}
+
+::view-transition-new(.nav-back) {
+  --vt-slide: -28px;
+  animation:
+    vt-fade-in 220ms 60ms var(--ease-out) both,
+    vt-slide-in 280ms var(--ease-out) both;
+}
+
+::view-transition-group(.node-morph) {
+  animation-duration: 320ms;
+  animation-timing-function: var(--ease-out);
+}
+
+::view-transition-image-pair(.node-morph) {
+  animation-name: vt-soft-blur;
 }
 
 @keyframes vt-fade-out {
@@ -171,10 +216,29 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes vt-slide-out {
+  from { translate: 0; }
+  to { translate: var(--vt-slide); }
+}
+
+@keyframes vt-slide-in {
+  from { translate: var(--vt-slide); }
+  to { translate: 0; }
+}
+
+@keyframes vt-soft-blur {
+  35% {
+    filter: blur(2px);
+  }
+}
+
 /* View Transition 모션 접근성 */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),
-  ::view-transition-new(root) {
+  ::view-transition-new(root),
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
     animation: none !important;
   }
 }
