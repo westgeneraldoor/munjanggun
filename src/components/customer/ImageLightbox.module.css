@@ -1,0 +1,179 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background-color: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  animation: fadeIn 0.2s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+}
+
+/* 이미지 컨테이너 */
+.imageContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 1200px;
+  max-height: 85vh;
+}
+
+.image {
+  object-fit: contain;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.imageLoaded {
+  opacity: 1;
+}
+
+/* 슬라이드 애니메이션 */
+.slideFromRight {
+  animation: slideInFromRight 0.35s ease both;
+}
+
+.slideFromLeft {
+  animation: slideInFromLeft 0.35s ease both;
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(60px);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-60px);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* 닫기 버튼 */
+.closeButton {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  background: none;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  padding: var(--space-2);
+  z-index: 102;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+}
+
+.closeButton:hover {
+  opacity: 1;
+}
+
+/* 좌우 네비게이션 버튼 */
+.navButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text);
+  cursor: pointer;
+  z-index: 102;
+  opacity: 0.6;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
+}
+
+.navButton:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.prevButton {
+  left: var(--space-3);
+}
+
+.nextButton {
+  right: var(--space-3);
+}
+
+/* 모바일: 작은 버튼 */
+@media (max-width: 768px) {
+  .navButton {
+    width: 36px;
+    height: 36px;
+    opacity: 0.5;
+  }
+
+  .prevButton {
+    left: var(--space-2);
+  }
+
+  .nextButton {
+    right: var(--space-2);
+  }
+
+  .imageContainer {
+    max-height: 80vh;
+  }
+}
+
+/* 데스크톱: 큰 버튼 */
+@media (min-width: 769px) {
+  .navButton {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* 하단 인디케이터 + 캡션 */
+.bottomInfo {
+  position: absolute;
+  bottom: var(--space-6);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  z-index: 102;
+}
+
+.caption {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: var(--text-sm);
+  text-align: center;
+  max-width: 400px;
+  line-height: 1.4;
+}
+
+.counter {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

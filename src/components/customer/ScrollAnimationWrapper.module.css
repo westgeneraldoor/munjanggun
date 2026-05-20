@@ -1,0 +1,24 @@
+.wrapper {
+  opacity: 0;
+  transform: translateY(18px) scale(0.985);
+  filter: blur(2px);
+  transition: opacity 360ms var(--ease-out), transform 360ms var(--ease-out), filter 360ms var(--ease-out);
+  /* transition-delay is set inline */
+  break-inside: avoid;
+}
+
+.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0px);
+}
+
+/* prefers-reduced-motion 처리 - globals.css에서 일괄 적용되어 있지만 확실히 하기 위해 */
+@media (prefers-reduced-motion: reduce) {
+  .wrapper {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none !important;
+  }
+}

@@ -1,0 +1,101 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background-color: var(--admin-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  border: 1px solid var(--admin-border);
+}
+
+.photosGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.photoItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background-color: var(--admin-surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  border: 1px solid var(--admin-border);
+  position: relative;
+}
+
+.photoActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-2);
+}
+
+.orderActions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.actionBtn {
+  background: none;
+  border: none;
+  color: var(--admin-text-sub);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.actionBtn:hover:not(:disabled) {
+  background-color: var(--admin-surface-elevated);
+  color: var(--admin-text);
+}
+
+.actionBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.deleteBtn {
+  color: var(--color-error);
+}
+
+.deleteBtn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.input {
+  background-color: var(--admin-surface-elevated);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--admin-text);
+  width: 100%;
+}
+
+.input:focus-visible {
+  outline: none;
+  border-color: var(--admin-accent);
+}
+
+.addPhotoCard {
+  border: 2px dashed var(--admin-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  background-color: var(--admin-surface);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.addPhotoCard:hover {
+  border-color: var(--admin-accent);
+  background-color: var(--admin-surface-elevated);
+}

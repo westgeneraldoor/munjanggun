@@ -1,0 +1,139 @@
+.breadcrumbWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.breadcrumb {
+  font-size: var(--text-base);
+}
+
+.desktopList {
+  display: none;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+@media (min-width: 769px) {
+  .desktopList {
+    display: flex;
+  }
+}
+
+.desktopItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.link {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.link:hover {
+  color: var(--color-text);
+}
+
+.current {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.separator {
+  color: var(--color-text-muted);
+}
+
+.mobileList {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+@media (min-width: 769px) {
+  .mobileList {
+    display: none;
+  }
+}
+
+.mobileItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.mobileLink {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.mobileLink:hover {
+  color: var(--color-text);
+}
+
+.mobileSeparator {
+  color: var(--color-text-muted);
+}
+
+.mobileCurrent {
+  color: var(--color-text);
+  font-weight: var(--font-medium);
+}
+
+.backButton {
+  width: fit-content;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid rgba(196, 162, 101, 0.22);
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-text);
+  text-decoration: none;
+  transition:
+    border-color 180ms var(--ease-out),
+    background-color 180ms var(--ease-out),
+    transform 180ms var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.backButton:active {
+  transform: scale(0.98);
+  border-color: rgba(196, 162, 101, 0.7);
+  background: rgba(196, 162, 101, 0.12);
+}
+
+.backText {
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+}
+
+.backSubText {
+  color: var(--color-text-sub);
+  font-size: var(--text-xs);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .backButton:hover {
+    border-color: rgba(196, 162, 101, 0.75);
+    background: rgba(196, 162, 101, 0.1);
+  }
+}
+
+@media (max-width: 420px) {
+  .backButton {
+    width: 100%;
+    justify-content: center;
+  }
+}

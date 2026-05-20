@@ -1,0 +1,26 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background-color: var(--admin-bg);
+  color: var(--admin-text);
+}
+
+.main {
+  flex: 1;
+  padding: var(--space-4);
+  /* for mobile, padding top will account for header */
+  padding-top: calc(var(--space-4) + 56px); /* 56px is mobile header height */
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    flex-direction: row;
+  }
+  
+  .main {
+    padding: var(--space-8);
+    padding-top: var(--space-8);
+    margin-left: 240px; /* Sidebar width */
+  }
+}
