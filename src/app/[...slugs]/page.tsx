@@ -14,6 +14,7 @@ import Breadcrumb from '@/components/customer/Breadcrumb'
 import ScrollRestorer from '@/components/customer/ScrollRestorer'
 import { getOptimalCols } from '@/lib/grid-utils'
 import { EMPTY_STATE_TITLE, EMPTY_STATE_SUBTITLE, GALLERY_SECTION_TITLE } from '@/lib/constants'
+import { buildShareDescription } from '@/lib/share'
 import { BreadcrumbItem, NodeRow, resolveSlugChain } from '@/lib/nodes'
 import styles from './page.module.css'
 
@@ -29,14 +30,18 @@ export async function generateMetadata(
     return {}
   }
 
-  const { currentNode } = resolved
+  const { currentNode, breadcrumbItems } = resolved
+  const shareDescription = buildShareDescription({
+    breadcrumbItems,
+    description: currentNode.tagline || currentNode.description,
+  })
 
   return {
     title: `${currentNode.name} | 문장군`,
-    description: currentNode.tagline || currentNode.description || '문장군 디지털 쇼룸',
+    description: shareDescription,
     openGraph: {
       title: currentNode.name,
-      description: currentNode.tagline || currentNode.description || '문장군 디지털 쇼룸',
+      description: shareDescription,
       images: currentNode.image_url ? [currentNode.image_url] : [],
     }
   }
@@ -87,6 +92,10 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
   const heroMedia = heroMediaResult.data
   const children = childrenResult.data
   const settings = settingsResult.data
+  const shareDescription = buildShareDescription({
+    breadcrumbItems,
+    description: node.tagline || node.description,
+  })
 
   const basePath = '/' + slugPath.join('/')
   const heroHasContent = (heroMedia && heroMedia.length > 0) || node.hero_video_url || node.hero_mobile_video_url || node.hero_title || node.hero_subtitle || node.hero_description
@@ -152,8 +161,7 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
         reservationUrl={settings?.reservation_url || null}
         storeUrl={settings?.store_url || null}
         shareTitle={node.name}
-        shareDescription={node.tagline || node.description || null}
-        shareImageUrl={node.image_url || null}
+        shareDescription={shareDescription}
       />
     </main>
   )
@@ -177,6 +185,10 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
 
   const photos = photosResult.data
   const settings = settingsResult.data
+  const shareDescription = buildShareDescription({
+    breadcrumbItems,
+    description: node.tagline || node.description,
+  })
 
   return (
     <main className={styles.main}>
@@ -242,8 +254,7 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
         reservationUrl={settings?.reservation_url || null}
         storeUrl={settings?.store_url || null}
         shareTitle={node.name}
-        shareDescription={node.tagline || node.description || null}
-        shareImageUrl={node.image_url || null}
+        shareDescription={shareDescription}
       />
     </main>
   )

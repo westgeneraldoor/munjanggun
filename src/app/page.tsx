@@ -95,7 +95,6 @@ export default async function Home() {
         storeUrl={siteSettings?.store_url || null}
         shareTitle={siteSettings?.hero_title || siteSettings?.site_title || null}
         shareDescription={siteSettings?.hero_description || siteSettings?.site_description || null}
-        shareImageUrl={siteSettings?.og_image_url || null}
       />
     </main>
   )
