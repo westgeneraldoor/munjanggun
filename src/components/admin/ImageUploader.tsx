@@ -276,15 +276,6 @@ export default function ImageUploader({
     setProgress(10)
 
     try {
-      // 기존 이미지가 있다면 삭제 처리
-      if (currentImageUrl) {
-        const oldPath = getStoragePathFromUrl(currentImageUrl)
-        if (oldPath) {
-          const supabase = createClient()
-          await supabase.storage.from(bucketName).remove([oldPath])
-        }
-      }
-
       setProgress(40)
       const url = await uploadSingleFile(file)
       

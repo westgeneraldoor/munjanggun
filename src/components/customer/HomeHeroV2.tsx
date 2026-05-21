@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import Image from 'next/image'
+import { shouldBypassNextImageOptimization } from '@/lib/image'
 import styles from './HomeHeroV2.module.css'
 
 interface HomeHeroV2Props {
@@ -107,6 +108,7 @@ export default function HomeHeroV2({ settings, desktopMedia, mobileMedia }: Home
             sizes="100vw"
             className={styles.image}
             style={{ objectFit: 'cover' }}
+            unoptimized={shouldBypassNextImageOptimization(item.image_url)}
           />
         </div>
       )

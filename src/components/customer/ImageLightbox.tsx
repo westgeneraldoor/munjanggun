@@ -3,6 +3,7 @@
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import { useEffect, useRef, useCallback, useState } from 'react'
+import { shouldBypassNextImageOptimization } from '@/lib/image'
 import styles from './ImageLightbox.module.css'
 
 interface Photo {
@@ -48,11 +49,12 @@ export default function ImageLightbox({
     const links: HTMLLinkElement[] = []
 
     const preload = (src: string) => {
-      const nextUrl = `/_next/image?url=${encodeURIComponent(src)}&w=1080&q=85`
       const link = document.createElement('link')
       link.rel = 'prefetch'
       link.as = 'image'
-      link.href = nextUrl
+      link.href = shouldBypassNextImageOptimization(src)
+        ? src
+        : `/_next/image?url=${encodeURIComponent(src)}&w=1080&q=85`
       document.head.appendChild(link)
       links.push(link)
     }
@@ -177,6 +179,7 @@ export default function ImageLightbox({
           quality={85}
           sizes="100vw"
           className={`${styles.image} ${isCurrentImageLoaded ? styles.imageLoaded : ''}`}
+          unoptimized={shouldBypassNextImageOptimization(currentPhoto.image_url)}
           onLoad={() => setLoadedIndex(currentIndex)}
         />
       </div>

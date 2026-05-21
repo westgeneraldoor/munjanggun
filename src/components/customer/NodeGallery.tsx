@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useState } from 'react'
+import { shouldBypassNextImageOptimization } from '@/lib/image'
 import ScrollAnimationWrapper from './ScrollAnimationWrapper'
 import ImageLightbox from './ImageLightbox'
 import styles from './NodeGallery.module.css'
@@ -45,6 +46,7 @@ export default function NodeGallery({ photos, nodeName }: NodeGalleryProps) {
             fill
             className={`${styles.image} ${loadedSet.has(index) ? styles.imageLoaded : ''}`}
             sizes="(max-width: 768px) 50vw, 400px"
+            unoptimized={shouldBypassNextImageOptimization(photo.image_url)}
             onLoad={() => handleImageLoad(index)}
           />
         </div>

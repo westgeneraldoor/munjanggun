@@ -15,6 +15,7 @@ import ScrollRestorer from '@/components/customer/ScrollRestorer'
 import { getOptimalCols } from '@/lib/grid-utils'
 import { EMPTY_STATE_TITLE, EMPTY_STATE_SUBTITLE, GALLERY_SECTION_TITLE } from '@/lib/constants'
 import { buildShareDescription } from '@/lib/share'
+import { shouldBypassNextImageOptimization } from '@/lib/image'
 import { BreadcrumbItem, NodeRow, resolveSlugChain } from '@/lib/nodes'
 import styles from './page.module.css'
 
@@ -198,6 +199,7 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
                 className={styles.mobileDetailImage}
                 sizes="100vw"
                 preload
+                unoptimized={shouldBypassNextImageOptimization(node.image_url)}
               />
             </div>
           </ViewTransition>
@@ -216,6 +218,7 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
                 className={styles.splitImage}
                 sizes="(min-width: 768px) 50vw, 100vw"
                 preload
+                unoptimized={shouldBypassNextImageOptimization(node.image_url)}
               />
             </ViewTransition>
           )}

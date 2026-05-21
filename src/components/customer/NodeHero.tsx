@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
+import { shouldBypassNextImageOptimization } from '@/lib/image'
 import styles from './NodeHero.module.css'
 
 interface NodeHeroProps {
@@ -159,6 +160,7 @@ export default function NodeHero({
             quality={85}
             sizes="100vw"
             className={styles.image}
+            unoptimized={shouldBypassNextImageOptimization(item.image_url)}
           />
         </div>
       )

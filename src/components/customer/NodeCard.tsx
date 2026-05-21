@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useLinkStatus } from 'next/link'
 import Image from 'next/image'
+import { shouldBypassNextImageOptimization } from '@/lib/image'
 import styles from './NodeCard.module.css'
 
 interface NodeCardProps {
@@ -62,6 +63,7 @@ export default function NodeCard({ node, basePath = '', textPosition = 'overlay'
             fill
             sizes="(max-width: 768px) 50vw, 33vw"
             className={`${styles.image} ${imgLoaded ? styles.imageLoaded : ''}`}
+            unoptimized={shouldBypassNextImageOptimization(node.image_url)}
             onLoad={() => setImgLoaded(true)}
           />
         ) : (
