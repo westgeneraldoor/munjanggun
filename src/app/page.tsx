@@ -94,7 +94,6 @@ export default async function Home() {
         reservationUrl={siteSettings?.reservation_url || null}
         storeUrl={siteSettings?.store_url || null}
         shareTitle={siteSettings?.hero_title || siteSettings?.site_title || null}
-        shareDescription={siteSettings?.hero_description || siteSettings?.site_description || null}
       />
     </main>
   )

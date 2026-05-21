@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { buildShareDescription } from './share.ts'
+import { buildNativeShareData, buildShareDescription } from './share.ts'
 
 test('buildShareDescription includes the browsing stage before the node copy', () => {
   assert.equal(
@@ -19,4 +19,17 @@ test('buildShareDescription includes the browsing stage before the node copy', (
 
 test('buildShareDescription falls back cleanly when there is no breadcrumb or body copy', () => {
   assert.equal(buildShareDescription({ breadcrumbItems: [], description: '' }), '문장군 디지털 쇼룸')
+})
+
+test('buildNativeShareData omits text so chat apps do not create a separate message body', () => {
+  assert.deepEqual(
+    buildNativeShareData({
+      title: '라운드아치',
+      url: 'https://munjanggun.vercel.app/design/round-arch',
+    }),
+    {
+      title: '라운드아치',
+      url: 'https://munjanggun.vercel.app/design/round-arch',
+    }
+  )
 })

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Share2, Check, Home } from 'lucide-react'
 import { logError } from '@/lib/logger'
+import { buildNativeShareData } from '@/lib/share'
 import styles from './CTABar.module.css'
 
 interface CTABarProps {
@@ -11,7 +12,6 @@ interface CTABarProps {
   storeUrl: string | null
   hideUntilScroll?: boolean
   shareTitle?: string | null
-  shareDescription?: string | null
 }
 
 function canUseNativeShare(shareData: ShareData) {
@@ -44,7 +44,6 @@ export default function CTABar({
   storeUrl,
   hideUntilScroll = false,
   shareTitle,
-  shareDescription,
 }: CTABarProps) {
   const [isVisible, setIsVisible] = useState(!hideUntilScroll)
   const [shared, setShared] = useState(false)
@@ -98,8 +97,7 @@ export default function CTABar({
   const handleShare = async () => {
     const url = window.location.href
     const title = shareTitle || document.title
-    const text = shareDescription || '문장군 디지털 쇼룸'
-    const shareData: ShareData = { title, text, url }
+    const shareData = buildNativeShareData({ title, url })
 
     try {
       if (canUseNativeShare(shareData)) {

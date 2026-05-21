@@ -28,3 +28,16 @@ export function buildShareDescription({
 
   return [stage, body].filter(Boolean).join('\n')
 }
+
+export function buildNativeShareData({
+  title,
+  url,
+}: {
+  title: string
+  url: string
+}): ShareData {
+  return {
+    title,
+    url,
+  }
+}

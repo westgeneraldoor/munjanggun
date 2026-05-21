@@ -92,10 +92,6 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
   const heroMedia = heroMediaResult.data
   const children = childrenResult.data
   const settings = settingsResult.data
-  const shareDescription = buildShareDescription({
-    breadcrumbItems,
-    description: node.tagline || node.description,
-  })
 
   const basePath = '/' + slugPath.join('/')
   const heroHasContent = (heroMedia && heroMedia.length > 0) || node.hero_video_url || node.hero_mobile_video_url || node.hero_title || node.hero_subtitle || node.hero_description
@@ -161,7 +157,6 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
         reservationUrl={settings?.reservation_url || null}
         storeUrl={settings?.store_url || null}
         shareTitle={node.name}
-        shareDescription={shareDescription}
       />
     </main>
   )
@@ -185,10 +180,6 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
 
   const photos = photosResult.data
   const settings = settingsResult.data
-  const shareDescription = buildShareDescription({
-    breadcrumbItems,
-    description: node.tagline || node.description,
-  })
 
   return (
     <main className={styles.main}>
@@ -254,7 +245,6 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
         reservationUrl={settings?.reservation_url || null}
         storeUrl={settings?.store_url || null}
         shareTitle={node.name}
-        shareDescription={shareDescription}
       />
     </main>
   )
