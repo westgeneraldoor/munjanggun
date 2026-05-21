@@ -35,6 +35,8 @@ export async function generateMetadata(
     title: `${currentNode.name} | 문장군`,
     description: currentNode.tagline || currentNode.description || '문장군 디지털 쇼룸',
     openGraph: {
+      title: currentNode.name,
+      description: currentNode.tagline || currentNode.description || '문장군 디지털 쇼룸',
       images: currentNode.image_url ? [currentNode.image_url] : [],
     }
   }
@@ -133,7 +135,7 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
                 <NodeCard 
                   node={child} 
                   basePath={basePath} 
-                  textPosition={(node.card_text_position as 'overlay' | 'below') || 'overlay'} 
+                  textPosition={(child.card_text_position as 'overlay' | 'below') || (node.card_text_position as 'overlay' | 'below') || 'overlay'}
                 />
               </ScrollAnimationWrapper>
             ))}
@@ -149,6 +151,9 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
       <CTABar
         reservationUrl={settings?.reservation_url || null}
         storeUrl={settings?.store_url || null}
+        shareTitle={node.name}
+        shareDescription={node.tagline || node.description || null}
+        shareImageUrl={node.image_url || null}
       />
     </main>
   )
@@ -179,10 +184,18 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
       
       <div className={styles.mobileHero}>
         {node.image_url && (
-          <NodeHero 
-            desktopMedia={[]}
-            mobileMedia={[{ image_url: node.image_url, display_order: 0 }]} 
-          />
+          <ViewTransition name={`node-detail-image-${node.id}`} share="node-morph">
+            <div className={styles.mobileDetailImageWrap}>
+              <Image
+                src={node.image_url}
+                alt={node.name}
+                fill
+                className={styles.mobileDetailImage}
+                sizes="100vw"
+                preload
+              />
+            </div>
+          </ViewTransition>
         )}
       </div>
       
@@ -197,7 +210,7 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
                 fill
                 className={styles.splitImage}
                 sizes="(min-width: 768px) 50vw, 100vw"
-                priority
+                preload
               />
             </ViewTransition>
           )}
@@ -228,6 +241,9 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
       <CTABar
         reservationUrl={settings?.reservation_url || null}
         storeUrl={settings?.store_url || null}
+        shareTitle={node.name}
+        shareDescription={node.tagline || node.description || null}
+        shareImageUrl={node.image_url || null}
       />
     </main>
   )

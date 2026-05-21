@@ -4,13 +4,14 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Edit2, Trash2, FolderPlus, FilePlus, ChevronUp, ChevronDown, Image as ImageIcon, FolderInput } from 'lucide-react'
+import { Edit2, Trash2, FolderPlus, FilePlus, ChevronUp, ChevronDown, Image as ImageIcon, FolderInput, Copy } from 'lucide-react'
 import { createShowroomClient } from '@/lib/supabase/client'
 import { logError } from '@/lib/logger'
 import StatusBadge from '@/components/admin/StatusBadge'
 import ConfirmModal from '@/components/admin/ConfirmModal'
 import NodeAddModal from '@/components/admin/NodeAddModal'
 import NodeMoveModal from '@/components/admin/NodeMoveModal'
+import NodeCopyModal from '@/components/admin/NodeCopyModal'
 import styles from './NodeList.module.css'
 
 type Node = {
@@ -59,6 +60,9 @@ export default function NodeList() {
 
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false)
   const [movingNode, setMovingNode] = useState<Node | null>(null)
+
+  const [isCopyModalOpen, setIsCopyModalOpen] = useState(false)
+  const [copyingNode, setCopyingNode] = useState<Node | null>(null)
 
   const router = useRouter()
   const supabase = createShowroomClient()
@@ -213,6 +217,13 @@ export default function NodeList() {
     router.refresh()
   }
 
+  const handleCopySuccess = () => {
+    fetchNodes(currentParentId)
+    setIsCopyModalOpen(false)
+    setCopyingNode(null)
+    router.refresh()
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -316,6 +327,16 @@ export default function NodeList() {
               </div>
 
               <div className={styles.itemActions}>
+                <button
+                  className={styles.actionBtn}
+                  onClick={() => {
+                    setCopyingNode(node)
+                    setIsCopyModalOpen(true)
+                  }}
+                  title="복사"
+                >
+                  <Copy size={18} />
+                </button>
                 <button 
                   className={styles.actionBtn}
                   onClick={() => {
@@ -373,6 +394,16 @@ export default function NodeList() {
         node={movingNode}
         onClose={() => setIsMoveModalOpen(false)}
         onSuccess={handleMoveSuccess}
+      />
+
+      <NodeCopyModal
+        isOpen={isCopyModalOpen}
+        node={copyingNode}
+        onClose={() => {
+          setIsCopyModalOpen(false)
+          setCopyingNode(null)
+        }}
+        onSuccess={handleCopySuccess}
       />
     </div>
   )

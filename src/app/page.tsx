@@ -21,6 +21,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: siteSettings?.hero_title || '문장군 디지털 쇼룸',
     description: siteSettings?.hero_description || '문장군 디지털 쇼룸',
+    openGraph: {
+      title: siteSettings?.hero_title || siteSettings?.site_title || '문장군 디지털 쇼룸',
+      description: siteSettings?.hero_description || siteSettings?.site_description || '문장군 디지털 쇼룸',
+      images: siteSettings?.og_image_url ? [siteSettings.og_image_url] : [],
+    },
   }
 }
 
@@ -72,7 +77,7 @@ export default async function Home() {
               <ScrollAnimationWrapper key={node.id} delay={Math.min(idx * 40, 160)}>
                 <NodeCard 
                   node={node} 
-                  textPosition={(siteSettings?.card_text_position as 'overlay' | 'below') || 'overlay'} 
+                  textPosition={(node.card_text_position as 'overlay' | 'below') || (siteSettings?.card_text_position as 'overlay' | 'below') || 'overlay'}
                 />
               </ScrollAnimationWrapper>
             ))}
@@ -88,6 +93,9 @@ export default async function Home() {
       <CTABar
         reservationUrl={siteSettings?.reservation_url || null}
         storeUrl={siteSettings?.store_url || null}
+        shareTitle={siteSettings?.hero_title || siteSettings?.site_title || null}
+        shareDescription={siteSettings?.hero_description || siteSettings?.site_description || null}
+        shareImageUrl={siteSettings?.og_image_url || null}
       />
     </main>
   )

@@ -1,29 +1,43 @@
 'use client'
 
 import { useEffect } from 'react'
+import { usePathname } from 'next/navigation'
+
+const SCROLL_KEY_PREFIX = 'catalog-scroll-y:'
+const NAV_DIRECTION_KEY = 'catalog-nav-direction'
 
 export default function ScrollRestorer() {
+  const pathname = usePathname()
+
   useEffect(() => {
-    // Restore scroll position
-    const savedScrollY = sessionStorage.getItem('catalog-scroll-y')
-    if (savedScrollY !== null) {
+    const scrollKey = `${SCROLL_KEY_PREFIX}${pathname}`
+    const navDirection = sessionStorage.getItem(NAV_DIRECTION_KEY)
+
+    if (navDirection === 'forward') {
+      sessionStorage.removeItem(NAV_DIRECTION_KEY)
       window.scrollTo({
-        top: parseInt(savedScrollY, 10),
-        behavior: 'instant'
+        top: 0,
+        behavior: 'auto',
+      })
+    } else {
+      const savedScrollY = sessionStorage.getItem(scrollKey)
+      window.scrollTo({
+        top: savedScrollY ? parseInt(savedScrollY, 10) : 0,
+        behavior: 'auto',
       })
     }
 
-    // Save scroll position before leaving
     const handleScroll = () => {
-      sessionStorage.setItem('catalog-scroll-y', window.scrollY.toString())
+      sessionStorage.setItem(scrollKey, window.scrollY.toString())
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
     
     return () => {
+      sessionStorage.setItem(scrollKey, window.scrollY.toString())
       window.removeEventListener('scroll', handleScroll)
     }
-  }, [])
+  }, [pathname])
 
   return null
 }

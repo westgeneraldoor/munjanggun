@@ -35,15 +35,20 @@ export default function NodeCard({ node, basePath = '', textPosition = 'overlay'
   const [imgLoaded, setImgLoaded] = useState(false)
   const [isPressed, setIsPressed] = useState(false)
 
-  const isDetailCard = node.type === 'detail'
-  const isBelow = textPosition === 'below' || isDetailCard
+  const isBelow = textPosition === 'below'
   const href = basePath ? `${basePath}/${node.slug}` : `/${node.slug}`
+
+  const handleNavigate = () => {
+    sessionStorage.setItem(`catalog-scroll-y:${window.location.pathname}`, window.scrollY.toString())
+    sessionStorage.setItem('catalog-nav-direction', 'forward')
+  }
 
   return (
     <Link
       href={href}
       transitionTypes={['nav-forward']}
       className={`${styles.card} ${isBelow ? styles.cardBelow : ''} ${isPressed ? styles.cardPressed : ''}`}
+      onNavigate={handleNavigate}
       onPointerDown={() => setIsPressed(true)}
       onPointerUp={() => setIsPressed(false)}
       onPointerCancel={() => setIsPressed(false)}

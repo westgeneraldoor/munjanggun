@@ -144,6 +144,19 @@
   display: block;
 }
 
+.mobileDetailImageWrap {
+  position: relative;
+  width: 100%;
+  height: min(82dvh, 760px);
+  min-height: 420px;
+  background-color: var(--color-surface);
+}
+
+.mobileDetailImage {
+  object-fit: contain;
+  object-position: center;
+}
+
 .detailSplit {
   display: block;
 }
@@ -170,11 +183,13 @@
     top: 0;
     height: 100vh;
     height: 100dvh;
+    overflow: hidden;
+    background-color: var(--color-surface);
   }
 
   .splitImage {
-    object-fit: cover;
-    animation: kenburns 20s ease-in-out infinite alternate;
+    object-fit: contain;
+    object-position: center;
   }
 
   .splitRight {

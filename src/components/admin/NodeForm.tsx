@@ -342,21 +342,24 @@ export default function NodeForm({ node, heroMedia: initialHeroMedia, galleryPho
           />
         </div>
 
-        {type === 'listing' && (
-          <div className={styles.inputGroup}>
-            <label htmlFor="cardTextPosition" className={styles.label}>하위 카드 표시 방식</label>
-            <select
-              id="cardTextPosition"
-              className={styles.select}
-              value={cardTextPosition}
-              onChange={(e) => setCardTextPosition(e.target.value as 'overlay' | 'below')}
-              disabled={isLoading}
-            >
-              <option value="overlay">이미지 위 (오버레이)</option>
-              <option value="below">이미지 아래</option>
-            </select>
-          </div>
-        )}
+        <div className={styles.inputGroup}>
+          <label htmlFor="cardTextPosition" className={styles.label}>카드 텍스트 표시 방식</label>
+          <select
+            id="cardTextPosition"
+            className={styles.select}
+            value={cardTextPosition}
+            onChange={(e) => setCardTextPosition(e.target.value as 'overlay' | 'below')}
+            disabled={isLoading}
+          >
+            <option value="overlay">이미지 위 (오버레이)</option>
+            <option value="below">이미지 아래</option>
+          </select>
+          <p className={styles.helpText}>
+            {type === 'listing'
+              ? '하위 카드의 기본 표시 방식으로 사용됩니다.'
+              : '이 상세 노드가 부모 목록에서 카드로 보일 때 적용됩니다.'}
+          </p>
+        </div>
 
         <div className={styles.inputGroup}>
           <label htmlFor="status" className={styles.label}>상태</label>
