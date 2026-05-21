@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Share2, Check, Home, MessageCircle, Link as LinkIcon, Copy } from 'lucide-react'
 import { logError } from '@/lib/logger'
+import { buildCtaRedirectUrl } from '@/lib/ctaRedirect'
 import { buildKakaoFeedTemplate, buildNativeShareData, type KakaoFeedTemplate } from '@/lib/share'
 import styles from './CTABar.module.css'
 
@@ -163,6 +164,7 @@ export default function CTABar({
 
   const handleKakaoShare = async () => {
     const url = window.location.href
+    const origin = window.location.origin
     const title = shareTitle || document.title
 
     if (!KAKAO_JAVASCRIPT_KEY || !shareImageUrl) {
@@ -184,8 +186,8 @@ export default function CTABar({
           description: shareDescription,
           imageUrl: shareImageUrl,
           pageUrl: url,
-          reservationUrl,
-          storeUrl,
+          reservationUrl: reservationUrl ? buildCtaRedirectUrl(origin, 'reservation') : null,
+          storeUrl: storeUrl ? buildCtaRedirectUrl(origin, 'store') : null,
         })
       )
 
@@ -250,10 +252,12 @@ export default function CTABar({
               <span>카카오톡</span>
             </button>
           )}
-          <button type="button" className={styles.shareMenuItem} onClick={handleShare} role="menuitem">
-            <LinkIcon size={18} />
-            <span>기본 공유</span>
-          </button>
+          {(!KAKAO_JAVASCRIPT_KEY || !shareImageUrl) && (
+            <button type="button" className={styles.shareMenuItem} onClick={handleShare} role="menuitem">
+              <LinkIcon size={18} />
+              <span>기본 공유</span>
+            </button>
+          )}
           <button type="button" className={styles.shareMenuItem} onClick={handleCopyLink} role="menuitem">
             <Copy size={18} />
             <span>링크 복사</span>

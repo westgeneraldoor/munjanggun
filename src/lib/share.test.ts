@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
+import { buildCtaRedirectUrl } from './ctaRedirect.ts'
 import { buildKakaoFeedTemplate, buildNativeShareData, buildShareDescription } from './share.ts'
 
 test('buildShareDescription includes the browsing stage before the node copy', () => {
@@ -35,14 +36,16 @@ test('buildNativeShareData omits text so chat apps do not create a separate mess
 })
 
 test('buildKakaoFeedTemplate restores feed card buttons without breadcrumb text', () => {
+  const origin = 'https://munjanggun.vercel.app'
+
   assert.deepEqual(
     buildKakaoFeedTemplate({
       title: '라운드아치',
       description: '상하 아치, 갤러리, 우아함',
       imageUrl: 'https://example.com/round-arch.jpg',
       pageUrl: 'https://munjanggun.vercel.app/design/round-arch',
-      reservationUrl: 'https://booking.naver.com/booking/5/bizes/654913/items/6032347',
-      storeUrl: 'http://smartstore.naver.com/doorgeneral',
+      reservationUrl: buildCtaRedirectUrl(origin, 'reservation'),
+      storeUrl: buildCtaRedirectUrl(origin, 'store'),
     }),
     {
       objectType: 'feed',
@@ -59,15 +62,15 @@ test('buildKakaoFeedTemplate restores feed card buttons without breadcrumb text'
         {
           title: '무료방문견적',
           link: {
-            mobileWebUrl: 'https://booking.naver.com/booking/5/bizes/654913/items/6032347',
-            webUrl: 'https://booking.naver.com/booking/5/bizes/654913/items/6032347',
+            mobileWebUrl: 'https://munjanggun.vercel.app/go/reservation',
+            webUrl: 'https://munjanggun.vercel.app/go/reservation',
           },
         },
         {
           title: '브랜드스토어',
           link: {
-            mobileWebUrl: 'http://smartstore.naver.com/doorgeneral',
-            webUrl: 'http://smartstore.naver.com/doorgeneral',
+            mobileWebUrl: 'https://munjanggun.vercel.app/go/store',
+            webUrl: 'https://munjanggun.vercel.app/go/store',
           },
         },
       ],
