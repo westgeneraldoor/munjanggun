@@ -5,6 +5,20 @@ export type ShareBreadcrumbItem = {
   href?: string
 }
 
+export type KakaoFeedTemplate = {
+  objectType: 'feed'
+  content: {
+    title: string
+    description?: string
+    imageUrl: string
+    link: { mobileWebUrl: string; webUrl: string }
+  }
+  buttons?: Array<{
+    title: string
+    link: { mobileWebUrl: string; webUrl: string }
+  }>
+}
+
 function normalizeText(value?: string | null) {
   const trimmed = value?.trim()
   return trimmed ? trimmed : null
@@ -39,5 +53,47 @@ export function buildNativeShareData({
   return {
     title,
     url,
+  }
+}
+
+export function buildKakaoFeedTemplate({
+  title,
+  description,
+  imageUrl,
+  pageUrl,
+  reservationUrl,
+  storeUrl,
+}: {
+  title: string
+  description?: string | null
+  imageUrl: string
+  pageUrl: string
+  reservationUrl?: string | null
+  storeUrl?: string | null
+}): KakaoFeedTemplate {
+  const buttons = [
+    reservationUrl
+      ? {
+          title: '무료방문견적',
+          link: { mobileWebUrl: reservationUrl, webUrl: reservationUrl },
+        }
+      : null,
+    storeUrl
+      ? {
+          title: '브랜드스토어',
+          link: { mobileWebUrl: storeUrl, webUrl: storeUrl },
+        }
+      : null,
+  ].filter((button): button is NonNullable<typeof button> => Boolean(button))
+
+  return {
+    objectType: 'feed',
+    content: {
+      title,
+      description: normalizeText(description) || DEFAULT_SHARE_DESCRIPTION,
+      imageUrl,
+      link: { mobileWebUrl: pageUrl, webUrl: pageUrl },
+    },
+    buttons: buttons.length > 0 ? buttons.slice(0, 2) : undefined,
   }
 }

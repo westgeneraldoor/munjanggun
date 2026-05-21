@@ -157,6 +157,8 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
         reservationUrl={settings?.reservation_url || null}
         storeUrl={settings?.store_url || null}
         shareTitle={node.name}
+        shareDescription={node.tagline || node.description || null}
+        shareImageUrl={node.image_url || null}
       />
     </main>
   )
@@ -245,6 +247,8 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
         reservationUrl={settings?.reservation_url || null}
         storeUrl={settings?.store_url || null}
         shareTitle={node.name}
+        shareDescription={node.tagline || node.description || null}
+        shareImageUrl={node.image_url || null}
       />
     </main>
   )
