@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Share2, Check, Home, MessageCircle, Link as LinkIcon, Copy } from 'lucide-react'
+import { Share2, Check, Home, MessageCircle } from 'lucide-react'
 import { logError } from '@/lib/logger'
 import { buildCtaRedirectUrl } from '@/lib/ctaRedirect'
-import { buildKakaoFeedTemplate, buildNativeShareData, type KakaoFeedTemplate } from '@/lib/share'
+import { buildKakaoFeedTemplate, buildNativeShareData, SHARE_MENU_ITEMS, type KakaoFeedTemplate } from '@/lib/share'
 import styles from './CTABar.module.css'
 
 interface CTABarProps {
@@ -37,23 +37,6 @@ function canUseNativeShare(shareData: ShareData) {
   }
 
   return typeof navigator.canShare !== 'function' || navigator.canShare(shareData)
-}
-
-async function copyToClipboard(value: string) {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(value)
-    return
-  }
-
-  const textarea = document.createElement('textarea')
-  textarea.value = value
-  textarea.setAttribute('readonly', '')
-  textarea.style.position = 'fixed'
-  textarea.style.left = '-9999px'
-  document.body.appendChild(textarea)
-  textarea.select()
-  document.execCommand('copy')
-  document.body.removeChild(textarea)
 }
 
 function loadKakaoSdk() {
@@ -145,14 +128,13 @@ export default function CTABar({
     const shareData = buildNativeShareData({ title, url })
 
     try {
-      if (canUseNativeShare(shareData)) {
-        await navigator.share(shareData)
+      if (!canUseNativeShare(shareData)) {
         setIsShareMenuOpen(false)
-        showSharedState()
+        logError('기본 공유 미지원', new Error('Web Share API is not available in this browser'))
         return
       }
 
-      await copyToClipboard(url)
+      await navigator.share(shareData)
       setIsShareMenuOpen(false)
       showSharedState()
     } catch (err) {
@@ -199,16 +181,6 @@ export default function CTABar({
     }
   }
 
-  const handleCopyLink = async () => {
-    try {
-      await copyToClipboard(window.location.href)
-      setIsShareMenuOpen(false)
-      showSharedState()
-    } catch (err) {
-      logError('링크 복사 실패', err)
-    }
-  }
-
   return (
     <div className={`${styles.container} ${!isVisible ? styles.hidden : ''}`}>
       <Link href="/" className={styles.homeButton} aria-label="홈으로 이동">
@@ -246,21 +218,13 @@ export default function CTABar({
       </button>
       {isShareMenuOpen && (
         <div className={styles.shareMenu} role="menu" aria-label="공유 방법 선택">
-          {KAKAO_JAVASCRIPT_KEY && shareImageUrl && (
-            <button type="button" className={styles.shareMenuItem} onClick={handleKakaoShare} role="menuitem">
-              <MessageCircle size={18} />
-              <span>카카오톡</span>
-            </button>
-          )}
-          {(!KAKAO_JAVASCRIPT_KEY || !shareImageUrl) && (
-            <button type="button" className={styles.shareMenuItem} onClick={handleShare} role="menuitem">
-              <LinkIcon size={18} />
-              <span>기본 공유</span>
-            </button>
-          )}
-          <button type="button" className={styles.shareMenuItem} onClick={handleCopyLink} role="menuitem">
-            <Copy size={18} />
-            <span>링크 복사</span>
+          <button type="button" className={styles.shareMenuItem} onClick={handleKakaoShare} role="menuitem">
+            <MessageCircle size={18} />
+            <span>{SHARE_MENU_ITEMS[0].label}</span>
+          </button>
+          <button type="button" className={styles.shareMenuItem} onClick={handleShare} role="menuitem">
+            <Share2 size={18} />
+            <span>{SHARE_MENU_ITEMS[1].label}</span>
           </button>
         </div>
       )}

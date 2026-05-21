@@ -131,14 +131,6 @@
   }
 }
 
-.galleryDivider {
-  width: 60px;
-  border: none;
-  border-top: 1px solid var(--color-accent);
-  opacity: 0.3;
-  margin: 0 0 var(--space-4) 0;
-}
-
 /* === Detail Split Layout === */
 .mobileHero {
   display: block;

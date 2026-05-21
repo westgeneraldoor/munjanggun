@@ -5,6 +5,7 @@ import { logError } from '@/lib/logger'
 import Image from 'next/image'
 import { UploadCloud, X, Edit2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { getCompressedImageMimeType } from '@/lib/admin/imageUpload'
 import styles from './ImageUploader.module.css'
 
 interface ImageUploaderProps {
@@ -19,7 +20,7 @@ interface ImageUploaderProps {
   onMultiUploadComplete?: (urls: string[]) => void
   onUploadReplace?: (oldUrl: string, newUrl: string) => void  // blob→실제URL 교체용
   compressionMaxDimension?: number   // 압축 최대 크기 (px)
-  compressionQuality?: number        // JPEG 품질 (0~1)
+  compressionQuality?: number        // 압축 품질 (0~1)
 }
 
 export default function ImageUploader({
@@ -84,7 +85,7 @@ export default function ImageUploader({
 
         ctx.drawImage(img, 0, 0, width, height)
 
-        const mimeType = file.type === 'image/webp' ? 'image/webp' : 'image/jpeg'
+        const mimeType = getCompressedImageMimeType(file.type)
         canvas.toBlob(
           (blob) => {
             if (!blob) {

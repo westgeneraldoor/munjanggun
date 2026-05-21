@@ -233,7 +233,6 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
           {photos && photos.length > 0 && (
             <div className={styles.gallerySection}>
               <ScrollAnimationWrapper delay={0}>
-                <hr className={styles.galleryDivider} />
                 <h2 className={styles.galleryTitle}>{GALLERY_SECTION_TITLE}</h2>
               </ScrollAnimationWrapper>
               <NodeGallery photos={photos} nodeName={node.name} />

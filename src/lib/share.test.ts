@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import { buildCtaRedirectUrl } from './ctaRedirect.ts'
-import { buildKakaoFeedTemplate, buildNativeShareData, buildShareDescription } from './share.ts'
+import { buildKakaoFeedTemplate, buildNativeShareData, buildShareDescription, SHARE_MENU_ITEMS } from './share.ts'
 
 test('buildShareDescription includes the browsing stage before the node copy', () => {
   assert.equal(
@@ -32,6 +32,13 @@ test('buildNativeShareData omits text so chat apps do not create a separate mess
       title: '라운드아치',
       url: 'https://munjanggun.vercel.app/design/round-arch',
     }
+  )
+})
+
+test('SHARE_MENU_ITEMS keeps the customer share menu to Kakao and native share only', () => {
+  assert.deepEqual(
+    SHARE_MENU_ITEMS.map(item => item.label),
+    ['카카오톡으로 공유', '다른 방법으로 공유']
   )
 })
 

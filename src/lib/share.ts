@@ -19,6 +19,11 @@ export type KakaoFeedTemplate = {
   }>
 }
 
+export const SHARE_MENU_ITEMS = [
+  { id: 'kakao', label: '카카오톡으로 공유' },
+  { id: 'native', label: '다른 방법으로 공유' },
+] as const
+
 function normalizeText(value?: string | null) {
   const trimmed = value?.trim()
   return trimmed ? trimmed : null
