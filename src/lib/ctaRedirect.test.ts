@@ -1,12 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { buildCtaRedirectUrl, selectCtaUrl } from './ctaRedirect.ts'
-
-test('buildCtaRedirectUrl keeps Kakao button links on the registered showroom domain', () => {
-  assert.equal(buildCtaRedirectUrl('https://munjanggun.vercel.app', 'reservation'), 'https://munjanggun.vercel.app/go/reservation')
-  assert.equal(buildCtaRedirectUrl('https://munjanggun.vercel.app', 'store'), 'https://munjanggun.vercel.app/go/store')
-})
+import { selectCtaUrl } from './ctaRedirect.ts'
 
 test('selectCtaUrl returns the admin configured value for each button', () => {
   const settings = {

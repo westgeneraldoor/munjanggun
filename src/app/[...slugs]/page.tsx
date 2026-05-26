@@ -158,8 +158,6 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
         reservationUrl={settings?.reservation_url || null}
         storeUrl={settings?.store_url || null}
         shareTitle={node.name}
-        shareDescription={node.tagline || node.description || null}
-        shareImageUrl={node.image_url || null}
       />
     </main>
   )
@@ -190,7 +188,7 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
       
       <div className={styles.mobileHero}>
         {node.image_url && (
-          <ViewTransition name={`node-detail-image-${node.id}`} share="node-morph">
+          <ViewTransition name={`node-detail-mobile-image-${node.id}`} share="node-morph">
             <div className={styles.mobileDetailImageWrap}>
               <Image
                 src={node.image_url}
@@ -210,7 +208,7 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
         {/* 데스크탑 좌측 이미지 */}
         <div className={styles.splitLeft}>
           {node.image_url && (
-            <ViewTransition name={`node-detail-image-${node.id}`} share="node-morph">
+            <ViewTransition name={`node-detail-desktop-image-${node.id}`} share="node-morph">
               <Image
                 src={node.image_url}
                 alt={node.name}
@@ -249,8 +247,6 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
         reservationUrl={settings?.reservation_url || null}
         storeUrl={settings?.store_url || null}
         shareTitle={node.name}
-        shareDescription={node.tagline || node.description || null}
-        shareImageUrl={node.image_url || null}
       />
     </main>
   )

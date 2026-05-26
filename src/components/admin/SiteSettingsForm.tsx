@@ -210,7 +210,7 @@ export default function SiteSettingsForm({ initialData, heroMedia: initialHeroMe
 
           <div className={styles.inputGroup}>
             <label className={styles.label}>대표 이미지 (OG Image)</label>
-            <p className={styles.helpText}>카카오톡 공유 등 링크 전송 시 표시될 이미지입니다. (권장 비율 1200x630)</p>
+            <p className={styles.helpText}>링크 공유 시 표시될 대표 이미지입니다. (권장 비율 1200x630)</p>
             <div style={{ marginTop: '8px' }}>
               <ImageUploader
                 folderPath="og"

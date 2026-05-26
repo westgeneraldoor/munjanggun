@@ -2,10 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Share2, Check, Home, MessageCircle } from 'lucide-react'
+import { Share2, Check, Home } from 'lucide-react'
 import { logError } from '@/lib/logger'
-import { buildCtaRedirectUrl } from '@/lib/ctaRedirect'
-import { buildKakaoFeedTemplate, buildNativeShareData, SHARE_MENU_ITEMS, type KakaoFeedTemplate } from '@/lib/share'
+import { buildClipboardFallbackText, buildNativeShareData } from '@/lib/share'
 import styles from './CTABar.module.css'
 
 interface CTABarProps {
@@ -13,23 +12,7 @@ interface CTABarProps {
   storeUrl: string | null
   hideUntilScroll?: boolean
   shareTitle?: string | null
-  shareDescription?: string | null
-  shareImageUrl?: string | null
 }
-
-type KakaoWindow = Window & {
-  Kakao?: {
-    init: (key: string) => void
-    isInitialized: () => boolean
-    Share?: {
-      sendDefault: (options: KakaoFeedTemplate) => void
-    }
-  }
-}
-
-const KAKAO_SDK_ID = 'kakao-js-sdk'
-const KAKAO_SDK_URL = 'https://t1.kakaocdn.net/kakao_js_sdk/2.8.1/kakao.min.js'
-const KAKAO_JAVASCRIPT_KEY = process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY
 
 function canUseNativeShare(shareData: ShareData) {
   if (typeof navigator.share !== 'function') {
@@ -39,29 +22,26 @@ function canUseNativeShare(shareData: ShareData) {
   return typeof navigator.canShare !== 'function' || navigator.canShare(shareData)
 }
 
-function loadKakaoSdk() {
-  return new Promise<void>((resolve, reject) => {
-    if ((window as KakaoWindow).Kakao?.Share) {
-      resolve()
-      return
-    }
+async function copyTextToClipboard(text: string) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text)
+    return
+  }
 
-    const existingScript = document.getElementById(KAKAO_SDK_ID)
-    if (existingScript) {
-      existingScript.addEventListener('load', () => resolve(), { once: true })
-      existingScript.addEventListener('error', () => reject(new Error('Kakao SDK load failed')), { once: true })
-      return
-    }
+  const textarea = document.createElement('textarea')
+  textarea.value = text
+  textarea.setAttribute('readonly', '')
+  textarea.style.position = 'fixed'
+  textarea.style.top = '-9999px'
+  document.body.appendChild(textarea)
+  textarea.select()
 
-    const script = document.createElement('script')
-    script.id = KAKAO_SDK_ID
-    script.src = KAKAO_SDK_URL
-    script.async = true
-    script.crossOrigin = 'anonymous'
-    script.addEventListener('load', () => resolve(), { once: true })
-    script.addEventListener('error', () => reject(new Error('Kakao SDK load failed')), { once: true })
-    document.head.appendChild(script)
-  })
+  const copied = document.execCommand('copy')
+  document.body.removeChild(textarea)
+
+  if (!copied) {
+    throw new Error('Clipboard fallback failed')
+  }
 }
 
 export default function CTABar({
@@ -69,12 +49,10 @@ export default function CTABar({
   storeUrl,
   hideUntilScroll = false,
   shareTitle,
-  shareDescription,
-  shareImageUrl,
 }: CTABarProps) {
   const [isVisible, setIsVisible] = useState(!hideUntilScroll)
   const [shared, setShared] = useState(false)
-  const [isShareMenuOpen, setIsShareMenuOpen] = useState(false)
+  const [shareNotice, setShareNotice] = useState<string | null>(null)
   const sharedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -110,16 +88,23 @@ export default function CTABar({
     }
   }, [])
 
-  const showSharedState = () => {
+  const showSharedState = (notice: string | null = null) => {
     if (sharedTimerRef.current) {
       clearTimeout(sharedTimerRef.current)
     }
 
     setShared(true)
+    setShareNotice(notice)
     sharedTimerRef.current = setTimeout(() => {
       setShared(false)
+      setShareNotice(null)
       sharedTimerRef.current = null
     }, 1500)
+  }
+
+  const copyShareLink = async (url: string) => {
+    await copyTextToClipboard(buildClipboardFallbackText({ url }))
+    showSharedState('링크가 복사됐어요')
   }
 
   const handleShare = async () => {
@@ -128,56 +113,25 @@ export default function CTABar({
     const shareData = buildNativeShareData({ title, url })
 
     try {
-      if (!canUseNativeShare(shareData)) {
-        setIsShareMenuOpen(false)
-        logError('기본 공유 미지원', new Error('Web Share API is not available in this browser'))
+      if (canUseNativeShare(shareData)) {
+        await navigator.share(shareData)
+        showSharedState()
         return
       }
 
-      await navigator.share(shareData)
-      setIsShareMenuOpen(false)
-      showSharedState()
+      await copyShareLink(url)
     } catch (err) {
-      if ((err as Error).name !== 'AbortError') {
+      if ((err as Error).name === 'AbortError') {
+        return
+      }
+
+      try {
+        await copyShareLink(url)
+      } catch (copyErr) {
         logError('공유하기 실패', err)
+        logError('공유 링크 복사 실패', copyErr)
+        showSharedState('공유를 지원하지 않는 브라우저예요')
       }
-    }
-  }
-
-  const handleKakaoShare = async () => {
-    const url = window.location.href
-    const origin = window.location.origin
-    const title = shareTitle || document.title
-
-    if (!KAKAO_JAVASCRIPT_KEY || !shareImageUrl) {
-      await handleShare()
-      return
-    }
-
-    try {
-      await loadKakaoSdk()
-      const kakao = (window as KakaoWindow).Kakao
-
-      if (kakao && !kakao.isInitialized()) {
-        kakao.init(KAKAO_JAVASCRIPT_KEY)
-      }
-
-      kakao?.Share?.sendDefault(
-        buildKakaoFeedTemplate({
-          title,
-          description: shareDescription,
-          imageUrl: shareImageUrl,
-          pageUrl: url,
-          reservationUrl: reservationUrl ? buildCtaRedirectUrl(origin, 'reservation') : null,
-          storeUrl: storeUrl ? buildCtaRedirectUrl(origin, 'store') : null,
-        })
-      )
-
-      setIsShareMenuOpen(false)
-      showSharedState()
-    } catch (err) {
-      logError('카카오톡 공유 실패', err)
-      await handleShare()
     }
   }
 
@@ -209,24 +163,15 @@ export default function CTABar({
       <button
         type="button"
         className={`${styles.shareButton} ${shared ? styles.shared : ''}`}
-        onClick={() => setIsShareMenuOpen(open => !open)}
+        onClick={handleShare}
         aria-label="공유하기"
-        aria-expanded={isShareMenuOpen}
-        aria-haspopup="menu"
       >
         {shared ? <Check size={20} /> : <Share2 size={20} />}
       </button>
-      {isShareMenuOpen && (
-        <div className={styles.shareMenu} role="menu" aria-label="공유 방법 선택">
-          <button type="button" className={styles.shareMenuItem} onClick={handleKakaoShare} role="menuitem">
-            <MessageCircle size={18} />
-            <span>{SHARE_MENU_ITEMS[0].label}</span>
-          </button>
-          <button type="button" className={styles.shareMenuItem} onClick={handleShare} role="menuitem">
-            <Share2 size={18} />
-            <span>{SHARE_MENU_ITEMS[1].label}</span>
-          </button>
-        </div>
+      {shareNotice && (
+        <span className={styles.shareNotice} role="status">
+          {shareNotice}
+        </span>
       )}
     </div>
   )
