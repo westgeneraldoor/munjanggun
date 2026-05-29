@@ -1,5 +1,18 @@
 # 문장군 디지털 쇼룸 V2 — 전체 태스크 현황
-📅 마지막 업데이트: 2026-04-30
+📅 마지막 업데이트: 2026-05-29
+
+## 현재 전략 전환 — 플랫폼 MVP
+- [x] 플랫폼 전략 문서 작성 및 최상위 기준 승격 (`PLATFORM_STRATEGY.md`)
+- [x] 플랫폼 전략 결정 기록 (`DECISION_LOG.md`)
+- [x] 플랫폼 전환 감사 완료 (`PLATFORM_MIGRATION_AUDIT.md`)
+- [x] 플랫폼 기준 PRD 승격 (`PRD_PLATFORM_v1.0.md`)
+- [x] Codex 기준 부트스트랩 승격 (`CODEX_PROJECT_BOOTSTRAP.md`)
+- [x] 쇼룸 PRD v2.0을 Current/Public Experience 참고 문서로 유지
+- [x] 기존 쇼룸 PRD v1.1을 Legacy/Public Experience 참고 문서로 전환
+- [x] 플랫폼 DB/RBAC 설계 문서 작성 (`PLATFORM_DB_RBAC_DESIGN.md`)
+- [x] MVP-01 OAuth 로그인 구현 오더 작성 (`_order.md` #052)
+- [ ] MVP-02 무료실측 신청 구현 오더 작성
+- [ ] AppSheet 전산과 플랫폼 DB의 관계 결정
 
 > V1 히스토리는 `_archive.md`에 보관
 

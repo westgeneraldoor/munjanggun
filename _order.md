@@ -1,109 +1,145 @@
-# 작업지시서 #051
-📅 발행: 2026-05-06 14:10
-🤖 추천 모델: Gemini Pro
-⏱️ 예상 시간: ~20분
+# 작업지시서 #052 — MVP-01 OAuth 로그인 기반 구축
+📅 발행: 2026-05-29
+🌿 브랜치: `platform-v1`
+🤖 추천 모델: Codex high reasoning
 
 ## 작업 목표
-**A. CTA 바 리디자인 — 울트라 미니멀 스타일**
-**B. 모바일 브레드크럼 수정 — 골드 통일 + 사이즈 업**
 
----
+문장군 플랫폼 MVP-01의 OAuth 로그인 기반을 구축한다.
 
-## A. CTA 바 리디자인
+이번 오더의 목표는 무료실측 신청 구현이 아니다. 다음 오더(MVP-02)에서 고객이 실제 신청을 저장할 수 있도록, 먼저 안전한 인증/프로필/RBAC 기반만 만든다.
 
-### 디자인 사양 (프리뷰 확정 — `_cta_preview.html`의 "개선안 C")
+## 반드시 먼저 읽을 문서
 
-**바 컨테이너 (.container):**
-- border-radius: `999px` (완전 필 형태)
-- background: `rgba(20, 20, 24, 0.9)`
-- backdrop-filter: `blur(20px)`
-- border: `1px solid rgba(255,255,255,0.07)`
-- box-shadow: `0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)`
-- padding: `8px 10px`
-- gap: `8px`
+1. `AGENTS.md`
+2. `GEMINI.md`
+3. `PLATFORM_STRATEGY.md`
+4. `PLATFORM_DB_RBAC_DESIGN.md`
+5. `PRD_PLATFORM_v1.0.md`
+6. `CODEX_PROJECT_BOOTSTRAP.md`
+7. `DECISION_LOG.md`
+8. `PROJECT_TASKS.md`
+9. `_context.md`
 
-**바 상단 골드 라인 (::before):**
-- top: -1px, left: 20%, right: 20%
-- height: 1px
-- background: `linear-gradient(to right, transparent, rgba(196,162,101,0.4), transparent)`
+Next.js 작업 전에는 `AGENTS.md` 지시에 따라 `node_modules/next/dist/docs/`에서 App Router, middleware/proxy, auth callback 관련 문서를 확인한다.
 
-**아이콘 버튼 (.homeButton, .shareButton):**
-- 36x36px (기존 44px에서 축소)
-- border-radius: 50%
-- border: none
-- background: transparent
-- color: `var(--color-text-sub)`
-- 호버: color → `var(--color-accent)`, background → `rgba(196,162,101,0.08)`
+Supabase 작업 전에는 아래 공식 문서를 확인한다.
 
-**메인 버튼 (.button):**
-- height: 40px
-- border-radius: `999px` (필 형태)
-- font-size: `var(--text-sm)` (13px)
-- letter-spacing: 0.2px
+- https://supabase.com/docs/guides/auth/social-login
+- https://supabase.com/docs/guides/auth/social-login/auth-kakao
+- https://supabase.com/docs/guides/auth/social-login/auth-google
+- https://supabase.com/docs/guides/database/postgres/row-level-security
 
-**Primary (.primary):**
-- background: `var(--color-accent)` (단순 단색, 기존 볼록 gradient 제거)
-- color: `var(--color-accent-foreground)`
-- box-shadow: `0 2px 8px rgba(196,162,101,0.2)`
-- 호버: background → `var(--color-accent-hover)`, shadow 강화, translateY(-1px)
+## 범위
 
-**Secondary (.secondary):**
-- background: `rgba(255,255,255,0.05)`
-- color: `var(--color-text)`
-- border: `1px solid rgba(255,255,255,0.08)`
-- 호버: background → `rgba(255,255,255,0.1)`, border 밝아짐
+### 포함
 
-**데스크탑 (1024px+):**
-- 동일 필 스타일 유지, max-width: 600px, 중앙 정렬
-- 아이콘/메인 버튼 사이즈 동일 (변경 없음)
+- `platform` 스키마와 MVP-01에 필요한 최소 테이블/타입 생성
+- `platform.profiles` 생성
+- `platform.staff_profiles` 생성
+- `platform_private` helper function 생성
+- profile 자동 생성 trigger
+- RLS enable + MVP-01 정책
+- 플랫폼용 Supabase client 헬퍼 추가
+- OAuth 로그인 페이지 또는 진입 컴포넌트 추가
+- OAuth callback route 추가
+- `/portal` 보호 라우트의 아주 얇은 placeholder 추가
+- 기존 `/admin` auth guard를 깨지 않도록 `proxy.ts` 확장
 
-**제거할 것:**
-- 기존 볼록 gradient (`background-image: linear-gradient(...)`) 전부 제거
-- 기존 복잡한 box-shadow (inset 다중) 전부 제거
-- 기존 shine sweep `::after` pseudo-element 전부 제거
-- `slideUpDesktop` 애니메이션은 radius 999px + translateX(-50%) 조합 유지
+### 제외
 
-### 수정 파일
-- `src/components/customer/CTABar.module.css` — 전면 리라이트
-- `src/components/customer/CTABar.tsx` — 변경 없음 (구조 유지)
+- 무료실측 신청 폼 저장
+- 사진 업로드
+- 담당자 배정
+- 견적/결제
+- Naver OAuth 강제 구현
+- 장바구니/쿠폰/포인트/회원등급/자동견적
 
----
+## 결정 사항
 
-## B. 모바일 브레드크럼 수정
+| 항목 | 결정 |
+|---|---|
+| 기본 OAuth | Kakao 우선 |
+| 보조 OAuth | Google 가능하면 함께 |
+| Naver | MVP-01 블로커 아님. `custom:naver`는 후속 후보 |
+| 기본 role | OAuth 최초 로그인 사용자는 `customer` |
+| role 원본 | `platform.profiles.role` |
+| 금지 | `user_metadata` 또는 클라이언트 값으로 role 판단 금지 |
 
-### B-1. 색상 통일
-- `.mobileLink` color를 `var(--color-text-sub)` → `var(--color-accent)`로 변경
-- 데스크탑 `.link`와 동일하게 골드로 통일
+## 예상 파일
 
-### B-2. 사이즈 업
-- `.mobileList` font-size를 `var(--text-xs)` → `var(--text-sm)`로 변경
+새 파일 또는 수정 가능 파일:
 
-### 수정 파일
-- `src/components/customer/Breadcrumb.module.css`
+```text
+src/lib/supabase/platform-server.ts
+src/lib/supabase/platform-client.ts
+src/app/auth/callback/route.ts
+src/app/login/page.tsx
+src/app/login/login.module.css
+src/app/portal/page.tsx
+src/app/portal/portal.module.css
+src/proxy.ts
+src/types/database.ts
+```
 
----
+마이그레이션:
 
-## 참고 파일
-- `_cta_preview.html` — 확정된 디자인 C의 CSS 참조 (`.new-bar-c` 클래스)
+```text
+supabase/migrations/<generated>_platform_auth_foundation.sql
+```
 
-## ⚠️ 금지
-- CTABar.tsx의 JSX 구조 변경 금지 (CSS만 수정)
-- Breadcrumb.tsx 수정 금지 (CSS만 수정)
-- 어드민 파일 수정 금지
-- `prefers-reduced-motion` 대응 제거 금지 — 반드시 유지
-- 데스크탑 중앙 정렬(translateX(-50%)) 로직 제거 금지
+단, 현재 repo에 `supabase/` 디렉터리가 없다면 먼저 현 구조를 확인하고 프로젝트 관례에 맞게 만든다. 마이그레이션 파일명은 직접 발명하지 말고 Supabase CLI가 가능하면 `supabase migration new platform_auth_foundation`으로 만든다.
 
-## 완료 기준
-- [x] `npm run lint` — 에러 0개
-- [x] `npm run build` — 성공
-- [x] CTA 바: 필(pill) 형태, 투명 아이콘 버튼, 단색 골드 primary, 미세 보더 secondary
-- [x] CTA 바: 데스크탑에서 중앙 정렬 + 필 형태 유지
-- [x] 모바일 브레드크럼: 골드 링크 + 13px 사이즈
-- [x] prefers-reduced-motion 대응 유지
+## DB 설계 요약
 
----
+`PLATFORM_DB_RBAC_DESIGN.md`의 MVP-01 범위를 따른다.
+
+필수:
+
+- schema: `platform`
+- private schema: `platform_private`
+- enum: `platform.profile_role`
+- tables:
+  - `platform.profiles`
+  - `platform.staff_profiles`
+- helper functions:
+  - `platform_private.current_role()`
+  - `platform_private.is_admin()`
+  - `platform_private.is_sales_manager()`
+- RLS:
+  - 사용자는 본인 profile 조회 가능
+  - 관리자는 전체 profile 조회/수정 가능
+  - 일반 사용자는 자기 role 수정 불가
+
+## 구현 규칙
+
+- 기존 `showroom`/V2 CMS 동작을 깨지 않는다.
+- 기존 `/admin` 접근 흐름을 깨지 않는다.
+- 플랫폼 고객 경로는 `/portal`로 시작한다.
+- 로그인 화면은 고객에게 "회원가입"보다 "무료실측 신청 계속하기" 맥락으로 보이게 만든다.
+- CSS는 기존 디자인 토큰을 사용한다.
+- Tailwind 사용 금지.
+- `any` 금지.
+- `console.log` 금지.
+- `console.error` 직접 호출 금지, 기존 `logError()` 사용.
+
+## 검증 기준
+
+필수:
+
+- [ ] `npm run lint`
+- [ ] `npm run build`
+- [ ] 로그인하지 않은 사용자가 `/portal` 접근 시 `/login` 또는 로그인 유도 경로로 이동
+- [ ] OAuth callback route가 존재하고 세션 교환 흐름이 구현됨
+- [ ] `platform.profiles` role이 기본 `customer`로 생성되는 설계
+- [ ] 고객이 자신의 role을 클라이언트에서 바꿀 수 없는 설계
+- [ ] 기존 `/admin` CMS 접근 흐름이 깨지지 않음
+
+가능하면:
+
+- [ ] Supabase 로컬/원격에서 migration 적용 가능 여부 확인
+- [ ] 테스트 사용자 1명으로 `profiles` row 생성 확인
+
 ## 작업 결과 (작업자가 작성)
-CTA 바와 모바일 브레드크럼의 울트라 미니멀 디자인 업데이트를 완료했습니다.
-- CTABar.module.css 를 _cta_preview.html 개선안 C 사양에 맞춰 전면 수정했습니다. (볼록 gradient 및 복잡한 shadow 제거, 필 형태 반투명 UI, 중앙 정렬 등)
-- Breadcrumb.module.css 의 모바일 폰트 사이즈를 xs에서 sm으로 변경하고 텍스트 컬러를 골드로 통일했습니다.
-- lint 경고(에러 0개) 및 build 에러 없음을 확인했습니다.
+
+아직 미작성.
