@@ -13,13 +13,14 @@
 
 1. `AGENTS.md`
 2. `GEMINI.md`
-3. `PLATFORM_STRATEGY.md`
-4. `PLATFORM_DB_RBAC_DESIGN.md`
-5. `PRD_PLATFORM_v1.0.md`
-6. `CODEX_PROJECT_BOOTSTRAP.md`
-7. `DECISION_LOG.md`
-8. `PROJECT_TASKS.md`
-9. `_context.md`
+3. `docs/platform/PLATFORM_STRATEGY.md`
+4. `docs/platform/PLATFORM_TASKS.md`
+5. `docs/platform/PLATFORM_DB_RBAC_DESIGN.md`
+6. `docs/platform/PRD_PLATFORM_v1.0.md`
+7. `docs/platform/CODEX_PROJECT_BOOTSTRAP.md`
+8. `docs/platform/DECISION_LOG.md`
+9. `PROJECT_TASKS.md`
+10. `_context.md`
 
 Next.js 작업 전에는 `AGENTS.md` 지시에 따라 `node_modules/next/dist/docs/`에서 App Router, middleware/proxy, auth callback 관련 문서를 확인한다.
 
@@ -92,7 +93,7 @@ supabase/migrations/<generated>_platform_auth_foundation.sql
 
 ## DB 설계 요약
 
-`PLATFORM_DB_RBAC_DESIGN.md`의 MVP-01 범위를 따른다.
+`docs/platform/PLATFORM_DB_RBAC_DESIGN.md`의 MVP-01 범위를 따른다.
 
 필수:
 

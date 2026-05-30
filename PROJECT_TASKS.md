@@ -1,20 +1,9 @@
 # 문장군 디지털 쇼룸 V2 — 전체 태스크 현황
-📅 마지막 업데이트: 2026-05-29
+📅 마지막 업데이트: 2026-05-30
 
-## 현재 전략 전환 — 플랫폼 MVP
-- [x] 플랫폼 전략 문서 작성 및 최상위 기준 승격 (`PLATFORM_STRATEGY.md`)
-- [x] 플랫폼 전략 결정 기록 (`DECISION_LOG.md`)
-- [x] 플랫폼 전환 감사 완료 (`PLATFORM_MIGRATION_AUDIT.md`)
-- [x] 플랫폼 기준 PRD 승격 (`PRD_PLATFORM_v1.0.md`)
-- [x] Codex 기준 부트스트랩 승격 (`CODEX_PROJECT_BOOTSTRAP.md`)
-- [x] 쇼룸 PRD v2.0을 Current/Public Experience 참고 문서로 유지
-- [x] 기존 쇼룸 PRD v1.1을 Legacy/Public Experience 참고 문서로 전환
-- [x] 플랫폼 DB/RBAC 설계 문서 작성 (`PLATFORM_DB_RBAC_DESIGN.md`)
-- [x] MVP-01 OAuth 로그인 구현 오더 작성 (`_order.md` #052)
-- [ ] MVP-02 무료실측 신청 구현 오더 작성
-- [ ] AppSheet 전산과 플랫폼 DB의 관계 결정
 
-> V1 히스토리는 `_archive.md`에 보관
+> 플랫폼 제작 일정의 기준은 `docs/platform/PLATFORM_TASKS.md`다.
+> V1/V2 히스토리는 `docs/archive/showroom/`와 아래 쇼룸 Phase 기록에 보관한다.
 
 ## V2 Phase 0: 기반 설정 ✅
 - [x] Git 브랜치 `v2-cms` 생성 (main 보호) ✅ 오더 #015
@@ -80,12 +69,12 @@
 - [x] 코드 위생 (100dvh fallback, ScrollRestorer, emptyState 상수화) ✅ 오더 #036
 - [x] Playfair Display 실적용 + LQIP 블러 프리뷰 ✅ 오더 #037
 - [x] 한글 slug 데이터 정리 ✅ 완료
-- [ ] EVAL-01 ~ EVAL-21 전수 검사
-- [ ] 카카오톡 인앱 브라우저 호환 테스트
-- [ ] 이미지 로딩 성능 확인
+- [x] EVAL-01 ~ EVAL-21 전수 검사
+- [x] 카카오톡 인앱 브라우저 호환 테스트
+- [x] 이미지 로딩 성능 확인
 - [x] 에러 핸들링 (네트워크 실패, 이미지 fallback)
 - [x] 접근성 확인 (alt, 키보드 네비게이션)
-- [ ] 최종 빌드 → Vercel 배포 (v2-cms → main merge)
+- [x] 최종 빌드 → Vercel 배포 (v2-cms → main merge)
 
 ## V2 Phase 5-A: "시네마틱 갤러리" 체험 고도화
 - [x] 전략 논의: 🅰️시네마틱갤러리 → 🅱️매끄러운전환 → 🅲️소재인터랙션 순서 확정 ✅

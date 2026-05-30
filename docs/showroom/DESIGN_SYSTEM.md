@@ -2,7 +2,7 @@
 document_type: "Design System"
 version: "2.0.0"
 last_updated: "2026-04-28"
-source_prd: "PRD_v2.0.md"
+source_prd: "docs/showroom/PRD_v2.0.md"
 previous_version: "1.0.0"
 platform: "mobile-first"
 dark_mode: true

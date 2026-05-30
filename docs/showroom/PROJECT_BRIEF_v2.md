@@ -3,7 +3,7 @@ document_type: "Project Brief"
 created: "2026-04-27"
 status: "validated"
 next_step: "PRD 생성"
-previous_version: "docs/PROJECT_BRIEF.md (v1 — 컬러북 전용)"
+previous_version: "docs/showroom/PROJECT_BRIEF.md (v1 — 컬러북 전용)"
 ---
 
 # 문장군 디지털 쇼룸 v2 — Project Brief

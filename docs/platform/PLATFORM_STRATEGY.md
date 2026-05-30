@@ -4,8 +4,9 @@ version: "1.0.0"
 status: "canonical"
 created: "2026-05-29"
 priority: "above_prd"
-related_prd: "PRD_PLATFORM_v1.0.md"
-related_audit: "PLATFORM_MIGRATION_AUDIT.md"
+related_tasks: "docs/platform/PLATFORM_TASKS.md"
+related_prd: "docs/platform/PRD_PLATFORM_v1.0.md"
+related_audit: "docs/platform/PLATFORM_MIGRATION_AUDIT.md"
 ---
 
 # 문장군 플랫폼 전략
@@ -285,19 +286,20 @@ related_audit: "PLATFORM_MIGRATION_AUDIT.md"
 
 플랫폼 작업의 문서 우선순위는 다음과 같다.
 
-1. `PLATFORM_STRATEGY.md`
-2. `CODEX_PROJECT_BOOTSTRAP.md`
-3. `PRD_PLATFORM_v1.0.md`
-4. `PLATFORM_MIGRATION_AUDIT.md`
-5. `BRAND_CONTEXT.md`
-6. `docs/DESIGN_SYSTEM.md`
-7. `PRD_v2.0.md`
-8. `PRD_v1.1.md`
-9. `docs/PROJECT_BRIEF.md`
+1. `docs/platform/PLATFORM_STRATEGY.md`
+2. `docs/platform/PLATFORM_TASKS.md`
+3. `docs/platform/CODEX_PROJECT_BOOTSTRAP.md`
+4. `docs/platform/PRD_PLATFORM_v1.0.md`
+5. `docs/platform/PLATFORM_MIGRATION_AUDIT.md`
+6. `docs/platform/BRAND_CONTEXT.md`
+7. `docs/showroom/DESIGN_SYSTEM.md`
+8. `docs/showroom/PRD_v2.0.md`
+9. `docs/showroom/PRD_v1.1.md`
+10. `docs/showroom/PROJECT_BRIEF.md`
 
-`PLATFORM_STRATEGY.md`는 "왜 만드는가"를 정한다.
+`docs/platform/PLATFORM_STRATEGY.md`는 "왜 만드는가"를 정한다.
 
-`PRD_PLATFORM_v1.0.md`는 "무엇을 만들 것인가"를 정한다.
+`docs/platform/PRD_PLATFORM_v1.0.md`는 "무엇을 만들 것인가"를 정한다.
 
 두 문서가 충돌하면 전략 문서가 우선한다.
 

@@ -3,7 +3,7 @@ document_type: "Executable PRD"
 version: "1.1.0"
 last_updated: "2026-04-21"
 target_agent: "Antigravity / Claude Code / Cursor"
-source_brief: "docs/PROJECT_BRIEF.md"
+source_brief: "docs/showroom/PROJECT_BRIEF.md"
 changelog:
   - version: "1.1.0"
     date: "2026-04-21"
@@ -503,7 +503,7 @@ munjanggun/
 ├── public/
 │   └── fonts/
 ├── docs/
-│   ├── PRD_v1.1.md                    # 이 문서
+│   ├── docs/showroom/PRD_v1.1.md                    # 이 문서
 │   └── PROJECT_BRIEF.md               # 오피스아워 결과물 (추적용 복사본)
 ├── next.config.ts
 ├── package.json

@@ -4,9 +4,10 @@ version: "1.0.0"
 status: "ready_for_mvp_order"
 created: "2026-05-29"
 scope: "MVP-01 OAuth login + MVP-02 free measurement request + MVP-03 assignment foundation"
-source_strategy: "PLATFORM_STRATEGY.md"
-source_prd: "PRD_PLATFORM_v1.0.md"
-source_audit: "PLATFORM_MIGRATION_AUDIT.md"
+source_strategy: "docs/platform/PLATFORM_STRATEGY.md"
+source_tasks: "docs/platform/PLATFORM_TASKS.md"
+source_prd: "docs/platform/PRD_PLATFORM_v1.0.md"
+source_audit: "docs/platform/PLATFORM_MIGRATION_AUDIT.md"
 ---
 
 # 문장군 플랫폼 DB/RBAC 설계
@@ -32,11 +33,12 @@ source_audit: "PLATFORM_MIGRATION_AUDIT.md"
 
 우선순위는 다음과 같다.
 
-1. `PLATFORM_STRATEGY.md`
-2. `CODEX_PROJECT_BOOTSTRAP.md`
-3. `PRD_PLATFORM_v1.0.md`
-4. `PLATFORM_MIGRATION_AUDIT.md`
-5. `BRAND_CONTEXT.md`
+1. `docs/platform/PLATFORM_STRATEGY.md`
+2. `docs/platform/PLATFORM_TASKS.md`
+3. `docs/platform/CODEX_PROJECT_BOOTSTRAP.md`
+4. `docs/platform/PRD_PLATFORM_v1.0.md`
+5. `docs/platform/PLATFORM_MIGRATION_AUDIT.md`
+6. `docs/platform/BRAND_CONTEXT.md`
 
 핵심 원칙:
 

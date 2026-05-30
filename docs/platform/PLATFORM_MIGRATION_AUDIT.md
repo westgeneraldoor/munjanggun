@@ -3,9 +3,10 @@ document_type: "Platform Migration Audit"
 status: "submitted"
 created: "2026-05-29"
 auditor: "Codex"
-canonical_prd: "PRD_PLATFORM_v1.0.md"
-canonical_bootstrap: "CODEX_PROJECT_BOOTSTRAP.md"
-canonical_strategy: "PLATFORM_STRATEGY.md"
+canonical_prd: "docs/platform/PRD_PLATFORM_v1.0.md"
+canonical_tasks: "docs/platform/PLATFORM_TASKS.md"
+canonical_bootstrap: "docs/platform/CODEX_PROJECT_BOOTSTRAP.md"
+canonical_strategy: "docs/platform/PLATFORM_STRATEGY.md"
 development_status: "minimum_design_then_mvp_build"
 ---
 
@@ -35,30 +36,31 @@ development_status: "minimum_design_then_mvp_build"
 
 | 문서 | 현재 역할 | 전환 판정 |
 |---|---|---|
-| `PRD_PLATFORM_v1.0.md` | 플랫폼 목표 초안 | Canonical |
-| `PLATFORM_STRATEGY.md` | 플랫폼을 왜 만드는지 정의하는 북극성 문서 | Canonical |
-| `CODEX_PROJECT_BOOTSTRAP.md` | 플랫폼 개발 에이전트 부트스트랩 | Canonical |
-| `PRD_v2.0.md` | V2 만능 노드 CMS 쇼룸 PRD | Current/Public Experience Reference |
-| `PRD_v1.1.md` | V1 디지털 컬러북 실행 PRD | Legacy/Public Experience Reference |
-| `docs/PROJECT_BRIEF.md` | 쇼룸 아이디어 검증과 문제 정의 | Legacy/Public Experience Reference |
-| `PROJECT_TASKS.md` | V2 쇼룸 구현 상태 + 플랫폼 MVP 전환 상태 보드 | Active state board |
-| `BRAND_CONTEXT.md` | 브랜드, 영업, 시공, 세일즈 플로우 맥락 | Active Business Context |
+| `docs/platform/PRD_PLATFORM_v1.0.md` | 플랫폼 목표 초안 | Canonical |
+| `docs/platform/PLATFORM_STRATEGY.md` | 플랫폼을 왜 만드는지 정의하는 북극성 문서 | Canonical |
+| `docs/platform/PLATFORM_TASKS.md` | 플랫폼 제작 페이즈와 오더 순서 | Canonical |
+| `docs/platform/CODEX_PROJECT_BOOTSTRAP.md` | 플랫폼 개발 에이전트 부트스트랩 | Canonical |
+| `docs/showroom/PRD_v2.0.md` | V2 만능 노드 CMS 쇼룸 PRD | Current/Public Experience Reference |
+| `docs/showroom/PRD_v1.1.md` | V1 디지털 컬러북 실행 PRD | Legacy/Public Experience Reference |
+| `docs/showroom/PROJECT_BRIEF.md` | 쇼룸 아이디어 검증과 문제 정의 | Legacy/Public Experience Reference |
+| `PROJECT_TASKS.md` | V2 쇼룸 구현 히스토리 + 플랫폼 태스크 포인터 | Active state board |
+| `docs/platform/BRAND_CONTEXT.md` | 브랜드, 영업, 시공, 세일즈 플로우 맥락 | Active Business Context |
 | `_context.md` | 최근 작업 상태 | Active, 플랫폼 전환 상태로 갱신 |
 | `_order.md` | MVP-01 OAuth 로그인 구현 오더 #052 | Active order |
-| `docs/DESIGN_SYSTEM.md` | 쇼룸 디자인 시스템 | Active Design Base |
+| `docs/showroom/DESIGN_SYSTEM.md` | 쇼룸 디자인 시스템 | Active Design Base |
 | `README.md` | 현재 구현된 쇼룸 설명 | Current Product README |
 | `GEMINI.md` | 에이전트 진입 문서 | Active, 플랫폼 기준 문서 반영 |
-| `_audit_2026-04-21.md` | 쇼룸 PRD 감사 | Historical audit, 일부 해결됨 |
-| `_launch_check.md` | 쇼룸 출시 점검 | Historical launch evidence |
+| `docs/archive/showroom/_audit_2026-04-21.md` | 쇼룸 PRD 감사 | Historical audit, 일부 해결됨 |
+| `docs/archive/showroom/_launch_check.md` | 쇼룸 출시 점검 | Historical launch evidence |
 | `promo-video/*` | 프로모션 영상 제작 문서 | Out of platform migration scope |
 
 ### 1.2 PRD v2.0 확인 결과
 
-`v2-cms` 기준 현재 루트에는 `PRD_v2.0.md`가 존재한다.
+`v2-cms` 기준 현재 저장소에는 `docs/showroom/PRD_v2.0.md`가 존재한다.
 
-`PRD_v2.0.md`는 플랫폼 PRD가 아니라 기존 쇼룸을 V2 만능 노드 CMS로 확장한 실행 PRD다. 이 문서는 플랫폼의 Public Experience 영역 기준으로 계승한다.
+`docs/showroom/PRD_v2.0.md`는 플랫폼 PRD가 아니라 기존 쇼룸을 V2 만능 노드 CMS로 확장한 실행 PRD다. 이 문서는 플랫폼의 Public Experience 영역 기준으로 계승한다.
 
-현재 플랫폼 제품 문서는 `PRD_PLATFORM_v1.0.md`이며, 이 문서를 플랫폼 PRD의 기준 문서로 승격한다. 기존 `PRD_v1.1.md`는 V1 디지털 컬러북 실행 PRD로 Legacy 참고 문서다.
+현재 플랫폼 제품 문서는 `docs/platform/PRD_PLATFORM_v1.0.md`이며, 이 문서를 플랫폼 PRD의 기준 문서로 승격한다. 기존 `docs/showroom/PRD_v1.1.md`는 V1 디지털 컬러북 실행 PRD로 Legacy 참고 문서다.
 
 ## 2. 기준 문서 승격
 
@@ -66,14 +68,15 @@ development_status: "minimum_design_then_mvp_build"
 
 | 기준 문서 | 역할 |
 |---|---|
-| `PRD_PLATFORM_v1.0.md` | 플랫폼 제품 범위, 원칙, MVP, RBAC, 로드맵 기준 |
-| `CODEX_PROJECT_BOOTSTRAP.md` | Codex/에이전트가 개발 전 반드시 읽는 실행 정책 |
-| `PLATFORM_STRATEGY.md` | 고객/영업/대표 관점의 플랫폼 존재 이유와 네이버 전환 전략 |
-| `PLATFORM_MIGRATION_AUDIT.md` | 기존 자산 승계/Legacy 전환/최소 설계 게이트 근거 |
+| `docs/platform/PRD_PLATFORM_v1.0.md` | 플랫폼 제품 범위, 원칙, MVP, RBAC, 로드맵 기준 |
+| `docs/platform/PLATFORM_TASKS.md` | 플랫폼 페이즈, 오더 순서, 완료 기준 |
+| `docs/platform/CODEX_PROJECT_BOOTSTRAP.md` | Codex/에이전트가 개발 전 반드시 읽는 실행 정책 |
+| `docs/platform/PLATFORM_STRATEGY.md` | 고객/영업/대표 관점의 플랫폼 존재 이유와 네이버 전환 전략 |
+| `docs/platform/PLATFORM_MIGRATION_AUDIT.md` | 기존 자산 승계/Legacy 전환/최소 설계 게이트 근거 |
 
 ### 2.2 승격하면서 정정한 사항
 
-`CODEX_PROJECT_BOOTSTRAP.md.md`는 파일명 자체가 기준 문서 역할에 맞지 않았다. 기준 문서로 쓰기 위해 `CODEX_PROJECT_BOOTSTRAP.md`로 정정한다.
+초기 초안의 `CODEX_PROJECT_BOOTSTRAP.md.md` 파일명은 기준 문서 역할에 맞지 않았다. 기준 문서로 쓰기 위해 `docs/platform/CODEX_PROJECT_BOOTSTRAP.md`로 정정한다.
 
 두 기준 문서에는 `status: canonical` frontmatter를 부여한다.
 
@@ -81,21 +84,22 @@ development_status: "minimum_design_then_mvp_build"
 
 플랫폼 작업에서는 아래 순서를 따른다.
 
-1. `PLATFORM_STRATEGY.md`
-2. `CODEX_PROJECT_BOOTSTRAP.md`
-3. `PRD_PLATFORM_v1.0.md`
-4. `PLATFORM_MIGRATION_AUDIT.md`
-5. `BRAND_CONTEXT.md`
-6. `docs/DESIGN_SYSTEM.md`
-7. `PRD_v2.0.md`
-8. `PRD_v1.1.md`
-9. `docs/PROJECT_BRIEF.md`
+1. `docs/platform/PLATFORM_STRATEGY.md`
+2. `docs/platform/PLATFORM_TASKS.md`
+3. `docs/platform/CODEX_PROJECT_BOOTSTRAP.md`
+4. `docs/platform/PRD_PLATFORM_v1.0.md`
+5. `docs/platform/PLATFORM_MIGRATION_AUDIT.md`
+6. `docs/platform/BRAND_CONTEXT.md`
+7. `docs/showroom/DESIGN_SYSTEM.md`
+8. `docs/showroom/PRD_v2.0.md`
+9. `docs/showroom/PRD_v1.1.md`
+10. `docs/showroom/PROJECT_BRIEF.md`
 
-`PRD_v2.0.md`, `PRD_v1.1.md`, `docs/PROJECT_BRIEF.md`는 더 이상 신규 플랫폼 기능의 범위 판단 기준이 아니다. 다만 기존 쇼룸을 보존하거나 Public Experience 영역을 수정할 때는 여전히 근거 문서로 사용한다.
+`docs/showroom/PRD_v2.0.md`, `docs/showroom/PRD_v1.1.md`, `docs/showroom/PROJECT_BRIEF.md`는 더 이상 신규 플랫폼 기능의 범위 판단 기준이 아니다. 다만 기존 쇼룸을 보존하거나 Public Experience 영역을 수정할 때는 여전히 근거 문서로 사용한다.
 
 ## 3. 문서별 상세 감사
 
-### 3.1 `PRD_PLATFORM_v1.0.md`
+### 3.1 `docs/platform/PRD_PLATFORM_v1.0.md`
 
 강점:
 
@@ -119,11 +123,11 @@ development_status: "minimum_design_then_mvp_build"
 
 판정:
 
-`PRD_PLATFORM_v1.0.md`는 플랫폼 방향을 정하는 기준 문서로 충분하다. 그러나 바로 구현 오더로 쓰기에는 데이터 모델과 보안 정책이 부족하다. 다음 단계는 거대한 추가 PRD가 아니라 "플랫폼 DB/RBAC 최소 설계 오더"다. 이 설계가 통과되면 MVP-01 OAuth 로그인과 MVP-02 무료실측 신청 구현으로 바로 들어간다.
+`docs/platform/PRD_PLATFORM_v1.0.md`는 플랫폼 방향을 정하는 기준 문서로 충분하다. 그러나 바로 구현 오더로 쓰기에는 데이터 모델과 보안 정책이 부족하다. 다음 단계는 거대한 추가 PRD가 아니라 "플랫폼 DB/RBAC 최소 설계 오더"다. 이 설계가 통과되면 MVP-01 OAuth 로그인과 MVP-02 무료실측 신청 구현으로 바로 들어간다.
 
-### 3.2 `PRD_v2.0.md`와 `PRD_v1.1.md`
+### 3.2 `docs/showroom/PRD_v2.0.md`와 `docs/showroom/PRD_v1.1.md`
 
-`PRD_v2.0.md`는 현재 `v2-cms` 브랜치의 실행 기준이다. `PRD_v1.1.md`는 V1 컬러북의 과거 실행 기준이다. 플랫폼 작업에서는 두 문서 모두 신규 기능의 최상위 기준이 아니라 Public Experience 참고 문서로 사용한다.
+`docs/showroom/PRD_v2.0.md`는 현재 `v2-cms` 브랜치의 실행 기준이다. `docs/showroom/PRD_v1.1.md`는 V1 컬러북의 과거 실행 기준이다. 플랫폼 작업에서는 두 문서 모두 신규 기능의 최상위 기준이 아니라 Public Experience 참고 문서로 사용한다.
 
 특히 아래 자산은 계승 가치가 높다.
 
@@ -147,9 +151,9 @@ development_status: "minimum_design_then_mvp_build"
 
 판정:
 
-`PRD_v2.0.md`는 `Current/Public Experience Reference`로 유지한다. `PRD_v1.1.md`는 `Legacy/Public Experience Reference`로 전환한다. 두 문서는 "플랫폼에서 쇼룸 영역을 어떻게 보존할지"를 설명하는 참고 문서이며, 신규 플랫폼 기능의 근거 문서가 아니다.
+`docs/showroom/PRD_v2.0.md`는 `Current/Public Experience Reference`로 유지한다. `docs/showroom/PRD_v1.1.md`는 `Legacy/Public Experience Reference`로 전환한다. 두 문서는 "플랫폼에서 쇼룸 영역을 어떻게 보존할지"를 설명하는 참고 문서이며, 신규 플랫폼 기능의 근거 문서가 아니다.
 
-### 3.3 `docs/PROJECT_BRIEF.md`
+### 3.3 `docs/showroom/PROJECT_BRIEF.md`
 
 이 문서는 쇼룸의 탄생 배경을 잘 설명한다.
 
@@ -175,9 +179,11 @@ Legacy로 내리되 폐기하지 않는다. 플랫폼의 `Public Experience`와 
 
 판정:
 
-`PROJECT_TASKS.md`는 쇼룸 구현 히스토리로 가치가 있으나, 플랫폼 전환의 현재 상태를 대표하지 못한다. 기준 문서 승격 후에는 상단에 "현재 전략 전환" 섹션을 추가하고, 플랫폼 구현은 별도의 Phase로 분리해야 한다.
+`PROJECT_TASKS.md`는 쇼룸 구현 히스토리로 가치가 있으나, 플랫폼 전환의 세부 일정표 역할까지 맡기면 다시 비대해진다.
 
-### 3.5 `BRAND_CONTEXT.md`
+따라서 `PROJECT_TASKS.md`는 전체 상태 포인터로 유지하고, 플랫폼 구현의 실제 Phase와 오더 순서는 `docs/platform/PLATFORM_TASKS.md`로 분리한다.
+
+### 3.5 `docs/platform/BRAND_CONTEXT.md`
 
 플랫폼 전환에서 가장 중요한 비즈니스 문서다.
 
@@ -194,7 +200,7 @@ Legacy로 내리되 폐기하지 않는다. 플랫폼의 `Public Experience`와 
 
 판정:
 
-`BRAND_CONTEXT.md`는 Legacy가 아니라 Active Business Context다. 플랫폼 설계자가 `PRD_PLATFORM_v1.0.md` 다음으로 읽어야 한다.
+`docs/platform/BRAND_CONTEXT.md`는 Legacy가 아니라 Active Business Context다. 플랫폼 설계자가 `docs/platform/PRD_PLATFORM_v1.0.md` 다음으로 읽어야 한다.
 
 ### 3.6 `_context.md`
 
@@ -204,7 +210,7 @@ Legacy로 내리되 폐기하지 않는다. 플랫폼의 `Public Experience`와 
 
 기준 문서 승격 후 `_context.md`는 갱신해야 한다. 단, 이 파일은 실행 상태 요약용이므로 플랫폼 설계 전체를 길게 넣지 않는다.
 
-### 3.7 `docs/DESIGN_SYSTEM.md`
+### 3.7 `docs/showroom/DESIGN_SYSTEM.md`
 
 쇼룸 디자인 시스템은 플랫폼에도 계승한다.
 
@@ -318,13 +324,13 @@ Active Design Base로 계승한다. 폐기하지 않는다.
 
 ### 6.1 브랜치 정책
 
-`PRD_PLATFORM_v1.0.md`는 Base Branch를 `v2-cms`, New Branch를 `platform-v1`로 지정한다.
+`docs/platform/PRD_PLATFORM_v1.0.md`는 Base Branch를 `v2-cms`, New Branch를 `platform-v1`로 지정한다.
 
 현재 문서 베이스라인은 `v2-cms`에서 분기한 `platform-v1` 브랜치 위에서 정리한다. 플랫폼 구현도 이 브랜치에서 시작한다.
 
 ### 6.2 AppSheet 전산 리스크
 
-`BRAND_CONTEXT.md`에 따르면 AppSheet가 접수, 실측, 제작, 발주, 시공, 정산, 출결, 차량, 카드 등 전 업무 전산이다.
+`docs/platform/BRAND_CONTEXT.md`에 따르면 AppSheet가 접수, 실측, 제작, 발주, 시공, 정산, 출결, 차량, 카드 등 전 업무 전산이다.
 
 플랫폼이 AppSheet를 대체하는지, 일부만 연동하는지, 고객 포털 데이터만 별도로 들고 가는지 결정되지 않았다. 이 결정을 하지 않고 플랫폼 DB를 만들면 운영팀이 이중 입력을 하게 될 가능성이 높다.
 
@@ -338,7 +344,7 @@ Active Design Base로 계승한다. 폐기하지 않는다.
 
 ### 6.5 문서 드리프트 리스크
 
-`GEMINI.md`, `README.md`, `PROJECT_TASKS.md`, `_context.md`는 여전히 쇼룸 중심이다. 기준 문서 승격 후 이 문서들이 동시에 갱신되지 않으면 다음 에이전트가 기존 PRD v1.1 기준으로 되돌아갈 수 있다.
+`GEMINI.md`, `PROJECT_TASKS.md`, `_context.md`, `_order.md`는 루트 실행 진입점으로 유지하되, 플랫폼 세부 기준은 `docs/platform/`으로 모은다. 이 경로가 어긋나면 다음 에이전트가 기존 쇼룸 PRD 기준으로 되돌아갈 수 있다.
 
 ## 7. 승계/Legacy 전환 결정표
 
@@ -349,10 +355,10 @@ Active Design Base로 계승한다. 폐기하지 않는다.
 | 기존 디자인 시스템 | 계승 | 업무형 컴포넌트 규칙 추가 |
 | 기존 Supabase client 구조 | 계승 | 플랫폼 스키마/RBAC에 맞게 확장 |
 | 기존 `showroom` 스키마 | 계승 | 플랫폼 핵심 테이블과 분리하거나 명확한 schema boundary 설정 |
-| `PRD_v1.1.md` | Legacy | Public Experience 참고 문서로만 사용 |
-| `docs/PROJECT_BRIEF.md` | Legacy | 쇼룸 탄생 배경/영업 보조 맥락으로 보존 |
+| `docs/showroom/PRD_v1.1.md` | Legacy | Public Experience 참고 문서로만 사용 |
+| `docs/showroom/PROJECT_BRIEF.md` | Legacy | 쇼룸 탄생 배경/영업 보조 맥락으로 보존 |
 | `_order.md` | Active | MVP-01 OAuth 로그인 구현 오더로 유지 |
-| `_launch_check.md` | Legacy evidence | 쇼룸 품질 근거로 보존 |
+| `docs/archive/showroom/_launch_check.md` | Legacy evidence | 쇼룸 품질 근거로 보존 |
 | `promo-video/*` | Out of scope | 플랫폼 개발 기준에서 제외 |
 | 외부 예약/스토어 CTA | 단계적 전환 | MVP에서 내부 신청/결제 흐름으로 대체 여부 결정 |
 
@@ -374,18 +380,19 @@ Active Design Base로 계승한다. 폐기하지 않는다.
 
 | 후속 설계 | 처리 원칙 |
 |---|---|
-| AppSheet 관계 | Phase 1에서는 수동 운영/병행 가능성을 열어두고, Phase 2 전에 확정 |
+| AppSheet 관계 | MVP-02 신청 구현은 막지 않되, MVP-03 접수/배정 운영 전에는 확정 |
 | Toss 결제 설계 | 견적 생성 이후 단계에서 별도 설계 |
 | A/S/시공 일정 | v1 이후 확장 여지만 보존 |
 
 ## 9. 권장 다음 순서
 
-1. `PLATFORM_STRATEGY.md`를 PRD 상위 기준 문서로 유지한다.
-2. `PLATFORM_DB_RBAC_DESIGN.md`를 MVP-01/02에 필요한 최소 범위로 작성한다.
+1. `docs/platform/PLATFORM_STRATEGY.md`를 PRD 상위 기준 문서로 유지한다.
+2. `docs/platform/PLATFORM_TASKS.md`를 플랫폼 제작 일정 기준으로 유지한다.
 3. MVP-01 OAuth 로그인을 구현한다.
 4. MVP-02 무료실측 신청을 바로 구현한다.
-5. 관리자/영업 매니저가 접수 건을 확인하고 담당자를 배정하는 화면으로 확장한다.
-6. 견적과 결제는 실측 신청/담당자 배정 데이터가 안정화된 뒤 진행한다.
+5. AppSheet와 플랫폼 DB의 운영 관계를 확정한다.
+6. 관리자/영업 매니저가 접수 건을 확인하고 담당자를 배정하는 화면으로 확장한다.
+7. 견적과 결제는 실측 신청/담당자 배정 데이터가 안정화된 뒤 진행한다.
 
 ## 10. 최종 판정
 
@@ -393,4 +400,4 @@ Active Design Base로 계승한다. 폐기하지 않는다.
 
 기존 프로젝트는 폐기 대상이 아니라 좋은 출발점이다. 특히 쇼룸 UX, CMS, 디자인 토큰, Supabase 연결 구조, 이미지 업로드 구조는 그대로 살릴 가치가 높다.
 
-그러나 플랫폼의 본체는 아직 코드에 없다. 다음 작업은 장기 문서화가 아니라 MVP-01/02를 안전하게 시작하기 위한 최소 DB/RBAC 설계다. 그 다음에는 로그인과 무료실측 신청 구현으로 바로 들어가야 한다.
+그러나 플랫폼의 본체는 아직 코드에 없다. 다음 작업은 장기 문서화가 아니라 `docs/platform/PLATFORM_TASKS.md`의 순서에 따라 로그인과 무료실측 신청 구현으로 바로 들어가는 것이다.

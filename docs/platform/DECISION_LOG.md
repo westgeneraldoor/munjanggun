@@ -1,22 +1,47 @@
 # Decision Log
 
+## 2026-05-30 — 플랫폼 문서 구조와 태스크 보드 분리
+
+### 결정
+
+플랫폼 제작 일정의 기준 문서를 `docs/platform/PLATFORM_TASKS.md`로 분리한다.
+
+루트의 `PROJECT_TASKS.md`는 기존 V2 쇼룸 히스토리와 전체 상태 포인터로 유지하고, 플랫폼의 세부 페이즈/오더/완료 기준은 `docs/platform/PLATFORM_TASKS.md`를 우선한다.
+
+### 문서 구조
+
+- 플랫폼 기준 문서: `docs/platform/`
+- 쇼룸 기준 문서: `docs/showroom/`
+- 과거 감사/출시/아카이브: `docs/archive/showroom/`
+- 실행 진입점: `GEMINI.md`, `_context.md`, `_order.md`, `PROJECT_TASKS.md`
+
+### 이유
+
+플랫폼 개발이 시작되면서 루트에 PRD, 감사, 아카이브, 에이전트 문서가 뒤섞여 현재 일정이 잘 보이지 않았다.
+
+앞으로 PM과 작업자는 `docs/platform/PLATFORM_TASKS.md`에서 전체 일정 순서를 확인하고, `_order.md`에서 현재 작업 오더만 실행한다.
+
+### 되돌릴 조건
+
+문서 이동으로 에이전트가 기준 문서를 찾지 못하거나 자동화가 깨지면 루트 진입 문서에 별도 인덱스를 추가한다. 단, 플랫폼 태스크 보드를 `PROJECT_TASKS.md`에 다시 길게 합치지는 않는다.
+
 ## 2026-05-29 — 플랫폼 전략 문서 최상위 기준화
 
 ### 결정
 
-`PLATFORM_STRATEGY.md`를 플랫폼 작업의 최상위 기준 문서로 둔다.
+`docs/platform/PLATFORM_STRATEGY.md`를 플랫폼 작업의 최상위 기준 문서로 둔다.
 
 문장군 플랫폼의 목적은 쇼핑몰 구축이 아니라 고객 여정 통합이다.
 
 ### 이유
 
-`PLATFORM_MIGRATION_AUDIT.md`는 기술/문서/코드 승계 관점의 감사로는 충분하지만, 고객이 왜 네이버예약 대신 문장군 플랫폼에서 무료실측을 신청해야 하는지에 대한 사업 전략 기준이 부족했다.
+`docs/platform/PLATFORM_MIGRATION_AUDIT.md`는 기술/문서/코드 승계 관점의 감사로는 충분하지만, 고객이 왜 네이버예약 대신 문장군 플랫폼에서 무료실측을 신청해야 하는지에 대한 사업 전략 기준이 부족했다.
 
-앞으로 장바구니, 쿠폰, 포인트, 회원등급, 자동견적 같은 기능 제안이 나올 때 `PLATFORM_STRATEGY.md`를 기준으로 컷하거나 후순위화한다.
+앞으로 장바구니, 쿠폰, 포인트, 회원등급, 자동견적 같은 기능 제안이 나올 때 `docs/platform/PLATFORM_STRATEGY.md`를 기준으로 컷하거나 후순위화한다.
 
 ### 실행 순서
 
-1. `PLATFORM_DB_RBAC_DESIGN.md`를 MVP-01/02에 필요한 최소 범위로 작성한다.
+1. `docs/platform/PLATFORM_DB_RBAC_DESIGN.md`를 MVP-01/02에 필요한 최소 범위로 작성한다.
 2. MVP-01 OAuth 로그인을 구현한다.
 3. MVP-02 무료실측 신청을 구현한다.
 4. 관리자/영업 매니저 접수 확인과 담당자 배정으로 확장한다.
@@ -29,7 +54,7 @@
 
 ### 결정
 
-`PLATFORM_DB_RBAC_DESIGN.md`를 MVP-01 OAuth 로그인, MVP-02 무료실측 신청, MVP-03 담당자 배정 기반의 최소 DB/RBAC 설계 문서로 둔다.
+`docs/platform/PLATFORM_DB_RBAC_DESIGN.md`를 MVP-01 OAuth 로그인, MVP-02 무료실측 신청, MVP-03 담당자 배정 기반의 최소 DB/RBAC 설계 문서로 둔다.
 
 ### 핵심 설계
 

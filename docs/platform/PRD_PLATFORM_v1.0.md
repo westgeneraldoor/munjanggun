@@ -2,13 +2,14 @@
 document_type: "Platform PRD"
 version: "1.0.0"
 status: "canonical"
-last_updated: "2026-05-29"
-source_strategy: "PLATFORM_STRATEGY.md"
-source_db_rbac: "PLATFORM_DB_RBAC_DESIGN.md"
-source_audit: "PLATFORM_MIGRATION_AUDIT.md"
-current_public_experience_prd: "PRD_v2.0.md"
-legacy_public_experience_prd: "PRD_v1.1.md"
-agent_bootstrap: "CODEX_PROJECT_BOOTSTRAP.md"
+last_updated: "2026-05-30"
+source_strategy: "docs/platform/PLATFORM_STRATEGY.md"
+source_tasks: "docs/platform/PLATFORM_TASKS.md"
+source_db_rbac: "docs/platform/PLATFORM_DB_RBAC_DESIGN.md"
+source_audit: "docs/platform/PLATFORM_MIGRATION_AUDIT.md"
+current_public_experience_prd: "docs/showroom/PRD_v2.0.md"
+legacy_public_experience_prd: "docs/showroom/PRD_v1.1.md"
+agent_bootstrap: "docs/platform/CODEX_PROJECT_BOOTSTRAP.md"
 ---
 
 # 문장군 플랫폼 v1.0

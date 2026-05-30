@@ -12,8 +12,8 @@ changelog:
     changes:
       - "v2 초기 PRD 생성 (만능 노드 CMS)"
 target_agent: "Antigravity / Claude Code / Cursor"
-source_brief: "docs/PROJECT_BRIEF_v2.md"
-previous_prd: "PRD_v1.1.md"
+source_brief: "docs/showroom/PROJECT_BRIEF_v2.md"
+previous_prd: "docs/showroom/PRD_v1.1.md"
 ---
 
 # 문장군 디지털 쇼룸 v2 — Product Requirements Document
@@ -536,7 +536,7 @@ munjanggun/
 ├── scripts/
 │   └── migrate-v1-to-v2.ts           # 데이터 마이그레이션
 ├── public/
-├── PRD_v2.0.md                    # 이 문서 (프로젝트 루트)
+├── docs/showroom/PRD_v2.0.md                    # 이 문서 (프로젝트 루트)
 ├── docs/
 │   ├── PROJECT_BRIEF_v2.md
 │   └── DESIGN_SYSTEM.md

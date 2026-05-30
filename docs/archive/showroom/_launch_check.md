@@ -221,6 +221,6 @@ UX & 유저 편의성     ████████████████░░
 ---
 
 📁 점검 리포트 저장 완료!
-📍 위치: `_launch_check.md`
+📍 위치: `docs/archive/showroom/_launch_check.md`
 
 > Phase 1 (즉시 실행) 과제들을 **총괄 시작**으로 수정 작업을 진행할까요?
