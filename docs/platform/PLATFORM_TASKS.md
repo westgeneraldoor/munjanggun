@@ -56,7 +56,7 @@ MVP-01 카카오 로그인
 
 | 순서 | 작업 | 상태 | 비고 |
 |---|---|---|---|
-| 1 | MVP-01 카카오 로그인 기반 구축 | Ready | `_order.md` #052 |
+| 1 | MVP-01 카카오 로그인 기반 구축 | Code Complete | 외부 Kakao/Supabase 설정 확인 필요 |
 | 2 | MVP-02 무료방문견적 신청 + 어드민 접수 큐 | Next | 고객 신청과 운영 확인을 한 세트로 구현 |
 | 3 | MVP-03 담당자 배정 + 접수 상태 관리 | Planned | 접수 처리와 AppSheet 수동 등록 지원 |
 | 4 | MVP-04 견적서 작성 + 견적 링크 발송 | Planned | 영업 담당자가 고객에게 보낼 견적 생성 |
@@ -124,7 +124,7 @@ MVP-01 카카오 로그인
 
 목표: 고객이 플랫폼에 로그인하고, `customer` role profile이 안전하게 생성되는 기반을 만든다.
 
-상태: Ready
+상태: Code Complete / External Config Pending
 
 작업 오더:
 
@@ -132,42 +132,42 @@ MVP-01 카카오 로그인
 
 구현 항목:
 
-- [ ] Next.js App Router/route handler/proxy 관련 현재 버전 문서 확인
-- [ ] Supabase Auth/Kakao Login/RLS 공식 문서 확인
-- [ ] `platform` schema 생성 migration 작성
-- [ ] `platform_private` schema 생성 migration 작성
-- [ ] `platform.profile_role` enum 생성
-- [ ] `platform.profiles` 테이블 생성
-- [ ] `platform.staff_profiles` 테이블 생성
-- [ ] 카카오 최초 로그인 시 profile 자동 생성 trigger 작성
-- [ ] `platform_private.current_role()` 작성
-- [ ] `platform_private.is_admin()` 작성
-- [ ] `platform_private.is_sales_manager()` 작성
-- [ ] `profiles` RLS enable
-- [ ] 고객 본인 profile 조회 policy 작성
-- [ ] 고객 role 자체 변경 금지 policy 작성
-- [ ] 관리자 전체 profile 조회/수정 policy 작성
-- [ ] `src/types/database.ts` platform 타입 추가 또는 재생성
-- [ ] `src/lib/supabase/platform-server.ts` 추가
-- [ ] `src/lib/supabase/platform-client.ts` 추가
-- [ ] `src/app/auth/callback/route.ts` 추가
-- [ ] `src/app/login/page.tsx` 추가
-- [ ] `src/app/login/login.module.css` 추가
-- [ ] `src/app/portal/page.tsx` placeholder 추가
-- [ ] `src/app/portal/portal.module.css` 추가
-- [ ] `src/proxy.ts`에서 `/portal` 보호 추가
-- [ ] 기존 `/admin` auth guard 회귀 없음 확인
+- [x] Next.js App Router/route handler/proxy 관련 현재 버전 문서 확인
+- [x] Supabase Auth/Kakao Login/RLS 공식 문서 확인
+- [x] `platform` schema 생성 migration 작성
+- [x] `platform_private` schema 생성 migration 작성
+- [x] `platform.profile_role` enum 생성
+- [x] `platform.profiles` 테이블 생성
+- [x] `platform.staff_profiles` 테이블 생성
+- [x] 카카오 최초 로그인 시 profile 자동 생성 trigger 작성
+- [x] `platform_private.current_role()` 작성
+- [x] `platform_private.is_admin()` 작성
+- [x] `platform_private.is_sales_manager()` 작성
+- [x] `profiles` RLS enable
+- [x] 고객 본인 profile 조회 policy 작성
+- [x] 고객 role 자체 변경 금지 policy 작성
+- [x] 관리자 전체 profile 조회/수정 policy 작성
+- [x] `src/types/database.ts` platform 타입 추가 또는 재생성
+- [x] `src/lib/supabase/platform-server.ts` 추가
+- [x] `src/lib/supabase/platform-client.ts` 추가
+- [x] `src/app/auth/callback/route.ts` 추가
+- [x] `src/app/login/page.tsx` 추가
+- [x] `src/app/login/login.module.css` 추가
+- [x] `src/app/portal/page.tsx` placeholder 추가
+- [x] `src/app/portal/portal.module.css` 추가
+- [x] `src/proxy.ts`에서 `/portal` 보호 추가
+- [x] 기존 `/admin` auth guard 회귀 없음 확인
 
 완료 기준:
 
 - [ ] Kakao OAuth 로그인 흐름이 동작한다.
 - [ ] 로그인 사용자는 `platform.profiles.role = customer`로 생성된다.
-- [ ] 비로그인 사용자는 `/portal`에 접근할 수 없다.
+- [x] 비로그인 사용자는 `/portal`에 접근할 수 없다.
 - [ ] 고객 profile에 이름과 휴대폰 번호를 필수로 확보한다.
-- [ ] 고객은 role을 클라이언트에서 바꿀 수 없다.
-- [ ] 기존 쇼룸 고객 페이지와 `/admin` CMS가 깨지지 않는다.
-- [ ] `npm run lint` 통과
-- [ ] `npm run build` 통과
+- [x] 고객은 role을 클라이언트에서 바꿀 수 없다.
+- [x] 기존 쇼룸 고객 페이지와 `/admin` CMS가 깨지지 않는다.
+- [x] `npm run lint` 통과
+- [x] `npm run build` 통과
 
 주의:
 

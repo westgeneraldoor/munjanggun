@@ -252,4 +252,71 @@ export interface Database {
       }
     }
   }
+  platform: {
+    Tables: {
+      profiles: {
+        Row: {
+          id: string
+          role: 'customer' | 'sales_manager' | 'administrator'
+          display_name: string | null
+          phone: string | null
+          email: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          role?: 'customer' | 'sales_manager' | 'administrator'
+          display_name?: string | null
+          phone?: string | null
+          email?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          role?: 'customer' | 'sales_manager' | 'administrator'
+          display_name?: string | null
+          phone?: string | null
+          email?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      staff_profiles: {
+        Row: {
+          profile_id: string
+          team_name: string | null
+          public_name: string
+          work_phone: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          profile_id: string
+          team_name?: string | null
+          public_name: string
+          work_phone?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          profile_id?: string
+          team_name?: string | null
+          public_name?: string
+          work_phone?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+    }
+    Enums: {
+      profile_role: 'customer' | 'sales_manager' | 'administrator'
+      measurement_status: 'submitted' | 'appsheet_pending' | 'appsheet_registered' | 'assigned' | 'scheduled' | 'measured' | 'cancelled'
+      product_family: 'middle_door' | 'abs_door' | 'front_door' | 'molding_baseboard' | 'other'
+    }
+  }
 }

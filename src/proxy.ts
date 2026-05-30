@@ -32,16 +32,116 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/admin')
-  const isLoginRoute = request.nextUrl.pathname === '/admin/login'
+  const pathname = request.nextUrl.pathname
 
-  if (isAuthRoute && !isLoginRoute && !user) {
-    return NextResponse.redirect(new URL('/admin/login', request.url))
+  // 1. 경로 타입 식별
+  const isAdminRoute = pathname.startsWith('/admin')
+  const isAdminLoginRoute = pathname === '/admin/login'
+  const isManagerRoute = pathname.startsWith('/manager')
+  const isPortalRoute = pathname.startsWith('/portal')
+  const isMeasureRoute = pathname.startsWith('/measure')
+  const isCustomerLoginRoute = pathname === '/login'
+  const needsRoleLookup = isAdminRoute || isManagerRoute
+
+  // 2. 로그인 여부에 따른 1차 처리 및 역할(role) 조회
+  let userRole: string | null = null
+  let roleQueryError = false
+  let profileExists = false
+
+  if (user && needsRoleLookup) {
+    // platform 스키마를 바라보는 client 임시 생성하여 역할 조회
+    const platformClient = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+            supabaseResponse = NextResponse.next({
+              request,
+            })
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            )
+          },
+        },
+        db: { schema: 'platform' }
+      }
+    )
+
+    const { data: profile, error } = await platformClient
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (error) {
+      roleQueryError = true
+    } else if (profile) {
+      profileExists = true
+      userRole = profile.role
+    }
   }
 
-  // If user is already logged in, they shouldn't access the login page
-  if (isLoginRoute && user) {
-    return NextResponse.redirect(new URL('/admin/nodes', request.url))
+  // 3. 비로그인 처리
+  if (!user) {
+    // 어드민 / 매니저 경로 -> 어드민 로그인으로 리다이렉트
+    if ((isAdminRoute && !isAdminLoginRoute) || isManagerRoute) {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+    // 포털 / 견적신청 경로 -> 고객 로그인으로 리다이렉트
+    if (isPortalRoute || isMeasureRoute) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+  }
+
+  // 4. 로그인된 사용자 처리
+  if (user) {
+    // 4.1 쿼리 오류 발생 시 fail-closed (보호 경로 접근 차단)
+    if (roleQueryError) {
+      if ((isAdminRoute && !isAdminLoginRoute) || isManagerRoute) {
+        return NextResponse.redirect(new URL('/login?error=query_failed', request.url))
+      }
+    }
+
+    // 4.2 로그인 페이지 접근 차단
+    if (isCustomerLoginRoute) {
+      return NextResponse.redirect(new URL('/portal', request.url))
+    }
+    if (isAdminLoginRoute) {
+      if (userRole === 'administrator') {
+        return NextResponse.redirect(new URL('/admin/nodes', request.url))
+      }
+      if (userRole === 'sales_manager') {
+        return NextResponse.redirect(new URL('/manager', request.url))
+      }
+      return NextResponse.redirect(new URL('/portal', request.url))
+    }
+
+    // 4.3 역할(Role) 기반 가드 및 레거시 어드민 허용 정책
+    const isAdminPlatformRoute = pathname.startsWith('/admin/platform')
+
+    // A. 신규 플랫폼 어드민 경로 (/admin/platform): administrator만 허용
+    if (isAdminPlatformRoute && userRole !== 'administrator') {
+      return NextResponse.redirect(new URL('/portal', request.url))
+    }
+
+    // B. 매니저 경로 (/manager): sales_manager 또는 administrator만 허용
+    if (isManagerRoute && userRole !== 'sales_manager' && userRole !== 'administrator') {
+      return NextResponse.redirect(new URL('/portal', request.url))
+    }
+
+    // C. 기존 /admin/* CMS 경로 보호 (단, /admin/platform 및 /admin/login 등은 위에서 이미 필터링됨)
+    // - platform profile이 존재하는 고객/매니저 계정이면 administrator가 아닐 시 차단
+    // - platform profile이 없는 legacy admin 계정은 임시 통과 허용
+    if (isAdminRoute && !isAdminLoginRoute && !isAdminPlatformRoute) {
+      if (profileExists && userRole !== 'administrator') {
+        return NextResponse.redirect(new URL('/portal', request.url))
+      }
+    }
   }
 
   return supabaseResponse

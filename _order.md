@@ -143,4 +143,32 @@ supabase/migrations/<generated>_platform_auth_foundation.sql
 
 ## 작업 결과 (작업자가 작성)
 
-아직 미작성.
+### 변경 파일 목록
+- [supabase/migrations/20260530000000_platform_auth_foundation.sql](file:///c:/Users/hjh/안티그래비티/munjanggun/supabase/migrations/20260530000000_platform_auth_foundation.sql) (신규)
+- [src/types/database.ts](file:///c:/Users/hjh/안티그래비티/munjanggun/src/types/database.ts) (수정)
+- [src/lib/supabase/platform-client.ts](file:///c:/Users/hjh/안티그래비티/munjanggun/src/lib/supabase/platform-client.ts) (신규)
+- [src/lib/supabase/platform-server.ts](file:///c:/Users/hjh/안티그래비티/munjanggun/src/lib/supabase/platform-server.ts) (신규)
+- [src/proxy.ts](file:///c:/Users/hjh/안티그래비티/munjanggun/src/proxy.ts) (수정)
+- [src/app/auth/callback/route.ts](file:///c:/Users/hjh/안티그래비티/munjanggun/src/app/auth/callback/route.ts) (신규)
+- [src/app/login/page.tsx](file:///c:/Users/hjh/안티그래비티/munjanggun/src/app/login/page.tsx) (신규)
+- [src/app/login/login.module.css](file:///c:/Users/hjh/안티그래비티/munjanggun/src/app/login/login.module.css) (신규)
+- [src/app/portal/page.tsx](file:///c:/Users/hjh/안티그래비티/munjanggun/src/app/portal/page.tsx) (신규)
+- [src/app/portal/portal.module.css](file:///c:/Users/hjh/안티그래비티/munjanggun/src/app/portal/portal.module.css) (신규)
+- [eslint.config.mjs](file:///c:/Users/hjh/안티그래비티/munjanggun/eslint.config.mjs) (수정)
+
+### 구현 내용
+- **기존 /admin CMS 가드 예외화 및 legacy admin 임시 허용**: 일반 고객/영업 매니저 등이 기존 쇼룸 CMS 경로(예: `/admin/nodes`, `/admin/settings`)에 로그인 상태일 때 접근 차단되지 않도록 체크 로직을 완화하고, 신규 플랫폼 어드민인 `/admin/platform` 경로에 대해서만 `administrator` 역할을 강제하도록 `src/proxy.ts`를 조율했습니다. 더불어 platform profile row가 아예 없는 legacy admin인 경우 기존 CMS 경로에 접근할 수 있도록 `.maybeSingle()` 및 profile 존재 여부 검사를 구현했고, 쿼리 실패 시 fail-closed 원칙을 적용하여 보호 경로 진입을 차단했습니다.
+- **마이그레이션 SQL 권한 엄격히 제한**: `platform.profiles` 테이블에 대해 `authenticated` 역할의 UPDATE 권한을 `display_name` 및 `phone` 컬럼으로만 한정(컬럼 레벨 GRANT)하여, 일반 로그인 사용자가 `role` 이나 `email`, `created_at/updated_at` 등의 민감한 컬럼을 임의로 변경하지 못하도록 데이터베이스 수준의 안전장치를 설정했습니다.
+- **RLS 무한 재귀 루프 차단**: `profiles` RLS update 정책 내에서 자기 자신을 직접 서브쿼리로 조회해 무한 재귀를 유발할 수 있던 부분을 차단하기 위해 `platform_private.get_user_role(p_user_id UUID)` 헬퍼 함수를 신설하고 이를 RLS update `WITH CHECK`에 바인딩했습니다.
+- **트리거 함수 보안 지정**: 사용자 가입 시 프로필을 연동 생성하는 `handle_new_user` 함수를 `platform_private` 스키마 하위로 이전하고, `SECURITY DEFINER` 및 `search_path`를 고정 지정하여 권한 위조를 방지했습니다.
+- **오픈 리다이렉트 취약점 차단**: `src/app/auth/callback/route.ts` 에서 `next` 파라미터가 `/`로 시작하고 `//`로 시작하지 않는 유효한 상대 경로일 때만 리다이렉트를 처리하며, 절대 경로나 프로토콜이 주입되었을 때는 `/portal`로 안전하게 리다이렉트하는 위협 방지 로직을 추가했습니다.
+- **타입 바인딩 & Supabase SDK 헬퍼 & UI**: 앞선 빌드와 동일하게 스키마별 클라이언트 분리, TS Database 타입 매핑 및 프리미엄 다크/골드 간편로그인 UI 및 포털 placeholder를 유지하였습니다.
+
+### 검증 결과
+- **npm run lint**: ESLint 체크 성공 (Warning은 빌드를 방해하지 않는 수준의 기존 CMS 잔재일 뿐이며, 생성 폴더 빌드 무시는 정상 유지됩니다).
+- **npm run build**: Next.js 16+ Turbopack optimized production build가 에러 없이 완벽히 성공함을 재검증했습니다.
+
+### 미확인 사항
+- 실제 카카오 개발자 센터 어플리케이션(OAuth Client ID 및 Client Secret) 등록 정보와 클라우드 Supabase Auth의 카카오 활성화 연결 테스트.
+- 원격 실서버 환경에서의 카카오 로그인 API 리다이렉트 흐름.
+- Supabase Dashboard > API Settings > Exposed schemas 목록에 `platform` 스키마가 포함되어 있는지 확인.
