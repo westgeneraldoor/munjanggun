@@ -17,6 +17,7 @@
 ## 핵심 문서 위치
 - 플랫폼 태스크 보드(제작 일정 기준): `./docs/platform/PLATFORM_TASKS.md`
 - 플랫폼 전략(최상위 기준): `./docs/platform/PLATFORM_STRATEGY.md`
+- 플랫폼 개발 운영 전략: `./docs/platform/DEVELOPMENT_STRATEGY.md`
 - 플랫폼 DB/RBAC 설계: `./docs/platform/PLATFORM_DB_RBAC_DESIGN.md`
 - 플랫폼 PRD(기준): `./docs/platform/PRD_PLATFORM_v1.0.md`
 - 플랫폼 에이전트 부트스트랩(기준): `./docs/platform/CODEX_PROJECT_BOOTSTRAP.md`
@@ -35,7 +36,9 @@
 ## 현재 단계
 V1 완료 & 프로덕션 배포 → **V2 Phase 5-B 완료** (시네마틱갤러리 + 매끄러운전환 + UX편의) → **플랫폼 전환 베이스라인 수립 중**.
 
-플랫폼 개발은 거대한 추가 PRD를 더 만든 뒤 시작하는 것이 아니다. `docs/platform/PLATFORM_STRATEGY.md`를 북극성으로 두고, `docs/platform/PLATFORM_TASKS.md`의 페이즈 순서와 `docs/platform/PLATFORM_DB_RBAC_DESIGN.md`의 최소 DB/RBAC 기준에 따라 OAuth 로그인과 무료실측 신청 구현으로 바로 들어간다.
+플랫폼 개발은 거대한 추가 PRD를 더 만든 뒤 시작하는 것이 아니다. `docs/platform/PLATFORM_STRATEGY.md`를 북극성으로 두고, `docs/platform/PLATFORM_TASKS.md`의 페이즈 순서와 `docs/platform/PLATFORM_DB_RBAC_DESIGN.md`의 최소 DB/RBAC 기준에 따라 카카오 로그인과 무료방문견적 신청 구현으로 바로 들어간다.
+
+중요: 고객뷰는 신청/견적/결제를 쉽게 만드는 입구이고, 어드민은 실제 사내 운영 엔진이다. 어드민은 AppSheet 수동 등록, 담당자 배정, 견적서 작성, 링크 발송, 결제 확인, AS 접수, 후기 요청까지 이어져야 하며 모바일/데스크탑 모두 반응형이어야 한다.
 
 ## 브랜치 전략
 - `main` = V1 프로덕션 (Vercel 자동 배포, 절대 수정 금지)

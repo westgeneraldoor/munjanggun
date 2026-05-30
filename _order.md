@@ -1,13 +1,13 @@
-# 작업지시서 #052 — MVP-01 OAuth 로그인 기반 구축
+# 작업지시서 #052 — MVP-01 카카오 로그인 기반 구축
 📅 발행: 2026-05-29
 🌿 브랜치: `platform-v1`
-🤖 추천 모델: Codex high reasoning
+🤖 추천 모델: Gemini Flash 3.5 High 작업자 + Codex PM 검수
 
 ## 작업 목표
 
-문장군 플랫폼 MVP-01의 OAuth 로그인 기반을 구축한다.
+문장군 플랫폼 MVP-01의 카카오 로그인 기반을 구축한다.
 
-이번 오더의 목표는 무료실측 신청 구현이 아니다. 다음 오더(MVP-02)에서 고객이 실제 신청을 저장할 수 있도록, 먼저 안전한 인증/프로필/RBAC 기반만 만든다.
+이번 오더의 목표는 무료방문견적 신청 구현이 아니다. 다음 오더(MVP-02)에서 고객 신청과 어드민 접수 큐를 만들 수 있도록, 먼저 안전한 인증/프로필/RBAC 기반만 만든다.
 
 ## 반드시 먼저 읽을 문서
 
@@ -15,12 +15,13 @@
 2. `GEMINI.md`
 3. `docs/platform/PLATFORM_STRATEGY.md`
 4. `docs/platform/PLATFORM_TASKS.md`
-5. `docs/platform/PLATFORM_DB_RBAC_DESIGN.md`
-6. `docs/platform/PRD_PLATFORM_v1.0.md`
-7. `docs/platform/CODEX_PROJECT_BOOTSTRAP.md`
-8. `docs/platform/DECISION_LOG.md`
-9. `PROJECT_TASKS.md`
-10. `_context.md`
+5. `docs/platform/DEVELOPMENT_STRATEGY.md`
+6. `docs/platform/PLATFORM_DB_RBAC_DESIGN.md`
+7. `docs/platform/PRD_PLATFORM_v1.0.md`
+8. `docs/platform/CODEX_PROJECT_BOOTSTRAP.md`
+9. `docs/platform/DECISION_LOG.md`
+10. `PROJECT_TASKS.md`
+11. `_context.md`
 
 Next.js 작업 전에는 `AGENTS.md` 지시에 따라 `node_modules/next/dist/docs/`에서 App Router, middleware/proxy, auth callback 관련 문서를 확인한다.
 
@@ -28,7 +29,6 @@ Supabase 작업 전에는 아래 공식 문서를 확인한다.
 
 - https://supabase.com/docs/guides/auth/social-login
 - https://supabase.com/docs/guides/auth/social-login/auth-kakao
-- https://supabase.com/docs/guides/auth/social-login/auth-google
 - https://supabase.com/docs/guides/database/postgres/row-level-security
 
 ## 범위
@@ -49,7 +49,7 @@ Supabase 작업 전에는 아래 공식 문서를 확인한다.
 
 ### 제외
 
-- 무료실측 신청 폼 저장
+- 무료방문견적 신청 폼 저장
 - 사진 업로드
 - 담당자 배정
 - 견적/결제
@@ -60,9 +60,9 @@ Supabase 작업 전에는 아래 공식 문서를 확인한다.
 
 | 항목 | 결정 |
 |---|---|
-| 기본 OAuth | Kakao 우선 |
-| 보조 OAuth | Google 가능하면 함께 |
-| Naver | MVP-01 블로커 아님. `custom:naver`는 후속 후보 |
+| 기본 OAuth | Kakao만 구현 |
+| Google | 후속 확장 |
+| Naver | Google 확장 시점에 Naver 간편로그인도 함께 검토 |
 | 기본 role | OAuth 최초 로그인 사용자는 `customer` |
 | role 원본 | `platform.profiles.role` |
 | 금지 | `user_metadata` 또는 클라이언트 값으로 role 판단 금지 |
@@ -117,7 +117,7 @@ supabase/migrations/<generated>_platform_auth_foundation.sql
 - 기존 `showroom`/V2 CMS 동작을 깨지 않는다.
 - 기존 `/admin` 접근 흐름을 깨지 않는다.
 - 플랫폼 고객 경로는 `/portal`로 시작한다.
-- 로그인 화면은 고객에게 "회원가입"보다 "무료실측 신청 계속하기" 맥락으로 보이게 만든다.
+- 로그인 화면은 고객에게 "회원가입"보다 "무료방문견적 신청 계속하기" 맥락으로 보이게 만든다.
 - CSS는 기존 디자인 토큰을 사용한다.
 - Tailwind 사용 금지.
 - `any` 금지.

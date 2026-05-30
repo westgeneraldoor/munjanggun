@@ -5,12 +5,15 @@ created: "2026-05-29"
 auditor: "Codex"
 canonical_prd: "docs/platform/PRD_PLATFORM_v1.0.md"
 canonical_tasks: "docs/platform/PLATFORM_TASKS.md"
+canonical_development_strategy: "docs/platform/DEVELOPMENT_STRATEGY.md"
 canonical_bootstrap: "docs/platform/CODEX_PROJECT_BOOTSTRAP.md"
 canonical_strategy: "docs/platform/PLATFORM_STRATEGY.md"
 development_status: "minimum_design_then_mvp_build"
 ---
 
 # 문장군 플랫폼 전환 감사 보고서
+
+> 2026-05-30 업데이트: 이 감사 보고서는 전환 가능성과 승계/Legacy 판단의 근거 문서다. 실제 실행 순서와 최신 MVP 결정은 `docs/platform/PLATFORM_TASKS.md`, `docs/platform/DEVELOPMENT_STRATEGY.md`, `docs/platform/DECISION_LOG.md`가 우선한다. 최신 기준은 MVP-01 카카오 로그인, MVP-02 무료방문견적 신청 + 어드민 접수 큐, private `measurement-media` bucket이다.
 
 ## 0. 결론
 
@@ -26,9 +29,9 @@ development_status: "minimum_design_then_mvp_build"
 | 기존 CMS | 핵심 엔진으로 계승 | 컬렉션, 컬러, 이미지, 공개/초안, 미리보기 구조가 플랫폼의 콘텐츠 운영 기반이 됨 |
 | 기존 쇼룸 PRD v2.0 | Current/Public Experience Reference | V2 만능 노드 CMS와 `showroom` 스키마 기준을 정의하므로 플랫폼의 공개 쇼룸 영역 기준으로 계승 |
 | 기존 PRD v1.1 | Legacy Reference로 전환 | V1 컬러북 실행 PRD이므로 플랫폼 구현 기준으로 쓰면 충돌 |
-| 플랫폼 PRD | 기준 문서로 승격 | 고객 포털, 무료 실측, 담당자 배정, 견적, 결제의 새 목표를 정의 |
+| 플랫폼 PRD | 기준 문서로 승격 | 고객 포털, 무료방문견적, 담당자 배정, 견적, 결제의 새 목표를 정의 |
 | Codex Bootstrap | 기준 문서로 승격 | 에이전트가 개발 전에 읽어야 할 정책 문서로 사용 |
-| 플랫폼 개발 | 최소 설계 후 MVP 구현 | DB/RBAC와 개인정보 경계는 먼저 잡되, 로그인과 무료실측 신청까지 빠르게 검증해야 함 |
+| 플랫폼 개발 | 최소 설계 후 MVP 구현 | DB/RBAC와 개인정보 경계는 먼저 잡되, 카카오 로그인과 무료방문견적 신청까지 빠르게 검증해야 함 |
 
 ## 1. 감사 범위
 
@@ -46,7 +49,7 @@ development_status: "minimum_design_then_mvp_build"
 | `PROJECT_TASKS.md` | V2 쇼룸 구현 히스토리 + 플랫폼 태스크 포인터 | Active state board |
 | `docs/platform/BRAND_CONTEXT.md` | 브랜드, 영업, 시공, 세일즈 플로우 맥락 | Active Business Context |
 | `_context.md` | 최근 작업 상태 | Active, 플랫폼 전환 상태로 갱신 |
-| `_order.md` | MVP-01 OAuth 로그인 구현 오더 #052 | Active order |
+| `_order.md` | MVP-01 카카오 로그인 구현 오더 #052 | Active order |
 | `docs/showroom/DESIGN_SYSTEM.md` | 쇼룸 디자인 시스템 | Active Design Base |
 | `README.md` | 현재 구현된 쇼룸 설명 | Current Product README |
 | `GEMINI.md` | 에이전트 진입 문서 | Active, 플랫폼 기준 문서 반영 |
@@ -72,6 +75,7 @@ development_status: "minimum_design_then_mvp_build"
 | `docs/platform/PLATFORM_TASKS.md` | 플랫폼 페이즈, 오더 순서, 완료 기준 |
 | `docs/platform/CODEX_PROJECT_BOOTSTRAP.md` | Codex/에이전트가 개발 전 반드시 읽는 실행 정책 |
 | `docs/platform/PLATFORM_STRATEGY.md` | 고객/영업/대표 관점의 플랫폼 존재 이유와 네이버 전환 전략 |
+| `docs/platform/DEVELOPMENT_STRATEGY.md` | Codex/Gemini/Claude/GPT 역할 분담과 작업 운영 전략 |
 | `docs/platform/PLATFORM_MIGRATION_AUDIT.md` | 기존 자산 승계/Legacy 전환/최소 설계 게이트 근거 |
 
 ### 2.2 승격하면서 정정한 사항
@@ -86,14 +90,15 @@ development_status: "minimum_design_then_mvp_build"
 
 1. `docs/platform/PLATFORM_STRATEGY.md`
 2. `docs/platform/PLATFORM_TASKS.md`
-3. `docs/platform/CODEX_PROJECT_BOOTSTRAP.md`
-4. `docs/platform/PRD_PLATFORM_v1.0.md`
-5. `docs/platform/PLATFORM_MIGRATION_AUDIT.md`
-6. `docs/platform/BRAND_CONTEXT.md`
-7. `docs/showroom/DESIGN_SYSTEM.md`
-8. `docs/showroom/PRD_v2.0.md`
-9. `docs/showroom/PRD_v1.1.md`
-10. `docs/showroom/PROJECT_BRIEF.md`
+3. `docs/platform/DEVELOPMENT_STRATEGY.md`
+4. `docs/platform/CODEX_PROJECT_BOOTSTRAP.md`
+5. `docs/platform/PRD_PLATFORM_v1.0.md`
+6. `docs/platform/PLATFORM_MIGRATION_AUDIT.md`
+7. `docs/platform/BRAND_CONTEXT.md`
+8. `docs/showroom/DESIGN_SYSTEM.md`
+9. `docs/showroom/PRD_v2.0.md`
+10. `docs/showroom/PRD_v1.1.md`
+11. `docs/showroom/PROJECT_BRIEF.md`
 
 `docs/showroom/PRD_v2.0.md`, `docs/showroom/PRD_v1.1.md`, `docs/showroom/PROJECT_BRIEF.md`는 더 이상 신규 플랫폼 기능의 범위 판단 기준이 아니다. 다만 기존 쇼룸을 보존하거나 Public Experience 영역을 수정할 때는 여전히 근거 문서로 사용한다.
 
@@ -107,7 +112,7 @@ development_status: "minimum_design_then_mvp_build"
 |---|---|
 | 제품 정의 | "쇼핑몰이 아니라 고객 포털"이라는 경계가 명확함 |
 | 승계 전략 | 기존 쇼룸과 CMS를 폐기하지 않는다고 명시함 |
-| MVP 흐름 | 로그인, 무료 실측, 담당자 배정, 견적, 결제 순서가 비즈니스 흐름과 맞음 |
+| MVP 흐름 | 로그인, 무료방문견적, 담당자 배정, 견적, 결제 순서가 비즈니스 흐름과 맞음 |
 | 금지 범위 | 쇼핑몰, 장바구니, 쿠폰, 포인트, 리뷰, 자동 견적 엔진을 금지해 스코프 크립을 막음 |
 
 보완 필요:
@@ -115,7 +120,7 @@ development_status: "minimum_design_then_mvp_build"
 | 이슈 | 위험 | 개발 전 필요한 결정 |
 |---|---|---|
 | RBAC가 기능 표로만 있음 | DB 정책/RLS/라우트 보호로 번역되지 않으면 URL 접근이 권한처럼 오해될 수 있음 | `profiles`, `roles`, `manager_assignments` 등 권한 모델 확정 |
-| 무료 실측 신청 데이터 모델 없음 | 접수 상태와 고객 PII 처리 방식이 불명확 | `measurement_requests` 스키마, 사진 저장 정책, 개인정보 보관 정책 정의 |
+| 무료방문견적 신청 데이터 모델 없음 | 접수 상태와 고객 PII 처리 방식이 불명확 | `measurement_requests` 스키마, 사진/영상 저장 정책, 개인정보 보관 정책 정의 |
 | 견적 모델 없음 | quote URL만 만들면 결제/수정/보관 상태가 쉽게 꼬임 | `quotes`, `quote_items`, `quote_status_history` 설계 |
 | 결제 상태 모델 없음 | 토스 결제 승인/실패/취소/환불 흐름 누락 | `payments`, `payment_events`, Toss webhook 정책 정의 |
 | AppSheet와의 관계 없음 | 기존 운영 전산과 플랫폼 데이터가 이중 관리될 수 있음 | AppSheet를 유지/연동/대체 중 무엇으로 볼지 결정 |
@@ -123,7 +128,7 @@ development_status: "minimum_design_then_mvp_build"
 
 판정:
 
-`docs/platform/PRD_PLATFORM_v1.0.md`는 플랫폼 방향을 정하는 기준 문서로 충분하다. 그러나 바로 구현 오더로 쓰기에는 데이터 모델과 보안 정책이 부족하다. 다음 단계는 거대한 추가 PRD가 아니라 "플랫폼 DB/RBAC 최소 설계 오더"다. 이 설계가 통과되면 MVP-01 OAuth 로그인과 MVP-02 무료실측 신청 구현으로 바로 들어간다.
+`docs/platform/PRD_PLATFORM_v1.0.md`는 플랫폼 방향을 정하는 기준 문서로 충분하다. 그러나 바로 구현 오더로 쓰기에는 데이터 모델과 보안 정책이 부족하다. 다음 단계는 거대한 추가 PRD가 아니라 "플랫폼 DB/RBAC 최소 설계 오더"다. 이 설계가 통과되면 MVP-01 카카오 로그인과 MVP-02 무료방문견적 신청 + 어드민 접수 큐 구현으로 바로 들어간다.
 
 ### 3.2 `docs/showroom/PRD_v2.0.md`와 `docs/showroom/PRD_v1.1.md`
 
@@ -157,7 +162,7 @@ development_status: "minimum_design_then_mvp_build"
 
 이 문서는 쇼룸의 탄생 배경을 잘 설명한다.
 
-핵심은 "실측 후 컬러를 못 고른 고객에게 카톡 링크 하나로 보내는 디지털 컬러북"이다. 플랫폼의 전체 고객 여정과는 다르지만, `무료 실측 이후 컬러 확신을 만드는 Public Experience`로 계승할 가치가 높다.
+핵심은 "실측 후 컬러를 못 고른 고객에게 카톡 링크 하나로 보내는 디지털 컬러북"이다. 플랫폼의 전체 고객 여정과는 다르지만, `무료방문견적 이후 컬러 확신을 만드는 Public Experience`로 계승할 가치가 높다.
 
 판정:
 
@@ -191,7 +196,7 @@ Legacy로 내리되 폐기하지 않는다. 플랫폼의 `Public Experience`와 
 
 | 사실 | 플랫폼 의미 |
 |---|---|
-| 무료 방문실측이 핵심 차별점 | MVP-02가 제품의 중심이어야 함 |
+| 무료방문견적이 핵심 차별점 | MVP-02가 제품의 중심이어야 함 |
 | 영업부 5명이 방문실측 견적상담 전담 | Sales Manager 역할은 실제 운영 조직과 맞음 |
 | 담당매니저 1인이 실측부터 A/S까지 책임 | 담당자 배정, 견적, 고객 이력 설계의 핵심 |
 | 현재 결제는 네이버 브랜드스토어 중심 | 토스 결제 도입은 운영 방식 변경이므로 신중해야 함 |
@@ -270,7 +275,7 @@ Active Design Base로 계승한다. 폐기하지 않는다.
 | `src/types/database.ts` | `showroom` 외 플랫폼 스키마 또는 확장 테이블 타입 추가 |
 | `src/components/admin/*List.tsx` | 컬렉션/컬러 전용 CRUD 패턴을 업무 큐와 견적 목록 패턴으로 일반화 |
 | `SiteSettingsForm` | 외부 예약/스토어 링크 중심 설정에서 플랫폼 내부 플로우 설정으로 확장 |
-| `CTABar` | 외부 예약 링크 CTA에서 내부 무료 실측 신청 CTA로 전환 가능 |
+| `CTABar` | 외부 예약 링크 CTA에서 내부 무료방문견적 신청 CTA로 전환 가능 |
 | `ImageUploader` | 고객 업로드 권한, PII 사진, Storage 경로 분리 정책 추가 필요 |
 | `generateSlug` | 쇼룸 slug에는 충분하지만 고객/견적 도메인에는 별도 식별자 정책 필요 |
 
@@ -293,7 +298,7 @@ Active Design Base로 계승한다. 폐기하지 않는다.
 |---|---|
 | 사용자 프로필 | 고객/영업매니저/관리자 식별 |
 | 역할/RBAC | 기능별 조회/수정 권한 |
-| 무료 실측 신청 | 플랫폼 MVP의 시작점 |
+| 무료방문견적 신청 | 플랫폼 MVP의 시작점 |
 | 담당자 배정 | 관리자와 영업 매니저 업무 분리 |
 | 견적 | 고객 결제 전 핵심 문서 |
 | 견적 항목/옵션/추가금 | 문장군의 현장 특이사항/추가금 구조 반영 |
@@ -308,8 +313,8 @@ Active Design Base로 계승한다. 폐기하지 않는다.
 |---|---|
 | `profiles` | Supabase Auth 사용자 확장 정보 |
 | `roles` 또는 `profile_roles` | Customer/Sales Manager/Admin 권한 |
-| `measurement_requests` | 무료 실측 신청 |
-| `measurement_photos` | 고객 업로드 현장 사진 |
+| `measurement_requests` | 무료방문견적 신청 |
+| `measurement_request_media` | 고객 업로드 현장 사진/영상 |
 | `manager_assignments` | 담당자 배정 |
 | `quotes` | 견적 헤더 |
 | `quote_items` | 제품/옵션/추가금 항목 |
@@ -357,7 +362,7 @@ Active Design Base로 계승한다. 폐기하지 않는다.
 | 기존 `showroom` 스키마 | 계승 | 플랫폼 핵심 테이블과 분리하거나 명확한 schema boundary 설정 |
 | `docs/showroom/PRD_v1.1.md` | Legacy | Public Experience 참고 문서로만 사용 |
 | `docs/showroom/PROJECT_BRIEF.md` | Legacy | 쇼룸 탄생 배경/영업 보조 맥락으로 보존 |
-| `_order.md` | Active | MVP-01 OAuth 로그인 구현 오더로 유지 |
+| `_order.md` | Active | MVP-01 카카오 로그인 구현 오더로 유지 |
 | `docs/archive/showroom/_launch_check.md` | Legacy evidence | 쇼룸 품질 근거로 보존 |
 | `promo-video/*` | Out of scope | 플랫폼 개발 기준에서 제외 |
 | 외부 예약/스토어 CTA | 단계적 전환 | MVP에서 내부 신청/결제 흐름으로 대체 여부 결정 |
@@ -366,17 +371,17 @@ Active Design Base로 계승한다. 폐기하지 않는다.
 
 아래 게이트는 개발을 오래 막기 위한 장치가 아니다.
 
-목적은 개인정보와 권한을 망치지 않을 만큼만 먼저 정하고, 곧바로 실제 고객이 무료실측을 신청하는 첫 화면까지 가는 것이다.
+목적은 개인정보와 권한을 망치지 않을 만큼만 먼저 정하고, 곧바로 실제 고객이 무료방문견적을 신청하는 첫 화면까지 가는 것이다.
 
 | 게이트 | 완료 기준 |
 |---|---|
-| DB/RBAC 최소 설계 | MVP-01 로그인과 MVP-02 무료실측 신청에 필요한 테이블, RLS, role별 접근 흐름 확정 |
-| Auth 설계 | 우선 OAuth 제공자와 고객 식별자 정책 확정 |
-| Storage 정책 | 고객 현장 사진은 공개 쇼룸 이미지와 분리하고 비공개 원칙 확정 |
+| DB/RBAC 최소 설계 | MVP-01 카카오 로그인과 MVP-02 무료방문견적 신청에 필요한 테이블, RLS, role별 접근 흐름 확정 |
+| Auth 설계 | 카카오 로그인과 고객 식별자 정책 확정 |
+| Storage 정책 | 고객 현장 사진/영상은 공개 쇼룸 이미지와 분리하고 비공개 원칙 확정 |
 | Route map | 고객 신청, 매니저 접수 목록, 관리자 배정 경로 확정 |
 | Implementation order | 개발자가 읽을 수 있는 첫 `_order.md` 작성 |
 
-아래 항목은 중요하지만 첫 무료실측 신청 화면을 막을 정도로 깊게 설계하지 않는다.
+아래 항목은 중요하지만 첫 무료방문견적 신청 화면을 막을 정도로 깊게 설계하지 않는다.
 
 | 후속 설계 | 처리 원칙 |
 |---|---|
@@ -388,8 +393,8 @@ Active Design Base로 계승한다. 폐기하지 않는다.
 
 1. `docs/platform/PLATFORM_STRATEGY.md`를 PRD 상위 기준 문서로 유지한다.
 2. `docs/platform/PLATFORM_TASKS.md`를 플랫폼 제작 일정 기준으로 유지한다.
-3. MVP-01 OAuth 로그인을 구현한다.
-4. MVP-02 무료실측 신청을 바로 구현한다.
+3. MVP-01 카카오 로그인을 구현한다.
+4. MVP-02 무료방문견적 신청 + 어드민 접수 큐를 바로 구현한다.
 5. AppSheet와 플랫폼 DB의 운영 관계를 확정한다.
 6. 관리자/영업 매니저가 접수 건을 확인하고 담당자를 배정하는 화면으로 확장한다.
 7. 견적과 결제는 실측 신청/담당자 배정 데이터가 안정화된 뒤 진행한다.
@@ -400,4 +405,4 @@ Active Design Base로 계승한다. 폐기하지 않는다.
 
 기존 프로젝트는 폐기 대상이 아니라 좋은 출발점이다. 특히 쇼룸 UX, CMS, 디자인 토큰, Supabase 연결 구조, 이미지 업로드 구조는 그대로 살릴 가치가 높다.
 
-그러나 플랫폼의 본체는 아직 코드에 없다. 다음 작업은 장기 문서화가 아니라 `docs/platform/PLATFORM_TASKS.md`의 순서에 따라 로그인과 무료실측 신청 구현으로 바로 들어가는 것이다.
+그러나 플랫폼의 본체는 아직 코드에 없다. 다음 작업은 장기 문서화가 아니라 `docs/platform/PLATFORM_TASKS.md`의 순서에 따라 카카오 로그인과 무료방문견적 신청 구현으로 바로 들어가는 것이다.

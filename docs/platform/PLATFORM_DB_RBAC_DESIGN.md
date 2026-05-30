@@ -3,9 +3,10 @@ document_type: "Platform DB/RBAC Design"
 version: "1.0.0"
 status: "ready_for_mvp_order"
 created: "2026-05-29"
-scope: "MVP-01 OAuth login + MVP-02 free measurement request + MVP-03 assignment foundation"
+scope: "MVP-01 Kakao login + MVP-02 free visit estimate request/admin intake queue + MVP-03 assignment foundation"
 source_strategy: "docs/platform/PLATFORM_STRATEGY.md"
 source_tasks: "docs/platform/PLATFORM_TASKS.md"
+source_development_strategy: "docs/platform/DEVELOPMENT_STRATEGY.md"
 source_prd: "docs/platform/PRD_PLATFORM_v1.0.md"
 source_audit: "docs/platform/PLATFORM_MIGRATION_AUDIT.md"
 ---
@@ -16,13 +17,13 @@ source_audit: "docs/platform/PLATFORM_MIGRATION_AUDIT.md"
 
 이 문서는 플랫폼 전체 OS의 완성 설계가 아니다.
 
-목적은 MVP-01 OAuth 로그인과 MVP-02 무료실측 신청을 안전하게 구현할 만큼의 최소 DB/RBAC를 확정하는 것이다.
+목적은 MVP-01 카카오 로그인과 MVP-02 무료방문견적 신청 + 어드민 접수 큐를 안전하게 구현할 만큼의 최소 DB/RBAC를 확정하는 것이다.
 
 이번 설계가 통과되면 다음 순서로 바로 개발한다.
 
 ```text
-1. OAuth 로그인
-2. 무료실측 신청
+1. 카카오 로그인
+2. 무료방문견적 신청 + 어드민 접수 큐
 3. 관리자/영업 매니저 접수 확인
 4. 담당자 배정
 ```
@@ -35,17 +36,18 @@ source_audit: "docs/platform/PLATFORM_MIGRATION_AUDIT.md"
 
 1. `docs/platform/PLATFORM_STRATEGY.md`
 2. `docs/platform/PLATFORM_TASKS.md`
-3. `docs/platform/CODEX_PROJECT_BOOTSTRAP.md`
-4. `docs/platform/PRD_PLATFORM_v1.0.md`
-5. `docs/platform/PLATFORM_MIGRATION_AUDIT.md`
-6. `docs/platform/BRAND_CONTEXT.md`
+3. `docs/platform/DEVELOPMENT_STRATEGY.md`
+4. `docs/platform/CODEX_PROJECT_BOOTSTRAP.md`
+5. `docs/platform/PRD_PLATFORM_v1.0.md`
+6. `docs/platform/PLATFORM_MIGRATION_AUDIT.md`
+7. `docs/platform/BRAND_CONTEXT.md`
 
 핵심 원칙:
 
 | 원칙 | 적용 |
 |---|---|
 | 쇼핑몰이 아니다 | 상품/장바구니 DB를 만들지 않는다 |
-| 고객 여정 통합 | 무료실측 신청에서 담당자 배정까지 먼저 연결한다 |
+| 고객 여정 통합 | 무료방문견적 신청에서 어드민 접수 큐와 담당자 배정까지 먼저 연결한다 |
 | URL은 권한이 아니다 | 모든 고객 데이터는 Auth + RLS로 보호한다 |
 | 문서만 오래 쓰지 않는다 | 첫 신청 화면을 만들 수 있는 최소 범위만 설계한다 |
 | 기존 쇼룸 계승 | `showroom` 스키마는 유지하고 플랫폼 스키마와 분리한다 |
@@ -59,8 +61,8 @@ source_audit: "docs/platform/PLATFORM_MIGRATION_AUDIT.md"
 | Row Level Security | 노출 스키마의 테이블은 RLS를 켜고, 역할별 policy를 둔다 |
 | Auth + RLS | `auth.uid()` 기반으로 고객 본인/담당 매니저/관리자 접근을 분리한다 |
 | JWT metadata | 사용자가 수정 가능한 `user_metadata`를 권한 판단에 쓰지 않는다 |
-| Storage Access Control | 고객 현장 사진은 공개 버킷이 아니라 RLS/서명 URL 기반으로 다룬다 |
-| Social Login | Kakao/Google은 Supabase built-in provider, Naver는 custom OAuth/OIDC 후보로 본다 |
+| Storage Access Control | 고객 현장 사진/영상은 공개 버킷이 아니라 RLS/서명 URL 기반으로 다룬다 |
+| Social Login | MVP-01은 Kakao만 구현한다. Google/Naver는 후속 확장으로 둔다 |
 
 참고:
 
@@ -112,9 +114,11 @@ MVP는 단일 역할 모델로 시작한다.
 
 | Role | 한국어 | 목적 |
 |---|---|---|
-| `customer` | 고객 | 본인 무료실측 신청/사진/상태 조회 |
+| `customer` | 고객 | 본인 무료방문견적 신청/사진/영상/상태 조회 |
 | `sales_manager` | 영업 매니저 | 담당 고객 신청 조회, 상태 변경, 상담 메모 |
 | `administrator` | 관리자 | 전체 신청 조회, 담당자 배정, 역할 관리 |
+
+어드민/영업 매니저 화면은 모바일과 데스크탑 모두 반응형으로 사용 가능해야 한다. 플랫폼 초기 운영은 AppSheet 수동 등록을 전제로 하므로, 어드민은 고객 정보를 확인하고 복사하기 쉬운 운영 콘솔이어야 한다.
 
 ### 4.1 역할 저장 위치
 
@@ -148,31 +152,30 @@ MVP는 단일 역할 모델로 시작한다.
 
 | Provider | Supabase 지원 | MVP 판단 |
 |---|---|---|
-| Kakao | built-in provider | 1순위. 카카오 유입/공유 맥락과 가장 맞음 |
-| Google | built-in provider | 2순위. 운영자/스태프 fallback으로도 유용 |
-| Naver | built-in 목록에 없음 | `custom:naver` OAuth2 후보. 설정이 길어지면 MVP-02를 막지 않는다 |
+| Kakao | built-in provider | MVP-01 구현 대상 |
+| Google | built-in provider | 후속 확장. 운영자/스태프 fallback으로도 유용 |
+| Naver | built-in 목록에 없음 | Google 확장 시점에 Naver 간편로그인도 함께 검토 |
 
 권장:
 
-1. Kakao 로그인 먼저 구현
-2. Google 로그인 함께 또는 바로 다음 구현
-3. Naver는 custom OAuth2 설정 검증 후 추가
+1. MVP-01은 Kakao 로그인만 구현
+2. Google/Naver는 로그인 확장 단계에서 함께 검토
+3. Naver는 custom OAuth/OIDC 설정이 필요하므로 MVP-01 블로커로 두지 않음
 
 ### 5.2 고객 UX 원칙
 
-전략 문서의 "가입부터 강요하지 않는다" 원칙을 지키기 위해 아래 UX를 권장한다.
+전략 문서의 "가입을 목적처럼 보이게 하지 않는다" 원칙을 지키기 위해 아래 UX를 권장한다.
 
 ```text
-무료실측 신청 화면 진입
-→ 고객이 폼 입력
-→ 제출 시 로그인 필요 안내
-→ OAuth 완료 후 작성 데이터 복원
+무료방문견적 신청 CTA 클릭
+→ 카카오 로그인 필요 안내
+→ 카카오 OAuth 완료
+→ 이름/휴대폰 확인
+→ 신청 폼 입력
 → 신청 저장
 ```
 
-기술적으로는 DB insert 전에 인증이 필요하다.
-
-즉, UX는 "폼 먼저"지만 DB는 `customer_id = auth.uid()`가 있는 인증 사용자만 insert한다.
+무료방문견적 신청과 AS 접수는 모두 로그인 필수다. 다만 화면 문구는 "회원가입"보다 "무료방문견적 신청 계속하기" 맥락으로 보여야 한다.
 
 ## 6. MVP 테이블 설계
 
@@ -181,8 +184,8 @@ MVP는 단일 역할 모델로 시작한다.
 | 테이블 | 목적 |
 |---|---|
 | `platform.profiles` | Supabase Auth 사용자 확장 프로필과 role |
-| `platform.measurement_requests` | 무료 방문실측 신청 |
-| `platform.measurement_request_photos` | 고객 현장 사진 메타데이터 |
+| `platform.measurement_requests` | 무료방문견적 신청 |
+| `platform.measurement_request_media` | 고객 현장 사진/영상 메타데이터 |
 | `platform.measurement_request_events` | 상태/배정/메모 이력 |
 | `platform.staff_profiles` | 영업 매니저/관리자 운영용 표시 정보 |
 
@@ -242,7 +245,7 @@ DB check로 다른 테이블의 role을 직접 강제하기보다, 관리자 UI�
 
 ### 7.3 `platform.measurement_requests`
 
-무료 방문실측 신청의 중심 테이블이다.
+무료방문견적 신청의 중심 테이블이다.
 
 | 컬럼 | 타입 | 필수 | 설명 |
 |---|---|---|---|
@@ -261,7 +264,9 @@ DB check로 다른 테이블의 role을 직접 강제하기보다, 관리자 UI�
 | `site_note` | `text` | N | 고객 현장 설명 |
 | `internal_note` | `text` | N | 관리자/매니저 내부 메모 |
 | `source_channel` | `text` | Y | `platform`, `naver`, `phone`, `kakao`, `manual` |
-| `external_appsheet_id` | `text` | N | AppSheet 연동/수동 매칭용 |
+| `external_appsheet_id` | `text` | N | AppSheet 수동 등록/후속 연동 매칭용 |
+| `appsheet_registered_at` | `timestamptz` | N | AppSheet 수동 등록 완료 시각 |
+| `appsheet_registered_by` | `uuid` | N | AppSheet 수동 등록 처리자 |
 | `submitted_at` | `timestamptz` | Y | 접수 시각 |
 | `assigned_at` | `timestamptz` | N | 담당자 배정 시각 |
 | `scheduled_at` | `timestamptz` | N | 실측 예정 시각 |
@@ -273,7 +278,9 @@ DB check로 다른 테이블의 role을 직접 강제하기보다, 관리자 UI�
 
 | DB 값 | 화면 표시 | 의미 |
 |---|---|---|
-| `received` | 접수대기 | 고객 신청 완료, 아직 담당자 미배정 |
+| `submitted` | 접수대기 | 고객 신청 완료 |
+| `appsheet_pending` | AppSheet 등록대기 | 운영자가 AppSheet에 수동 등록해야 함 |
+| `appsheet_registered` | AppSheet 등록완료 | AppSheet 수동 등록 완료 |
 | `assigned` | 담당자배정 | 관리자 또는 시스템이 매니저 배정 |
 | `scheduled` | 실측예정 | 고객과 일정 합의 |
 | `measured` | 실측완료 | 실측 완료 |
@@ -291,24 +298,26 @@ DB check로 다른 테이블의 role을 직접 강제하기보다, 관리자 UI�
 
 MVP 원칙:
 
-- 첫 insert는 항상 `status = received`.
+- 첫 insert는 항상 `status = submitted`.
 - 고객은 `internal_note`, `assigned_manager_id`, `status`를 직접 수정하지 못한다.
 - 영업 매니저는 담당 건만 조회/상태 변경한다.
 - 관리자는 전체 조회/배정/상태 변경 가능하다.
+- MVP에서는 AppSheet를 자동 연동하지 않고 수동 등록 상태만 추적한다.
 
-### 7.4 `platform.measurement_request_photos`
+### 7.4 `platform.measurement_request_media`
 
-고객 현장 사진 메타데이터다.
+고객 현장 사진/영상 메타데이터다.
 
 | 컬럼 | 타입 | 필수 | 설명 |
 |---|---|---|---|
 | `id` | `uuid` | Y | PK |
-| `request_id` | `uuid` | Y | 무료실측 신청 FK |
+| `request_id` | `uuid` | Y | 무료방문견적 신청 FK |
 | `uploaded_by` | `uuid` | Y | 업로드한 사용자 |
-| `storage_bucket` | `text` | Y | 기본값 `measurement-photos` |
+| `storage_bucket` | `text` | Y | 기본값 `measurement-media` |
 | `storage_path` | `text` | Y | private object path |
 | `original_filename` | `text` | N | 원본 파일명 |
-| `mime_type` | `text` | N | 이미지 타입 |
+| `mime_type` | `text` | N | 이미지/영상 타입 |
+| `media_type` | `text` | Y | `image` 또는 `video` |
 | `size_bytes` | `integer` | N | 파일 크기 |
 | `display_order` | `integer` | Y | 정렬 |
 | `created_at` | `timestamptz` | Y | 생성 시각 |
@@ -316,16 +325,17 @@ MVP 원칙:
 Storage path 규칙:
 
 ```text
-{customer_id}/{request_id}/{photo_id}.{ext}
+{customer_id}/{request_id}/{media_id}.{ext}
 ```
 
 예:
 
 ```text
 6e9.../0d2.../b71....jpg
+6e9.../0d2.../f82....mp4
 ```
 
-사진 URL은 DB에 public URL로 저장하지 않는다. `storage_path`만 저장하고, 화면에서는 권한 검증 후 짧은 signed URL을 발급한다.
+사진/영상 URL은 DB에 public URL로 저장하지 않는다. `storage_path`만 저장하고, 화면에서는 권한 검증 후 짧은 signed URL을 발급한다.
 
 ### 7.5 `platform.measurement_request_events`
 
@@ -334,7 +344,7 @@ Storage path 규칙:
 | 컬럼 | 타입 | 필수 | 설명 |
 |---|---|---|---|
 | `id` | `uuid` | Y | PK |
-| `request_id` | `uuid` | Y | 무료실측 신청 FK |
+| `request_id` | `uuid` | Y | 무료방문견적 신청 FK |
 | `actor_id` | `uuid` | N | 이벤트 생성 사용자 |
 | `event_type` | `text` | Y | `created`, `assigned`, `status_changed`, `note_added` |
 | `from_status` | `platform.measurement_status` | N | 이전 상태 |
@@ -352,7 +362,7 @@ erDiagram
     PROFILES ||--o| STAFF_PROFILES : "staff info"
     PROFILES ||--o{ MEASUREMENT_REQUESTS : "customer_id"
     PROFILES ||--o{ MEASUREMENT_REQUESTS : "assigned_manager_id"
-    MEASUREMENT_REQUESTS ||--o{ MEASUREMENT_REQUEST_PHOTOS : "has"
+    MEASUREMENT_REQUESTS ||--o{ MEASUREMENT_REQUEST_MEDIA : "has"
     MEASUREMENT_REQUESTS ||--o{ MEASUREMENT_REQUEST_EVENTS : "tracks"
 
     AUTH_USERS {
@@ -381,11 +391,12 @@ erDiagram
       text address_line1
       product_family product_family
     }
-    MEASUREMENT_REQUEST_PHOTOS {
+    MEASUREMENT_REQUEST_MEDIA {
       uuid id PK
       uuid request_id FK
       text storage_bucket
       text storage_path
+      text media_type
     }
     MEASUREMENT_REQUEST_EVENTS {
       uuid id PK
@@ -403,11 +414,11 @@ erDiagram
 | 본인 profile 조회 | O | O | O |
 | 타인 profile 조회 | X | 제한 | O |
 | role 변경 | X | X | O |
-| 무료실측 신청 생성 | O | 대리 생성은 후속 | O |
-| 무료실측 신청 조회 | 본인 | 담당 건 | 전체 |
-| 무료실측 신청 상태 변경 | X | 담당 건 | 전체 |
+| 무료방문견적 신청 생성 | O | 대리 생성은 후속 | O |
+| 무료방문견적 신청 조회 | 본인 | 담당 건 | 전체 |
+| 무료방문견적 신청 상태 변경 | X | 담당 건 | 전체 |
 | 담당자 배정 | X | X | O |
-| 사진 업로드 | 본인 신청 | 담당 건 후속 | 전체 |
+| 사진/영상 업로드 | 본인 신청 | 담당 건 후속 | 전체 |
 | 사진 조회 | 본인 신청 | 담당 건 | 전체 |
 | 이벤트 조회 | 본인 신청의 공개 상태만 | 담당 건 | 전체 |
 | 이벤트 생성 | 신청 생성 이벤트만 | 담당 건 | 전체 |
@@ -484,7 +495,7 @@ INSERT:
 
 ```sql
 customer_id = (select auth.uid())
-and status = 'received'
+and status = 'submitted'
 and assigned_manager_id is null
 ```
 
@@ -503,7 +514,7 @@ UPDATE:
 - 상태 변경은 manager/admin server action에서 처리한다.
 - RLS는 최종 방어선으로 둔다.
 
-### 10.3 `measurement_request_photos`
+### 10.3 `measurement_request_media`
 
 SELECT:
 
@@ -550,13 +561,13 @@ INSERT:
 | 버킷 | 공개 여부 | 용도 |
 |---|---|---|
 | `showroom-images` | public | 쇼룸 텍스처/시공 공개 이미지 |
-| `measurement-photos` | private | 고객 현장 사진 |
+| `measurement-media` | private | 고객 현장 사진/영상 |
 
-기존 `showroom-images`를 고객 현장 사진에 재사용하지 않는다.
+기존 `showroom-images`를 고객 현장 사진/영상에 재사용하지 않는다.
 
 ### 11.2 접근 방식
 
-고객 현장 사진은 signed URL 방식으로 제공한다.
+고객 현장 사진/영상은 signed URL 방식으로 제공한다.
 
 흐름:
 
@@ -580,7 +591,7 @@ INSERT:
 
 | 작업 | 정책 |
 |---|---|
-| INSERT | authenticated만, bucket `measurement-photos`, 첫 폴더가 auth.uid() |
+| INSERT | authenticated만, bucket `measurement-media`, 첫 폴더가 auth.uid() |
 | SELECT | 가급적 직접 허용하지 않고 signed URL 사용 |
 | UPDATE | upsert 미사용. 필요 시 SELECT + UPDATE 필요 |
 | DELETE | 관리자/server only |
@@ -588,7 +599,7 @@ INSERT:
 업로드 path는 `auth.uid()`로 시작해야 한다.
 
 ```text
-{auth.uid()}/{request_id}/{photo_id}.{ext}
+{auth.uid()}/{request_id}/{media_id}.{ext}
 ```
 
 MVP에서는 server action upload가 더 안전하다. 단, 파일 크기가 크면 browser upload + RLS path 제한을 사용한다.
@@ -605,7 +616,7 @@ MVP에서는 server action upload가 더 안전하다. 단, 파일 크기가 크
 | `measurement_requests` | `measurement_requests_assigned_manager_idx(assigned_manager_id)` |
 | `measurement_requests` | `measurement_requests_status_created_idx(status, created_at desc)` |
 | `measurement_requests` | `measurement_requests_created_idx(created_at desc)` |
-| `measurement_request_photos` | `measurement_request_photos_request_idx(request_id)` |
+| `measurement_request_media` | `measurement_request_media_request_idx(request_id)` |
 | `measurement_request_events` | `measurement_request_events_request_created_idx(request_id, created_at desc)` |
 
 이유:
@@ -620,7 +631,7 @@ MVP 구현 경로 제안:
 
 | Route | 역할 | Auth |
 |---|---|---|
-| `/measure` | 무료실측 신청 폼 | 화면 접근 public, 제출 authenticated |
+| `/measure` | 무료방문견적 신청 폼 | authenticated |
 | `/auth/callback` | OAuth callback | public |
 | `/portal` | 고객 포털 홈/내 신청 목록 | customer |
 | `/portal/measurements/[id]` | 고객 신청 상세 | customer 본인 |
@@ -644,12 +655,12 @@ MVP 구현 경로 제안:
 
 ```text
 1. 고객이 /measure 접근
-2. 폼 입력: 이름, 전화번호, 주소, 제품군, 희망 일정, 사진
+2. 폼 입력: 이름, 전화번호, 주소, 제품군, 희망 일정, 사진/영상 선택 첨부
 3. 제출 클릭
 4. 로그인 안 됨 → OAuth로 이동, 폼 draft는 sessionStorage에 보존
 5. OAuth callback 후 /measure 복귀
 6. server action이 measurement_requests insert
-7. 사진 업로드 및 measurement_request_photos insert
+7. 사진/영상 업로드 및 measurement_request_media insert
 8. measurement_request_events에 created 기록
 9. 고객에게 신청 완료 화면 표시
 10. 관리자/매니저 큐에 접수 건 표시
@@ -659,7 +670,7 @@ MVP 구현 경로 제안:
 
 ```text
 1. 관리자가 /admin/platform/measurements 접속
-2. status = received 신청 목록 확인
+2. status = submitted 또는 appsheet_pending 신청 목록 확인
 3. 영업 매니저 선택
 4. assigned_manager_id, assigned_at, status = assigned 업데이트
 5. measurement_request_events에 assigned 기록
@@ -679,9 +690,10 @@ Phase 1에서 AppSheet를 대체하지 않는다.
 
 | 단계 | 정책 |
 |---|---|
-| MVP-02 | 플랫폼이 무료실측 신청을 받는다 |
-| MVP-03 | 관리자/매니저가 접수 확인과 배정을 한다 |
-| Phase 2 전 | AppSheet에 수동 입력할지, CSV/export 할지, API 연동할지 결정 |
+| MVP-02 | 플랫폼이 무료방문견적 신청을 받고 어드민 접수 큐에 보여준다 |
+| MVP-03 | 관리자/매니저가 담당자 배정과 상태 관리를 한다 |
+| MVP | AppSheet는 수동 등록으로 유지 |
+| 장기 | API/CSV/단계적 흡수 전략 별도 검토 |
 
 `measurement_requests.external_appsheet_id`는 나중에 AppSheet record와 매칭하기 위한 빈 슬롯이다.
 
@@ -699,7 +711,7 @@ Phase 1에서 AppSheet를 대체하지 않는다.
    - `platform.profiles`
    - `platform.staff_profiles`
    - `platform.measurement_requests`
-   - `platform.measurement_request_photos`
+   - `platform.measurement_request_media`
    - `platform.measurement_request_events`
 5. updated_at trigger 생성
 6. auth user profile 생성 trigger 생성
@@ -707,7 +719,7 @@ Phase 1에서 AppSheet를 대체하지 않는다.
 8. helper function 생성
 9. RLS policy 생성
 10. index 생성
-11. private bucket `measurement-photos` 생성
+11. private bucket `measurement-media` 생성
 12. storage.objects policy 생성
 13. TypeScript type 재생성
 
@@ -719,15 +731,18 @@ Phase 1에서 AppSheet를 대체하지 않는다.
 
 ## 18. 구현 전 확인 질문
 
-다음 오더 전에 사용자가 결정해야 할 것은 3개뿐이다.
+다음 오더 전에 사용자가 결정한 사항은 아래와 같다.
 
-| 질문 | 기본안 |
+| 항목 | 결정 |
 |---|---|
-| OAuth 1순위 | Kakao |
-| Google을 MVP-01에 같이 넣을지 | 같이 넣기 권장 |
-| Naver를 MVP-01 블로커로 볼지 | 블로커 아님. `custom:naver`로 후속 추가 |
+| OAuth 1순위 | Kakao만 MVP-01에 구현 |
+| Google | 후속 확장 |
+| Naver 간편로그인 | Google 확장 시점에 함께 검토 |
+| 무료방문견적 신청 사진/영상 | 선택사항. 여러 장 사진과 동영상 첨부 지원 |
+| AppSheet | MVP에서는 수동 등록. API 연동은 후속 대형 과제 |
+| AS 접수 | 로그인 필수, 후속 MVP에 포함 |
 
-Naver가 반드시 첫날 필요하다면 `custom:naver` OAuth2 설정 검증을 MVP-01 오더에 포함한다. 다만 이 경우 로그인 구현 시간이 늘어날 수 있다.
+남은 설계는 자동견적이나 AppSheet 병합이 아니라 MVP-01/02 구현을 막지 않는 선에서만 진행한다.
 
 ## 19. 완료 기준
 
@@ -735,12 +750,12 @@ Naver가 반드시 첫날 필요하다면 `custom:naver` OAuth2 설정 검증을
 
 | 기준 | 확인 방법 |
 |---|---|
-| 고객이 OAuth로 로그인할 수 있다 | Kakao/Google 로그인 후 `profiles` row 생성 |
-| 고객이 무료실측 신청을 생성할 수 있다 | `measurement_requests.customer_id = auth.uid()` |
+| 고객이 카카오로 로그인할 수 있다 | Kakao 로그인 후 `profiles` row 생성 |
+| 고객이 무료방문견적 신청을 생성할 수 있다 | `measurement_requests.customer_id = auth.uid()` |
 | 고객은 본인 신청만 볼 수 있다 | 다른 고객 id 직접 접근 시 0 row/404 |
 | 매니저는 담당 신청만 볼 수 있다 | assigned_manager_id 기준 RLS 확인 |
 | 관리자는 전체 신청을 볼 수 있다 | administrator role 확인 |
-| 고객 현장 사진이 public URL로 노출되지 않는다 | private bucket + signed URL |
+| 고객 현장 사진/영상이 public URL로 노출되지 않는다 | private bucket + signed URL |
 | role은 고객이 바꿀 수 없다 | profile update 테스트 |
 
 ## 20. 최종 결정
@@ -751,11 +766,11 @@ MVP-01/02는 아래 설계로 진행한다.
 새 스키마: platform
 기존 쇼룸 스키마: showroom 유지
 역할: customer / sales_manager / administrator
-인증: Kakao 우선, Google 보조, Naver는 custom OAuth 후보
+인증: MVP-01은 Kakao만. Google/Naver는 후속
 첫 고객 데이터: measurement_requests
-고객 사진: private measurement-photos bucket
+고객 사진/영상: private measurement-media bucket
 권한: RLS + server action + signed URL
-다음 작업: MVP-01 OAuth 로그인 구현 오더
+다음 작업: MVP-01 카카오 로그인 구현 오더
 ```
 
 이 문서는 더 이상 큰 PRD를 쓰기 위한 문서가 아니다. 다음 구현으로 넘어가기 위한 최소 설계 문서다.

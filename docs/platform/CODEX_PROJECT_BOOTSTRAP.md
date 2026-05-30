@@ -5,6 +5,7 @@ status: "canonical"
 last_updated: "2026-05-30"
 source_strategy: "docs/platform/PLATFORM_STRATEGY.md"
 source_tasks: "docs/platform/PLATFORM_TASKS.md"
+source_development_strategy: "docs/platform/DEVELOPMENT_STRATEGY.md"
 source_prd: "docs/platform/PRD_PLATFORM_v1.0.md"
 source_audit: "docs/platform/PLATFORM_MIGRATION_AUDIT.md"
 supersedes_for_platform_work:
@@ -19,7 +20,7 @@ supersedes_for_platform_work:
 
 코드를 작성하기 전에 아래 내용을 반드시 이해해야 한다.
 
-가장 먼저 `docs/platform/PLATFORM_STRATEGY.md`를 읽는다. 그 다음 `docs/platform/PLATFORM_TASKS.md`에서 현재 페이즈와 오더 순서를 확인한다.
+가장 먼저 `docs/platform/PLATFORM_STRATEGY.md`를 읽는다. 그 다음 `docs/platform/PLATFORM_TASKS.md`에서 현재 페이즈와 오더 순서를 확인하고, `docs/platform/DEVELOPMENT_STRATEGY.md`에서 역할 분담과 작업자 운영 방식을 확인한다.
 
 이 프로젝트의 목적은 쇼핑몰 구축이 아니라 고객 여정 통합이다.
 
@@ -30,7 +31,7 @@ supersedes_for_platform_work:
 문장군은
 
 * 중문 자체 제작
-* 무료 방문 실측
+* 무료방문견적
 * 전속 시공팀 운영
 
 기반의 인테리어 시공 회사다.
@@ -101,19 +102,19 @@ platform-v1
 
 2순위
 
-무료 실측 신청
+무료방문견적 신청 + 어드민 접수 큐
 
 3순위
 
-담당자 배정
+담당자 배정 + 접수 상태 관리
 
 4순위
 
-견적 생성
+견적서 작성 + 견적 링크 발송
 
 5순위
 
-견적 링크
+견적 승인 + 결제 전 설문
 
 6순위
 
@@ -128,7 +129,7 @@ MVP 단계에서 아래 기능 제안 금지
 * 장바구니
 * 쿠폰
 * 포인트
-* 리뷰
+* 공개 커뮤니티형 리뷰/댓글
 * 고객 등급
 * 3D
 * AI 자동 견적
@@ -141,10 +142,13 @@ MVP 단계에서 아래 기능 제안 금지
 
 항상 아래 흐름을 기준으로 판단한다.
 
-무료 실측
+무료방문견적 신청
+→ 어드민 접수 큐
 → 담당자 배정
-→ 견적
+→ 견적서 작성/발송
+→ 견적 승인
 → 결제
+→ AS/후기/사진/홍보동의
 
 이 흐름을 개선하지 못하는 기능은 후순위다.
 

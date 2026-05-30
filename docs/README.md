@@ -6,6 +6,7 @@
 
 - `docs/platform/PLATFORM_TASKS.md` — 플랫폼 제작 일정, 페이즈, 오더 순서
 - `docs/platform/PLATFORM_STRATEGY.md` — 왜 이 플랫폼을 만드는지
+- `docs/platform/DEVELOPMENT_STRATEGY.md` — Codex/Gemini/Claude/GPT 역할 분담과 개발 운영 방식
 - `docs/platform/PLATFORM_DB_RBAC_DESIGN.md` — MVP-01/02 최소 DB/RBAC 설계
 - `docs/platform/PRD_PLATFORM_v1.0.md` — 플랫폼 제품 범위
 - `docs/platform/CODEX_PROJECT_BOOTSTRAP.md` — 작업 에이전트 부트스트랩
