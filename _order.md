@@ -167,6 +167,9 @@ supabase/migrations/<generated>_platform_auth_foundation.sql
 ### 검증 결과
 - **npm run lint**: ESLint 체크 성공 (Warning은 빌드를 방해하지 않는 수준의 기존 CMS 잔재일 뿐이며, 생성 폴더 빌드 무시는 정상 유지됩니다).
 - **npm run build**: Next.js 16+ Turbopack optimized production build가 에러 없이 완벽히 성공함을 재검증했습니다.
+- **Supabase MCP migration 적용**: `20260602015936_platform_auth_foundation`, `20260602020113_harden_platform_auth_policies` 적용 완료.
+- **Supabase MCP DB 확인**: `platform.profiles`, `platform.staff_profiles` 생성 및 RLS enable 확인.
+- **Supabase advisor 확인**: 신규 `platform` 관련 security/performance advisor 경고는 하드닝 migration 후 해소. 남은 advisor 항목은 기존 public/colorbook/showroom 계열 이슈.
 
 ### 미확인 사항
 - 실제 카카오 개발자 센터 어플리케이션(OAuth Client ID 및 Client Secret) 등록 정보와 클라우드 Supabase Auth의 카카오 활성화 연결 테스트.

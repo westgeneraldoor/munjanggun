@@ -56,7 +56,7 @@ MVP-01 카카오 로그인
 
 | 순서 | 작업 | 상태 | 비고 |
 |---|---|---|---|
-| 1 | MVP-01 카카오 로그인 기반 구축 | Code Complete | 외부 Kakao/Supabase 설정 확인 필요 |
+| 1 | MVP-01 카카오 로그인 기반 구축 | DB Applied | Kakao/Supabase Auth 외부 설정 및 실제 로그인 테스트 필요 |
 | 2 | MVP-02 무료방문견적 신청 + 어드민 접수 큐 | Next | 고객 신청과 운영 확인을 한 세트로 구현 |
 | 3 | MVP-03 담당자 배정 + 접수 상태 관리 | Planned | 접수 처리와 AppSheet 수동 등록 지원 |
 | 4 | MVP-04 견적서 작성 + 견적 링크 발송 | Planned | 영업 담당자가 고객에게 보낼 견적 생성 |
@@ -124,7 +124,7 @@ MVP-01 카카오 로그인
 
 목표: 고객이 플랫폼에 로그인하고, `customer` role profile이 안전하게 생성되는 기반을 만든다.
 
-상태: Code Complete / External Config Pending
+상태: DB Applied / OAuth Test Pending
 
 작업 오더:
 
@@ -157,6 +157,9 @@ MVP-01 카카오 로그인
 - [x] `src/app/portal/portal.module.css` 추가
 - [x] `src/proxy.ts`에서 `/portal` 보호 추가
 - [x] 기존 `/admin` auth guard 회귀 없음 확인
+- [x] Supabase MCP로 `20260602015936_platform_auth_foundation` migration 적용
+- [x] Supabase MCP로 `20260602020113_harden_platform_auth_policies` migration 적용
+- [x] 신규 `platform` 관련 security/performance advisor 경고 해소
 
 완료 기준:
 
@@ -175,6 +178,7 @@ MVP-01 카카오 로그인
 - Naver 간편로그인은 Google 확장 시점에 함께 검토한다.
 - 고객 role 판단에 `user_metadata`를 사용하지 않는다.
 - 쇼룸의 `showroom` schema와 플랫폼의 `platform` schema를 섞지 않는다.
+- `platform` 스키마가 Supabase Dashboard > API Settings > Exposed schemas에 포함되어야 브라우저 클라이언트 조회가 가능하다.
 
 ## 4. Phase 2 — MVP-02 무료방문견적 신청 + 어드민 접수 큐
 
