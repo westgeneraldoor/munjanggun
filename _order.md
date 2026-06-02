@@ -163,11 +163,14 @@ supabase/migrations/<generated>_platform_auth_foundation.sql
 - **트리거 함수 보안 지정**: 사용자 가입 시 프로필을 연동 생성하는 `handle_new_user` 함수를 `platform_private` 스키마 하위로 이전하고, `SECURITY DEFINER` 및 `search_path`를 고정 지정하여 권한 위조를 방지했습니다.
 - **오픈 리다이렉트 취약점 차단**: `src/app/auth/callback/route.ts` 에서 `next` 파라미터가 `/`로 시작하고 `//`로 시작하지 않는 유효한 상대 경로일 때만 리다이렉트를 처리하며, 절대 경로나 프로토콜이 주입되었을 때는 `/portal`로 안전하게 리다이렉트하는 위협 방지 로직을 추가했습니다.
 - **타입 바인딩 & Supabase SDK 헬퍼 & UI**: 앞선 빌드와 동일하게 스키마별 클라이언트 분리, TS Database 타입 매핑 및 프리미엄 다크/골드 간편로그인 UI 및 포털 placeholder를 유지하였습니다.
+- **기존 auth user 보정**: 이미 `auth.users`에 존재하던 카카오 계정은 최초 생성 트리거가 동작하지 않으므로, 재로그인 시 `platform.profiles`를 보정 생성하는 `on_auth_user_updated` trigger를 추가했습니다.
+- **로그인 화면 문구 보정**: `DIGITAL SHOWROOM` 표현을 제거하고 무료방문견적 플랫폼 맥락으로 수정했습니다.
 
 ### 검증 결과
 - **npm run lint**: ESLint 체크 성공 (Warning은 빌드를 방해하지 않는 수준의 기존 CMS 잔재일 뿐이며, 생성 폴더 빌드 무시는 정상 유지됩니다).
 - **npm run build**: Next.js 16+ Turbopack optimized production build가 에러 없이 완벽히 성공함을 재검증했습니다.
 - **Supabase MCP migration 적용**: `20260602015936_platform_auth_foundation`, `20260602020113_harden_platform_auth_policies` 적용 완료.
+- **Supabase MCP migration 추가 적용**: `20260602024352_sync_platform_profile_on_auth_update` 적용 완료.
 - **Supabase MCP DB 확인**: `platform.profiles`, `platform.staff_profiles` 생성 및 RLS enable 확인.
 - **Supabase advisor 확인**: 신규 `platform` 관련 security/performance advisor 경고는 하드닝 migration 후 해소. 남은 advisor 항목은 기존 public/colorbook/showroom 계열 이슈.
 

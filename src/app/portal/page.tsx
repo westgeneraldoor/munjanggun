@@ -33,7 +33,7 @@ export default function PortalPage() {
           .from('profiles')
           .select('display_name, email, role')
           .eq('id', user.id)
-          .single()
+          .maybeSingle()
 
         if (profileError) {
           logError('Fetch user profile error', profileError)

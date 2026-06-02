@@ -67,6 +67,7 @@ MVP-01 카카오 로그인
 | 항목 | 결정 |
 |---|---|
 | MVP-01 로그인 | 카카오만 구현 |
+| 이메일 로그인 | 고객용 보조 로그인으로 매직링크/OTP 방식 검토. 비밀번호 회원가입은 MVP 기본값 아님 |
 | Google/Naver 로그인 | Google 확장 시점에 Naver 간편로그인도 함께 검토 |
 | 고객 필수 정보 | 이름, 휴대폰 번호 필수 |
 | 무료방문견적 신청 | 로그인 필수 |
@@ -159,6 +160,7 @@ MVP-01 카카오 로그인
 - [x] 기존 `/admin` auth guard 회귀 없음 확인
 - [x] Supabase MCP로 `20260602015936_platform_auth_foundation` migration 적용
 - [x] Supabase MCP로 `20260602020113_harden_platform_auth_policies` migration 적용
+- [x] Supabase MCP로 기존 auth user 재로그인 시 profile 보정 trigger 적용
 - [x] 신규 `platform` 관련 security/performance advisor 경고 해소
 
 완료 기준:
@@ -175,6 +177,7 @@ MVP-01 카카오 로그인
 주의:
 
 - Google과 Naver 간편로그인은 MVP-01 블로커가 아니다.
+- 고객용 이메일 로그인은 카카오 장애/미사용자 대비 보조 수단이다. 도입 시 비밀번호 회원가입보다 매직링크/OTP를 우선한다.
 - Naver 간편로그인은 Google 확장 시점에 함께 검토한다.
 - 고객 role 판단에 `user_metadata`를 사용하지 않는다.
 - 쇼룸의 `showroom` schema와 플랫폼의 `platform` schema를 섞지 않는다.

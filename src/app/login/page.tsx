@@ -48,12 +48,12 @@ export default function LoginPage({ searchParams }: PageProps) {
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.brand}>MUNJANGGUN</div>
-        <div className={styles.brandSub}>DIGITAL SHOWROOM</div>
+        <div className={styles.brandSub}>무료방문견적 플랫폼</div>
 
         <h1 className={styles.title}>무료방문견적 신청 계속하기</h1>
         <p className={styles.description}>
-          안전하고 빠른 카카오 간편로그인으로<br />
-          견적 신청부터 계약, 결제까지 한 번에 진행하세요.
+          상담 신청부터 견적 확인과 결제까지<br />
+          문장군 플랫폼에서 한 번에 진행하세요.
         </p>
 
         <div className={styles.buttonContainer}>
