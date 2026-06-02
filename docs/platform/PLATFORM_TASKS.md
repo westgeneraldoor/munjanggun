@@ -56,7 +56,7 @@ MVP-01 카카오 로그인
 
 | 순서 | 작업 | 상태 | 비고 |
 |---|---|---|---|
-| 1 | MVP-01 카카오 로그인 기반 구축 | DB Applied | Kakao/Supabase Auth 외부 설정 및 실제 로그인 테스트 필요 |
+| 1 | MVP-01 카카오 로그인 기반 구축 | Verified | 로컬 Kakao OAuth 및 customer profile 생성 확인 |
 | 2 | MVP-02 무료방문견적 신청 + 어드민 접수 큐 | Next | 고객 신청과 운영 확인을 한 세트로 구현 |
 | 3 | MVP-03 담당자 배정 + 접수 상태 관리 | Planned | 접수 처리와 AppSheet 수동 등록 지원 |
 | 4 | MVP-04 견적서 작성 + 견적 링크 발송 | Planned | 영업 담당자가 고객에게 보낼 견적 생성 |
@@ -125,7 +125,7 @@ MVP-01 카카오 로그인
 
 목표: 고객이 플랫폼에 로그인하고, `customer` role profile이 안전하게 생성되는 기반을 만든다.
 
-상태: DB Applied / OAuth Test Pending
+상태: Verified
 
 작업 오더:
 
@@ -165,10 +165,11 @@ MVP-01 카카오 로그인
 
 완료 기준:
 
-- [ ] Kakao OAuth 로그인 흐름이 동작한다.
-- [ ] 로그인 사용자는 `platform.profiles.role = customer`로 생성된다.
+- [x] Kakao OAuth 로그인 흐름이 동작한다.
+- [x] 로그인 사용자는 `platform.profiles.role = customer`로 생성된다.
 - [x] 비로그인 사용자는 `/portal`에 접근할 수 없다.
-- [ ] 고객 profile에 이름과 휴대폰 번호를 필수로 확보한다.
+- [x] 고객 profile에 이름과 이메일이 저장된다.
+- [x] 휴대폰 번호는 MVP-02 신청 폼에서 필수 확보하기로 분리한다.
 - [x] 고객은 role을 클라이언트에서 바꿀 수 없다.
 - [x] 기존 쇼룸 고객 페이지와 `/admin` CMS가 깨지지 않는다.
 - [x] `npm run lint` 통과
@@ -191,8 +192,8 @@ MVP-01 카카오 로그인
 
 오더 작성 조건:
 
-- [ ] Phase 1 완료
-- [ ] `platform.profiles`와 로그인 세션 흐름 확인
+- [x] Phase 1 완료
+- [x] `platform.profiles`와 로그인 세션 흐름 확인
 - [ ] 고객 현장 사진/영상 private storage 정책 재확인
 
 구현 항목:
