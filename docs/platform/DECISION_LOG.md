@@ -2,6 +2,36 @@
 
 참고: 2026-05-30 이후 플랫폼 MVP 기준은 "MVP-01 카카오 로그인", "MVP-02 무료방문견적 신청 + 어드민 접수 큐", private `measurement-media` bucket이다. 아래 과거 결정의 이전 표현은 이 최신 결정으로 보정해서 해석한다.
 
+## 2026-06-02 — MVP-01 카카오 로그인 검증 완료와 보조 로그인 원칙
+
+### 결정
+
+MVP-01 카카오 로그인 기반은 로컬 OAuth 테스트와 Supabase MCP 검증을 통과한 것으로 판정한다.
+
+고객 profile 생성 기준은 `platform.profiles.role = customer`이며, 신규 auth user와 기존 auth user 재로그인 모두 profile 보정 생성이 되어야 한다.
+
+고객용 이메일 로그인은 필요성을 인정하되, 비밀번호 회원가입을 기본값으로 열지 않는다. 보조 로그인은 매직링크 또는 OTP 방식을 우선 검토한다.
+
+전화번호는 Kakao OAuth에서 안정적으로 받지 않고, MVP-02 무료방문견적 신청 폼에서 필수 입력으로 확보한다.
+
+### 검증
+
+- 로컬 Kakao OAuth 로그인 후 `/portal` 진입 확인
+- Supabase MCP로 `platform.profiles.role = customer` row 생성 확인
+- `auth.users` UPDATE trigger로 기존 auth user 재로그인 시 profile 보정 확인
+- `platform` schema exposed 확인
+- `platform_private` schema 미노출 유지
+
+### 이유
+
+문장군 플랫폼의 목적은 쇼핑몰식 회원가입이 아니라 무료방문견적 상담 여정으로 고객을 자연스럽게 연결하는 것이다.
+
+카카오를 기본 로그인으로 두되, 카카오 미사용 고객과 장애 상황을 대비해 이메일 보조 수단은 필요하다. 다만 비밀번호 회원가입은 고객 마찰과 운영 부담을 늘릴 수 있어 MVP 기본값으로 두지 않는다.
+
+### 되돌릴 조건
+
+실제 고객 테스트에서 카카오 로그인 전환율이 낮거나 이메일 미제공/카카오 미사용 고객 이탈이 반복되면, MVP-01.5 또는 MVP-02 범위에서 이메일 매직링크/OTP를 우선 구현한다.
+
 ## 2026-05-30 — AI 작업 분담과 중복 검증 최소화
 
 ### 결정

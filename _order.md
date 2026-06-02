@@ -175,6 +175,6 @@ supabase/migrations/<generated>_platform_auth_foundation.sql
 - **Supabase advisor 확인**: 신규 `platform` 관련 security/performance advisor 경고는 하드닝 migration 후 해소. 남은 advisor 항목은 기존 public/colorbook/showroom 계열 이슈.
 
 ### 미확인 사항
-- 실제 카카오 개발자 센터 어플리케이션(OAuth Client ID 및 Client Secret) 등록 정보와 클라우드 Supabase Auth의 카카오 활성화 연결 테스트.
-- 원격 실서버 환경에서의 카카오 로그인 API 리다이렉트 흐름.
-- Supabase Dashboard > API Settings > Exposed schemas 목록에 `platform` 스키마가 포함되어 있는지 확인.
+- 로컬 Kakao OAuth 로그인과 `platform.profiles.role = customer` 생성은 확인 완료.
+- Supabase Dashboard > API Settings > Exposed schemas 목록에 `platform` 스키마 포함 확인 완료.
+- 원격 실서버 환경에서의 카카오 로그인 API 리다이렉트 흐름은 배포 URL 확정 후 재확인 필요.

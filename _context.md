@@ -13,6 +13,7 @@ V2 쇼룸은 `v2-cms` 기준 Phase 5-B까지 완료. 현재는 `platform-v1`에�
 - MVP-01 카카오 로그인 기반 코드 구현 및 Codex PM 검수
 - Supabase MCP로 `platform_auth_foundation` 및 `harden_platform_auth_policies` migration 적용
 - 로컬 Kakao OAuth 재로그인 후 `platform.profiles.role = customer` 생성 확인
+- `_audit_2026-06-02_mvp01_final_review.md` 작성. MVP-01 판정은 `GO with follow-up`
 
 ## 핵심 결정
 - `PLATFORM_STRATEGY.md`는 PRD보다 상위 기준이며, 목적은 쇼핑몰이 아니라 고객 여정 통합이다.
@@ -25,7 +26,8 @@ V2 쇼룸은 `v2-cms` 기준 Phase 5-B까지 완료. 현재는 `platform-v1`에�
 1. ⬜ MVP-02 무료방문견적 신청 + 어드민 접수 큐 오더 협의
 2. ⬜ 고객 전화번호/주소를 MVP-02 신청 폼 필수 입력으로 확보
 3. ⬜ 고객용 이메일 매직링크/OTP 보조 로그인 도입 여부 결정
-4. ⬜ `.codex/` 임시 로그 폴더 정리
+4. ⬜ `measurement-media` private bucket 설계 재확인
+5. ⬜ `.codex/` 임시 로그 폴더 정리
 
 ## 현재 이슈
 - MVP-01 Kakao OAuth/profile 생성은 검증 완료. 전화번호는 Kakao OAuth가 아니라 MVP-02 신청 폼에서 필수 확보한다.
