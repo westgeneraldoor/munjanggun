@@ -58,3 +58,12 @@ V2 쇼룸은 `v2-cms` 기준 Public Experience로 유지한다. 현재 브랜치
 - GitHub push는 성공했지만, 로컬 `gh` 토큰 만료로 PR 생성은 아직 못 했다.
 - GitHub 커넥터 PR 생성도 권한 403으로 막혔다.
 - 어드민 모바일 반응형은 최소 동작은 확인했지만, MVP-03 전에 한 번 더 실제 업무 흐름 기준으로 다듬어야 한다.
+# MVP-02 public entry closeout - 2026-06-04
+
+- Current branch: `platform-v1`.
+- Production `https://munjanggun.vercel.app/` is not the latest platform work until the PR/branch is promoted or production is redeployed.
+- Use the latest Preview deployment for MVP-02 verification.
+- The public showroom floating `무료방문견적` CTA is now the official MVP-02 customer entry and points to `/portal/measure/new`.
+- The public showroom top-right auth menu is now part of MVP-02 verification.
+- Administrator accounts confirmed in Supabase `platform.profiles`: `moon@munjanggun.com`, `west1836@gmail.com`.
+- Verified locally with Playwright: logged-out CTA redirect keeps `next=/portal/measure/new`, customer menu, administrator menu, and admin navigation.

@@ -12,7 +12,7 @@ interface CTABarProps {
   hideUntilScroll?: boolean
 }
 
-export default function CTABar({ reservationUrl, storeUrl, hideUntilScroll = false }: CTABarProps) {
+export default function CTABar({ storeUrl, hideUntilScroll = false }: CTABarProps) {
   const [isVisible, setIsVisible] = useState(!hideUntilScroll)
   const [shared, setShared] = useState(false)
 
@@ -33,7 +33,7 @@ export default function CTABar({ reservationUrl, storeUrl, hideUntilScroll = fal
       },
       {
         threshold: 0,
-        rootMargin: '-50px 0px 0px 0px'
+        rootMargin: '-50px 0px 0px 0px',
       }
     )
 
@@ -44,7 +44,7 @@ export default function CTABar({ reservationUrl, storeUrl, hideUntilScroll = fal
   const handleShare = async () => {
     const shareData = {
       title: document.title,
-      url: window.location.href
+      url: window.location.href,
     }
 
     try {
@@ -58,7 +58,7 @@ export default function CTABar({ reservationUrl, storeUrl, hideUntilScroll = fal
       setTimeout(() => setShared(false), 1500)
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
-        logError('공유하기 실패', err)
+        logError('Share failed', err)
       }
     }
   }
@@ -68,16 +68,12 @@ export default function CTABar({ reservationUrl, storeUrl, hideUntilScroll = fal
       <Link href="/" className={styles.homeButton} aria-label="홈으로 이동">
         <Home size={20} />
       </Link>
-      {reservationUrl && (
-        <a
-          href={reservationUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`${styles.button} ${styles.primary}`}
-        >
-          무료방문견적
-        </a>
-      )}
+      <Link
+        href="/portal/measure/new"
+        className={`${styles.button} ${styles.primary}`}
+      >
+        무료방문견적
+      </Link>
       {storeUrl && (
         <a
           href={storeUrl}

@@ -1,6 +1,28 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+function getSafeNextPath(request: NextRequest) {
+  const nextPath = `${request.nextUrl.pathname}${request.nextUrl.search}`
+  if (!nextPath.startsWith('/') || nextPath.startsWith('//')) {
+    return '/portal'
+  }
+  return nextPath
+}
+
+function getCustomerLoginUrl(request: NextRequest) {
+  const loginUrl = new URL('/login', request.url)
+  loginUrl.searchParams.set('next', getSafeNextPath(request))
+  return loginUrl
+}
+
+function getSafeLoginNextParam(request: NextRequest) {
+  const nextParam = request.nextUrl.searchParams.get('next')
+  if (!nextParam || !nextParam.startsWith('/') || nextParam.startsWith('//')) {
+    return '/portal'
+  }
+  return nextParam
+}
+
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -94,7 +116,7 @@ export async function proxy(request: NextRequest) {
     }
     // 포털 / 견적신청 경로 -> 고객 로그인으로 리다이렉트
     if (isPortalRoute || isMeasureRoute) {
-      return NextResponse.redirect(new URL('/login', request.url))
+      return NextResponse.redirect(getCustomerLoginUrl(request))
     }
   }
 
@@ -109,7 +131,7 @@ export async function proxy(request: NextRequest) {
 
     // 4.2 로그인 페이지 접근 차단
     if (isCustomerLoginRoute) {
-      return NextResponse.redirect(new URL('/portal', request.url))
+      return NextResponse.redirect(new URL(getSafeLoginNextParam(request), request.url))
     }
     if (isAdminLoginRoute) {
       if (userRole === 'administrator') {

@@ -324,3 +324,15 @@ MVP-01 카카오 로그인
 - [ ] 고객 개인정보, 주소, 현장 사진이 보호되는가?
 - [ ] 기존 V2 쇼룸 Public Experience가 깨지지 않는가?
 - [ ] 어드민이 모바일에서도 실제로 쓸 수 있는가?
+## MVP-02 public entry completion - 2026-06-04
+
+Status: complete.
+
+- [x] Existing showroom bottom floating `무료방문견적` CTA routes to `/portal/measure/new`.
+- [x] Protected customer routes preserve `next` when redirecting to `/login`.
+- [x] Public showroom top-right login entry is visible when signed out.
+- [x] Signed-in customer menu exposes `마이페이지` and `무료방문견적 신청`.
+- [x] Signed-in administrator menu exposes `플랫폼 어드민`.
+- [x] `moon@munjanggun.com` administrator role confirmed in `platform.profiles`.
+- [x] `west1836@gmail.com` administrator role confirmed in `platform.profiles`.
+- [x] Local Playwright smoke verified logged-out CTA redirect, customer menu, administrator menu, and admin navigation.

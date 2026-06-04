@@ -72,3 +72,10 @@ MVP-02는 현재 `완료`다.
 MVP-03 담당자 배정 + 접수 상태 관리.
 
 단, 바로 기능을 만들기 전에 어드민 모바일 사용성, 접수 큐의 실제 업무 흐름, AppSheet 수동 등록 화면 동선을 먼저 짧게 점검한다.
+# MVP-02 public entry closeout - 2026-06-04
+
+- Main/showroom floating `무료방문견적` CTA now enters `/portal/measure/new` instead of the external Naver reservation link.
+- Customer protected routes now preserve `/login?next=/portal/measure/new`, so login returns to the application flow.
+- Public showroom now has a top-right login/user menu. Signed-in customers see `마이페이지` and `무료방문견적 신청`; administrators also see `플랫폼 어드민`.
+- `moon@munjanggun.com` and `west1836@gmail.com` are confirmed as `administrator` in `platform.profiles`.
+- Local checks passed: `npm run lint`, `npm run build`, and Playwright smoke for logged-out CTA redirect, customer menu, administrator menu, and admin navigation.

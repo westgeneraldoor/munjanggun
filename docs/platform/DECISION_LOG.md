@@ -234,3 +234,14 @@ MVP-01 카카오 로그인 구현 오더를 작성한다.
 ### 되돌릴 조건
 
 `platform-v1`에서 쇼룸 V2 회귀가 발생하면 플랫폼 변경을 분리하고 `v2-cms`를 기준으로 재분기한다.
+# 2026-06-04 - MVP-02 public showroom entry decision
+
+## Decision
+
+The existing showroom is part of the platform Public Experience, so the main floating `무료방문견적` CTA should enter the MVP-02 platform application flow at `/portal/measure/new`, not the external Naver reservation link.
+
+The public showroom must also expose a minimal top-right auth entry: signed-out users see `로그인`, signed-in customers see `마이페이지` and `무료방문견적 신청`, and signed-in administrators also see `플랫폼 어드민`.
+
+## Reason
+
+MVP-02 is not realistically testable if customers and reviewers cannot enter the new application flow from the visible public showroom. The entry point should match the actual customer journey before MVP-03 operational status work begins.
