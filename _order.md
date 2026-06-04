@@ -57,7 +57,7 @@ MVP-02는 현재 `완료`다.
 
 - 브랜치: `platform-v1`
 - 최신 기능 커밋: `da521d4`
-- Vercel Preview: `https://munjanggun-2asuxephs-westgeneraldoors-projects.vercel.app`
+- Vercel Preview: `https://munjanggun-qcrz2mwim-westgeneraldoors-projects.vercel.app`
 - 첫 배포 실패 원인: 관리자 페이지가 build 시점에 Supabase env를 요구하며 prerender됨
 - 보정: 관리자 서버 페이지를 `force-dynamic`으로 처리
 - 최신 배포 상태: READY
