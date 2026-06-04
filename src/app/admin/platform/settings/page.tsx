@@ -6,6 +6,8 @@ export const metadata = {
   title: '플랫폼 설정 | 문장군 관리자',
 }
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminPlatformSettingsPage() {
   // 관리자 인증 확인
   const supabase = await createPlatformClient()

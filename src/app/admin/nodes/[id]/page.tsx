@@ -5,6 +5,8 @@ import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 import { Database } from '@/types/database'
 
+export const dynamic = 'force-dynamic'
+
 export default async function NodeEditPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params
   const supabase = await createShowroomClient()

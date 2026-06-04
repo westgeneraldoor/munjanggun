@@ -3,6 +3,8 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createPlatformClient } from '@/lib/supabase/platform-server'
 import DetailClient from './DetailClient'
 
+export const dynamic = 'force-dynamic'
+
 interface Props {
   params: Promise<{ id: string }>
 }

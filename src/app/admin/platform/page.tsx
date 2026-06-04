@@ -11,6 +11,8 @@ export const metadata = {
   title: '접수 큐 | 문장군 관리자',
 }
 
+export const dynamic = 'force-dynamic'
+
 const STATUS_LABEL: Record<string, string> = {
   submitted: '신규',
   appsheet_pending: '신규',
