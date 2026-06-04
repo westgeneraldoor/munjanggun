@@ -27,9 +27,31 @@
   text-decoration: none;
 }
 
+.homeLink {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding: 0 12px;
+  color: #d7dbe4;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  text-decoration: none;
+}
+
 .backLink:hover {
   color: #ffe0a0;
   border-color: rgba(214, 173, 98, 0.5);
+}
+
+.homeLink:hover {
+  color: #f2cf83;
+  border-color: rgba(214, 173, 98, 0.4);
 }
 
 .pageTitle {
@@ -504,6 +526,23 @@
   text-decoration: none;
 }
 
+.doneSecondaryBtn {
+  display: inline-block;
+  padding: var(--space-3) var(--space-6);
+  color: #f7f8fb;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  text-decoration: none;
+}
+
+.doneSecondaryBtn:hover {
+  color: #f2cf83;
+  border-color: rgba(214, 173, 98, 0.42);
+}
+
 .spinnerWrapper {
   display: flex;
   align-items: center;
@@ -544,6 +583,16 @@
 }
 
 @media (max-width: 430px) {
+  .homeLink {
+    margin-left: 0;
+  }
+
+  .backLink,
+  .homeLink {
+    width: 100%;
+    justify-content: center;
+  }
+
   .form {
     padding: var(--space-4) var(--space-4) var(--space-12);
     gap: var(--space-4);

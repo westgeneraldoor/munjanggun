@@ -1,6 +1,8 @@
 'use client'
 
 import React, { use, useState } from 'react'
+import Link from 'next/link'
+import { Home, Mail, MessageCircle, X } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import { logError } from '@/lib/logger'
 import styles from './login.module.css'
@@ -32,7 +34,7 @@ export default function LoginPage({ searchParams }: PageProps) {
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [authError, setAuthError] = useState<string | null>(
-    resolvedParams.error === 'auth_failed' ? '인증에 실패했습니다. 다시 시도해 주세요.' : null
+    resolvedParams.error === 'auth_failed' ? '로그인이 완료되지 않았습니다. 다시 시도해 주세요.' : null
   )
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
@@ -58,12 +60,12 @@ export default function LoginPage({ searchParams }: PageProps) {
       })
       if (error) {
         logError('Kakao Sign-in OAuth error', error)
-        setAuthError('카카오 로그인 시도 중 오류가 발생했습니다.')
+        setAuthError('카카오 로그인을 여는 중 문제가 생겼습니다. 이메일로 시작하거나 잠시 뒤 다시 시도해 주세요.')
         setLoading(false)
       }
     } catch (err) {
       logError('Kakao Sign-in unexpected error', err)
-      setAuthError('시스템 오류가 발생했습니다.')
+      setAuthError('로그인을 시작하지 못했습니다. 네트워크 상태를 확인해 주세요.')
       setLoading(false)
     }
   }
@@ -94,7 +96,7 @@ export default function LoginPage({ searchParams }: PageProps) {
       }
     } catch (err) {
       logError('Email OTP unexpected error', err)
-      setAuthError('시스템 오류가 발생했습니다.')
+      setAuthError('인증 코드 발송 중 문제가 생겼습니다. 잠시 뒤 다시 시도해 주세요.')
     } finally {
       setLoading(false)
     }
@@ -123,7 +125,7 @@ export default function LoginPage({ searchParams }: PageProps) {
       }
     } catch (err) {
       logError('OTP verify unexpected error', err)
-      setAuthError('시스템 오류가 발생했습니다.')
+      setAuthError('로그인 확인 중 문제가 생겼습니다. 잠시 뒤 다시 시도해 주세요.')
     } finally {
       setLoading(false)
     }
@@ -137,15 +139,27 @@ export default function LoginPage({ searchParams }: PageProps) {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
+        <Link href="/" className={styles.closeLink} aria-label="문장군 홈으로 이동">
+          <X size={20} aria-hidden="true" />
+        </Link>
+        <Link href="/" className={styles.homeLink}>
+          <Home size={16} aria-hidden="true" />
+          <span>쇼룸 홈</span>
+        </Link>
+
         <div className={styles.brand}>MUNJANGGUN</div>
-        <div className={styles.brandSub}>고객 플랫폼</div>
+        <div className={styles.brandSub}>무료방문견적 신청</div>
 
         {step === 'main' && (
           <>
-            <h1 className={styles.title}>문장군 고객 계정</h1>
+            <h1 className={styles.title}>우리 집도 가능한지 먼저 확인해요</h1>
             <p className={styles.description}>
-              상담 신청, 견적서 확인, 결제, A/S 이력을 안전하게 관리합니다.
+              주소와 희망 방문일을 남기면 문장군이 확인 후 연락드립니다. 로그인은 신청 내역을 이어보고 사진을 안전하게 보관하기 위한 간편 인증입니다.
             </p>
+
+            <div className={styles.reassurance}>
+              가입부터 요구하지 않습니다. 상담 신청을 안전하게 이어가기 위해 필요한 정보만 확인합니다.
+            </div>
 
             <div className={styles.buttonContainer}>
               <button
@@ -153,12 +167,10 @@ export default function LoginPage({ searchParams }: PageProps) {
                 onClick={handleKakaoLogin}
                 disabled={loading}
                 className={styles.kakaoButton}
-                aria-label="카카오톡으로 간편 로그인"
+                aria-label="카카오로 무료방문견적 신청 시작"
               >
-                <svg className={styles.kakaoIcon} viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 3c-4.97 0-9 3.185-9 7.115 0 2.502 1.64 4.705 4.14 5.86-.188.67-.68 2.42-.777 2.782-.122.454.156.448.33.33 1.353-.913 3.136-2.146 3.917-2.68.455.064.918.098 1.39.098 4.97 0 9-3.186 9-7.115C21 6.185 16.97 3 12 3z" />
-                </svg>
-                {loading ? '연결 중...' : '카카오로 계속하기'}
+                <MessageCircle className={styles.kakaoIcon} size={20} aria-hidden="true" />
+                {loading ? '카카오 연결 중...' : '카카오로 10초 만에 시작'}
               </button>
 
               <div className={styles.divider}>
@@ -170,13 +182,10 @@ export default function LoginPage({ searchParams }: PageProps) {
                 onClick={() => { setStep('email_input'); setAuthError(null) }}
                 disabled={loading}
                 className={styles.emailButton}
-                aria-label="이메일로 로그인"
+                aria-label="이메일로 무료방문견적 신청 시작"
               >
-                <svg className={styles.emailIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <polyline points="2,4 12,13 22,4" />
-                </svg>
-                이메일로 로그인
+                <Mail className={styles.emailIcon} size={18} aria-hidden="true" />
+                이메일로 시작
               </button>
             </div>
           </>
@@ -184,9 +193,9 @@ export default function LoginPage({ searchParams }: PageProps) {
 
         {step === 'email_input' && (
           <>
-            <h1 className={styles.title}>이메일 로그인</h1>
+            <h1 className={styles.title}>이메일로 신청을 이어갈게요</h1>
             <p className={styles.description}>
-              이메일 주소를 입력하면 6자리 인증 코드를 보내드립니다.
+              이메일 주소로 6자리 인증 코드를 보내드립니다.
             </p>
             <form onSubmit={handleEmailSubmit} className={styles.form}>
               <label htmlFor="email-input" className={styles.fieldLabel}>이메일 주소</label>
@@ -214,7 +223,7 @@ export default function LoginPage({ searchParams }: PageProps) {
                 onClick={() => { setStep('main'); setAuthError(null) }}
                 className={styles.backButton}
               >
-                돌아가기
+                다른 방법으로 시작
               </button>
             </form>
           </>
@@ -222,9 +231,9 @@ export default function LoginPage({ searchParams }: PageProps) {
 
         {step === 'otp_input' && (
           <>
-            <h1 className={styles.title}>인증 코드 입력</h1>
+            <h1 className={styles.title}>인증 코드를 입력해 주세요</h1>
             <p className={styles.description}>
-              이메일로 받은 6자리 숫자를 입력해 주세요.
+              이메일로 받은 6자리 숫자를 입력하면 바로 이어집니다.
             </p>
             <form onSubmit={handleOtpSubmit} className={styles.form}>
               {successMsg && <div className={styles.successMsg}>{successMsg}</div>}
@@ -247,7 +256,7 @@ export default function LoginPage({ searchParams }: PageProps) {
                 disabled={loading || otp.length !== 6}
                 className={styles.primaryButton}
               >
-                {loading ? '확인 중...' : '로그인'}
+                {loading ? '확인 중...' : '신청 이어가기'}
               </button>
               <button
                 type="button"
@@ -259,7 +268,7 @@ export default function LoginPage({ searchParams }: PageProps) {
                 }}
                 className={styles.backButton}
               >
-                코드 다시 받기
+                코드를 다시 받을게요
               </button>
             </form>
           </>
@@ -268,7 +277,7 @@ export default function LoginPage({ searchParams }: PageProps) {
         {authError && <div className={styles.error} role="alert">{authError}</div>}
 
         <p className={styles.footer}>
-          문장군은 고객님의 개인정보를 안전하게 보호하며, 동의 없이 외부로 유출하지 않습니다.
+          입력한 정보는 무료방문견적 상담 진행과 안내를 위해서만 사용됩니다.
         </p>
       </div>
     </div>

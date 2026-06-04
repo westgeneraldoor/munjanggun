@@ -24,8 +24,8 @@ interface RecentRequest {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  submitted: '신규 접수',
-  appsheet_pending: '등록 대기',
+  submitted: '신청 접수',
+  appsheet_pending: '확인 중',
   appsheet_registered: '접수 완료',
   contacted: '상담 진행',
   assigned: '담당자 배정',
@@ -59,7 +59,7 @@ export default function PortalPage() {
         const { data: { user }, error: userError } = await supabase.auth.getUser()
 
         if (userError || !user) {
-          router.push('/login')
+          router.push('/login?next=/portal')
           return
         }
 
@@ -115,7 +115,7 @@ export default function PortalPage() {
       )
       const { error } = await supabase.auth.signOut()
       if (error) logError('Signout error', error)
-      router.push('/login')
+      router.push('/')
       router.refresh()
     } catch (err) {
       logError('Signout unexpected error', err)
@@ -134,26 +134,17 @@ export default function PortalPage() {
     {
       id: 'card-measure',
       Icon: Ruler,
-      title: '무료방문 실측 견적상담',
-      desc: '관심 품목, 주소, 희망 방문일을 남기면 담당자가 일정 확인 후 연락드립니다.',
+      title: '무료방문견적 신청',
+      desc: '주소와 희망 방문일을 남기면 문장군이 가능 여부를 확인해 연락드립니다.',
       href: '/portal/measure/new',
       active: true,
       cta: '신청하기',
     },
     {
-      id: 'card-as',
-      Icon: Wrench,
-      title: 'A/S 접수',
-      desc: '시공 후 확인이 필요한 내용을 남기고 진행 상태를 확인할 수 있습니다.',
-      href: null,
-      active: false,
-      cta: '준비중',
-    },
-    {
       id: 'card-estimate',
       Icon: ReceiptText,
-      title: '견적 및 결제 내역',
-      desc: '담당자가 보낸 견적서와 결제 진행 내역을 이곳에서 확인합니다.',
+      title: '견적서 확인',
+      desc: '담당자가 안내한 견적 내용을 이곳에서 확인할 수 있게 준비 중입니다.',
       href: null,
       active: false,
       cta: '준비중',
@@ -161,8 +152,17 @@ export default function PortalPage() {
     {
       id: 'card-history',
       Icon: Home,
-      title: '시공 및 A/S 이력',
-      desc: '시공일, 담당자, 결제 금액, A/S 기록을 고객 계정에 보관합니다.',
+      title: '시공 이력',
+      desc: '시공일, 담당자, A/S 기록을 차례로 연결할 예정입니다.',
+      href: null,
+      active: false,
+      cta: '준비중',
+    },
+    {
+      id: 'card-as',
+      Icon: Wrench,
+      title: 'A/S 접수',
+      desc: '시공 후 확인이 필요한 내용을 남기고 진행 상태를 확인합니다.',
       href: null,
       active: false,
       cta: '준비중',
@@ -179,10 +179,14 @@ export default function PortalPage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <span className={styles.logo}>MUNJANGGUN</span>
+        <Link href="/" className={styles.logo} aria-label="문장군 홈으로 이동">MUNJANGGUN</Link>
         <div className={styles.userMenu}>
+          <Link href="/" className={styles.homeButton}>
+            <Home size={15} aria-hidden="true" />
+            <span>쇼룸 홈</span>
+          </Link>
           <span className={styles.userInfo}>
-            <strong>{profile?.displayName}</strong> 님
+            <strong>{profile?.displayName}</strong>님
           </span>
           <button onClick={handleLogout} className={styles.logoutButton} id="btn-logout">
             로그아웃
@@ -192,11 +196,9 @@ export default function PortalPage() {
 
       <main className={styles.main}>
         <div className={styles.greeting}>
-          <h1 className={styles.greetingTitle}>
-            문장군 고객 포털
-          </h1>
+          <h1 className={styles.greetingTitle}>마이페이지</h1>
           <p className={styles.greetingDesc}>
-            상담 신청부터 견적, 결제, 시공 이력, A/S까지 고객 여정을 한곳에서 관리합니다.
+            문장군에 남긴 상담 신청과 앞으로 받을 견적, 시공 이력을 한곳에서 확인합니다.
           </p>
         </div>
 
@@ -211,11 +213,7 @@ export default function PortalPage() {
                 <h2 className={styles.cardTitle}>{card.title}</h2>
                 <p className={styles.cardDesc}>{card.desc}</p>
                 {card.active && card.href ? (
-                  <Link
-                    href={card.href}
-                    id={card.id}
-                    className={styles.cardCta}
-                  >
+                  <Link href={card.href} id={card.id} className={styles.cardCta}>
                     {card.cta}
                   </Link>
                 ) : (
@@ -227,13 +225,13 @@ export default function PortalPage() {
         </div>
 
         <section className={styles.requestSection}>
-          <h2 className={styles.sectionTitle}>최근 신청 내역</h2>
+          <h2 className={styles.sectionTitle}>최근 상담 신청</h2>
           {recentRequests.length === 0 ? (
             <div className={styles.emptyState}>
               <ClipboardList className={styles.emptyIcon} aria-hidden="true" strokeWidth={1.7} />
-              <p>아직 신청 내역이 없습니다.</p>
+              <p>아직 남긴 신청이 없습니다.</p>
               <Link href="/portal/measure/new" className={styles.emptyLink}>
-                무료방문 실측 견적상담 신청하기
+                무료방문견적 신청하기
               </Link>
             </div>
           ) : (

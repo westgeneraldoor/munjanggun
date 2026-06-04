@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { CheckCircle2, ChevronLeft, Paperclip, X } from 'lucide-react'
+import { CheckCircle2, ChevronLeft, Home, Paperclip, X } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import { logError } from '@/lib/logger'
 import DaumAddressSearch from '@/components/platform/DaumAddressSearch'
@@ -279,7 +279,10 @@ export default function MeasureForm({ userId }: Props) {
             정확한 방문 시간은 방문 전날 오후에 안내됩니다.
           </p>
           <Link href="/portal" className={styles.doneBtn} id="btn-back-portal">
-            고객 포털로 돌아가기
+            마이페이지에서 확인
+          </Link>
+          <Link href="/" className={styles.doneSecondaryBtn} id="btn-back-home">
+            쇼룸 홈으로
           </Link>
         </div>
       </div>
@@ -293,7 +296,11 @@ export default function MeasureForm({ userId }: Props) {
       <header className={styles.header}>
         <Link href="/portal" className={styles.backLink} id="btn-back">
           <ChevronLeft size={18} strokeWidth={2} aria-hidden="true" />
-          고객 포털로 돌아가기
+          마이페이지
+        </Link>
+        <Link href="/" className={styles.homeLink} id="btn-measure-home">
+          <Home size={16} strokeWidth={1.8} aria-hidden="true" />
+          쇼룸 홈
         </Link>
         <h1 className={styles.pageTitle}>무료방문 실측 견적상담 신청</h1>
       </header>
