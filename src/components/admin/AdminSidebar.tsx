@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Package, Settings, LogOut, Menu, X, FolderTree } from 'lucide-react'
+import { Settings, LogOut, Menu, X, FolderTree, ClipboardList, Sliders } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import styles from './AdminSidebar.module.css'
 
@@ -26,6 +26,8 @@ export default function AdminSidebar() {
   }
 
   const navItems = [
+    { name: '접수 큐', path: '/admin/platform', icon: ClipboardList },
+    { name: '플랫폼 설정', path: '/admin/platform/settings', icon: Sliders },
     { name: '노드 관리', path: '/admin/nodes', icon: FolderTree },
     { name: '사이트 설정', path: '/admin/settings', icon: Settings },
   ]
@@ -58,7 +60,11 @@ export default function AdminSidebar() {
           <ul className={styles.navList}>
             {navItems.map((item) => {
               const Icon = item.icon
-              const isActive = pathname.startsWith(item.path)
+              // 중복 매칭 버그 수정: /admin/platform/settings 가 /admin/platform 에 startsWith 매칭되지 않도록 함
+              const isActive = item.path === '/admin/platform'
+                ? pathname === '/admin/platform' || (pathname.startsWith('/admin/platform/') && !pathname.startsWith('/admin/platform/settings'))
+                : pathname.startsWith(item.path)
+
               return (
                 <li key={item.path}>
                   <Link

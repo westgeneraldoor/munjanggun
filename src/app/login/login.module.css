@@ -58,8 +58,12 @@
 .buttonContainer {
   width: 100%;
   margin-bottom: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
+/* 카카오 버튼 */
 .kakaoButton {
   display: flex;
   align-items: center;
@@ -76,16 +80,20 @@
   cursor: pointer;
   transition: transform var(--transition-fast), opacity var(--transition-fast);
   box-shadow: var(--shadow-sm);
-  text-decoration: none;
 }
 
-.kakaoButton:hover {
+.kakaoButton:hover:not(:disabled) {
   transform: translateY(-2px);
   opacity: 0.95;
 }
 
-.kakaoButton:active {
+.kakaoButton:active:not(:disabled) {
   transform: translateY(0);
+}
+
+.kakaoButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .kakaoIcon {
@@ -95,13 +103,160 @@
   flex-shrink: 0;
 }
 
-.footer {
-  font-size: var(--text-xs);
+/* 구분선 */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   color: var(--color-text-muted);
-  margin-top: var(--space-4);
-  line-height: var(--leading-normal);
+  font-size: var(--text-xs);
+  margin: var(--space-1) 0;
 }
 
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-border);
+}
+
+/* 이메일 버튼 */
+.emailButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 52px;
+  padding: 0 var(--space-4);
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.emailButton:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  background: var(--color-surface-elevated);
+}
+
+.emailButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.emailIcon {
+  width: 18px;
+  height: 18px;
+  margin-right: var(--space-3);
+  flex-shrink: 0;
+}
+
+/* 폼 공통 */
+.form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.fieldLabel {
+  text-align: left;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-sub);
+}
+
+.input {
+  width: 100%;
+  height: 52px;
+  padding: 0 var(--space-4);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: var(--text-base);
+  font-family: var(--font-sans);
+  transition: border-color var(--transition-fast);
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.otpInput {
+  text-align: center;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  letter-spacing: 0.3em;
+}
+
+/* 기본 CTA 버튼 */
+.primaryButton {
+  width: 100%;
+  height: 52px;
+  padding: 0 var(--space-4);
+  background: var(--color-accent);
+  color: var(--color-accent-foreground);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.primaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 뒤로가기 */
+.backButton {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  padding: var(--space-2);
+  transition: color var(--transition-fast);
+}
+
+.backButton:hover {
+  color: var(--color-text-sub);
+}
+
+/* 성공 메시지 */
+.successMsg {
+  padding: var(--space-3) var(--space-4);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius-sm);
+  color: var(--color-success);
+  font-size: var(--text-sm);
+  text-align: left;
+  line-height: var(--leading-relaxed);
+}
+
+/* 에러 */
 .error {
   margin-top: var(--space-4);
   padding: var(--space-3) var(--space-4);
@@ -112,4 +267,12 @@
   font-size: var(--text-sm);
   width: 100%;
   text-align: center;
+}
+
+/* 푸터 */
+.footer {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-4);
+  line-height: var(--leading-normal);
 }

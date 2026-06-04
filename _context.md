@@ -1,33 +1,56 @@
 # 프로젝트 컨텍스트
-📅 마지막 업데이트: 2026-06-02
-📋 마지막 오더: #052 MVP-01 카카오 로그인 기반 구축
+
+마지막 업데이트: 2026-06-04
+현재 오더: MVP-02 마감 정리
 
 ## 현재 상태
-V2 쇼룸은 `v2-cms` 기준 Phase 5-B까지 완료. 현재는 `platform-v1`에서 쇼룸을 Public Experience로 계승하면서 플랫폼 MVP로 확장 중이다. 플랫폼 기준 문서는 `docs/platform/`, 제작 일정 기준은 `docs/platform/PLATFORM_TASKS.md`다.
+
+V2 쇼룸은 `v2-cms` 기준 Public Experience로 유지한다. 현재 브랜치 `platform-v1`에서는 쇼룸을 유지하면서 문장군 플랫폼 MVP를 확장 중이다.
+
+플랫폼 기준 문서는 `docs/platform/`에 있고, 제작 일정 기준은 `docs/platform/PLATFORM_TASKS.md`다.
 
 ## 최근 완료
-- `PROJECT_TASKS.md`를 쇼룸 히스토리 + 플랫폼 태스크 포인터로 축소
-- 어드민을 플랫폼의 실제 운영 엔진으로 재정의
-- 결제 이후 AS/후기/사진/홍보동의 흐름을 후속 MVP로 반영
-- `docs/platform/DEVELOPMENT_STRATEGY.md`를 가벼운 AI 작업 운영 규칙으로 축소
-- MVP-01 카카오 로그인 기반 코드 구현 및 Codex PM 검수
-- Supabase MCP로 `platform_auth_foundation` 및 `harden_platform_auth_policies` migration 적용
-- 로컬 Kakao OAuth 재로그인 후 `platform.profiles.role = customer` 생성 확인
-- `_audit_2026-06-02_mvp01_final_review.md` 작성. MVP-01 판정은 `GO with follow-up`
+
+- MVP-01 카카오 로그인 기반 구현 및 검수
+- MVP-02 고객 포털, 무료방문 실측 견적상담 신청, 어드민 접수 큐 구현
+- Supabase `platform` schema, RLS, private media, booking settings 기반 구성
+- Daum 주소 검색, 주소 검색 fallback, 방문일 달력, 관심 제품 다중 선택 구현
+- 어드민 관심 품목 관리, 예약 가능일 설정, 접수/취소 큐 구현
+- 상담 희망 내용 선택사항 처리
+- 추천인 선택사항 추가
+- 방문시간대 선택 제거
+- 신청 전 확인사항 상세 안내 보강
+- 고객 신청 화면 다크 UI 가독성 개선
+- 플랫폼 화면 이모지 제거
+- Playwright로 고객 신청, 주소 검색, 어드민 접수 큐, 어드민 설정 화면 확인
+- `npm run lint` 통과
+- `npm run build` 통과
 
 ## 핵심 결정
+
 - `PLATFORM_STRATEGY.md`는 PRD보다 상위 기준이며, 목적은 쇼핑몰이 아니라 고객 여정 통합이다.
 - `PLATFORM_TASKS.md`는 플랫폼 제작 일정과 페이즈의 기준 문서다.
 - 기존 쇼룸/CMS는 Public Experience로 유지하고, 플랫폼 고객 데이터는 신규 `platform` 스키마로 분리한다.
-- MVP-01 로그인은 카카오만 구현하고, Google/Naver 간편로그인은 후속 확장 시점에 함께 검토한다.
-- 작업자는 Gemini Flash 3.5 High, Codex는 총괄 감리, Claude는 필요 시 선택 호출한다.
+- 작업자는 Gemini Flash 3.5 High를 기본으로 두되, 고위험/마감 검수는 Codex가 직접 수행할 수 있다.
+- 무료방문 실측 견적상담 신청과 AS 접수는 로그인 필수다.
+- 무료실측 신청 주소는 Daum/Kakao 주소 검색 기반으로 받는다.
+- 방문 희망일은 어드민 운영설정이 반영된 달력 선택으로 받는다.
+- 방문 시간은 고객이 지정하지 않고, 전날 담당 매니저가 동선 기준으로 안내한다.
+- 관심 제품 카테고리는 다중 선택이며, 품목은 어드민에서 관리한다.
+- 어드민은 실제 운영 엔진이므로 모바일/데스크탑 반응형 품질을 계속 높여야 한다.
 
 ## 다음 할 일
-1. ⬜ MVP-02 무료방문견적 신청 + 어드민 접수 큐 오더 협의
-2. ⬜ 고객 전화번호/주소를 MVP-02 신청 폼 필수 입력으로 확보
-3. ⬜ 고객용 이메일 매직링크/OTP 보조 로그인 도입 여부 결정
-4. ⬜ `measurement-media` private bucket 설계 재확인
-5. ⬜ `.codex/` 임시 로그 폴더 정리
+
+1. 문서 정리 마감
+2. 변경사항 커밋
+3. GitHub push
+4. Vercel 배포
+5. 배포 URL에서 카카오 로그인, 고객 신청, 어드민 접수 큐 최종 확인
+6. `docs/platform/PLATFORM_TASKS.md`에서 MVP-02 상태를 완료로 갱신
+7. 신규 세션에서 MVP-03 담당자 배정 + 접수 상태 관리 논의 시작
 
 ## 현재 이슈
-- MVP-01 Kakao OAuth/profile 생성은 검증 완료. 전화번호는 Kakao OAuth가 아니라 MVP-02 신청 폼에서 필수 확보한다.
+
+- `/admin`은 기존 쇼룸 CMS 입구이며, 플랫폼 어드민은 `/admin/platform`이다.
+- MVP-02는 완료 후보 상태다. 커밋, 푸시, 배포, 배포 URL 검수가 끝나야 완료로 판정한다.
+- 어드민 모바일 반응형은 최소 동작은 확인했지만, MVP-03 전에 한 번 더 실제 업무 흐름 기준으로 다듬어야 한다.

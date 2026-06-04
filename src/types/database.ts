@@ -7,7 +7,6 @@ export type Json =
   | Json[]
 
 export interface Database {
-
   showroom: {
     Tables: {
       site_settings: {
@@ -312,11 +311,237 @@ export interface Database {
           updated_at?: string
         }
       }
+      measurement_requests: {
+        Row: {
+          id: string
+          customer_id: string
+          customer_name: string
+          phone: string
+          address: string
+          address_detail: string | null
+          interest_category: 'middle_door' | 'abs_door' | 'front_door' | 'molding_baseboard' | 'other'
+          message: string
+          preferred_schedule: string | null
+          status: 'submitted' | 'appsheet_pending' | 'appsheet_registered' | 'contacted' | 'assigned' | 'scheduled' | 'measured' | 'cancelled'
+          appsheet_status: 'pending' | 'registered' | 'skipped'
+          privacy_agreed_at: string
+          created_at: string
+          updated_at: string
+          postcode: string | null
+          road_address: string | null
+          jibun_address: string | null
+          address_extra: string | null
+          preferred_visit_date: string | null
+          preferred_visit_time_slot: string | null
+          interest_categories: string[] | null
+          is_manual_address: boolean
+          referrer_name: string | null
+        }
+        Insert: {
+          id?: string
+          customer_id: string
+          customer_name: string
+          phone: string
+          address: string
+          address_detail?: string | null
+          interest_category?: 'middle_door' | 'abs_door' | 'front_door' | 'molding_baseboard' | 'other'
+          message: string
+          preferred_schedule?: string | null
+          status?: 'submitted' | 'appsheet_pending' | 'appsheet_registered' | 'contacted' | 'assigned' | 'scheduled' | 'measured' | 'cancelled'
+          appsheet_status?: 'pending' | 'registered' | 'skipped'
+          privacy_agreed_at?: string
+          created_at?: string
+          updated_at?: string
+          postcode?: string | null
+          road_address?: string | null
+          jibun_address?: string | null
+          address_extra?: string | null
+          preferred_visit_date?: string | null
+          preferred_visit_time_slot?: string | null
+          interest_categories?: string[] | null
+          is_manual_address?: boolean
+          referrer_name?: string | null
+        }
+        Update: {
+          id?: string
+          customer_id?: string
+          customer_name?: string
+          phone?: string
+          address?: string
+          address_detail?: string | null
+          interest_category?: 'middle_door' | 'abs_door' | 'front_door' | 'molding_baseboard' | 'other'
+          message?: string
+          preferred_schedule?: string | null
+          status?: 'submitted' | 'appsheet_pending' | 'appsheet_registered' | 'contacted' | 'assigned' | 'scheduled' | 'measured' | 'cancelled'
+          appsheet_status?: 'pending' | 'registered' | 'skipped'
+          privacy_agreed_at?: string
+          created_at?: string
+          updated_at?: string
+          postcode?: string | null
+          road_address?: string | null
+          jibun_address?: string | null
+          address_extra?: string | null
+          preferred_visit_date?: string | null
+          preferred_visit_time_slot?: string | null
+          interest_categories?: string[] | null
+          is_manual_address?: boolean
+          referrer_name?: string | null
+        }
+      }
+      measurement_media: {
+        Row: {
+          id: string
+          request_id: string
+          customer_id: string
+          bucket: string
+          object_path: string
+          media_type: 'image' | 'video'
+          file_name: string
+          file_size: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          request_id: string
+          customer_id: string
+          bucket?: string
+          object_path: string
+          media_type: 'image' | 'video'
+          file_name: string
+          file_size?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          request_id?: string
+          customer_id?: string
+          bucket?: string
+          object_path?: string
+          media_type?: 'image' | 'video'
+          file_name?: string
+          file_size?: number
+          created_at?: string
+        }
+      }
+      measurement_request_events: {
+        Row: {
+          id: string
+          request_id: string
+          actor_id: string
+          event_type: string
+          memo: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          request_id: string
+          actor_id: string
+          event_type: string
+          memo?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          request_id?: string
+          actor_id?: string
+          event_type?: string
+          memo?: string | null
+          created_at?: string
+        }
+      }
+      measurement_product_categories: {
+        Row: {
+          id: string
+          key: string
+          label: string
+          description: string | null
+          image_url: string | null
+          sort_order: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          key: string
+          label: string
+          description?: string | null
+          image_url?: string | null
+          sort_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          key?: string
+          label?: string
+          description?: string | null
+          image_url?: string | null
+          sort_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      measurement_booking_settings: {
+        Row: {
+          id: number
+          min_days_out: number
+          max_days_out: number
+          close_saturday: boolean
+          close_sunday: boolean
+          close_holidays: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          min_days_out?: number
+          max_days_out?: number
+          close_saturday?: boolean
+          close_sunday?: boolean
+          close_holidays?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          min_days_out?: number
+          max_days_out?: number
+          close_saturday?: boolean
+          close_sunday?: boolean
+          close_holidays?: boolean
+          updated_at?: string
+        }
+      }
+      measurement_date_overrides: {
+        Row: {
+          date: string
+          is_closed: boolean
+          memo: string | null
+          source: 'manual' | 'holiday'
+          created_at: string
+        }
+        Insert: {
+          date: string
+          is_closed: boolean
+          memo?: string | null
+          source?: 'manual' | 'holiday'
+          created_at?: string
+        }
+        Update: {
+          date?: string
+          is_closed?: boolean
+          memo?: string | null
+          source?: 'manual' | 'holiday'
+          created_at?: string
+        }
+      }
     }
     Enums: {
       profile_role: 'customer' | 'sales_manager' | 'administrator'
-      measurement_status: 'submitted' | 'appsheet_pending' | 'appsheet_registered' | 'assigned' | 'scheduled' | 'measured' | 'cancelled'
+      measurement_status: 'submitted' | 'appsheet_pending' | 'appsheet_registered' | 'contacted' | 'assigned' | 'scheduled' | 'measured' | 'cancelled'
       product_family: 'middle_door' | 'abs_door' | 'front_door' | 'molding_baseboard' | 'other'
+      appsheet_status: 'pending' | 'registered' | 'skipped'
     }
   }
 }

@@ -1,0 +1,406 @@
+/* ── Page ── */
+.page {
+  padding: var(--space-4);
+  color: var(--admin-text);
+  font-family: var(--font-sans);
+  max-width: 1100px;
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding: var(--space-6);
+  }
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: none;
+  border: none;
+  color: var(--admin-text-sub);
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  padding: var(--space-2) 0;
+  margin-bottom: var(--space-6);
+  transition: color var(--transition-fast);
+}
+
+.backBtn:hover {
+  color: var(--admin-accent);
+}
+
+/* ── Two-col Grid ── */
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+@media (min-width: 768px) {
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    gap: var(--space-5);
+  }
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ── Card ── */
+.card {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.cardTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--admin-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.cardTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.cardTitleRow .cardTitle {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+/* ── Info List ── */
+.infoList {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.infoList dt {
+  color: var(--admin-text-muted);
+  font-weight: var(--font-medium);
+  padding-top: 2px;
+}
+
+.infoList dd {
+  color: var(--admin-text);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.messageText {
+  white-space: pre-wrap;
+  line-height: var(--leading-relaxed);
+  color: var(--admin-text);
+}
+
+.idText {
+  font-family: monospace;
+  font-size: var(--text-xs);
+  color: var(--admin-text-muted);
+  word-break: break-all;
+}
+
+/* ── Copy Button ── */
+.copyBtn {
+  padding: 2px var(--space-2);
+  background: var(--admin-surface-elevated);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--admin-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.copyBtn:hover {
+  border-color: var(--admin-accent);
+  color: var(--admin-accent);
+}
+
+/* ── AppSheet Block ── */
+.appsheetCard {
+  background: #FFFEF5;
+  border-color: #E8D88A;
+}
+
+.copyAllBtn {
+  padding: var(--space-2) var(--space-4);
+  background: var(--admin-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.copyAllBtn:hover {
+  background: var(--admin-accent-hover);
+}
+
+.appsheetText {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--admin-text);
+  white-space: pre-wrap;
+  line-height: var(--leading-relaxed);
+  background: rgba(255, 255, 255, 0.6);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid #E8D88A;
+}
+
+/* ── Status Form ── */
+.statusRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+@media (min-width: 480px) {
+  .statusRow {
+    flex-direction: row;
+  }
+
+  .statusRow .fieldGroup {
+    flex: 1;
+  }
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.fieldLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--admin-text-sub);
+}
+
+.select {
+  height: 44px;
+  padding: 0 var(--space-3);
+  background: var(--admin-surface-elevated);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-md);
+  color: var(--admin-text);
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+}
+
+.textarea {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--admin-surface-elevated);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-md);
+  color: var(--admin-text);
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  resize: vertical;
+  transition: border-color var(--transition-fast);
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+}
+
+.saveMsg {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-3);
+}
+
+.saveMsgOk    { background: #F0FDF4; color: #15803D; border: 1px solid #86EFAC; }
+.saveMsgError { background: #FEF2F2; color: #991B1B; border: 1px solid #FCA5A5; }
+
+.saveBtn {
+  width: 100%;
+  height: 44px;
+  background: var(--admin-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  margin-top: var(--space-3);
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: var(--admin-accent-hover);
+}
+
+.saveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Media List ── */
+.mediaList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.mediaItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  background: var(--admin-surface-elevated);
+  border-radius: var(--radius-md);
+  gap: var(--space-3);
+}
+
+.mediaInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.mediaType {
+  flex-shrink: 0;
+  font-size: var(--text-lg);
+}
+
+.mediaName {
+  font-size: var(--text-sm);
+  color: var(--admin-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mediaSize {
+  font-size: var(--text-xs);
+  color: var(--admin-text-muted);
+  white-space: nowrap;
+}
+
+.mediaLink {
+  font-size: var(--text-sm);
+  color: var(--admin-accent);
+  font-weight: var(--font-semibold);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.mediaLink:hover {
+  text-decoration: underline;
+}
+
+.mediaFetchBtn {
+  padding: var(--space-2) var(--space-3);
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--admin-text-sub);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.mediaFetchBtn:hover:not(:disabled) {
+  border-color: var(--admin-accent);
+  color: var(--admin-accent);
+}
+
+.mediaFetchBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Manual notice banner & badges ── */
+.manualNoticeBanner {
+  background: #FFF5F5;
+  border: 1px solid #FEB2B2;
+  border-radius: var(--radius-lg, 8px);
+  color: #C53030;
+  padding: var(--space-4, 16px);
+  font-size: var(--text-sm, 14px);
+  line-height: 1.5;
+  margin-bottom: var(--space-5, 20px);
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.addressTypeBadge {
+  display: inline-block;
+  padding: 2px var(--space-2, 8px);
+  border-radius: var(--radius-sm, 4px);
+  font-size: 11px;
+  font-weight: var(--font-bold);
+}
+
+.typeManual {
+  background: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.typeApi {
+  background: #F0FDF4;
+  color: #15803D;
+  border: 1px solid rgba(21, 128, 61, 0.2);
+}
+
+.categoryBadgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.catBadge {
+  background: var(--admin-surface-elevated, #f8f9fa);
+  border: 1px solid var(--admin-border, #e9ecef);
+  color: var(--admin-text-sub, #495057);
+  padding: 2px var(--space-2, 8px);
+  border-radius: var(--radius-sm, 4px);
+  font-size: var(--text-xs, 12px);
+  font-weight: 500;
+}
+
