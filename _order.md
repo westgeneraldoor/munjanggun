@@ -56,11 +56,12 @@ MVP-02는 현재 `완료`다.
 ## 배포 상태
 
 - 브랜치: `platform-v1`
-- 최신 기능 커밋: `da521d4`
-- Vercel Preview: `https://munjanggun-9wo8h2zla-westgeneraldoors-projects.vercel.app`
+- 최신 기능 커밋: `beee460`
+- Vercel Preview: `https://munjanggun-knsqon7og-westgeneraldoors-projects.vercel.app`
 - 첫 배포 실패 원인: 관리자 페이지가 build 시점에 Supabase env를 요구하며 prerender됨
 - 보정: 관리자 서버 페이지를 `force-dynamic`으로 처리
 - 최신 배포 상태: READY
+- OAuth callback 보정: 세션 교환 쿠키를 최종 redirect 응답에 직접 실어 로그인 후 홈/쇼룸에서 유저메뉴가 유지되도록 수정
 - Vercel 환경변수: `platform-v1` Preview Supabase 3종, Production `SUPABASE_SERVICE_ROLE_KEY` 반영
 - Vercel Preview 보호: SSO Deployment Protection 해제, 공개 접근 200 확인
 - 실제 검수 접수 ID: `4a23cca6-5794-423e-8a34-c2f4bb204bd4`
@@ -79,3 +80,4 @@ MVP-03 담당자 배정 + 접수 상태 관리.
 - Public showroom now has a top-right login/user menu. Signed-in customers see `마이페이지` and `무료방문견적 신청`; administrators also see `플랫폼 어드민`.
 - `moon@munjanggun.com` and `west1836@gmail.com` are confirmed as `administrator` in `platform.profiles`.
 - Local checks passed: `npm run lint`, `npm run build`, and Playwright smoke for logged-out CTA redirect, customer menu, administrator menu, and admin navigation.
+- Latest callback fix commit: `beee460`; Preview READY at `https://munjanggun-knsqon7og-westgeneraldoors-projects.vercel.app`.
