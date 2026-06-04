@@ -53,7 +53,7 @@ V2 쇼룸은 `v2-cms` 기준 Public Experience로 유지한다. 현재 브랜치
 
 - `/admin`은 기존 쇼룸 CMS 입구이며, 플랫폼 어드민은 `/admin/platform`이다.
 - MVP-02는 완료 상태다. 커밋, 푸시, Vercel Preview 배포, 배포 URL 실검수까지 완료됐다.
-- Vercel Preview URL은 `https://munjanggun-2owsuqlq0-westgeneraldoors-projects.vercel.app`이다.
+- Vercel Preview URL은 `https://munjanggun-2asuxephs-westgeneraldoors-projects.vercel.app`이다.
 - Preview 실검수 접수 ID는 `4a23cca6-5794-423e-8a34-c2f4bb204bd4`이며, 테스트 접수 최종 상태는 `cancelled`다.
 - GitHub push는 성공했지만, 로컬 `gh` 토큰 만료로 PR 생성은 아직 못 했다.
 - GitHub 커넥터 PR 생성도 권한 403으로 막혔다.

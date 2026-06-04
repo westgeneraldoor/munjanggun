@@ -184,7 +184,7 @@ MVP-01 카카오 로그인
 
 검수 기록:
 
-- Preview URL: `https://munjanggun-2owsuqlq0-westgeneraldoors-projects.vercel.app`
+- Preview URL: `https://munjanggun-2asuxephs-westgeneraldoors-projects.vercel.app`
 - 테스트 고객: `codex-preview-customer@munjanggun.local`
 - 테스트 관리자: `codex-preview-administrator@munjanggun.local`
 - 테스트 접수 ID: `4a23cca6-5794-423e-8a34-c2f4bb204bd4`
