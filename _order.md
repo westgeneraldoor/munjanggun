@@ -36,17 +36,28 @@ MVP-02 무료방문 실측 견적상담 신청과 어드민 접수 큐를 실제
 - [x] `npm run lint` 통과
 - [x] `npm run build` 통과
 - [x] Playwright 주요 화면 확인
-- [ ] 문서 정리
-- [ ] 커밋
-- [ ] 푸시
-- [ ] 배포
+- [x] 문서 정리
+- [x] 커밋
+- [x] 푸시
+- [x] Vercel Preview 배포
+- [ ] GitHub PR 생성
 - [ ] 배포 URL 최종 확인
 
 ## 현재 판단
 
 MVP-02는 현재 `완료 후보`다.
 
-커밋, 푸시, 배포, 배포 URL 검수까지 끝나면 `docs/platform/PLATFORM_TASKS.md`에서 MVP-02를 완료로 바꾼다.
+배포 URL 검수까지 끝나면 `docs/platform/PLATFORM_TASKS.md`에서 MVP-02를 완료로 바꾼다.
+
+## 배포 상태
+
+- 브랜치: `platform-v1`
+- 최신 코드 커밋: `6dcd80b`
+- Vercel Preview: `https://munjanggun-9w9i0l6hy-westgeneraldoors-projects.vercel.app`
+- 첫 배포 실패 원인: 관리자 페이지가 build 시점에 Supabase env를 요구하며 prerender됨
+- 보정: 관리자 서버 페이지를 `force-dynamic`으로 처리
+- 두 번째 배포 상태: READY
+- 남은 확인: Vercel Preview/Production 환경변수와 실제 로그인 callback
 
 ## 다음 오더 후보
 
