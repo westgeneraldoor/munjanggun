@@ -140,6 +140,16 @@
 }
 
 /* === Detail Split Layout === */
+.mobileDetailImageWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+}
+
+.mobileDetailImage {
+  object-fit: cover;
+}
+
 .mobileHero {
   display: block;
 }

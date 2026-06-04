@@ -148,17 +148,17 @@ export default function LoginPage({ searchParams }: PageProps) {
         </Link>
 
         <div className={styles.brand}>MUNJANGGUN</div>
-        <div className={styles.brandSub}>무료방문견적 신청</div>
+        <div className={styles.brandSub}>고객 포털</div>
 
         {step === 'main' && (
           <>
-            <h1 className={styles.title}>우리 집도 가능한지 먼저 확인해요</h1>
+            <h1 className={styles.title}>문장군에 오신 것을 환영합니다</h1>
             <p className={styles.description}>
-              주소와 희망 방문일을 남기면 문장군이 확인 후 연락드립니다. 로그인은 신청 내역을 이어보고 사진을 안전하게 보관하기 위한 간편 인증입니다.
+              로그인하시면 무료방문견적 신청, 견적 확인, AS 접수 등 모든 서비스를 이용할 수 있습니다.
             </p>
 
             <div className={styles.reassurance}>
-              가입부터 요구하지 않습니다. 상담 신청을 안전하게 이어가기 위해 필요한 정보만 확인합니다.
+              별도 회원가입 없이 카카오 또는 이메일로 간편하게 시작할 수 있습니다.
             </div>
 
             <div className={styles.buttonContainer}>
@@ -167,7 +167,7 @@ export default function LoginPage({ searchParams }: PageProps) {
                 onClick={handleKakaoLogin}
                 disabled={loading}
                 className={styles.kakaoButton}
-                aria-label="카카오로 무료방문견적 신청 시작"
+                aria-label="카카오로 로그인"
               >
                 <MessageCircle className={styles.kakaoIcon} size={20} aria-hidden="true" />
                 {loading ? '카카오 연결 중...' : '카카오로 10초 만에 시작'}
@@ -182,7 +182,7 @@ export default function LoginPage({ searchParams }: PageProps) {
                 onClick={() => { setStep('email_input'); setAuthError(null) }}
                 disabled={loading}
                 className={styles.emailButton}
-                aria-label="이메일로 무료방문견적 신청 시작"
+                aria-label="이메일로 로그인"
               >
                 <Mail className={styles.emailIcon} size={18} aria-hidden="true" />
                 이메일로 시작
@@ -277,7 +277,7 @@ export default function LoginPage({ searchParams }: PageProps) {
         {authError && <div className={styles.error} role="alert">{authError}</div>}
 
         <p className={styles.footer}>
-          입력한 정보는 무료방문견적 상담 진행과 안내를 위해서만 사용됩니다.
+          입력한 정보는 서비스 이용과 안내를 위해서만 사용됩니다.
         </p>
       </div>
     </div>
