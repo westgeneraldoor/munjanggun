@@ -34,6 +34,7 @@ export default function PublicUserMenu() {
   const [open, setOpen] = useState(false)
 
   const isHidden = HIDDEN_PATH_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+  const loginHref = `/login?next=${encodeURIComponent(pathname || '/')}`
 
   useEffect(() => {
     if (isHidden) {
@@ -128,7 +129,7 @@ export default function PublicUserMenu() {
   if (!profile) {
     return (
       <div className={styles.container}>
-        <Link href="/login?next=/portal" className={styles.loginLink} id="public-login-link">
+        <Link href={loginHref} className={styles.loginLink} id="public-login-link">
           <LogIn size={17} aria-hidden="true" />
           <span>로그인</span>
         </Link>
