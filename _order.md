@@ -81,3 +81,18 @@ MVP-03 담당자 배정 + 접수 상태 관리.
 - `moon@munjanggun.com` and `west1836@gmail.com` are confirmed as `administrator` in `platform.profiles`.
 - Local checks passed: `npm run lint`, `npm run build`, and Playwright smoke for logged-out CTA redirect, customer menu, administrator menu, and admin navigation.
 - Latest callback fix commit: `beee460`; Preview READY at `https://munjanggun-knsqon7og-westgeneraldoors-projects.vercel.app`.
+
+# MVP-02 guided intake UX closeout - 2026-06-04
+
+- `/portal/measure/new` is now a step-by-step guided intake instead of a long single-page form.
+- Customer-facing copy now leads with `무료방문 실측견적 상담은 무료입니다.`
+- Applicant, primary contact recipient, and additional contact recipients are captured separately.
+- Visit-time copy now explains prior-day 4-5 PM route closeout, direct manager contact, missed-call SMS, and schedule-change handling.
+- Cheonan, Asan, Cheongju, Sejong, and Daejeon addresses are restricted to Wednesday/Saturday visit dates.
+- Unsupported regions are blocked in the UI and by the Supabase trigger.
+- Admin detail and AppSheet copy block now include contact recipient and service-region fields.
+- Supabase migration applied: `measurement_contact_region_flow`.
+- Local checks passed: `npm run lint`, `npm run build`.
+- Local Playwright verified: Seoul test submission, Chungcheong calendar restriction, unsupported-region blocking, and admin detail rendering.
+- Local smoke test request ID: `fb34508a-9e13-4413-9feb-497d81e7b669`.
+- Next action: commit, push, wait for Vercel Preview READY, then verify Preview `/portal/measure/new`.

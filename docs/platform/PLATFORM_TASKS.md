@@ -337,3 +337,19 @@ Status: complete.
 - [x] `moon@munjanggun.com` administrator role confirmed in `platform.profiles`.
 - [x] `west1836@gmail.com` administrator role confirmed in `platform.profiles`.
 - [x] Local Playwright smoke verified logged-out CTA redirect, customer menu, administrator menu, and admin navigation.
+
+## MVP-02 guided intake UX closeout - 2026-06-04
+
+Status: complete locally, ready for Preview deployment verification after push.
+
+- [x] `/portal/measure/new` changed from one long form to a step-by-step guided intake.
+- [x] Core reassurance copy uses `무료방문 실측견적 상담은 무료입니다.`
+- [x] Applicant and contact recipient can be different people.
+- [x] Additional contact recipients are supported for landlord/tenant/spouse cases.
+- [x] Visit-time guidance explains the prior-day 4-5 PM route closeout and direct contact flow.
+- [x] Cheonan, Asan, Cheongju, Sejong, and Daejeon are limited to Wednesday/Saturday visit dates.
+- [x] Unsupported service regions are blocked before submission.
+- [x] Contact recipient and service-region fields are saved to Supabase.
+- [x] Admin detail and AppSheet copy block include contact recipient and service-region details.
+- [x] Database trigger blocks unsupported regions and invalid Chungcheong weekdays.
+- [x] Local Playwright smoke verified Seoul submission, Chungcheong calendar restriction, unsupported-region blocking, and admin detail rendering.

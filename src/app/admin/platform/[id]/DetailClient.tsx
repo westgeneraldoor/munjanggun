@@ -20,6 +20,11 @@ interface DetailClientProps {
     id: string
     customer_name: string
     phone: string
+    applicant_relationship: string | null
+    contact_name: string | null
+    contact_phone: string | null
+    contact_relationship: string | null
+    additional_contacts: unknown
     address: string
     address_detail: string | null
     postcode: string | null
@@ -33,6 +38,8 @@ interface DetailClientProps {
     interest_category: string
     message: string
     referrer_name: string | null
+    service_region: string | null
+    service_region_status: string
     preferred_schedule: string | null
     status: string
     appsheet_status: string
@@ -40,6 +47,13 @@ interface DetailClientProps {
     created_at: string
   }
   media: MediaItem[]
+}
+
+interface AdditionalContact {
+  name?: string
+  phone?: string
+  relationship?: string
+  note?: string
 }
 
 const STATUS_OPTIONS = [
@@ -167,9 +181,37 @@ export default function DetailClient({ requestId, request, media }: DetailClient
 
   const getScheduleText = () => request.preferred_visit_date || request.preferred_schedule || '미기입'
 
+  const additionalContacts = Array.isArray(request.additional_contacts)
+    ? request.additional_contacts as AdditionalContact[]
+    : []
+
+  const formatAdditionalContacts = () => {
+    if (additionalContacts.length === 0) return ''
+    return additionalContacts
+      .map((contact, index) => {
+        const parts = [
+          contact.name,
+          contact.phone,
+          contact.relationship ? `관계: ${contact.relationship}` : '',
+          contact.note ? `메모: ${contact.note}` : '',
+        ].filter(Boolean)
+        return `${index + 1}. ${parts.join(' / ')}`
+      })
+      .join('\n')
+  }
+
+  const primaryContactText = [
+    request.contact_name || request.customer_name,
+    request.contact_phone || request.phone,
+    request.contact_relationship ? `관계: ${request.contact_relationship}` : '',
+  ].filter(Boolean).join(' / ')
+
   const appsheetBlock = [
-    `이름: ${request.customer_name}`,
-    `연락처: ${request.phone}`,
+    `신청자: ${request.customer_name}`,
+    `신청자 연락처: ${request.phone}`,
+    `신청자 관계: ${request.applicant_relationship || ''}`,
+    `대표 연락 대상: ${primaryContactText}`,
+    `추가 연락 대상: ${formatAdditionalContacts()}`,
     `추천인: ${request.referrer_name || ''}`,
     `우편번호: ${request.postcode || ''}`,
     `기본주소: ${request.road_address || request.address}`,
@@ -177,6 +219,7 @@ export default function DetailClient({ requestId, request, media }: DetailClient
     `지번주소: ${request.jibun_address || ''}`,
     `참고항목: ${request.address_extra || ''}`,
     `주소유형: ${request.is_manual_address ? '수동 입력, 주소 검토 필요' : '주소 검색 입력'}`,
+    `서비스 지역: ${request.service_region || ''} / ${request.service_region_status || ''}`,
     `관심품목: ${getCategoryLabelList()}`,
     `희망 방문일: ${getScheduleText()}`,
     `상담내용: ${request.message}`,
@@ -210,6 +253,25 @@ export default function DetailClient({ requestId, request, media }: DetailClient
                   {copied === 'phone' ? '복사됨' : '복사'}
                 </button>
               </dd>
+              {request.applicant_relationship && (
+                <>
+                  <dt>신청자 관계</dt>
+                  <dd>{request.applicant_relationship}</dd>
+                </>
+              )}
+              <dt>대표 연락 대상</dt>
+              <dd>
+                <span>{primaryContactText}</span>
+                <button type="button" className={styles.copyBtn} onClick={() => copyToClipboard(request.contact_phone || request.phone, 'contactPhone')}>
+                  {copied === 'contactPhone' ? '복사됨' : '복사'}
+                </button>
+              </dd>
+              {additionalContacts.length > 0 && (
+                <>
+                  <dt>추가 연락 대상</dt>
+                  <dd className={styles.messageText}>{formatAdditionalContacts()}</dd>
+                </>
+              )}
               {request.referrer_name && (
                 <>
                   <dt>추천인</dt>
@@ -258,6 +320,12 @@ export default function DetailClient({ requestId, request, media }: DetailClient
                   {request.is_manual_address ? '수동 입력' : '주소 검색'}
                 </span>
               </dd>
+              {request.service_region && (
+                <>
+                  <dt>서비스 지역</dt>
+                  <dd>{request.service_region} / {request.service_region_status}</dd>
+                </>
+              )}
             </dl>
           </div>
 

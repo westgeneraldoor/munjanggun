@@ -66,6 +66,17 @@ V2 쇼룸은 `v2-cms` 기준 Public Experience로 유지한다. 현재 브랜치
 - Use the latest Preview deployment for MVP-02 verification.
 - The public showroom floating `무료방문견적` CTA is now the official MVP-02 customer entry and points to `/portal/measure/new`.
 - The public showroom top-right auth menu is now part of MVP-02 verification.
+
+# MVP-02 guided intake update - 2026-06-04
+
+- `/portal/measure/new` was redesigned as a guided multi-step intake.
+- It captures applicant, primary contact recipient, optional additional contacts, service region, and service-region status.
+- Chungcheong limited areas are Cheonan, Asan, Cheongju, Sejong, and Daejeon; these are limited to Wednesday/Saturday visit dates.
+- Unsupported service regions are blocked in the UI and by the Supabase trigger.
+- Admin detail and AppSheet copy block include contact recipient and service-region information.
+- Supabase migration applied: `measurement_contact_region_flow`.
+- Local verification passed: lint, build, Seoul test submission, Chungcheong calendar restriction, unsupported-region blocking, admin detail rendering.
+- Local smoke test request ID: `fb34508a-9e13-4413-9feb-497d81e7b669`.
 - Administrator accounts confirmed in Supabase `platform.profiles`: `moon@munjanggun.com`, `west1836@gmail.com`.
 - Verified locally with Playwright: logged-out CTA redirect keeps `next=/portal/measure/new`, customer menu, administrator menu, and admin navigation.
 - OAuth callback was fixed in `beee460` so Supabase session cookies are written to the final redirect response.

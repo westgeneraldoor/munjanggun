@@ -317,6 +317,11 @@ export interface Database {
           customer_id: string
           customer_name: string
           phone: string
+          applicant_relationship: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          contact_relationship: string | null
+          additional_contacts: Json
           address: string
           address_detail: string | null
           interest_category: 'middle_door' | 'abs_door' | 'front_door' | 'molding_baseboard' | 'other'
@@ -336,12 +341,19 @@ export interface Database {
           interest_categories: string[] | null
           is_manual_address: boolean
           referrer_name: string | null
+          service_region: string | null
+          service_region_status: 'supported' | 'chungcheong_limited' | 'unsupported' | 'unknown'
         }
         Insert: {
           id?: string
           customer_id: string
           customer_name: string
           phone: string
+          applicant_relationship?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_relationship?: string | null
+          additional_contacts?: Json
           address: string
           address_detail?: string | null
           interest_category?: 'middle_door' | 'abs_door' | 'front_door' | 'molding_baseboard' | 'other'
@@ -361,12 +373,19 @@ export interface Database {
           interest_categories?: string[] | null
           is_manual_address?: boolean
           referrer_name?: string | null
+          service_region?: string | null
+          service_region_status?: 'supported' | 'chungcheong_limited' | 'unsupported' | 'unknown'
         }
         Update: {
           id?: string
           customer_id?: string
           customer_name?: string
           phone?: string
+          applicant_relationship?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_relationship?: string | null
+          additional_contacts?: Json
           address?: string
           address_detail?: string | null
           interest_category?: 'middle_door' | 'abs_door' | 'front_door' | 'molding_baseboard' | 'other'
@@ -386,6 +405,8 @@ export interface Database {
           interest_categories?: string[] | null
           is_manual_address?: boolean
           referrer_name?: string | null
+          service_region?: string | null
+          service_region_status?: 'supported' | 'chungcheong_limited' | 'unsupported' | 'unknown'
         }
       }
       measurement_media: {
