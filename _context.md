@@ -23,6 +23,10 @@ V2 쇼룸은 `v2-cms` 기준 Public Experience로 유지한다. 현재 브랜치
 - 고객 신청 화면 다크 UI 가독성 개선
 - 플랫폼 화면 이모지 제거
 - Playwright로 고객 신청, 주소 검색, 어드민 접수 큐, 어드민 설정 화면 확인
+- Vercel 환경변수 정리 및 새 Preview READY 배포
+- Preview URL 공개 접근 200 확인
+- Preview에서 테스트 고객 신청 1건 생성
+- Preview에서 어드민 접수완료/취소 상태 저장 확인
 - `npm run lint` 통과
 - `npm run build` 통과
 
@@ -41,16 +45,16 @@ V2 쇼룸은 `v2-cms` 기준 Public Experience로 유지한다. 현재 브랜치
 
 ## 다음 할 일
 
-1. 문서 정리 마감
-2. GitHub PR 생성
-3. 배포 URL에서 카카오 로그인, 고객 신청, 어드민 접수 큐 최종 확인
-4. `docs/platform/PLATFORM_TASKS.md`에서 MVP-02 상태를 완료로 갱신
-5. 신규 세션에서 MVP-03 담당자 배정 + 접수 상태 관리 논의 시작
+1. GitHub PR 생성
+2. 실제 카카오 계정 callback 확인
+3. 신규 세션에서 MVP-03 담당자 배정 + 접수 상태 관리 논의 시작
 
 ## 현재 이슈
 
 - `/admin`은 기존 쇼룸 CMS 입구이며, 플랫폼 어드민은 `/admin/platform`이다.
-- MVP-02는 완료 후보 상태다. 커밋, 푸시, Vercel Preview 배포는 완료됐고, 배포 URL 검수가 끝나야 완료로 판정한다.
-- Vercel Preview URL은 `https://munjanggun-9w9i0l6hy-westgeneraldoors-projects.vercel.app`이다.
+- MVP-02는 완료 상태다. 커밋, 푸시, Vercel Preview 배포, 배포 URL 실검수까지 완료됐다.
+- Vercel Preview URL은 `https://munjanggun-2owsuqlq0-westgeneraldoors-projects.vercel.app`이다.
+- Preview 실검수 접수 ID는 `4a23cca6-5794-423e-8a34-c2f4bb204bd4`이며, 테스트 접수 최종 상태는 `cancelled`다.
 - GitHub push는 성공했지만, 로컬 `gh` 토큰 만료로 PR 생성은 아직 못 했다.
+- GitHub 커넥터 PR 생성도 권한 403으로 막혔다.
 - 어드민 모바일 반응형은 최소 동작은 확인했지만, MVP-03 전에 한 번 더 실제 업무 흐름 기준으로 다듬어야 한다.

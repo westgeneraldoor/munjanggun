@@ -28,9 +28,7 @@ source_development_strategy: "docs/platform/DEVELOPMENT_STRATEGY.md"
 
 ## 현재 판단
 
-MVP-02는 기능 구현과 PM UX 보정이 완료된 상태다.
-
-다만 운영상 완료 판정은 아래 4개가 끝난 뒤로 둔다.
+MVP-02는 기능 구현, PM UX 보정, Vercel Preview 실검수가 완료된 상태다.
 
 - [x] `npm run lint` 통과
 - [x] `npm run build` 통과
@@ -38,9 +36,9 @@ MVP-02는 기능 구현과 PM UX 보정이 완료된 상태다.
 - [x] 커밋
 - [x] 푸시
 - [x] Vercel Preview 배포
-- [ ] 배포 URL에서 로그인, 신청, 어드민 접수 큐 최종 확인
+- [x] 배포 URL에서 로그인 보호, 고객 신청 생성, 어드민 접수 큐 최종 확인
 
-따라서 현재 상태는 `MVP-02 완료 후보`다. 배포 URL에서 로그인, 신청, 어드민 접수 큐 최종 확인까지 끝나면 `MVP-02 완료`로 바꾼다.
+따라서 현재 상태는 `MVP-02 완료`다. GitHub PR 생성과 실제 카카오 계정 callback 확인은 권한/실계정이 필요한 마감 운영 항목으로 별도 추적한다.
 
 ## 크리티컬 패스
 
@@ -91,7 +89,7 @@ MVP-01 카카오 로그인
 
 ## MVP-02 - 무료방문 실측 견적상담 신청 + 어드민 접수 큐
 
-상태: 완료 후보
+상태: 완료
 
 ### 고객 신청
 
@@ -179,9 +177,21 @@ MVP-01 카카오 로그인
 - [x] GitHub push
 - [x] Vercel Preview 배포
 - [ ] GitHub PR 생성
-- [ ] 배포 URL에서 카카오 로그인 callback 확인
-- [ ] 배포 URL에서 고객 신청 1건 실제 생성 확인
-- [ ] 배포 URL에서 어드민 접수/취소 버튼 확인
+- [x] 배포 URL에서 카카오 OAuth 시작 확인
+- [ ] 배포 URL에서 실제 카카오 계정 callback 확인
+- [x] 배포 URL에서 고객 신청 1건 실제 생성 확인
+- [x] 배포 URL에서 어드민 접수완료/취소 상태 저장 확인
+
+검수 기록:
+
+- Preview URL: `https://munjanggun-2owsuqlq0-westgeneraldoors-projects.vercel.app`
+- 테스트 고객: `codex-preview-customer@munjanggun.local`
+- 테스트 관리자: `codex-preview-administrator@munjanggun.local`
+- 테스트 접수 ID: `4a23cca6-5794-423e-8a34-c2f4bb204bd4`
+- 테스트 접수명: `Codex Preview Customer 20260604041120`
+- 신청 생성 상태: `submitted`
+- 어드민 접수완료 저장 후 상태: `appsheet_registered`
+- 어드민 취소 저장 후 상태: `cancelled`
 
 ## MVP-03 - 담당자 배정 + 접수 상태 관리
 

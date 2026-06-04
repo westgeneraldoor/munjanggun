@@ -3,7 +3,7 @@
 발행: 2026-06-04
 브랜치: `platform-v1`
 PM/실행: Codex
-상태: 마감 정리 중
+상태: MVP-02 실검수 완료 / PR 생성 대기
 
 ## 목표
 
@@ -40,24 +40,32 @@ MVP-02 무료방문 실측 견적상담 신청과 어드민 접수 큐를 실제
 - [x] 커밋
 - [x] 푸시
 - [x] Vercel Preview 배포
+- [x] Vercel 환경변수 정리
+- [x] Vercel Preview 보호 해제 및 공개 접근 확인
+- [x] 배포 URL 고객 신청 1건 실제 생성 확인
+- [x] 배포 URL 어드민 접수완료/취소 상태 저장 확인
 - [ ] GitHub PR 생성
-- [ ] 배포 URL 최종 확인
+- [x] 배포 URL 최종 확인
 
 ## 현재 판단
 
-MVP-02는 현재 `완료 후보`다.
+MVP-02는 현재 `완료`다.
 
-배포 URL 검수까지 끝나면 `docs/platform/PLATFORM_TASKS.md`에서 MVP-02를 완료로 바꾼다.
+배포 URL에서 테스트 고객 신청 1건 생성, 어드민 큐 노출, 상세 상태 저장으로 `appsheet_registered`와 `cancelled`까지 확인했다. GitHub PR 생성은 로컬 `gh` 토큰 만료와 GitHub 커넥터 권한 403 때문에 별도 권한 조치가 필요하다.
 
 ## 배포 상태
 
 - 브랜치: `platform-v1`
-- 최신 코드 커밋: `6dcd80b`
-- Vercel Preview: `https://munjanggun-9w9i0l6hy-westgeneraldoors-projects.vercel.app`
+- 최신 기능 커밋: `da521d4`
+- Vercel Preview: `https://munjanggun-2owsuqlq0-westgeneraldoors-projects.vercel.app`
 - 첫 배포 실패 원인: 관리자 페이지가 build 시점에 Supabase env를 요구하며 prerender됨
 - 보정: 관리자 서버 페이지를 `force-dynamic`으로 처리
-- 두 번째 배포 상태: READY
-- 남은 확인: Vercel Preview/Production 환경변수와 실제 로그인 callback
+- 최신 배포 상태: READY
+- Vercel 환경변수: `platform-v1` Preview Supabase 3종, Production `SUPABASE_SERVICE_ROLE_KEY` 반영
+- Vercel Preview 보호: SSO Deployment Protection 해제, 공개 접근 200 확인
+- 실제 검수 접수 ID: `4a23cca6-5794-423e-8a34-c2f4bb204bd4`
+- 테스트 접수 최종 상태: `cancelled`
+- 남은 확인: GitHub PR 생성, 실제 카카오 계정 callback 확인
 
 ## 다음 오더 후보
 
