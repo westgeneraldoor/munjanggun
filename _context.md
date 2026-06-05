@@ -85,3 +85,15 @@ V2 쇼룸은 `v2-cms` 기준 Public Experience로 유지한다. 현재 브랜치
 - Administrator accounts confirmed in Supabase `platform.profiles`: `moon@munjanggun.com`, `west1836@gmail.com`.
 - Verified locally with Playwright: logged-out CTA redirect keeps `next=/portal/measure/new`, customer menu, administrator menu, and admin navigation.
 - OAuth callback was fixed in `beee460` so Supabase session cookies are written to the final redirect response.
+
+# MVP-07 customer AS intake slice - 2026-06-05
+
+- `/portal` now uses the same white customer-facing tone as the guided free-visit estimate intake.
+- `/portal` exposes active entries for `무료방문 실측견적 상담` and `A/S 접수`, while estimate viewing and construction history remain prepared states.
+- `/portal/as/new` exists and is login-protected.
+- AS intake captures requester, optional separate contact recipient, address, issue type, urgency, preferred contact method, message, privacy consent, and optional image/video media.
+- Supabase migration applied live: `platform_as_requests_mvp07`.
+- Tables added: `platform.as_requests`, `platform.as_media`; RLS allows customer own-row insert/select and admin/sales select/update where appropriate.
+- Local verification passed: `npm run lint`, `npm run build`, Playwright customer login -> portal -> AS intake -> media upload -> submit -> done screen -> recent AS display -> mobile portal.
+- Local AS smoke request ID: `90dd7f22-db09-41b1-9026-f2aaa9904654`.
+- Remaining MVP-07 work: admin AS queue, AS status management, existing construction-history linkage, public floating CTA decision.

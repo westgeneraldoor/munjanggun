@@ -444,6 +444,100 @@ export interface Database {
           created_at?: string
         }
       }
+      as_requests: {
+        Row: {
+          id: string
+          customer_id: string
+          customer_name: string
+          phone: string
+          contact_name: string | null
+          contact_phone: string | null
+          contact_relationship: string | null
+          address: string | null
+          address_detail: string | null
+          issue_type: string
+          urgency: 'normal' | 'urgent'
+          preferred_contact_method: 'phone' | 'sms' | 'kakao'
+          message: string
+          status: 'submitted' | 'reviewing' | 'scheduled' | 'resolved' | 'cancelled'
+          privacy_agreed_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          customer_id: string
+          customer_name: string
+          phone: string
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_relationship?: string | null
+          address?: string | null
+          address_detail?: string | null
+          issue_type?: string
+          urgency?: 'normal' | 'urgent'
+          preferred_contact_method?: 'phone' | 'sms' | 'kakao'
+          message: string
+          status?: 'submitted' | 'reviewing' | 'scheduled' | 'resolved' | 'cancelled'
+          privacy_agreed_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          customer_id?: string
+          customer_name?: string
+          phone?: string
+          contact_name?: string | null
+          contact_phone?: string | null
+          contact_relationship?: string | null
+          address?: string | null
+          address_detail?: string | null
+          issue_type?: string
+          urgency?: 'normal' | 'urgent'
+          preferred_contact_method?: 'phone' | 'sms' | 'kakao'
+          message?: string
+          status?: 'submitted' | 'reviewing' | 'scheduled' | 'resolved' | 'cancelled'
+          privacy_agreed_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      as_media: {
+        Row: {
+          id: string
+          request_id: string
+          customer_id: string
+          bucket: string
+          object_path: string
+          media_type: 'image' | 'video'
+          file_name: string
+          file_size: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          request_id: string
+          customer_id: string
+          bucket?: string
+          object_path: string
+          media_type: 'image' | 'video'
+          file_name: string
+          file_size?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          request_id?: string
+          customer_id?: string
+          bucket?: string
+          object_path?: string
+          media_type?: 'image' | 'video'
+          file_name?: string
+          file_size?: number
+          created_at?: string
+        }
+      }
       measurement_request_events: {
         Row: {
           id: string

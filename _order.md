@@ -101,3 +101,17 @@ MVP-03 담당자 배정 + 접수 상태 관리.
 - Preview unauthenticated `/portal/measure/new` correctly redirects to `/login?next=/portal/measure/new`.
 - Preview dev smoke login route is intentionally unavailable (`/api/dev/playwright-login` returns 404), so authenticated Preview intake submission requires real Kakao/user session.
 - Remaining manual check: real Kakao login on Preview, create one guided intake request, confirm admin receive/cancel once more if needed.
+
+# MVP-07 customer AS intake slice - 2026-06-05
+
+- `/portal` 마이페이지를 무료방문 견적상담 화면과 같은 화이트톤으로 재구성했다.
+- `/portal`에서 `무료방문 실측견적 상담`, `A/S 접수`, `견적서 확인`, `시공/A/S 이력` 진입을 명확히 분리했다.
+- `/portal/as/new` 고객 AS 접수 화면을 추가했다.
+- AS 접수는 로그인 필수이며 접수자/연락받을 사람, 주소, 증상 유형, 우선도, 연락 선호 방식, 상세 내용, 선택 사진/동영상 첨부를 받는다.
+- Supabase migration applied: `platform_as_requests_mvp07`.
+- DB tables added: `platform.as_requests`, `platform.as_media`.
+- Local checks passed: `npm run lint`, `npm run build`.
+- Local Playwright verified: customer dev login, portal desktop, AS intake flow, optional media upload, done screen, recent AS display on portal, portal mobile.
+- Local AS smoke request ID: `90dd7f22-db09-41b1-9026-f2aaa9904654`.
+- Screenshots: `output/as-portal-qa/`.
+- Remaining MVP-07 scope: admin AS queue, AS status management, existing construction-history linkage, public floating CTA decision.
