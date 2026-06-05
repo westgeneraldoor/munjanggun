@@ -77,6 +77,11 @@ V2 쇼룸은 `v2-cms` 기준 Public Experience로 유지한다. 현재 브랜치
 - Supabase migration applied: `measurement_contact_region_flow`.
 - Local verification passed: lint, build, Seoul test submission, Chungcheong calendar restriction, unsupported-region blocking, admin detail rendering.
 - Local smoke test request ID: `fb34508a-9e13-4413-9feb-497d81e7b669`.
+- Commit/push done: `24872d6` (`MVP-02 무료견적 접수 UX 고도화`).
+- Latest Vercel Preview READY: `https://munjanggun-4oea8j2p9-westgeneraldoors-projects.vercel.app`.
+- Branch alias READY: `https://munjanggun-git-platform-v1-westgeneraldoors-projects.vercel.app`.
+- Preview unauthenticated route check passed: `/portal/measure/new` redirects to `/login?next=/portal/measure/new`.
+- Preview authenticated guided-intake submission still requires a real Kakao/user session because `/api/dev/playwright-login` is not available in Preview.
 - Administrator accounts confirmed in Supabase `platform.profiles`: `moon@munjanggun.com`, `west1836@gmail.com`.
 - Verified locally with Playwright: logged-out CTA redirect keeps `next=/portal/measure/new`, customer menu, administrator menu, and admin navigation.
 - OAuth callback was fixed in `beee460` so Supabase session cookies are written to the final redirect response.

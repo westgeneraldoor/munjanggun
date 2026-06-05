@@ -95,4 +95,9 @@ MVP-03 담당자 배정 + 접수 상태 관리.
 - Local checks passed: `npm run lint`, `npm run build`.
 - Local Playwright verified: Seoul test submission, Chungcheong calendar restriction, unsupported-region blocking, and admin detail rendering.
 - Local smoke test request ID: `fb34508a-9e13-4413-9feb-497d81e7b669`.
-- Next action: commit, push, wait for Vercel Preview READY, then verify Preview `/portal/measure/new`.
+- Commit/push done: `24872d6` (`MVP-02 무료견적 접수 UX 고도화`).
+- Vercel Preview READY: `https://munjanggun-4oea8j2p9-westgeneraldoors-projects.vercel.app`.
+- Branch alias READY: `https://munjanggun-git-platform-v1-westgeneraldoors-projects.vercel.app`.
+- Preview unauthenticated `/portal/measure/new` correctly redirects to `/login?next=/portal/measure/new`.
+- Preview dev smoke login route is intentionally unavailable (`/api/dev/playwright-login` returns 404), so authenticated Preview intake submission requires real Kakao/user session.
+- Remaining manual check: real Kakao login on Preview, create one guided intake request, confirm admin receive/cancel once more if needed.
