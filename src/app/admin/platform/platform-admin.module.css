@@ -63,9 +63,15 @@
 }
 
 .tabActive {
-  background: var(--admin-accent);
+  background: #7a5b22;
   color: #fff;
-  border-color: var(--admin-accent);
+  border-color: #7a5b22;
+}
+
+.tabActive:hover {
+  color: #fff;
+  background: #684c1b;
+  border-color: #684c1b;
 }
 
 /* ── Empty ── */

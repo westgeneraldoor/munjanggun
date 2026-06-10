@@ -69,6 +69,8 @@ V2 쇼룸은 `v2-cms` 기준 Public Experience로 유지한다. 현재 브랜치
 - GitHub push는 성공했지만, 로컬 `gh` 토큰 만료로 PR 생성은 아직 못 했다.
 - GitHub 커넥터 PR 생성도 권한 403으로 막혔다.
 - 어드민 모바일 반응형은 최소 동작은 확인했지만, MVP-03 전에 한 번 더 실제 업무 흐름 기준으로 다듬어야 한다.
+- 플랫폼 UI 헌법 문서 `docs/platform/PLATFORM_UI_CONSTITUTION.md`를 추가했다. 고객 접수/마이페이지/어드민 UI 변경 전 반드시 확인한다.
+- 무료견적과 A/S처럼 같은 성격의 화면이 다른 프레임/로딩/완료 동선을 갖는 것은 재발 방지 대상이다.
 - 2026-06-10 이어서 Supabase 스키마 확인, 성능 advisory 확인, Playwright 관통 검수를 완료했다.
 - 최신 테스트 A/S ID: `1aba60c7-b5cb-4a3a-91d3-193ccb07e746`
 - 최신 테스트 A/S 최종 상태: 고객 `cancel_confirmed`, 큐 `cancel_done`, 액션 이벤트 4건 기록.

@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowDown, ArrowUp, ImagePlus, Pencil, Save, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, Eye, EyeOff, ImagePlus, Pencil, Save } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import { logError } from '@/lib/logger'
 import styles from './settings.module.css'
@@ -228,7 +228,7 @@ export default function SettingsClient() {
   }
 
   const handleDeactivateCategory = async (id: string) => {
-    if (!confirm('이미 접수된 신청 내역 보존을 위해 삭제 대신 비노출 처리합니다. 진행할까요?')) return
+    if (!confirm('이미 접수된 신청 내역 보존을 위해 삭제 대신 숨김 처리합니다. 진행할까요?')) return
     await handleToggleCatActive(id, true)
   }
 
@@ -309,16 +309,16 @@ export default function SettingsClient() {
         <div className={styles.navRow}>
           <Link href="/admin/platform" className={styles.backLink}>접수 큐 목록</Link>
         </div>
-        <h1 className={styles.pageTitle}>플랫폼 운영 설정</h1>
-        <p className={styles.pageDesc}>무료방문 신청 품목과 예약 가능일을 관리합니다.</p>
+        <h1 className={styles.pageTitle}>견적 접수 운영설정</h1>
+        <p className={styles.pageDesc}>무료방문 실측견적 신청에 노출될 품목과 방문 가능일을 관리합니다.</p>
       </header>
 
       <div className={styles.tabs}>
         <button type="button" onClick={() => setActiveTab('categories')} className={`${styles.tab} ${activeTab === 'categories' ? styles.tabActive : ''}`}>
-          관심 품목 관리
+          견적 품목 관리
         </button>
         <button type="button" onClick={() => setActiveTab('schedule')} className={`${styles.tab} ${activeTab === 'schedule' ? styles.tabActive : ''}`}>
-          예약 일정 설정
+          방문일 운영 설정
         </button>
       </div>
 
@@ -410,8 +410,8 @@ export default function SettingsClient() {
                           </button>
                         )}
                         <button type="button" onClick={() => cat.is_active ? handleDeactivateCategory(cat.id) : handleToggleCatActive(cat.id, false)} className={styles.actionBtn}>
-                          <Trash2 size={15} />
-                          {cat.is_active ? '비노출' : '노출'}
+                          {cat.is_active ? <EyeOff size={15} /> : <Eye size={15} />}
+                          {cat.is_active ? '숨김' : '노출'}
                         </button>
                       </div>
                     </li>

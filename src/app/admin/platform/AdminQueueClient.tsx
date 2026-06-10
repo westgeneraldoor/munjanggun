@@ -268,7 +268,7 @@ export default function AdminQueueClient({ initialRows }: { initialRows: QueueRo
           </div>
           <Link href="/admin/platform/settings" className={styles.settingsBtn}>
             <Settings size={15} strokeWidth={1.8} />
-            운영 설정
+            견적 설정
           </Link>
         </div>
       </div>

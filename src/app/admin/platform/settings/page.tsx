@@ -3,7 +3,7 @@ import { createPlatformClient } from '@/lib/supabase/platform-server'
 import SettingsClient from './SettingsClient'
 
 export const metadata = {
-  title: '플랫폼 설정 | 문장군 관리자',
+  title: '견적 접수 운영설정 | 문장군 관리자',
 }
 
 export const dynamic = 'force-dynamic'

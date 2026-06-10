@@ -66,7 +66,15 @@
 }
 
 .tabActive {
-  background: #fffaf0;
+  background: #7a5b22;
+  color: #fff;
+  border-color: #7a5b22;
+}
+
+.tabActive:hover {
+  color: #fff;
+  background: #684c1b;
+  border-color: #684c1b;
 }
 
 .content,
@@ -213,18 +221,19 @@
 
 .categoryCard {
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr) auto;
-  gap: var(--space-4);
+  grid-template-columns: 76px minmax(180px, 1fr) auto;
+  gap: var(--space-3);
   align-items: center;
-  padding: var(--space-4);
+  min-height: 104px;
+  padding: var(--space-3);
   border: 1px solid var(--admin-border);
   border-radius: var(--radius-md);
   background: var(--admin-surface);
 }
 
 .categoryImage {
-  width: 96px;
-  height: 96px;
+  width: 76px;
+  height: 76px;
   overflow: hidden;
   border: 1px solid var(--admin-border);
   border-radius: var(--radius-md);
@@ -280,6 +289,7 @@
   gap: var(--space-2);
   flex-wrap: wrap;
   justify-content: flex-end;
+  min-width: 236px;
 }
 
 .statusBadge {
@@ -456,7 +466,15 @@
 
   .categoryActions {
     grid-column: 1 / -1;
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: 40px 40px minmax(82px, 1fr) minmax(82px, 1fr);
+    justify-content: stretch;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .actionBtn {
+    padding: 0 var(--space-2);
   }
 
   .overrideItem {

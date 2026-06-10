@@ -28,7 +28,7 @@ export default function AdminSidebar() {
 
   const navItems = [
     { name: '접수 큐', path: '/admin/platform', icon: ClipboardList },
-    { name: '플랫폼 설정', path: '/admin/platform/settings', icon: Sliders },
+    { name: '견적 설정', path: '/admin/platform/settings', icon: Sliders },
     { name: '노드 관리', path: '/admin/nodes', icon: FolderTree },
     { name: '사이트 설정', path: '/admin/settings', icon: Settings },
   ]
