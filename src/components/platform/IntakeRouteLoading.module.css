@@ -1,0 +1,240 @@
+.container {
+  min-height: 100dvh;
+  background: linear-gradient(180deg, #f6f7f2 0%, #f8f8f5 42%, #ffffff 100%);
+  color: #25272c;
+  font-family: var(--font-sans);
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 clamp(18px, 4vw, 44px);
+  background: rgba(255, 255, 255, 0.88);
+  border-bottom: 1px solid #e2e5dd;
+  backdrop-filter: blur(14px);
+}
+
+.brand {
+  color: #191b1f;
+  font-size: 17px;
+  font-weight: 850;
+  letter-spacing: 0;
+  text-decoration: none;
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topLink,
+.iconLink {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #444950;
+  background: #ffffff;
+  border: 1px solid #dce1d8;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.topLink {
+  padding: 0 12px 0 9px;
+}
+
+.iconLink {
+  width: 38px;
+}
+
+.shell {
+  width: min(1080px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 72px;
+  display: grid;
+  grid-template-columns: minmax(240px, 310px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.rail,
+.panel {
+  border-radius: 8px;
+}
+
+.rail {
+  min-height: 420px;
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: #1f2522;
+  box-shadow: 0 22px 50px rgba(31, 37, 34, 0.18);
+}
+
+.panel {
+  min-height: 520px;
+  padding: clamp(24px, 4vw, 42px);
+  background: #ffffff;
+  border: 1px solid #e3e6df;
+  box-shadow: 0 18px 46px rgba(27, 31, 35, 0.08);
+}
+
+.railLineShort,
+.railTitle,
+.railText,
+.progressTrack,
+.stepStack i,
+.skeletonGrid span {
+  overflow: hidden;
+  position: relative;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+}
+
+.railLineShort {
+  width: 44%;
+  height: 14px;
+  background: rgba(215, 187, 117, 0.42);
+}
+
+.railTitle {
+  width: 82%;
+  height: 76px;
+}
+
+.railText {
+  width: 92%;
+  height: 58px;
+}
+
+.progressTrack {
+  height: 7px;
+  margin: 6px 0;
+}
+
+.progressTrack span {
+  display: block;
+  width: 42%;
+  height: 100%;
+  background: #d7bb75;
+  border-radius: inherit;
+}
+
+.stepStack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stepStack i {
+  display: block;
+  width: 78%;
+  height: 30px;
+}
+
+.panelHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.panelHeader p {
+  color: #987b32;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.panelHeader h1 {
+  max-width: 640px;
+  color: #17191d;
+  font-size: clamp(25px, 3vw, 34px);
+  line-height: 1.25;
+  font-weight: 850;
+}
+
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.skeletonGrid span {
+  height: 156px;
+  background: #f3f5ef;
+  border: 1px solid #e3e6df;
+}
+
+@media (max-width: 920px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .rail {
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    min-height: 58px;
+    padding: 0 14px;
+  }
+
+  .brand {
+    font-size: 15px;
+  }
+
+  .topActions {
+    gap: 6px;
+  }
+
+  .topLink {
+    min-width: 0;
+    padding: 0 10px 0 8px;
+  }
+
+  .shell {
+    width: 100%;
+    padding: 0 0 48px;
+    gap: 0;
+  }
+
+  .rail,
+  .panel {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+  }
+
+  .rail {
+    min-height: 180px;
+    padding: 18px;
+  }
+
+  .panel {
+    min-height: 360px;
+    padding: 24px 18px;
+  }
+
+  .skeletonGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .skeletonGrid span {
+    height: 96px;
+  }
+}

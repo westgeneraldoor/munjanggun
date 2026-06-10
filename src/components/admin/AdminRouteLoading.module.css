@@ -1,0 +1,85 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: var(--space-6);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.header h1 {
+  margin: 0 0 8px;
+  color: var(--admin-text);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+}
+
+.header p {
+  color: var(--admin-text-sub);
+  font-size: var(--text-sm);
+}
+
+.header > span {
+  width: 132px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-md);
+  background: var(--admin-surface-elevated);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.toolbar span {
+  width: 120px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background: var(--admin-surface-elevated);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.rows span {
+  height: 54px;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0)) 0 0 / 240px 100% no-repeat,
+    var(--admin-surface);
+  animation: shimmer 1s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: 100% 0, 0 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: var(--space-4);
+  }
+
+  .header {
+    flex-direction: column;
+  }
+
+  .header > span,
+  .toolbar span {
+    width: 100%;
+  }
+}

@@ -115,6 +115,32 @@
   color: var(--admin-accent);
 }
 
+.navItem.pending {
+  position: relative;
+}
+
+.navItem.pending::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-left: auto;
+  border-radius: 999px;
+  background: var(--admin-accent);
+  animation: pendingPulse 0.72s ease-in-out infinite alternate;
+}
+
+@keyframes pendingPulse {
+  from {
+    opacity: 0.38;
+    transform: scale(0.84);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .sidebarFooter {
   padding: var(--space-4);
   border-top: 1px solid var(--admin-border);

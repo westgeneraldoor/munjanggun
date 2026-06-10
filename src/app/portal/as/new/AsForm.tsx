@@ -256,10 +256,15 @@ export default function AsForm({ userId }: Props) {
       <div className={styles.container}>
         <header className={styles.topbar}>
           <Link href="/" className={styles.logoLink}>MUNJANGGUN</Link>
-          <Link href="/portal" className={styles.topLink}>
-            <Home size={16} aria-hidden="true" />
-            <span>마이페이지</span>
-          </Link>
+          <div className={styles.topActions}>
+            <Link href="/portal" className={styles.topLink}>
+              <ArrowLeft size={16} aria-hidden="true" />
+              <span>마이페이지</span>
+            </Link>
+            <Link href="/" className={styles.iconLink} aria-label="홈으로 이동">
+              <Home size={17} aria-hidden="true" />
+            </Link>
+          </div>
         </header>
         <main className={styles.doneShell}>
           <div className={styles.donePanel}>

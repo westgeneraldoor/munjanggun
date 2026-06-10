@@ -9,6 +9,7 @@ import styles from './AdminSidebar.module.css'
 
 export default function AdminSidebar() {
   const [isOpen, setIsOpen] = useState(false)
+  const [pendingPath, setPendingPath] = useState<string | null>(null)
   const pathname = usePathname()
   const router = useRouter()
   const toggleSidebar = () => setIsOpen(!isOpen)
@@ -64,13 +65,17 @@ export default function AdminSidebar() {
               const isActive = item.path === '/admin/platform'
                 ? pathname === '/admin/platform' || (pathname.startsWith('/admin/platform/') && !pathname.startsWith('/admin/platform/settings'))
                 : pathname.startsWith(item.path)
+              const isPending = pendingPath === item.path && !isActive
 
               return (
                 <li key={item.path}>
                   <Link
                     href={item.path}
-                    className={`${styles.navItem} ${isActive ? styles.active : ''}`}
-                    onClick={() => setIsOpen(false)}
+                    className={`${styles.navItem} ${isActive || isPending ? styles.active : ''} ${isPending ? styles.pending : ''}`}
+                    onClick={() => {
+                      setPendingPath(item.path)
+                      setIsOpen(false)
+                    }}
                   >
                     <Icon size={24} />
                     <span>{item.name}</span>

@@ -72,6 +72,7 @@ const CATEGORY_LABEL: Record<string, string> = {
 }
 
 const ISSUE_LABEL: Record<string, string> = {
+  customer_description: '상세 내용',
   door_adjustment: '문 여닫힘/수평',
   film_damage: '필름/표면 손상',
   hardware: '손잡이/부속 문제',

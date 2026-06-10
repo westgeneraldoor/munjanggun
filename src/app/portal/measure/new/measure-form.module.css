@@ -933,8 +933,13 @@
     font-size: 15px;
   }
 
+  .topActions {
+    gap: 6px;
+  }
+
   .topLink {
-    display: none;
+    min-width: 0;
+    padding: 0 10px 0 8px;
   }
 
   .shell {
@@ -1035,5 +1040,20 @@
     flex: 1;
     padding: 0 12px;
     font-size: 14px;
+  }
+
+  .doneShell {
+    width: 100%;
+    padding: 28px 14px 56px;
+  }
+
+  .doneActions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .doneBtn,
+  .doneSecondaryBtn {
+    width: 100%;
   }
 }
