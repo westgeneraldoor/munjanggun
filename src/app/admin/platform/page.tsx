@@ -1,10 +1,9 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Settings } from 'lucide-react'
-import { createPlatformClient } from '@/lib/supabase/platform-server'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { Database } from '@/types/database'
-import AdminQueueActions from './AdminQueueActions'
+import { ArrowDownAZ, ArrowUpAZ, Settings } from 'lucide-react'
+import { createPlatformClient, createPlatformAdminClient } from '@/lib/supabase/platform-server'
+import { CustomerRequestStatus, QueueSourceType, QueueWorkStatus, Database } from '@/types/database'
+import UnifiedQueueActions from './UnifiedQueueActions'
 import styles from './platform-admin.module.css'
 
 export const metadata = {
@@ -13,15 +12,49 @@ export const metadata = {
 
 export const dynamic = 'force-dynamic'
 
-const STATUS_LABEL: Record<string, string> = {
-  submitted: '신규',
-  appsheet_pending: '신규',
-  appsheet_registered: '접수완료',
-  contacted: '접수완료',
-  assigned: '접수완료',
-  scheduled: '접수완료',
-  measured: '접수완료',
-  cancelled: '취소',
+type SortKey = 'receivedAt' | 'customerName' | 'sourceType' | 'queueStatus' | 'customerStatus'
+type SortDir = 'asc' | 'desc'
+
+interface QueueRow {
+  key: string
+  sourceType: QueueSourceType
+  id: string
+  customerName: string
+  phone: string
+  address: string
+  summary: string
+  message: string
+  receivedAt: string
+  updatedAt: string
+  customerStatus: CustomerRequestStatus
+  queueStatus: QueueWorkStatus
+  customerActionNote: string | null
+  customerActionRequestedAt: string | null
+  processedAt: string | null
+  hasMedia: boolean
+  sourceLabel: string
+  contactName: string | null
+  contactPhone: string | null
+  contactRelationship: string | null
+  extraRows: Array<{ label: string; value: string }>
+}
+
+const QUEUE_STATUS_LABEL: Record<QueueWorkStatus, string> = {
+  new_received: '신규접수',
+  new_done: '접수완료',
+  change_received: '수정접수',
+  change_done: '수정완료',
+  cancel_received: '취소접수',
+  cancel_done: '취소완료',
+}
+
+const CUSTOMER_STATUS_LABEL: Record<CustomerRequestStatus, string> = {
+  confirmation_pending: '확정대기',
+  confirmed: '접수확정',
+  change_pending: '수정대기',
+  change_confirmed: '수정확정',
+  cancel_pending: '취소대기',
+  cancel_confirmed: '취소확정',
 }
 
 const FALLBACK_CATEGORY_LABEL: Record<string, string> = {
@@ -32,20 +65,12 @@ const FALLBACK_CATEGORY_LABEL: Record<string, string> = {
   other: '기타',
 }
 
-type MeasurementRow = {
-  id: string
-  customer_name: string
-  phone: string
-  address: string
-  status: string
-  appsheet_status: string
-  interest_category: string
-  interest_categories: string[] | null
-  preferred_visit_date: string | null
-  preferred_schedule: string | null
-  is_manual_address: boolean
-  created_at: string
-  _has_media: boolean
+const ISSUE_LABEL: Record<string, string> = {
+  door_adjustment: '문 여닫힘/수평',
+  film_damage: '필름/표면 손상',
+  hardware: '손잡이/부속 문제',
+  noise: '소음/간섭',
+  other: '기타 문의',
 }
 
 function formatDateTime(value: string) {
@@ -57,10 +82,126 @@ function formatDateTime(value: string) {
   })
 }
 
+function formatFullDateTime(value: string | null) {
+  if (!value) return '-'
+  return new Date(value).toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+function truncate(value: string, length = 26) {
+  return value.length > length ? `${value.slice(0, length)}...` : value
+}
+
+function hrefFor(params: Record<string, string | undefined>) {
+  const next = new URLSearchParams()
+  Object.entries(params).forEach(([key, value]) => {
+    if (value && value !== 'all') next.set(key, value)
+  })
+  const query = next.toString()
+  return query ? `/admin/platform?${query}` : '/admin/platform'
+}
+
+function sortRows(rows: QueueRow[], sort: SortKey, dir: SortDir) {
+  const direction = dir === 'asc' ? 1 : -1
+  return [...rows].sort((a, b) => {
+    const left = a[sort]
+    const right = b[sort]
+    return String(left).localeCompare(String(right), 'ko-KR') * direction
+  })
+}
+
+function getCategoryDisplay(
+  row: Database['platform']['Tables']['measurement_requests']['Row'],
+  categoryMap: Record<string, string>,
+) {
+  if (row.interest_categories && row.interest_categories.length > 0) {
+    return row.interest_categories.map(key => categoryMap[key] || FALLBACK_CATEGORY_LABEL[key] || key).join(', ')
+  }
+  return FALLBACK_CATEGORY_LABEL[row.interest_category] || row.interest_category
+}
+
+function QueueDetail({ row }: { row: QueueRow | null }) {
+  if (!row) {
+    return (
+      <aside className={styles.detailPanel}>
+        <div className={styles.detailEmpty}>선택된 접수 건이 없습니다.</div>
+      </aside>
+    )
+  }
+
+  return (
+    <aside className={styles.detailPanel}>
+      <div className={styles.detailTop}>
+        <div>
+          <span className={styles.sourcePill}>{row.sourceLabel}</span>
+          <h2>{row.customerName}</h2>
+          <p>{row.phone}</p>
+        </div>
+        <span className={`${styles.queueBadge} ${styles[`q_${row.queueStatus}`]}`}>
+          {QUEUE_STATUS_LABEL[row.queueStatus]}
+        </span>
+      </div>
+
+      <div className={styles.detailStatusRow}>
+        <span>{CUSTOMER_STATUS_LABEL[row.customerStatus]}</span>
+        <span>접수 {formatDateTime(row.receivedAt)}</span>
+      </div>
+
+      <dl className={styles.detailList}>
+        <div>
+          <dt>주소</dt>
+          <dd>{row.address || '-'}</dd>
+        </div>
+        <div>
+          <dt>요약</dt>
+          <dd>{row.summary}</dd>
+        </div>
+        <div>
+          <dt>내용</dt>
+          <dd>{row.message || '-'}</dd>
+        </div>
+        <div>
+          <dt>연락받을 분</dt>
+          <dd>
+            {row.contactName ? `${row.contactName} / ${row.contactPhone || '-'} / ${row.contactRelationship || '-'}` : '접수자 본인'}
+          </dd>
+        </div>
+        {row.extraRows.map(item => (
+          <div key={item.label}>
+            <dt>{item.label}</dt>
+            <dd>{item.value || '-'}</dd>
+          </div>
+        ))}
+        <div>
+          <dt>고객 요청 메모</dt>
+          <dd>{row.customerActionNote || '-'}</dd>
+        </div>
+        <div>
+          <dt>요청 시각</dt>
+          <dd>{formatFullDateTime(row.customerActionRequestedAt)}</dd>
+        </div>
+        <div>
+          <dt>처리 시각</dt>
+          <dd>{formatFullDateTime(row.processedAt)}</dd>
+        </div>
+      </dl>
+
+      <div className={styles.detailFooter}>
+        <UnifiedQueueActions sourceType={row.sourceType} requestId={row.id} queueStatus={row.queueStatus} />
+      </div>
+    </aside>
+  )
+}
+
 export default async function AdminPlatformPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>
+  searchParams: Promise<{ type?: string; queue?: string; sort?: string; dir?: string; selected?: string }>
 }) {
   const supabase = await createPlatformClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -79,84 +220,168 @@ export default async function AdminPlatformPage({
   }
 
   const params = await searchParams
-  const filterStatus = params.status ?? 'all'
+  const typeFilter = params.type === 'measurement' || params.type === 'as' ? params.type : 'all'
+  const queueFilter = params.queue && params.queue in QUEUE_STATUS_LABEL ? params.queue as QueueWorkStatus : 'all'
+  const sort = ['receivedAt', 'customerName', 'sourceType', 'queueStatus', 'customerStatus'].includes(params.sort ?? '')
+    ? params.sort as SortKey
+    : 'receivedAt'
+  const dir: SortDir = params.dir === 'asc' ? 'asc' : 'desc'
 
-  const adminClient = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { db: { schema: 'platform' } }
-  )
+  const adminClient = createPlatformAdminClient()
 
-  const { data: categoriesData } = await adminClient
-    .from('measurement_product_categories')
-    .select('key, label')
+  const [
+    categoriesResult,
+    measurementResult,
+    asResult,
+  ] = await Promise.all([
+    adminClient.from('measurement_product_categories').select('key, label'),
+    adminClient
+      .from('measurement_requests')
+      .select('id, customer_name, phone, contact_name, contact_phone, contact_relationship, address, address_detail, message, interest_category, interest_categories, preferred_visit_date, preferred_visit_time_slot, preferred_schedule, service_region, service_region_status, is_manual_address, customer_status, queue_status, customer_action_note, customer_action_requested_at, processed_at, created_at, updated_at')
+      .order('created_at', { ascending: false })
+      .limit(150),
+    adminClient
+      .from('as_requests')
+      .select('id, customer_name, phone, contact_name, contact_phone, contact_relationship, address, address_detail, issue_type, message, customer_status, queue_status, customer_action_note, customer_action_requested_at, processed_at, created_at, updated_at, is_manual_address')
+      .order('created_at', { ascending: false })
+      .limit(150),
+  ])
 
-  const categoryMap = (categoriesData ?? []).reduce<Record<string, string>>((acc, category) => {
+  const categoryRows = (categoriesResult.data ?? []) as Array<{ key: string; label: string }>
+  const categoryMap = categoryRows.reduce<Record<string, string>>((acc, category) => {
     acc[category.key] = category.label
     return acc
   }, {})
 
-  let query = adminClient
-    .from('measurement_requests')
-    .select('id, customer_name, phone, address, status, appsheet_status, interest_category, interest_categories, preferred_visit_date, preferred_schedule, is_manual_address, created_at')
-    .order('created_at', { ascending: false })
+  const measurementRows = (measurementResult.data ?? []) as Database['platform']['Tables']['measurement_requests']['Row'][]
+  const asRows = (asResult.data ?? []) as Database['platform']['Tables']['as_requests']['Row'][]
 
-  if (filterStatus === 'submitted') {
-    query = query.in('status', ['submitted', 'appsheet_pending'])
-  } else if (filterStatus === 'appsheet_registered') {
-    query = query.in('status', ['appsheet_registered', 'contacted', 'assigned', 'scheduled', 'measured'])
-  } else if (filterStatus === 'cancelled') {
-    query = query.eq('status', 'cancelled')
-  }
+  const measurementIds = measurementRows.map(row => row.id)
+  const asIds = asRows.map(row => row.id)
 
-  type RequestRow = Database['platform']['Tables']['measurement_requests']['Row']
-  type MediaRow = Database['platform']['Tables']['measurement_media']['Row']
+  const [measurementMediaResult, asMediaResult] = await Promise.all([
+    measurementIds.length > 0
+      ? adminClient.from('measurement_media').select('request_id').in('request_id', measurementIds)
+      : Promise.resolve({ data: [] }),
+    asIds.length > 0
+      ? adminClient.from('as_media').select('request_id').in('request_id', asIds)
+      : Promise.resolve({ data: [] }),
+  ])
 
-  const { data: requests } = await query
-  const requestsData = (requests ?? []) as RequestRow[]
-  const requestIds = requestsData.map(row => row.id)
-  let mediaMap: Record<string, boolean> = {}
+  const measurementMedia = ((measurementMediaResult.data ?? []) as Array<{ request_id: string }>).reduce<Record<string, boolean>>((acc, item) => {
+    acc[item.request_id] = true
+    return acc
+  }, {})
 
-  if (requestIds.length > 0) {
-    const { data: mediaItems } = await adminClient
-      .from('measurement_media')
-      .select('request_id')
-      .in('request_id', requestIds)
-    const typedMedia = (mediaItems ?? []) as Pick<MediaRow, 'request_id'>[]
-    mediaMap = typedMedia.reduce<Record<string, boolean>>((acc, item) => {
-      acc[item.request_id] = true
-      return acc
-    }, {})
-  }
+  const asMedia = ((asMediaResult.data ?? []) as Array<{ request_id: string }>).reduce<Record<string, boolean>>((acc, item) => {
+    acc[item.request_id] = true
+    return acc
+  }, {})
 
-  const rows: MeasurementRow[] = requestsData.map(row => ({
-    ...row,
-    _has_media: mediaMap[row.id] ?? false,
+  const measurementQueueRows: QueueRow[] = measurementRows.map(row => {
+    const category = getCategoryDisplay(row, categoryMap)
+    return {
+      key: `measurement:${row.id}`,
+      sourceType: 'measurement',
+      id: row.id,
+      customerName: row.customer_name,
+      phone: row.phone,
+      address: row.address,
+      summary: category,
+      message: row.message,
+      receivedAt: row.created_at,
+      updatedAt: row.updated_at,
+      customerStatus: row.customer_status,
+      queueStatus: row.queue_status,
+      customerActionNote: row.customer_action_note,
+      customerActionRequestedAt: row.customer_action_requested_at,
+      processedAt: row.processed_at,
+      hasMedia: measurementMedia[row.id] ?? false,
+      sourceLabel: '무료실측',
+      contactName: row.contact_name,
+      contactPhone: row.contact_phone,
+      contactRelationship: row.contact_relationship,
+      extraRows: [
+        { label: '희망일', value: row.preferred_visit_date || row.preferred_schedule || '-' },
+        { label: '희망 시간대', value: row.preferred_visit_time_slot || '-' },
+        { label: '서비스 지역', value: row.service_region || row.service_region_status || '-' },
+        { label: '주소 입력', value: row.is_manual_address ? '수동 주소' : '주소 검색' },
+      ],
+    }
+  })
+
+  const asQueueRows: QueueRow[] = asRows.map(row => ({
+    key: `as:${row.id}`,
+    sourceType: 'as',
+    id: row.id,
+    customerName: row.customer_name,
+    phone: row.phone,
+    address: row.address || '-',
+    summary: ISSUE_LABEL[row.issue_type] || row.issue_type,
+    message: row.message,
+    receivedAt: row.created_at,
+    updatedAt: row.updated_at,
+    customerStatus: row.customer_status,
+    queueStatus: row.queue_status,
+    customerActionNote: row.customer_action_note,
+    customerActionRequestedAt: row.customer_action_requested_at,
+    processedAt: row.processed_at,
+    hasMedia: asMedia[row.id] ?? false,
+    sourceLabel: 'A/S',
+    contactName: row.contact_name,
+    contactPhone: row.contact_phone,
+    contactRelationship: row.contact_relationship,
+    extraRows: [
+      { label: '상세 주소', value: row.address_detail || '-' },
+      { label: '주소 입력', value: row.is_manual_address ? '수동 주소' : '주소 검색' },
+    ],
   }))
 
-  const tabs = [
-    { key: 'all', label: '전체', href: '/admin/platform' },
-    { key: 'submitted', label: '신규', href: '/admin/platform?status=submitted' },
-    { key: 'appsheet_registered', label: '접수완료', href: '/admin/platform?status=appsheet_registered' },
-    { key: 'cancelled', label: '취소', href: '/admin/platform?status=cancelled' },
+  const filtered = [...measurementQueueRows, ...asQueueRows]
+    .filter(row => typeFilter === 'all' || row.sourceType === typeFilter)
+    .filter(row => queueFilter === 'all' || row.queueStatus === queueFilter)
+
+  const rows = sortRows(filtered, sort, dir)
+  const selectedKey = params.selected && rows.some(row => row.key === params.selected)
+    ? params.selected
+    : rows[0]?.key
+  const selectedRow = rows.find(row => row.key === selectedKey) ?? null
+
+  const sourceTabs = [
+    { key: 'all', label: '전체', href: hrefFor({ type: 'all', queue: queueFilter, sort, dir }) },
+    { key: 'measurement', label: '무료실측', href: hrefFor({ type: 'measurement', queue: queueFilter, sort, dir }) },
+    { key: 'as', label: 'A/S', href: hrefFor({ type: 'as', queue: queueFilter, sort, dir }) },
   ]
 
-  const getCategoryDisplay = (row: MeasurementRow) => {
-    if (row.interest_categories && row.interest_categories.length > 0) {
-      return row.interest_categories.map(key => categoryMap[key] || FALLBACK_CATEGORY_LABEL[key] || key).join(', ')
-    }
-    return FALLBACK_CATEGORY_LABEL[row.interest_category] || row.interest_category
-  }
+  const queueTabs = [
+    { key: 'all', label: '전체', href: hrefFor({ type: typeFilter, queue: 'all', sort, dir }) },
+    ...Object.entries(QUEUE_STATUS_LABEL).map(([key, label]) => ({
+      key,
+      label,
+      href: hrefFor({ type: typeFilter, queue: key, sort, dir }),
+    })),
+  ]
 
-  const getScheduleDisplay = (row: MeasurementRow) => row.preferred_visit_date || row.preferred_schedule || '-'
+  const sortHref = (nextSort: SortKey) => hrefFor({
+    type: typeFilter,
+    queue: queueFilter,
+    sort: nextSort,
+    dir: sort === nextSort && dir === 'desc' ? 'asc' : 'desc',
+    selected: selectedKey,
+  })
+
+  const sortIcon = (key: SortKey) => {
+    if (sort !== key) return null
+    return dir === 'asc' ? <ArrowUpAZ size={13} aria-hidden="true" /> : <ArrowDownAZ size={13} aria-hidden="true" />
+  }
 
   return (
     <div className={styles.page}>
       <div className={styles.pageHeader}>
         <div className={styles.headerTitleRow}>
           <div>
-            <h1 className={styles.pageTitle}>접수 큐</h1>
-            <p className={styles.pageDesc}>무료방문 실측 견적상담 신청 목록</p>
+            <h1 className={styles.pageTitle}>통합 접수 큐</h1>
+            <p className={styles.pageDesc}>무료방문 실측, A/S, 수정/취소 요청을 한곳에서 처리합니다.</p>
           </div>
           <Link href="/admin/platform/settings" className={styles.settingsBtn}>
             <Settings size={15} strokeWidth={1.8} />
@@ -165,93 +390,118 @@ export default async function AdminPlatformPage({
         </div>
       </div>
 
-      <div className={styles.tabs}>
-        {tabs.map(tab => (
-          <Link key={tab.key} href={tab.href} className={`${styles.tab} ${filterStatus === tab.key ? styles.tabActive : ''}`}>
-            {tab.label}
-          </Link>
-        ))}
+      <div className={styles.filterStack}>
+        <nav className={styles.tabs} aria-label="접수 종류">
+          {sourceTabs.map(tab => (
+            <Link key={tab.key} href={tab.href} className={`${styles.tab} ${typeFilter === tab.key ? styles.tabActive : ''}`}>
+              {tab.label}
+            </Link>
+          ))}
+        </nav>
+        <nav className={styles.tabs} aria-label="처리 상태">
+          {queueTabs.map(tab => (
+            <Link key={tab.key} href={tab.href} className={`${styles.tab} ${queueFilter === tab.key ? styles.tabActive : ''}`}>
+              {tab.label}
+            </Link>
+          ))}
+        </nav>
       </div>
 
       {rows.length === 0 ? (
         <div className={styles.empty}>
-          <p>해당 상태의 접수 건이 없습니다.</p>
+          <p>해당 조건의 접수 건이 없습니다.</p>
         </div>
       ) : (
-        <>
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>접수일시</th>
-                  <th>고객명</th>
-                  <th>연락처</th>
-                  <th>주소</th>
-                  <th>관심 품목</th>
-                  <th>희망 방문일</th>
-                  <th>상태</th>
-                  <th>첨부</th>
-                  <th>처리</th>
-                  <th>상세</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map(row => (
-                  <tr key={row.id} className={styles.row}>
-                    <td className={styles.cellDate}>{formatDateTime(row.created_at)}</td>
-                    <td className={styles.cellName}><strong>{row.customer_name}</strong></td>
-                    <td className={styles.cellPhone}>{row.phone}</td>
-                    <td className={styles.cellAddress} title={row.address}>
-                      <div className={styles.addressCellContent}>
-                        <span>{row.address.length > 24 ? `${row.address.slice(0, 24)}...` : row.address}</span>
-                        {row.is_manual_address && <span className={styles.manualBadge}>수동 주소 검토 필요</span>}
-                      </div>
-                    </td>
-                    <td className={styles.cellCategory} title={getCategoryDisplay(row)}>{getCategoryDisplay(row)}</td>
-                    <td className={styles.cellSchedule}>{getScheduleDisplay(row)}</td>
-                    <td>
-                      <span className={`${styles.statusBadge} ${styles[`s_${row.status}`]}`}>
-                        {STATUS_LABEL[row.status] ?? row.status}
-                      </span>
-                    </td>
-                    <td className={styles.cellMedia}>{row._has_media ? '있음' : '-'}</td>
-                    <td><AdminQueueActions requestId={row.id} currentStatus={row.status} /></td>
-                    <td>
-                      <Link href={`/admin/platform/${row.id}`} className={styles.detailLink} id={`link-detail-${row.id.slice(0, 8)}`}>
-                        보기
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className={styles.queueLayout}>
+          <section className={styles.queueListPanel}>
+            <div className={styles.queueSummary}>
+              <strong>{rows.length}건</strong>
+              <span>목록 행을 누르면 상세가 바뀝니다.</span>
+            </div>
 
-          <ul className={styles.mobileList}>
-            {rows.map(row => (
-              <li key={row.id} className={styles.mobileCard}>
-                <div className={styles.mobileCardTop}>
-                  <span className={`${styles.statusBadge} ${styles[`s_${row.status}`]}`}>
-                    {STATUS_LABEL[row.status] ?? row.status}
-                  </span>
-                  <span className={styles.mobileDate}>{formatDateTime(row.created_at)}</span>
-                </div>
-                <div className={styles.mobileCardName}>{row.customer_name} / {row.phone}</div>
-                <div className={styles.mobileCardAddress}>{row.address}</div>
-                {row.is_manual_address && <span className={styles.mobileManualBadge}>수동 주소 검토 필요</span>}
-                <div className={styles.mobileCardMeta}>
-                  <span>품목: {getCategoryDisplay(row)}</span>
-                  <span>희망 방문일: {getScheduleDisplay(row)}</span>
-                  <span>첨부: {row._has_media ? '있음' : '없음'}</span>
-                </div>
-                <div className={styles.mobileActions}>
-                  <AdminQueueActions requestId={row.id} currentStatus={row.status} />
-                  <Link href={`/admin/platform/${row.id}`} className={styles.mobileDetailLink}>상세 보기</Link>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </>
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th><Link href={sortHref('receivedAt')}>접수일시 {sortIcon('receivedAt')}</Link></th>
+                    <th><Link href={sortHref('sourceType')}>종류 {sortIcon('sourceType')}</Link></th>
+                    <th><Link href={sortHref('customerName')}>고객/연락처 {sortIcon('customerName')}</Link></th>
+                    <th>주소/요약</th>
+                    <th><Link href={sortHref('queueStatus')}>상태 {sortIcon('queueStatus')}</Link></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map(row => {
+                    const rowHref = hrefFor({ type: typeFilter, queue: queueFilter, sort, dir, selected: row.key })
+                    return (
+                    <tr key={row.key} className={`${styles.row} ${row.key === selectedKey ? styles.rowSelected : ''}`}>
+                      <td className={styles.cellDate}>
+                        <Link href={rowHref} className={styles.cellLink}>
+                          {formatDateTime(row.receivedAt)}
+                        </Link>
+                      </td>
+                      <td><Link href={rowHref} className={styles.cellLink}><span className={styles.sourcePill}>{row.sourceLabel}</span></Link></td>
+                      <td className={styles.cellName}>
+                        <Link href={rowHref} className={styles.cellLink}>
+                          <span className={styles.stackCell}>
+                            <strong>{row.customerName}</strong>
+                            <small>{row.phone}</small>
+                          </span>
+                        </Link>
+                      </td>
+                      <td className={styles.cellAddress} title={`${row.address} / ${row.summary}`}>
+                        <Link href={rowHref} className={styles.cellLink}>
+                          <span className={styles.stackCell}>
+                            <span>{truncate(row.address, 34)}</span>
+                            <small>
+                              {truncate(row.summary, 24)}
+                              {row.hasMedia ? ' · 첨부 있음' : ''}
+                            </small>
+                          </span>
+                        </Link>
+                      </td>
+                      <td>
+                        <Link href={rowHref} className={styles.cellLink}>
+                          <span className={styles.stackCell}>
+                            <span className={`${styles.queueBadge} ${styles[`q_${row.queueStatus}`]}`}>
+                              {QUEUE_STATUS_LABEL[row.queueStatus]}
+                            </span>
+                            <small>{CUSTOMER_STATUS_LABEL[row.customerStatus]}</small>
+                          </span>
+                        </Link>
+                      </td>
+                    </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <ul className={styles.mobileList}>
+              {rows.map(row => (
+                <li key={row.key} className={`${styles.mobileCard} ${row.key === selectedKey ? styles.mobileCardSelected : ''}`}>
+                  <Link href={hrefFor({ type: typeFilter, queue: queueFilter, sort, dir, selected: row.key })} className={styles.mobileCardLink}>
+                    <div className={styles.mobileCardTop}>
+                      <span className={`${styles.queueBadge} ${styles[`q_${row.queueStatus}`]}`}>
+                        {QUEUE_STATUS_LABEL[row.queueStatus]}
+                      </span>
+                      <span className={styles.mobileDate}>{formatDateTime(row.receivedAt)}</span>
+                    </div>
+                    <div className={styles.mobileCardName}>{row.sourceLabel} / {row.customerName} / {row.phone}</div>
+                    <div className={styles.mobileCardAddress}>{row.address}</div>
+                    <div className={styles.mobileCardMeta}>
+                      <span>{row.summary}</span>
+                      <span>{CUSTOMER_STATUS_LABEL[row.customerStatus]}</span>
+                      <span>첨부: {row.hasMedia ? '있음' : '없음'}</span>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <QueueDetail row={selectedRow} />
+        </div>
       )}
     </div>
   )

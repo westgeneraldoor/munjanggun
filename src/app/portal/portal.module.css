@@ -345,6 +345,24 @@
   white-space: nowrap;
 }
 
+.requestMeta .customer_confirmation_pending,
+.requestMeta .customer_change_pending,
+.requestMeta .customer_cancel_pending {
+  color: #8a6c22;
+  background: #fbf4dc;
+}
+
+.requestMeta .customer_confirmed,
+.requestMeta .customer_change_confirmed {
+  color: #17643d;
+  background: #e8f6ed;
+}
+
+.requestMeta .customer_cancel_confirmed {
+  color: #9f2f2f;
+  background: #fae9e9;
+}
+
 .requestItem p {
   overflow: hidden;
   color: #4f5752;
@@ -357,6 +375,167 @@
 .requestItem small {
   color: #7b837b;
   font-size: 12px;
+}
+
+.actionNote {
+  color: #4d5b52 !important;
+  background: #f1f5ef;
+  border: 1px solid #dfe6dc;
+  border-radius: 8px;
+  padding: 8px 10px;
+  line-height: 1.45;
+}
+
+.requestActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.requestActions button {
+  min-height: 34px;
+  padding: 0 11px;
+  color: #173b31;
+  background: #ffffff;
+  border: 1px solid #cbd6ca;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.requestActions button:hover {
+  background: #f7f9f4;
+  border-color: #9fb19d;
+}
+
+.requestActions .dangerAction {
+  color: #b42318;
+  border-color: #f0c1bc;
+}
+
+.requestActions .dangerAction:hover {
+  background: #fff5f4;
+  border-color: #e79b93;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(13, 18, 16, 0.44);
+}
+
+.actionModal {
+  width: min(520px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  background: #ffffff;
+  border: 1px solid #dfe5dc;
+  border-radius: 8px;
+  box-shadow: 0 26px 70px rgba(20, 25, 22, 0.24);
+}
+
+.actionModal header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.actionModal h2 {
+  color: #17191d;
+  font-size: 21px;
+  line-height: 1.35;
+  font-weight: 850;
+}
+
+.actionModal p {
+  margin-top: 6px;
+  color: #596064;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.actionModal header button {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #4f5752;
+  background: #ffffff;
+  border: 1px solid #dce1d8;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.actionModal textarea {
+  width: 100%;
+  min-height: 136px;
+  resize: vertical;
+  padding: 13px 14px;
+  color: #202326;
+  background: #ffffff;
+  border: 1px solid #dce1d8;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.65;
+  outline: none;
+}
+
+.actionModal textarea:focus {
+  border-color: #9fb19d;
+  box-shadow: 0 0 0 4px rgba(23, 59, 49, 0.08);
+}
+
+.modalError {
+  color: #b42318 !important;
+  font-size: 13px !important;
+  font-weight: 750;
+}
+
+.actionModal footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.actionModal footer button {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.actionModal footer button:first-child {
+  color: #3f4742;
+  background: #ffffff;
+  border: 1px solid #dce1d8;
+}
+
+.actionModal footer button:last-child {
+  color: #ffffff;
+  background: #173b31;
+  border: 1px solid #173b31;
+}
+
+.actionModal footer button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 @media (max-width: 980px) {

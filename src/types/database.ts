@@ -6,6 +6,24 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export type CustomerRequestStatus =
+  | 'confirmation_pending'
+  | 'confirmed'
+  | 'change_pending'
+  | 'change_confirmed'
+  | 'cancel_pending'
+  | 'cancel_confirmed'
+
+export type QueueWorkStatus =
+  | 'new_received'
+  | 'new_done'
+  | 'change_received'
+  | 'change_done'
+  | 'cancel_received'
+  | 'cancel_done'
+
+export type QueueSourceType = 'measurement' | 'as'
+
 export interface Database {
   showroom: {
     Tables: {
@@ -343,6 +361,12 @@ export interface Database {
           referrer_name: string | null
           service_region: string | null
           service_region_status: 'supported' | 'chungcheong_limited' | 'unsupported' | 'unknown'
+          customer_status: CustomerRequestStatus
+          queue_status: QueueWorkStatus
+          customer_action_note: string | null
+          customer_action_requested_at: string | null
+          processed_at: string | null
+          processed_by: string | null
         }
         Insert: {
           id?: string
@@ -375,6 +399,12 @@ export interface Database {
           referrer_name?: string | null
           service_region?: string | null
           service_region_status?: 'supported' | 'chungcheong_limited' | 'unsupported' | 'unknown'
+          customer_status?: CustomerRequestStatus
+          queue_status?: QueueWorkStatus
+          customer_action_note?: string | null
+          customer_action_requested_at?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
         }
         Update: {
           id?: string
@@ -407,6 +437,12 @@ export interface Database {
           referrer_name?: string | null
           service_region?: string | null
           service_region_status?: 'supported' | 'chungcheong_limited' | 'unsupported' | 'unknown'
+          customer_status?: CustomerRequestStatus
+          queue_status?: QueueWorkStatus
+          customer_action_note?: string | null
+          customer_action_requested_at?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
         }
       }
       measurement_media: {
@@ -463,6 +499,17 @@ export interface Database {
           privacy_agreed_at: string
           created_at: string
           updated_at: string
+          postcode: string | null
+          road_address: string | null
+          jibun_address: string | null
+          address_extra: string | null
+          is_manual_address: boolean
+          customer_status: CustomerRequestStatus
+          queue_status: QueueWorkStatus
+          customer_action_note: string | null
+          customer_action_requested_at: string | null
+          processed_at: string | null
+          processed_by: string | null
         }
         Insert: {
           id?: string
@@ -482,6 +529,17 @@ export interface Database {
           privacy_agreed_at?: string
           created_at?: string
           updated_at?: string
+          postcode?: string | null
+          road_address?: string | null
+          jibun_address?: string | null
+          address_extra?: string | null
+          is_manual_address?: boolean
+          customer_status?: CustomerRequestStatus
+          queue_status?: QueueWorkStatus
+          customer_action_note?: string | null
+          customer_action_requested_at?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
         }
         Update: {
           id?: string
@@ -501,6 +559,17 @@ export interface Database {
           privacy_agreed_at?: string
           created_at?: string
           updated_at?: string
+          postcode?: string | null
+          road_address?: string | null
+          jibun_address?: string | null
+          address_extra?: string | null
+          is_manual_address?: boolean
+          customer_status?: CustomerRequestStatus
+          queue_status?: QueueWorkStatus
+          customer_action_note?: string | null
+          customer_action_requested_at?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
         }
       }
       as_media: {
@@ -560,6 +629,50 @@ export interface Database {
           request_id?: string
           actor_id?: string
           event_type?: string
+          memo?: string | null
+          created_at?: string
+        }
+      }
+      request_action_events: {
+        Row: {
+          id: string
+          source_type: QueueSourceType
+          source_id: string
+          actor_id: string | null
+          actor_role: 'customer' | 'sales_manager' | 'administrator' | 'system'
+          event_type: string
+          from_customer_status: CustomerRequestStatus | null
+          to_customer_status: CustomerRequestStatus | null
+          from_queue_status: QueueWorkStatus | null
+          to_queue_status: QueueWorkStatus | null
+          memo: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          source_type: QueueSourceType
+          source_id: string
+          actor_id?: string | null
+          actor_role: 'customer' | 'sales_manager' | 'administrator' | 'system'
+          event_type: string
+          from_customer_status?: CustomerRequestStatus | null
+          to_customer_status?: CustomerRequestStatus | null
+          from_queue_status?: QueueWorkStatus | null
+          to_queue_status?: QueueWorkStatus | null
+          memo?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          source_type?: QueueSourceType
+          source_id?: string
+          actor_id?: string | null
+          actor_role?: 'customer' | 'sales_manager' | 'administrator' | 'system'
+          event_type?: string
+          from_customer_status?: CustomerRequestStatus | null
+          to_customer_status?: CustomerRequestStatus | null
+          from_queue_status?: QueueWorkStatus | null
+          to_queue_status?: QueueWorkStatus | null
           memo?: string | null
           created_at?: string
         }

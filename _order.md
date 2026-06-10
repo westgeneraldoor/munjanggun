@@ -1,78 +1,71 @@
-# 현재 작업 오더 - MVP-02 마감 정리
+# 현재 작업 오더 - MVP-02 접수 경험/통합 큐 보강
 
-발행: 2026-06-04
+발행: 2026-06-09
 브랜치: `platform-v1`
 PM/실행: Codex
-상태: MVP-02 실검수 완료 / PR 생성 대기
+상태: 구현 및 로컬 실검수 완료 / 커밋·푸시 대기
 
 ## 목표
 
-MVP-02 무료방문 실측 견적상담 신청과 어드민 접수 큐를 실제 검수 가능한 상태로 마감한다.
-
-이번 오더는 새 기능을 크게 벌리는 작업이 아니라, 사용자가 직접 화면을 보며 지적한 UX 문제를 고치고 문서, 커밋, 배포 흐름까지 정리하는 작업이다.
+고객이 무료방문견적/A/S 접수 이후 수정요청과 취소요청을 할 수 있고, 어드민은 실측과 A/S를 한곳의 접수큐에서 처리할 수 있게 만든다.
 
 ## 반영해야 할 사용자 피드백
 
-- 고객 포털로 돌아가는 버튼을 명확하게 보이게 한다.
-- 신청 전 확인사항은 누를 수 있다는 인식이 생기도록 강조한다.
-- 접혀 있는 확인사항은 열었을 때 실제 운영 안내가 충분히 상세해야 한다.
-- 충청권 지정요일은 구체적으로 수요일, 토요일 중심 운영이라고 표시한다.
-- 주소 검색 모달이 blank일 때 fallback과 안내를 제공한다.
-- 상담 희망 내용은 필수가 아니라 선택사항으로 둔다.
-- 추천인 입력란을 선택사항으로 추가한다.
-- 다크 UI의 폰트 대비와 가독성을 개선한다.
-- 플랫폼 화면에서 이모지를 사용하지 않는다.
-- 방문시간대 선택 항목은 제거한다.
+- 고객 상태는 `확정대기`, `접수확정`, `수정대기`, `수정확정`, `취소대기`, `취소확정`으로 보인다.
+- 어드민 접수큐 상태는 `신규접수`, `접수완료`, `수정접수`, `수정완료`, `취소접수`, `취소완료`로 보인다.
+- 고객 수정/취소 요청은 어드민 접수큐에 다시 떠야 한다.
+- 처리자는 누가 언제 조치했는지 기록되어야 한다.
+- 접수큐는 무료실측, A/S, 이후 결제 링크 흐름까지 한 영역에서 필터링 가능한 구조로 간다.
+- 데스크탑은 목록을 보면서 행을 누르면 우측 상세가 바뀐다.
+- 모바일 상세 구성은 데스크탑 우측 상세와 같은 정보 구조를 쓴다.
+- AS 접수는 Daum 주소검색을 사용한다.
+- AS 접수에서 급함/확인 우선도와 연락 선호 방식은 제거한다.
+- AS 사진/동영상은 필수는 아니지만 정확한 상담에 도움이 된다는 식으로 안내한다.
+- 버튼/화면 전환의 느린 체감을 줄인다.
 
 ## 완료 기준
 
-- [x] 고객 신청 화면 UX 보정
-- [x] Daum 주소 검색 blank fallback 보정
-- [x] 상담 희망 내용 선택사항 처리
-- [x] 추천인 필드 추가
-- [x] Supabase DB migration 적용
+- [x] Supabase DB migration 작성
+- [x] Supabase DB migration 라이브 적용
 - [x] TypeScript 타입 반영
-- [x] 어드민 상세/AppSheet 복사 블록에 추천인 반영
+- [x] 고객 수정/취소 요청 API 추가
+- [x] 어드민 큐 완료 처리 API 추가
+- [x] 마이페이지 수정요청/취소요청 UI 추가
+- [x] AS 접수 UX/문구/주소검색 개선
+- [x] 어드민 통합 접수큐 구현
+- [x] 데스크탑 우측 상세 패널 구현
+- [x] 큐 필터/정렬 구현
+- [x] route-level loading UI 추가
 - [x] `npm run lint` 통과
 - [x] `npm run build` 통과
-- [x] Playwright 주요 화면 확인
 - [x] 문서 정리
-- [x] 커밋
-- [x] 푸시
-- [x] Vercel Preview 배포
-- [x] Vercel 환경변수 정리
-- [x] Vercel Preview 보호 해제 및 공개 접근 확인
-- [x] 배포 URL 고객 신청 1건 실제 생성 확인
-- [x] 배포 URL 어드민 접수완료/취소 상태 저장 확인
+- [x] Playwright 주요 화면 확인
+- [ ] 커밋
+- [ ] 푸시
+- [ ] Vercel Preview 배포
 - [ ] GitHub PR 생성
-- [x] 배포 URL 최종 확인
 
 ## 현재 판단
 
-MVP-02는 현재 `완료`다.
-
-배포 URL에서 테스트 고객 신청 1건 생성, 어드민 큐 노출, 상세 상태 저장으로 `appsheet_registered`와 `cancelled`까지 확인했다. GitHub PR 생성은 로컬 `gh` 토큰 만료와 GitHub 커넥터 권한 403 때문에 별도 권한 조치가 필요하다.
+이번 보강 구현은 `npm run lint`, `npm run build`, 로컬 Playwright 관통 검수를 통과했다. AS 신규 접수, 고객 수정요청, 어드민 수정완료, 고객 취소요청, 어드민 취소완료까지 확인했다.
 
 ## 배포 상태
 
 - 브랜치: `platform-v1`
-- 최신 기능 커밋: `beee460`
-- Vercel Preview: `https://munjanggun-knsqon7og-westgeneraldoors-projects.vercel.app`
-- 첫 배포 실패 원인: 관리자 페이지가 build 시점에 Supabase env를 요구하며 prerender됨
-- 보정: 관리자 서버 페이지를 `force-dynamic`으로 처리
-- 최신 배포 상태: READY
-- OAuth callback 보정: 세션 교환 쿠키를 최종 redirect 응답에 직접 실어 로그인 후 홈/쇼룸에서 유저메뉴가 유지되도록 수정
-- Vercel 환경변수: `platform-v1` Preview Supabase 3종, Production `SUPABASE_SERVICE_ROLE_KEY` 반영
-- Vercel Preview 보호: SSO Deployment Protection 해제, 공개 접근 200 확인
-- 실제 검수 접수 ID: `4a23cca6-5794-423e-8a34-c2f4bb204bd4`
-- 테스트 접수 최종 상태: `cancelled`
-- 남은 확인: GitHub PR 생성, 실제 카카오 계정 callback 확인
+- 이번 보강은 아직 커밋/푸시/Preview 배포 전이다.
+- 이전 READY Preview와 Branch alias는 과거 MVP-02 검수 기록으로만 본다.
+- 로컬 테스트 A/S ID: `1aba60c7-b5cb-4a3a-91d3-193ccb07e746`
+- 테스트 최종 상태: 고객 `cancel_confirmed`, 큐 `cancel_done`, 액션 이벤트 4건
+- Playwright 스크린샷: `output/platform-queue-qa/`
+- Supabase security advisor는 앱 연결 재인증이 필요해 아직 확인하지 못했다.
 
 ## 다음 오더 후보
 
-MVP-03 담당자 배정 + 접수 상태 관리.
-
-단, 바로 기능을 만들기 전에 어드민 모바일 사용성, 접수 큐의 실제 업무 흐름, AppSheet 수동 등록 화면 동선을 먼저 짧게 점검한다.
+1. 커밋
+2. 푸시
+3. Vercel Preview 배포 확인
+4. Preview에서 실제 카카오 계정 기준 핵심 화면 확인
+5. 이후 MVP-03 담당자 배정 + 상태 관리 논의
 # MVP-02 public entry closeout - 2026-06-04
 
 - Main/showroom floating `무료방문견적` CTA now enters `/portal/measure/new` instead of the external Naver reservation link.

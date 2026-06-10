@@ -283,7 +283,8 @@
 }
 
 .formGrid label,
-.textareaLabel {
+.textareaLabel,
+.selectLabel {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -294,14 +295,16 @@
 }
 
 .formGrid span,
-.textareaLabel span {
+.textareaLabel span,
+.selectLabel span {
   color: #33383c;
   font-size: 14px;
   font-weight: 850;
 }
 
 .formGrid input,
-.textareaLabel textarea {
+.textareaLabel textarea,
+.selectLabel select {
   width: 100%;
   color: #202326;
   background: #ffffff;
@@ -317,6 +320,16 @@
   padding: 0 14px;
 }
 
+.selectLabel select {
+  min-height: 48px;
+  padding: 0 42px 0 14px;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #526059 50%), linear-gradient(135deg, #526059 50%, transparent 50%);
+  background-position: calc(100% - 18px) 21px, calc(100% - 12px) 21px;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
 .textareaLabel textarea {
   resize: vertical;
   min-height: 148px;
@@ -325,9 +338,68 @@
 }
 
 .formGrid input:focus,
-.textareaLabel textarea:focus {
+.textareaLabel textarea:focus,
+.selectLabel select:focus {
   border-color: #9fb19d;
   box-shadow: 0 0 0 4px rgba(23, 59, 49, 0.08);
+}
+
+.addressBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  background: #fbfbf8;
+  border: 1px solid #e6e9e1;
+  border-radius: 8px;
+}
+
+.addressHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.addressHeader div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.addressHeader span {
+  color: #33383c;
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.addressHeader p {
+  color: #6b746e;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.addressSearchButton {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 13px;
+  color: #173b31;
+  background: #ffffff;
+  border: 1px solid #cbd6ca;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 850;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.addressSearchButton:hover {
+  border-color: #9fb19d;
+  background: #f7f9f4;
 }
 
 .toggleRow,
@@ -679,6 +751,14 @@
   .formGrid,
   .optionGrid {
     grid-template-columns: 1fr;
+  }
+
+  .addressHeader {
+    flex-direction: column;
+  }
+
+  .addressSearchButton {
+    width: 100%;
   }
 
   .actions {

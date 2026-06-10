@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -12,8 +12,10 @@ import {
   Ruler,
   ShieldCheck,
   Wrench,
+  X,
 } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
+import { CustomerRequestStatus, QueueSourceType } from '@/types/database'
 import { logError } from '@/lib/logger'
 import styles from './portal.module.css'
 
@@ -25,7 +27,9 @@ interface UserProfile {
 
 interface RecentMeasurementRequest {
   id: string
-  status: string
+  customer_status: CustomerRequestStatus
+  queue_status: string
+  customer_action_note: string | null
   address: string
   created_at: string
   interest_category: string
@@ -34,29 +38,29 @@ interface RecentMeasurementRequest {
 
 interface RecentAsRequest {
   id: string
-  status: string
+  customer_status: CustomerRequestStatus
+  queue_status: string
+  customer_action_note: string | null
   issue_type: string
   address: string | null
   created_at: string
 }
 
-const MEASURE_STATUS_LABEL: Record<string, string> = {
-  submitted: '접수 완료',
-  appsheet_pending: '확인 중',
-  appsheet_registered: '접수 등록',
-  contacted: '상담 진행',
-  assigned: '담당자 배정',
-  scheduled: '방문 예정',
-  measured: '실측 완료',
-  cancelled: '취소',
+interface ActionTarget {
+  sourceType: QueueSourceType
+  requestId: string
+  action: 'change' | 'cancel'
+  title: string
+  description: string
 }
 
-const AS_STATUS_LABEL: Record<string, string> = {
-  submitted: '접수 완료',
-  reviewing: '확인 중',
-  scheduled: '방문 예정',
-  resolved: '처리 완료',
-  cancelled: '취소',
+const CUSTOMER_STATUS_LABEL: Record<CustomerRequestStatus, string> = {
+  confirmation_pending: '확정대기',
+  confirmed: '접수확정',
+  change_pending: '수정대기',
+  change_confirmed: '수정확정',
+  cancel_pending: '취소대기',
+  cancel_confirmed: '취소확정',
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -70,7 +74,7 @@ const CATEGORY_LABEL: Record<string, string> = {
 const ISSUE_LABEL: Record<string, string> = {
   door_adjustment: '문 여닫힘/수평',
   film_damage: '필름/표면 손상',
-  hardware: '손잡이/부속',
+  hardware: '손잡이/부속 문제',
   noise: '소음/간섭',
   other: '기타 문의',
 }
@@ -83,12 +87,24 @@ function formatDate(value: string) {
   })
 }
 
+function canRequestChange(status: CustomerRequestStatus) {
+  return status !== 'cancel_pending' && status !== 'cancel_confirmed'
+}
+
+function canRequestCancel(status: CustomerRequestStatus) {
+  return status !== 'cancel_pending' && status !== 'cancel_confirmed'
+}
+
 export default function PortalPage() {
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [recentMeasurements, setRecentMeasurements] = useState<RecentMeasurementRequest[]>([])
   const [recentAsRequests, setRecentAsRequests] = useState<RecentAsRequest[]>([])
   const [loading, setLoading] = useState(true)
+  const [actionTarget, setActionTarget] = useState<ActionTarget | null>(null)
+  const [actionMemo, setActionMemo] = useState('')
+  const [actionBusy, setActionBusy] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   const supabase = useMemo(() => createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -96,72 +112,74 @@ export default function PortalPage() {
     { db: { schema: 'platform' } }
   ), [])
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const fetchUser = useCallback(async () => {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-        if (userError || !user) {
-          router.push('/login?next=/portal')
-          return
-        }
-
-        const { data, error: profileError } = await supabase
-          .from('profiles')
-          .select('display_name, email, role')
-          .eq('id', user.id)
-          .maybeSingle()
-
-        if (profileError) {
-          logError('Fetch user profile error', profileError)
-        }
-
-        const dbProfile = data as {
-          display_name: string | null
-          email: string | null
-          role: 'customer' | 'sales_manager' | 'administrator'
-        } | null
-
-        setProfile({
-          email: dbProfile?.email || user.email,
-          displayName: dbProfile?.display_name || user.user_metadata?.full_name || user.user_metadata?.name || '고객',
-          role: dbProfile?.role || 'customer',
-        })
-
-        const [measureResult, asResult] = await Promise.all([
-          supabase
-            .from('measurement_requests')
-            .select('id, status, address, created_at, interest_category, interest_categories')
-            .eq('customer_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(4),
-          supabase
-            .from('as_requests')
-            .select('id, status, issue_type, address, created_at')
-            .eq('customer_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(4),
-        ])
-
-        if (measureResult.error) {
-          logError('Fetch measurement requests error', measureResult.error)
-        } else {
-          setRecentMeasurements((measureResult.data ?? []) as RecentMeasurementRequest[])
-        }
-
-        if (asResult.error) {
-          logError('Fetch AS requests error', asResult.error)
-        } else {
-          setRecentAsRequests((asResult.data ?? []) as RecentAsRequest[])
-        }
-      } catch (err) {
-        logError('Fetch user unexpected error', err)
-      } finally {
-        setLoading(false)
+      if (userError || !user) {
+        router.push('/login?next=/portal')
+        return
       }
+
+      const { data, error: profileError } = await supabase
+        .from('profiles')
+        .select('display_name, email, role')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (profileError) {
+        logError('Fetch user profile error', profileError)
+      }
+
+      const dbProfile = data as {
+        display_name: string | null
+        email: string | null
+        role: 'customer' | 'sales_manager' | 'administrator'
+      } | null
+
+      setProfile({
+        email: dbProfile?.email || user.email,
+        displayName: dbProfile?.display_name || user.user_metadata?.full_name || user.user_metadata?.name || '고객',
+        role: dbProfile?.role || 'customer',
+      })
+
+      const [measureResult, asResult] = await Promise.all([
+        supabase
+          .from('measurement_requests')
+          .select('id, customer_status, queue_status, customer_action_note, address, created_at, interest_category, interest_categories')
+          .eq('customer_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(6),
+        supabase
+          .from('as_requests')
+          .select('id, customer_status, queue_status, customer_action_note, issue_type, address, created_at')
+          .eq('customer_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(6),
+      ])
+
+      if (measureResult.error) {
+        logError('Fetch measurement requests error', measureResult.error)
+      } else {
+        setRecentMeasurements((measureResult.data ?? []) as RecentMeasurementRequest[])
+      }
+
+      if (asResult.error) {
+        logError('Fetch AS requests error', asResult.error)
+      } else {
+        setRecentAsRequests((asResult.data ?? []) as RecentAsRequest[])
+      }
+    } catch (err) {
+      logError('Fetch user unexpected error', err)
+    } finally {
+      setLoading(false)
     }
-    fetchUser()
   }, [router, supabase])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchUser()
+  }, [fetchUser])
 
   const handleLogout = async () => {
     try {
@@ -171,6 +189,45 @@ export default function PortalPage() {
       router.refresh()
     } catch (err) {
       logError('Signout unexpected error', err)
+    }
+  }
+
+  const openAction = (target: ActionTarget) => {
+    setActionTarget(target)
+    setActionMemo('')
+    setActionError(null)
+  }
+
+  const submitAction = async () => {
+    if (!actionTarget || actionBusy) return
+    setActionBusy(true)
+    setActionError(null)
+
+    try {
+      const res = await fetch('/api/platform/customer-request-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sourceType: actionTarget.sourceType,
+          requestId: actionTarget.requestId,
+          action: actionTarget.action,
+          memo: actionMemo.trim() || null,
+        }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        throw new Error(data?.error || '요청을 저장하지 못했습니다.')
+      }
+
+      setActionTarget(null)
+      setActionMemo('')
+      await fetchUser()
+      router.refresh()
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : '요청을 저장하지 못했습니다.')
+    } finally {
+      setActionBusy(false)
     }
   }
 
@@ -194,7 +251,7 @@ export default function PortalPage() {
       id: 'card-measure',
       Icon: Ruler,
       title: '무료방문 실측견적 상담',
-      desc: '비용 부담 없이 우리 집 시공 가능 여부와 대략적인 방향을 먼저 확인해요.',
+      desc: '견적상담을 받고 진행하지 않아도 비용이 들지 않아요. 우리 집 시공 가능 여부와 방향을 먼저 확인해요.',
       href: '/portal/measure/new',
       active: true,
       cta: '신청하기',
@@ -203,7 +260,7 @@ export default function PortalPage() {
       id: 'card-as',
       Icon: Wrench,
       title: 'A/S 접수',
-      desc: '문 여닫힘, 부속, 필름 손상처럼 확인이 필요한 내용을 사진과 함께 남겨요.',
+      desc: '문 여닫힘, 부속, 표면 손상처럼 확인이 필요한 내용을 사진이나 동영상과 함께 남겨주세요.',
       href: '/portal/as/new',
       active: true,
       cta: '접수하기',
@@ -212,7 +269,7 @@ export default function PortalPage() {
       id: 'card-estimate',
       Icon: FileText,
       title: '견적서 확인',
-      desc: '담당자가 안내한 견적서를 이곳에서 확인할 수 있도록 준비 중입니다.',
+      desc: '담당자가 안내한 견적서를 마이페이지에서 확인할 수 있도록 준비 중입니다.',
       href: null,
       active: false,
       cta: '준비중',
@@ -221,7 +278,7 @@ export default function PortalPage() {
       id: 'card-history',
       Icon: ShieldCheck,
       title: '시공/A/S 이력',
-      desc: '진행했던 상담, 시공, 사후관리 기록을 한곳에 모을 예정입니다.',
+      desc: '상담, 시공, 사후관리 기록을 한곳에서 볼 수 있도록 이어서 만들겠습니다.',
       href: null,
       active: false,
       cta: '준비중',
@@ -297,10 +354,37 @@ export default function PortalPage() {
                   <li key={req.id} className={styles.requestItem}>
                     <div className={styles.requestMeta}>
                       <span>{getCategoryLabel(req)}</span>
-                      <strong>{MEASURE_STATUS_LABEL[req.status] ?? req.status}</strong>
+                      <strong className={styles[`customer_${req.customer_status}`]}>
+                        {CUSTOMER_STATUS_LABEL[req.customer_status] ?? req.customer_status}
+                      </strong>
                     </div>
                     <p>{req.address}</p>
+                    {req.customer_action_note && <small className={styles.actionNote}>요청 메모: {req.customer_action_note}</small>}
                     <small>{formatDate(req.created_at)}</small>
+                    <div className={styles.requestActions}>
+                      {canRequestChange(req.customer_status) && (
+                        <button type="button" onClick={() => openAction({
+                          sourceType: 'measurement',
+                          requestId: req.id,
+                          action: 'change',
+                          title: '견적상담 수정 요청',
+                          description: '변경해야 할 날짜, 연락처, 주소, 요청 내용을 적어주세요.',
+                        })}>
+                          수정요청
+                        </button>
+                      )}
+                      {canRequestCancel(req.customer_status) && (
+                        <button type="button" className={styles.dangerAction} onClick={() => openAction({
+                          sourceType: 'measurement',
+                          requestId: req.id,
+                          action: 'cancel',
+                          title: '견적상담 취소 요청',
+                          description: '취소가 필요한 이유나 담당자에게 남길 말을 적어주세요.',
+                        })}>
+                          취소요청
+                        </button>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -323,10 +407,37 @@ export default function PortalPage() {
                   <li key={req.id} className={styles.requestItem}>
                     <div className={styles.requestMeta}>
                       <span>{ISSUE_LABEL[req.issue_type] ?? req.issue_type}</span>
-                      <strong>{AS_STATUS_LABEL[req.status] ?? req.status}</strong>
+                      <strong className={styles[`customer_${req.customer_status}`]}>
+                        {CUSTOMER_STATUS_LABEL[req.customer_status] ?? req.customer_status}
+                      </strong>
                     </div>
                     <p>{req.address || '주소 미입력'}</p>
+                    {req.customer_action_note && <small className={styles.actionNote}>요청 메모: {req.customer_action_note}</small>}
                     <small>{formatDate(req.created_at)}</small>
+                    <div className={styles.requestActions}>
+                      {canRequestChange(req.customer_status) && (
+                        <button type="button" onClick={() => openAction({
+                          sourceType: 'as',
+                          requestId: req.id,
+                          action: 'change',
+                          title: 'A/S 수정 요청',
+                          description: '변경해야 할 연락처, 주소, 증상 내용을 적어주세요.',
+                        })}>
+                          수정요청
+                        </button>
+                      )}
+                      {canRequestCancel(req.customer_status) && (
+                        <button type="button" className={styles.dangerAction} onClick={() => openAction({
+                          sourceType: 'as',
+                          requestId: req.id,
+                          action: 'cancel',
+                          title: 'A/S 취소 요청',
+                          description: '취소가 필요한 이유나 담당자에게 남길 말을 적어주세요.',
+                        })}>
+                          취소요청
+                        </button>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -334,6 +445,35 @@ export default function PortalPage() {
           </section>
         </div>
       </main>
+
+      {actionTarget && (
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-labelledby="customer-action-title">
+          <div className={styles.actionModal}>
+            <header>
+              <div>
+                <h2 id="customer-action-title">{actionTarget.title}</h2>
+                <p>{actionTarget.description}</p>
+              </div>
+              <button type="button" onClick={() => setActionTarget(null)} aria-label="닫기">
+                <X size={20} aria-hidden="true" />
+              </button>
+            </header>
+            <textarea
+              value={actionMemo}
+              onChange={event => setActionMemo(event.target.value)}
+              placeholder="담당자가 확인할 수 있도록 필요한 내용을 남겨주세요."
+              rows={5}
+            />
+            {actionError && <p className={styles.modalError}>{actionError}</p>}
+            <footer>
+              <button type="button" onClick={() => setActionTarget(null)} disabled={actionBusy}>닫기</button>
+              <button type="button" onClick={submitAction} disabled={actionBusy}>
+                {actionBusy ? '저장 중' : '요청 남기기'}
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

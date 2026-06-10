@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useCallback, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -9,10 +9,12 @@ import {
   Check,
   CheckCircle2,
   Home,
+  MapPin,
   Paperclip,
   Trash2,
 } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
+import DaumAddressSearch from '@/components/platform/DaumAddressSearch'
 import { logError } from '@/lib/logger'
 import styles from './as-form.module.css'
 
@@ -26,22 +28,30 @@ interface FilePreview {
   type: 'image' | 'video'
 }
 
+interface AddressData {
+  postcode: string
+  roadAddress: string
+  jibunAddress: string
+  addressExtra: string
+  isManual: boolean
+}
+
 const MAX_FILE_COUNT = 6
 const MAX_FILE_SIZE_MB = 50
 
 const STEPS = [
-  { title: '안내', helper: '먼저 안심하셔도 돼요' },
-  { title: '연락처', helper: '누가 연락을 받으면 좋을까요' },
-  { title: '내용', helper: '어떤 부분을 봐드릴까요' },
-  { title: '사진', helper: '있으면 더 정확해요' },
+  { title: '안내', helper: '천천히 하나씩 도움 드릴게요' },
+  { title: '연락처', helper: '누가 연락받으면 좋을까요' },
+  { title: '내용', helper: '불편한 부분을 적어주세요' },
+  { title: '사진', helper: '있으면 훨씬 정확해요' },
 ] as const
 
 const ISSUE_OPTIONS = [
-  { value: 'door_adjustment', label: '문 여닫힘/수평', desc: '문이 닿거나, 잘 닫히지 않거나, 틈이 신경 쓰이는 경우' },
-  { value: 'film_damage', label: '필름/표면 손상', desc: '찍힘, 벗겨짐, 표면 오염처럼 외관 확인이 필요한 경우' },
-  { value: 'hardware', label: '손잡이/부속', desc: '손잡이, 경첩, 레일, 부속품 움직임이 불편한 경우' },
-  { value: 'noise', label: '소음/간섭', desc: '열고 닫을 때 소리나 걸림이 느껴지는 경우' },
-  { value: 'other', label: '기타 문의', desc: '위 항목으로 딱 나누기 어려운 경우' },
+  { value: 'door_adjustment', label: '문 여닫힘/수평' },
+  { value: 'film_damage', label: '필름/표면 손상' },
+  { value: 'hardware', label: '손잡이/부속 문제' },
+  { value: 'noise', label: '소음/간섭' },
+  { value: 'other', label: '기타 문의' },
 ]
 
 function formatPhone(raw: string) {
@@ -75,9 +85,13 @@ export default function AsForm({ userId }: Props) {
   const [contactRelationship, setContactRelationship] = useState('')
   const [address, setAddress] = useState('')
   const [addressDetail, setAddressDetail] = useState('')
+  const [postcode, setPostcode] = useState('')
+  const [roadAddress, setRoadAddress] = useState('')
+  const [jibunAddress, setJibunAddress] = useState('')
+  const [addressExtra, setAddressExtra] = useState('')
+  const [isManualAddress, setIsManualAddress] = useState(false)
+  const [showAddressSearch, setShowAddressSearch] = useState(false)
   const [issueType, setIssueType] = useState('door_adjustment')
-  const [urgency, setUrgency] = useState<'normal' | 'urgent'>('normal')
-  const [preferredContactMethod, setPreferredContactMethod] = useState<'phone' | 'sms' | 'kakao'>('phone')
   const [message, setMessage] = useState('')
   const [privacy, setPrivacy] = useState(false)
   const [files, setFiles] = useState<FilePreview[]>([])
@@ -104,9 +118,22 @@ export default function AsForm({ userId }: Props) {
       if (!sameContact && (!contactName.trim() || contactPhone.replace(/\D/g, '').length < 10 || !contactRelationship.trim())) return false
       return true
     }
-    if (currentStep === 2) return message.trim().length >= 8
+    if (currentStep === 2) return message.trim().length >= 10
     return privacy
   }, [contactName, contactPhone, contactRelationship, currentStep, customerName, message, phone, privacy, sameContact])
+
+  const handleAddressComplete = useCallback((data: AddressData) => {
+    const nextAddress = data.roadAddress || data.jibunAddress || ''
+    setPostcode(data.postcode)
+    setRoadAddress(data.roadAddress)
+    setJibunAddress(data.jibunAddress)
+    setAddressExtra(data.addressExtra)
+    setIsManualAddress(data.isManual)
+    if (nextAddress) {
+      setAddress(`${nextAddress}${data.addressExtra}`)
+    }
+    setShowAddressSearch(false)
+  }, [])
 
   const handleFiles = (selected: FileList | null) => {
     setFileError(null)
@@ -168,9 +195,14 @@ export default function AsForm({ userId }: Props) {
           contact_relationship: sameContact ? null : contactRelationship.trim(),
           address: address.trim() || null,
           address_detail: addressDetail.trim() || null,
+          postcode: postcode || null,
+          road_address: roadAddress || null,
+          jibun_address: jibunAddress || null,
+          address_extra: addressExtra || null,
+          is_manual_address: isManualAddress,
           issue_type: issueType,
-          urgency,
-          preferred_contact_method: preferredContactMethod,
+          urgency: 'normal',
+          preferred_contact_method: 'phone',
           message: message.trim(),
           privacy_agreed_at: new Date().toISOString(),
         })
@@ -234,10 +266,10 @@ export default function AsForm({ userId }: Props) {
         <main className={styles.doneShell}>
           <div className={styles.donePanel}>
             <CheckCircle2 size={44} aria-hidden="true" />
-            <p className={styles.doneKicker}>A/S 접수가 완료되었습니다</p>
+            <p className={styles.doneKicker}>A/S 접수 완료</p>
             <h1>남겨주신 내용을 확인하고 연락드릴게요.</h1>
             <p>
-              사진과 증상을 함께 확인한 뒤 담당자가 연락드립니다. 전화 연결이 어려우면 문자나 카카오 안내를 남겨드릴 수 있어요.
+              담당자가 접수 내용을 보고 필요한 확인을 이어갑니다. 전화 연결이 어렵다면 문자나 카카오톡으로 안내를 남겨드릴게요.
             </p>
             <div className={styles.doneActions}>
               <Link href="/portal" className={styles.primaryButton}>마이페이지로 이동</Link>
@@ -268,8 +300,8 @@ export default function AsForm({ userId }: Props) {
         <aside className={styles.rail}>
           <div className={styles.railCopy}>
             <p>A/S 접수</p>
-            <h1>불편한 부분을 차분히 확인해볼게요.</h1>
-            <span>사진이 없어도 접수할 수 있고, 사진이 있으면 담당자가 더 정확히 보고 연락드릴 수 있어요.</span>
+            <h1>불편한 부분을 천천히 확인할게요.</h1>
+            <span>사진이나 동영상이 있으면 상담과 안내가 훨씬 정확해져요. 없어도 접수는 가능하니 편하게 남겨주세요.</span>
           </div>
           <div className={styles.progressBlock}>
             <div className={styles.progressText}>
@@ -298,23 +330,23 @@ export default function AsForm({ userId }: Props) {
             <div className={styles.stepScreen}>
               <div className={styles.screenHeader}>
                 <p className={styles.stepKicker}>먼저 안내드릴게요</p>
-                <h2>A/S가 필요한 상황을 남겨주시면 문장군이 확인하고 연락드려요.</h2>
+                <h2>천천히 하나씩 도움 드릴게요.</h2>
                 <p>
-                  시공 이후 확인이 필요한 부분을 편하게 남겨주세요. 접수 내용은 담당자가 보고 연락드리며, 방문이 필요한 경우 일정 안내까지 이어집니다.
+                  시공 이후 확인이 필요한 부분을 편하게 남겨주세요. 접수 내용은 담당자가 보고 연락드리고, 방문이 필요한 경우 일정 안내까지 이어집니다.
                 </p>
               </div>
               <div className={styles.noticeGrid}>
                 <div>
-                  <strong>사진은 선택입니다</strong>
-                  <p>사진이 있으면 더 빠르게 판단할 수 있지만, 없어도 접수는 가능합니다.</p>
+                  <strong>사진/동영상이 있으면 좋아요</strong>
+                  <p>상태를 더 정확히 보고 안내드릴 수 있어요. 필수는 아니지만 가능하면 함께 올려주세요.</p>
                 </div>
                 <div>
                   <strong>연락받을 사람을 따로 적을 수 있어요</strong>
-                  <p>접수자와 실제 현장 연락자가 다르면 다음 단계에서 따로 남겨주세요.</p>
+                  <p>접수자와 실제 현장 연락자가 다르면 다음 단계에서 구분해서 남겨주세요.</p>
                 </div>
                 <div>
-                  <strong>급한 건은 표시해주세요</strong>
-                  <p>사용이 어렵거나 안전상 불편한 경우 우선 확인이 필요하다고 알려주세요.</p>
+                  <strong>맞지 않는 시간은 다시 조율해요</strong>
+                  <p>방문이 필요하면 담당자가 연락드리고, 안내받은 시간이 어렵다면 일정을 변경해 드립니다.</p>
                 </div>
               </div>
             </div>
@@ -324,7 +356,7 @@ export default function AsForm({ userId }: Props) {
             <div className={styles.stepScreen}>
               <div className={styles.screenHeader}>
                 <p className={styles.stepKicker}>연락 정보</p>
-                <h2>접수하시는 분과 연락받을 분을 알려주세요.</h2>
+                <h2>접수하는 분과 연락받을 분을 알려주세요.</h2>
                 <p>집주인, 세입자, 가족처럼 접수자와 현장 연락자가 다를 수 있어요. 필요한 연락 흐름을 편하게 남겨주세요.</p>
               </div>
               <div className={styles.formGrid}>
@@ -357,15 +389,30 @@ export default function AsForm({ userId }: Props) {
                   </label>
                 </div>
               )}
-              <div className={styles.formGrid}>
-                <label className={styles.fullWidth}>
-                  <span>현장 주소</span>
-                  <input id="as-address" value={address} onChange={event => setAddress(event.target.value)} placeholder="예: 서울시 강남구 ..." />
-                </label>
-                <label className={styles.fullWidth}>
-                  <span>상세 주소</span>
-                  <input id="as-address-detail" value={addressDetail} onChange={event => setAddressDetail(event.target.value)} placeholder="동, 호수, 현관 비밀번호 안내가 필요하면 함께 적어주세요" />
-                </label>
+              <div className={styles.addressBlock}>
+                <div className={styles.addressHeader}>
+                  <div>
+                    <span>현장 주소</span>
+                    <p>주소 검색으로 정확히 남겨주세요. 검색이 어려우면 직접 입력도 가능합니다.</p>
+                  </div>
+                  <button type="button" onClick={() => setShowAddressSearch(true)} className={styles.addressSearchButton}>
+                    <MapPin size={16} aria-hidden="true" />
+                    <span>주소 검색</span>
+                  </button>
+                </div>
+                <div className={styles.formGrid}>
+                  <label className={styles.fullWidth}>
+                    <span>주소</span>
+                    <input id="as-address" value={address} onChange={event => {
+                      setAddress(event.target.value)
+                      setIsManualAddress(true)
+                    }} placeholder="주소 검색 또는 직접 입력" />
+                  </label>
+                  <label className={styles.fullWidth}>
+                    <span>상세 주소</span>
+                    <input id="as-address-detail" value={addressDetail} onChange={event => setAddressDetail(event.target.value)} placeholder="동, 호수, 공동현관 안내가 있으면 함께 적어주세요" />
+                  </label>
+                </div>
               </div>
             </div>
           )}
@@ -374,47 +421,25 @@ export default function AsForm({ userId }: Props) {
             <div className={styles.stepScreen}>
               <div className={styles.screenHeader}>
                 <p className={styles.stepKicker}>A/S 내용</p>
-                <h2>어떤 부분을 확인하면 좋을까요?</h2>
-                <p>정확히 몰라도 괜찮아요. 가장 가까운 항목을 고르고, 실제로 느끼는 불편함을 그대로 적어주세요.</p>
+                <h2>불편한 내용을 최대한 자세히 적어주세요.</h2>
+                <p>정확히 모르셔도 괜찮아요. 언제부터, 어느 부분이, 어떻게 불편한지만 편한 말로 남겨주시면 됩니다.</p>
               </div>
-              <div className={styles.optionGrid} role="radiogroup" aria-label="A/S 유형">
-                {ISSUE_OPTIONS.map(option => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    id={`as-issue-${option.value}`}
-                    className={issueType === option.value ? styles.optionSelected : styles.optionCard}
-                    onClick={() => setIssueType(option.value)}
-                    aria-pressed={issueType === option.value}
-                  >
-                    <strong>{option.label}</strong>
-                    <span>{option.desc}</span>
-                  </button>
-                ))}
-              </div>
-              <div className={styles.segmentGroup}>
-                <p>확인 우선도</p>
-                <div>
-                  <button type="button" className={urgency === 'normal' ? styles.segmentActive : ''} onClick={() => setUrgency('normal')}>일반 확인</button>
-                  <button type="button" className={urgency === 'urgent' ? styles.segmentActive : ''} onClick={() => setUrgency('urgent')}>빠른 확인 필요</button>
-                </div>
-              </div>
-              <div className={styles.segmentGroup}>
-                <p>연락 선호 방식</p>
-                <div>
-                  <button type="button" className={preferredContactMethod === 'phone' ? styles.segmentActive : ''} onClick={() => setPreferredContactMethod('phone')}>전화</button>
-                  <button type="button" className={preferredContactMethod === 'sms' ? styles.segmentActive : ''} onClick={() => setPreferredContactMethod('sms')}>문자</button>
-                  <button type="button" className={preferredContactMethod === 'kakao' ? styles.segmentActive : ''} onClick={() => setPreferredContactMethod('kakao')}>카카오</button>
-                </div>
-              </div>
+              <label className={styles.selectLabel}>
+                <span>가장 가까운 유형</span>
+                <select id="as-issue-type" value={issueType} onChange={event => setIssueType(event.target.value)}>
+                  {ISSUE_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </label>
               <label className={styles.textareaLabel}>
-                <span>불편한 내용을 적어주세요</span>
+                <span>불편한 내용</span>
                 <textarea
                   id="as-message"
                   value={message}
                   onChange={event => setMessage(event.target.value)}
-                  placeholder="예: 중문을 닫을 때 아래쪽이 바닥에 살짝 닿는 느낌이 있고, 닫힐 때 소리가 납니다."
-                  rows={6}
+                  placeholder="예: 중문을 닫을 때 아래쪽이 바닥에 살짝 닿는 느낌이 있고, 문을 열고 닫을 때 소리가 납니다."
+                  rows={7}
                 />
               </label>
             </div>
@@ -424,8 +449,8 @@ export default function AsForm({ userId }: Props) {
             <div className={styles.stepScreen}>
               <div className={styles.screenHeader}>
                 <p className={styles.stepKicker}>마무리</p>
-                <h2>사진이 있으면 올려주세요. 없으면 바로 접수해도 됩니다.</h2>
-                <p>전체 모습 1장과 문제가 보이는 부분 1장을 함께 올리면 담당자가 상황을 더 쉽게 확인할 수 있어요.</p>
+                <h2>사진이나 동영상이 있으면 함께 올려주세요.</h2>
+                <p>필수는 아니지만, 전체 모습과 문제가 보이는 부분을 같이 올려주시면 담당자가 훨씬 정확하게 확인하고 연락드릴 수 있어요.</p>
               </div>
               <div className={styles.uploadBox}>
                 <input
@@ -469,7 +494,7 @@ export default function AsForm({ userId }: Props) {
               )}
               <div className={styles.summaryBox}>
                 <strong>접수 후 연락받을 분</strong>
-                <p>{primaryContact.name} · {primaryContact.phone} · {primaryContact.relationship}</p>
+                <p>{primaryContact.name || '-'} · {primaryContact.phone || '-'} · {primaryContact.relationship || '-'}</p>
               </div>
               <label className={styles.privacyRow}>
                 <input id="as-privacy" type="checkbox" checked={privacy} onChange={event => setPrivacy(event.target.checked)} />
@@ -497,6 +522,13 @@ export default function AsForm({ userId }: Props) {
           </footer>
         </section>
       </main>
+
+      {showAddressSearch && (
+        <DaumAddressSearch
+          onComplete={handleAddressComplete}
+          onClose={() => setShowAddressSearch(false)}
+        />
+      )}
     </div>
   )
 }

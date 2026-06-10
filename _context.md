@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트
 
-마지막 업데이트: 2026-06-04
-현재 오더: MVP-02 마감 정리
+마지막 업데이트: 2026-06-09
+현재 오더: MVP-02 접수 경험/통합 큐 보강
 
 ## 현재 상태
 
@@ -11,6 +11,15 @@ V2 쇼룸은 `v2-cms` 기준 Public Experience로 유지한다. 현재 브랜치
 
 ## 최근 완료
 
+- 고객 요청 상태 체계를 `확정대기/접수확정/수정대기/수정확정/취소대기/취소확정`으로 분리했다.
+- 어드민 큐 상태 체계를 `신규접수/접수완료/수정접수/수정완료/취소접수/취소완료`로 분리했다.
+- 고객 마이페이지에서 최근 무료견적/A/S 접수에 대해 수정요청, 취소요청을 남길 수 있게 했다.
+- 수정/취소 요청은 바로 확정하지 않고 어드민 통합 접수큐에 다시 노출되도록 했다.
+- 어드민 `/admin/platform`을 무료실측 + A/S 통합 접수큐로 재구성했다.
+- 데스크탑 어드민은 목록 행 선택 시 우측 상세 패널이 바뀌고, 모바일은 같은 상세 구조를 아래에서 확인한다.
+- AS 접수 화면에서 급함/연락 선호 방식을 제거하고, 상세 내용 + 사진/동영상 중심으로 단순화했다.
+- AS 주소 입력에 Daum 주소 검색과 수동 입력 fallback을 붙이고 주소 메타데이터를 저장한다.
+- 포털, 무료견적, AS, 어드민 큐에 route-level loading UI를 추가했다.
 - MVP-01 카카오 로그인 기반 구현 및 검수
 - MVP-02 고객 포털, 무료방문 실측 견적상담 신청, 어드민 접수 큐 구현
 - Supabase `platform` schema, RLS, private media, booking settings 기반 구성
@@ -45,9 +54,10 @@ V2 쇼룸은 `v2-cms` 기준 Public Experience로 유지한다. 현재 브랜치
 
 ## 다음 할 일
 
-1. GitHub PR 생성
-2. 실제 카카오 계정 callback 확인
-3. 신규 세션에서 MVP-03 담당자 배정 + 접수 상태 관리 논의 시작
+1. 로컬/Preview에서 고객 수정요청, 취소요청, 어드민 완료 처리까지 실제 브라우저 검수
+2. GitHub PR 생성
+3. 실제 카카오 계정 callback 확인
+4. MVP-03 담당자 배정 + 접수 상태 관리 논의 시작
 
 ## 현재 이슈
 
@@ -59,6 +69,11 @@ V2 쇼룸은 `v2-cms` 기준 Public Experience로 유지한다. 현재 브랜치
 - GitHub push는 성공했지만, 로컬 `gh` 토큰 만료로 PR 생성은 아직 못 했다.
 - GitHub 커넥터 PR 생성도 권한 403으로 막혔다.
 - 어드민 모바일 반응형은 최소 동작은 확인했지만, MVP-03 전에 한 번 더 실제 업무 흐름 기준으로 다듬어야 한다.
+- 2026-06-10 이어서 Supabase 스키마 확인, 성능 advisory 확인, Playwright 관통 검수를 완료했다.
+- 최신 테스트 A/S ID: `1aba60c7-b5cb-4a3a-91d3-193ccb07e746`
+- 최신 테스트 A/S 최종 상태: 고객 `cancel_confirmed`, 큐 `cancel_done`, 액션 이벤트 4건 기록.
+- Playwright 스크린샷: `output/platform-queue-qa/`
+- Supabase security advisor는 앱 연결 재인증이 필요해 확인하지 못했다. Performance advisor에서 이번 변경으로 생긴 `processed_by` FK 인덱스 누락은 `platform_processed_by_indexes` 마이그레이션으로 해결했다.
 # MVP-02 public entry closeout - 2026-06-04
 
 - Current branch: `platform-v1`.

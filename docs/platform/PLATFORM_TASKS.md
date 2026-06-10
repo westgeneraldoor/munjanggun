@@ -2,7 +2,7 @@
 document_type: "Platform Task Board"
 version: "1.1.0"
 status: "active"
-last_updated: "2026-06-04"
+last_updated: "2026-06-09"
 owner: "Codex PM"
 source_strategy: "docs/platform/PLATFORM_STRATEGY.md"
 source_prd: "docs/platform/PRD_PLATFORM_v1.0.md"
@@ -28,17 +28,17 @@ source_development_strategy: "docs/platform/DEVELOPMENT_STRATEGY.md"
 
 ## 현재 판단
 
-MVP-02는 기능 구현, PM UX 보정, Vercel Preview 실검수가 완료된 상태다.
+MVP-02는 기존 무료방문견적 신청/어드민 큐를 넘어, 고객 수정/취소 요청과 AS 통합 큐까지 로컬 검수를 완료했다.
 
 - [x] `npm run lint` 통과
 - [x] `npm run build` 통과
 - [x] Playwright 모바일/데스크탑 주요 화면 확인
-- [x] 커밋
-- [x] 푸시
-- [x] Vercel Preview 배포
-- [x] 배포 URL에서 로그인 보호, 고객 신청 생성, 어드민 접수 큐 최종 확인
+- [ ] 커밋
+- [ ] 푸시
+- [ ] Vercel Preview 배포
+- [ ] 배포 URL에서 로그인 보호, 고객 수정/취소 요청, 어드민 통합 큐 최종 확인
 
-따라서 현재 상태는 `MVP-02 완료`다. GitHub PR 생성과 실제 카카오 계정 callback 확인은 권한/실계정이 필요한 마감 운영 항목으로 별도 추적한다.
+따라서 현재 상태는 `MVP-02 보강 완료 후보`다. 커밋, 푸시, Preview 배포와 Preview 실계정 확인이 남았다.
 
 ## 크리티컬 패스
 
@@ -120,10 +120,14 @@ MVP-01 카카오 로그인
 
 ### 어드민 접수 큐
 
-- [x] `/admin/platform` 접수 큐 구현
-- [x] 전체, 신규, 접수완료, 취소 필터 단순화
-- [x] 접수 버튼 제공
-- [x] 취소 버튼 제공
+- [x] `/admin/platform` 통합 접수 큐 구현
+- [x] 무료방문 실측 접수 표시
+- [x] A/S 접수 표시
+- [x] 신규접수, 접수완료, 수정접수, 수정완료, 취소접수, 취소완료 필터
+- [x] 종류, 접수일시, 고객명, 큐상태, 고객상태 정렬
+- [x] 데스크탑 우측 상세 패널
+- [x] 모바일 상세 동일 정보 구조
+- [x] 큐 완료 처리 버튼 제공
 - [x] 신규 주소 필드 표시
 - [x] 관심 제품 다중 표시
 - [x] 희망 방문일 표시
@@ -161,14 +165,32 @@ MVP-01 카카오 로그인
 - [x] 관리자는 신청 전체 관리 가능
 - [x] 예약 가능일 DB trigger 검증
 - [x] 추천인 `referrer_name` 컬럼 추가
+- [x] 고객 상태 `customer_request_status` enum 추가
+- [x] 어드민 큐 상태 `queue_work_status` enum 추가
+- [x] 실측/A/S 요청에 고객 상태, 큐 상태, 고객 요청 메모, 처리자, 처리시각 컬럼 추가
+- [x] 통합 액션 이벤트 `platform.request_action_events` 추가
+- [x] AS 주소 검색 메타데이터 컬럼 추가
+
+### 고객 마이페이지 / A/S 보강
+
+- [x] 마이페이지 최근 견적상담 수정요청 버튼
+- [x] 마이페이지 최근 견적상담 취소요청 버튼
+- [x] 마이페이지 최근 A/S 수정요청 버튼
+- [x] 마이페이지 최근 A/S 취소요청 버튼
+- [x] 고객 요청은 어드민 큐에 수정접수/취소접수로 재노출
+- [x] AS 접수 Daum 주소 검색 적용
+- [x] AS 급함/확인 우선도 제거
+- [x] AS 연락 선호 방식 제거
+- [x] AS 사진/동영상 안내 문구 개선
 
 ### 검증
 
 - [x] `npm run lint` 통과
 - [x] `npm run build` 통과
 - [x] Playwright로 고객 신청 모바일 화면 확인
-- [x] Playwright로 주소 검색 모달 확인
-- [x] Playwright로 어드민 접수 큐 확인
+- [x] Playwright로 AS 주소 검색 모달 확인
+- [x] Playwright로 고객 수정/취소 요청 확인
+- [x] Playwright로 어드민 통합 접수 큐 확인
 - [x] Playwright로 어드민 설정 화면 확인
 
 ### 완료 전 남은 일
@@ -184,6 +206,15 @@ MVP-01 카카오 로그인
 
 검수 기록:
 
+- 2026-06-10 보강 검수
+  - 로컬 테스트 A/S ID: `1aba60c7-b5cb-4a3a-91d3-193ccb07e746`
+  - 최종 고객 상태: `cancel_confirmed`
+  - 최종 큐 상태: `cancel_done`
+  - 액션 이벤트: 4건
+  - 스크린샷: `output/platform-queue-qa/`
+  - 통과: AS 신규 접수, 고객 수정요청, 어드민 수정완료, 고객 취소요청, 어드민 취소완료
+  - Supabase performance advisor: 이번 변경의 `processed_by` FK 인덱스 누락 해결
+  - Supabase security advisor: 앱 연결 재인증 필요로 미확인
 - Preview URL: `https://munjanggun-knsqon7og-westgeneraldoors-projects.vercel.app`
 - 최신 callback 보정 커밋: `beee460`
 - 테스트 고객: `codex-preview-customer@munjanggun.local`
