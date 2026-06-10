@@ -10,6 +10,7 @@ interface Props {
   sourceType: QueueSourceType
   requestId: string
   queueStatus: QueueWorkStatus
+  onCompleted?: (next: { customerStatus: string; queueStatus: QueueWorkStatus }) => void
 }
 
 const ACTION_BY_STATUS: Partial<Record<QueueWorkStatus, {
@@ -34,7 +35,7 @@ const ACTION_BY_STATUS: Partial<Record<QueueWorkStatus, {
   },
 }
 
-export default function UnifiedQueueActions({ sourceType, requestId, queueStatus }: Props) {
+export default function UnifiedQueueActions({ sourceType, requestId, queueStatus, onCompleted }: Props) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
 
@@ -63,7 +64,12 @@ export default function UnifiedQueueActions({ sourceType, requestId, queueStatus
         throw new Error(data?.error || '처리 상태를 저장하지 못했습니다.')
       }
 
-      router.refresh()
+      const data = await res.json() as { customerStatus: string; queueStatus: QueueWorkStatus }
+      if (onCompleted) {
+        onCompleted(data)
+      } else {
+        router.refresh()
+      }
     } catch (error) {
       alert(error instanceof Error ? error.message : '처리 상태를 저장하지 못했습니다.')
     } finally {

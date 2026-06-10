@@ -43,6 +43,7 @@
 }
 
 .tab {
+  appearance: none;
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-full);
   font-size: var(--text-sm);
@@ -53,6 +54,7 @@
   text-decoration: none;
   white-space: nowrap;
   transition: all var(--transition-fast);
+  cursor: pointer;
 }
 
 .tab:hover {
@@ -146,12 +148,19 @@
   white-space: nowrap;
 }
 
-.table thead th a {
+.table thead th button {
+  appearance: none;
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+  padding: 0;
   color: inherit;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-weight: inherit;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .table tbody td {
@@ -159,6 +168,15 @@
   border-bottom: 1px solid var(--admin-border);
   color: var(--admin-text);
   vertical-align: middle;
+}
+
+.row {
+  cursor: pointer;
+  outline: none;
+}
+
+.row:focus-visible td {
+  box-shadow: inset 0 0 0 2px rgba(196, 162, 101, 0.45);
 }
 
 .row:last-child td {
@@ -225,7 +243,7 @@
 }
 
 @media (min-width: 1180px) {
-  .queueLayout {
+  .queueLayoutSelected {
     grid-template-columns: minmax(0, 1fr) minmax(360px, 460px);
     align-items: start;
   }
@@ -302,6 +320,16 @@
   border: 1px solid var(--admin-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--admin-shadow-sm);
+}
+
+.desktopDetail {
+  display: none;
+}
+
+@media (min-width: 1180px) {
+  .desktopDetail {
+    display: block;
+  }
 }
 
 @media (min-width: 1180px) {
@@ -488,6 +516,20 @@
   }
 }
 
+.mobileDetailScreen {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  .mobileDetailScreen {
+    display: block;
+  }
+
+  .mobileDetailScreen + .queueLayout {
+    display: none;
+  }
+}
+
 .mobileCard {
   background: var(--admin-surface);
   border: 1px solid var(--admin-border);
@@ -504,11 +546,35 @@
 }
 
 .mobileCardLink {
+  appearance: none;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   color: inherit;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  text-align: left;
   text-decoration: none;
+  cursor: pointer;
+}
+
+.mobileBackButton {
+  min-height: 38px;
+  width: max-content;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-3);
+  color: var(--admin-text-sub);
+  background: var(--admin-surface-elevated);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
 }
 
 .mobileCardTop {

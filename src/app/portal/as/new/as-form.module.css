@@ -402,6 +402,33 @@
   background: #f7f9f4;
 }
 
+#as-address[readonly] {
+  cursor: pointer;
+}
+
+.mediaGuide {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 16px 18px;
+  color: #3f4742;
+  background: #f8f6ed;
+  border: 1px solid #e2d6aa;
+  border-radius: 8px;
+}
+
+.mediaGuide strong {
+  color: #173b31;
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.mediaGuide span {
+  color: #596064;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
 .toggleRow,
 .privacyRow {
   display: flex;

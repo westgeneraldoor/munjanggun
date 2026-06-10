@@ -42,17 +42,8 @@ const MAX_FILE_SIZE_MB = 50
 const STEPS = [
   { title: '안내', helper: '천천히 하나씩 도움 드릴게요' },
   { title: '연락처', helper: '누가 연락받으면 좋을까요' },
-  { title: '내용', helper: '불편한 부분을 적어주세요' },
-  { title: '사진', helper: '있으면 훨씬 정확해요' },
+  { title: '내용', helper: '불편한 부분과 사진' },
 ] as const
-
-const ISSUE_OPTIONS = [
-  { value: 'door_adjustment', label: '문 여닫힘/수평' },
-  { value: 'film_damage', label: '필름/표면 손상' },
-  { value: 'hardware', label: '손잡이/부속 문제' },
-  { value: 'noise', label: '소음/간섭' },
-  { value: 'other', label: '기타 문의' },
-]
 
 function formatPhone(raw: string) {
   const digits = raw.replace(/\D/g, '').slice(0, 11)
@@ -91,7 +82,6 @@ export default function AsForm({ userId }: Props) {
   const [addressExtra, setAddressExtra] = useState('')
   const [isManualAddress, setIsManualAddress] = useState(false)
   const [showAddressSearch, setShowAddressSearch] = useState(false)
-  const [issueType, setIssueType] = useState('door_adjustment')
   const [message, setMessage] = useState('')
   const [privacy, setPrivacy] = useState(false)
   const [files, setFiles] = useState<FilePreview[]>([])
@@ -116,21 +106,29 @@ export default function AsForm({ userId }: Props) {
     if (currentStep === 1) {
       if (!customerName.trim() || phone.replace(/\D/g, '').length < 10) return false
       if (!sameContact && (!contactName.trim() || contactPhone.replace(/\D/g, '').length < 10 || !contactRelationship.trim())) return false
+      if (!address.trim()) return false
       return true
     }
-    if (currentStep === 2) return message.trim().length >= 10
-    return privacy
-  }, [contactName, contactPhone, contactRelationship, currentStep, customerName, message, phone, privacy, sameContact])
+    return message.trim().length >= 10 && privacy
+  }, [address, contactName, contactPhone, contactRelationship, currentStep, customerName, message, phone, privacy, sameContact])
 
   const handleAddressComplete = useCallback((data: AddressData) => {
     const nextAddress = data.roadAddress || data.jibunAddress || ''
-    setPostcode(data.postcode)
-    setRoadAddress(data.roadAddress)
-    setJibunAddress(data.jibunAddress)
-    setAddressExtra(data.addressExtra)
     setIsManualAddress(data.isManual)
-    if (nextAddress) {
-      setAddress(`${nextAddress}${data.addressExtra}`)
+    if (data.isManual) {
+      setAddress('')
+      setPostcode('')
+      setRoadAddress('')
+      setJibunAddress('')
+      setAddressExtra('')
+    } else {
+      setPostcode(data.postcode)
+      setRoadAddress(data.roadAddress)
+      setJibunAddress(data.jibunAddress)
+      setAddressExtra(data.addressExtra)
+      if (nextAddress) {
+        setAddress(`${nextAddress}${data.addressExtra}`)
+      }
     }
     setShowAddressSearch(false)
   }, [])
@@ -200,7 +198,7 @@ export default function AsForm({ userId }: Props) {
           jibun_address: jibunAddress || null,
           address_extra: addressExtra || null,
           is_manual_address: isManualAddress,
-          issue_type: issueType,
+          issue_type: 'customer_description',
           urgency: 'normal',
           preferred_contact_method: 'phone',
           message: message.trim(),
@@ -403,10 +401,17 @@ export default function AsForm({ userId }: Props) {
                 <div className={styles.formGrid}>
                   <label className={styles.fullWidth}>
                     <span>주소</span>
-                    <input id="as-address" value={address} onChange={event => {
-                      setAddress(event.target.value)
-                      setIsManualAddress(true)
-                    }} placeholder="주소 검색 또는 직접 입력" />
+                    <input
+                      id="as-address"
+                      value={address}
+                      readOnly={!isManualAddress}
+                      onClick={() => !isManualAddress && setShowAddressSearch(true)}
+                      onChange={event => {
+                        if (!isManualAddress) return
+                        setAddress(event.target.value)
+                      }}
+                      placeholder={isManualAddress ? '도로명 주소 또는 지번 주소 입력' : '기본주소를 눌러 주소를 검색해 주세요'}
+                    />
                   </label>
                   <label className={styles.fullWidth}>
                     <span>상세 주소</span>
@@ -424,14 +429,6 @@ export default function AsForm({ userId }: Props) {
                 <h2>불편한 내용을 최대한 자세히 적어주세요.</h2>
                 <p>정확히 모르셔도 괜찮아요. 언제부터, 어느 부분이, 어떻게 불편한지만 편한 말로 남겨주시면 됩니다.</p>
               </div>
-              <label className={styles.selectLabel}>
-                <span>가장 가까운 유형</span>
-                <select id="as-issue-type" value={issueType} onChange={event => setIssueType(event.target.value)}>
-                  {ISSUE_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </label>
               <label className={styles.textareaLabel}>
                 <span>불편한 내용</span>
                 <textarea
@@ -442,15 +439,9 @@ export default function AsForm({ userId }: Props) {
                   rows={7}
                 />
               </label>
-            </div>
-          )}
-
-          {currentStep === 3 && (
-            <div className={styles.stepScreen}>
-              <div className={styles.screenHeader}>
-                <p className={styles.stepKicker}>마무리</p>
-                <h2>사진이나 동영상이 있으면 함께 올려주세요.</h2>
-                <p>필수는 아니지만, 전체 모습과 문제가 보이는 부분을 같이 올려주시면 담당자가 훨씬 정확하게 확인하고 연락드릴 수 있어요.</p>
+              <div className={styles.mediaGuide}>
+                <strong>사진이나 동영상이 있으면 훨씬 정확하게 볼 수 있어요.</strong>
+                <span>필수는 아니지만, 전체 모습과 문제가 보이는 부분을 같이 올려주시면 담당자가 확인하기 좋습니다.</span>
               </div>
               <div className={styles.uploadBox}>
                 <input
