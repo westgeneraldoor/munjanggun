@@ -2,7 +2,7 @@
 document_type: "Platform Task Board"
 version: "1.1.0"
 status: "active"
-last_updated: "2026-06-09"
+last_updated: "2026-06-10"
 owner: "Codex PM"
 source_strategy: "docs/platform/PLATFORM_STRATEGY.md"
 source_prd: "docs/platform/PRD_PLATFORM_v1.0.md"
@@ -28,17 +28,26 @@ source_development_strategy: "docs/platform/DEVELOPMENT_STRATEGY.md"
 
 ## 현재 판단
 
-MVP-02는 기존 무료방문견적 신청/어드민 큐를 넘어, 고객 수정/취소 요청과 AS 통합 큐까지 로컬 검수를 완료했다.
+MVP-02는 무료방문 실측견적 상담 신청을 중심으로, 고객 마이페이지, 수정/취소 요청, A/S 접수, 무료실측+A/S 통합 접수 큐까지 확장된 상태로 개발과 로컬 검수를 완료했다.
 
 - [x] `npm run lint` 통과
 - [x] `npm run build` 통과
 - [x] Playwright 모바일/데스크탑 주요 화면 확인
-- [ ] 커밋
-- [ ] 푸시
-- [ ] Vercel Preview 배포
-- [ ] 배포 URL에서 로그인 보호, 고객 수정/취소 요청, 어드민 통합 큐 최종 확인
+- [x] 커밋
+- [x] 푸시
+- [x] Vercel Preview 배포 READY
+- [x] 플랫폼 UI 헌법 문서화
+- [ ] Preview 실제 계정 최종 검수
+- [ ] GitHub draft PR 생성
 
-따라서 현재 상태는 `MVP-02 보강 완료 후보`다. 커밋, 푸시, Preview 배포와 Preview 실계정 확인이 남았다.
+따라서 현재 상태는 `MVP-02 closeout`이다. 새 기능 구현은 멈추고 Preview 실계정 검수와 PR 준비를 먼저 닫는다.
+
+최신 배포:
+
+- 최신 커밋: `ce691aa MVP-02 플랫폼 UI 헌법과 견적 설정 정리`
+- Preview URL: `https://munjanggun-p9d8j6thb-westgeneraldoors-projects.vercel.app`
+- Branch alias: `https://munjanggun-git-platform-v1-westgeneraldoors-projects.vercel.app`
+- Production `https://munjanggun.vercel.app`은 아직 최신 플랫폼 작업이 아니다.
 
 ## 크리티컬 패스
 
@@ -192,6 +201,17 @@ MVP-01 카카오 로그인
 - [x] Playwright로 고객 수정/취소 요청 확인
 - [x] Playwright로 어드민 통합 접수 큐 확인
 - [x] Playwright로 어드민 설정 화면 확인
+- [x] Playwright로 무료견적/A/S 공통 접수 프레임 확인
+- [x] Playwright로 마이페이지 모바일 overflow 없음 확인
+- [x] Playwright로 어드민 필터 active-hover 대비 확인
+
+### UI/운영 헌법
+
+- [x] `docs/platform/PLATFORM_UI_CONSTITUTION.md` 추가
+- [x] `AGENTS.md`에 플랫폼 UI 헌법 확인 규칙 추가
+- [x] 고객 접수 화면 상단바/로딩/완료 동선 공통화
+- [x] 어드민 견적 접수 운영설정 명칭 정리
+- [x] 어드민 버튼 상태 대비 보정
 
 ### 완료 전 남은 일
 
@@ -204,6 +224,19 @@ MVP-01 카카오 로그인
 - [x] 배포 URL에서 고객 신청 1건 실제 생성 확인
 - [x] 배포 URL에서 어드민 접수완료/취소 상태 저장 확인
 
+### Preview 최종 검수 체크리스트
+
+- [ ] 실제 카카오 계정으로 Preview 로그인 callback 확인
+- [ ] 고객 무료방문 실측견적 상담 1건 생성
+- [ ] 고객 A/S 접수 1건 생성
+- [ ] 고객 수정요청 생성
+- [ ] 고객 취소요청 생성
+- [ ] 관리자 `moon@munjanggun.com` 접수 큐 확인
+- [ ] 관리자 `west1836@gmail.com` 접수 큐 확인
+- [ ] 어드민 접수완료/수정완료/취소완료 처리 확인
+- [ ] 모바일 390px에서 마이페이지/접수/어드민 설정 좌우 overflow 없음 확인
+- [ ] 기존 쇼룸 Public Experience 회귀 없음 확인
+
 검수 기록:
 
 - 2026-06-10 보강 검수
@@ -215,7 +248,9 @@ MVP-01 카카오 로그인
   - 통과: AS 신규 접수, 고객 수정요청, 어드민 수정완료, 고객 취소요청, 어드민 취소완료
   - Supabase performance advisor: 이번 변경의 `processed_by` FK 인덱스 누락 해결
   - Supabase security advisor: 앱 연결 재인증 필요로 미확인
-- Preview URL: `https://munjanggun-knsqon7og-westgeneraldoors-projects.vercel.app`
+- 이전 Preview URL: `https://munjanggun-knsqon7og-westgeneraldoors-projects.vercel.app`
+- 최신 Preview URL: `https://munjanggun-p9d8j6thb-westgeneraldoors-projects.vercel.app`
+- Branch alias: `https://munjanggun-git-platform-v1-westgeneraldoors-projects.vercel.app`
 - 최신 callback 보정 커밋: `beee460`
 - 테스트 고객: `codex-preview-customer@munjanggun.local`
 - 테스트 관리자: `codex-preview-administrator@munjanggun.local`
@@ -286,14 +321,14 @@ MVP-01 카카오 로그인
 
 ## MVP-07 - AS 접수
 
-상태: 고객 접수 MVP 일부 완료
+상태: 고객 접수와 어드민 통합 큐는 MVP-02 보강에 흡수 완료. 기존 시공 이력 연결과 AS 전용 상태 관리는 후속 범위.
 
 - [x] AS 접수 로그인 필수
 - [ ] 기존 시공 이력 연결
 - [x] AS 접수 폼
 - [x] AS 사진/영상 첨부
-- [ ] 어드민 AS 접수 큐
-- [ ] AS 상태 관리
+- [x] 어드민 AS 접수 큐
+- [ ] AS 상태 관리 고도화
 - [ ] 하단 플로팅 CTA 재정의
 
 진행 기록:
