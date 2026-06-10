@@ -20,6 +20,16 @@ owner: "Codex PM"
 - 기존 운영 흐름은 `AppSheet -> n8n -> HTML 견적서 생성 -> 솔라피 알림톡 발송`이다.
 - 영업부 담당자는 AppSheet에서 `견적서 보내기` 액션을 누를 뿐, 생성된 HTML 링크를 직접 다루지 않는다.
 
+## 2026-06-10 MCP 연결 상태
+
+- n8n `Instance-level MCP`는 활성화되어 있다.
+- Codex 전역 설정 `C:\Users\hjh\.codex\config.toml`에 `n8n-mcp` 서버를 등록했다.
+- MCP URL은 `https://n8n.munjanggun.com/mcp-server/http`이다.
+- MCP 초기화 요청은 `200 OK`로 성공했고, 서버 정보는 `n8n MCP Server 1.1.0`으로 확인했다.
+- 수동 `tools/list` 확인 결과 MCP 도구 28개가 노출된다.
+- 현재 Codex 세션에서는 새 MCP 서버가 정식 tool namespace로 즉시 노출되지 않았다. 다음 Codex 세션 또는 앱 재시작 후 직접 도구로 보일 수 있다.
+- 노출 도구에는 `publish_workflow`, `unpublish_workflow`, `update_workflow`, `archive_workflow` 같은 운영 변경 도구가 포함된다. 사용자의 명시 승인 없이 이 도구들은 사용하지 않는다.
+
 ## 핵심 원칙
 
 1. 운영 워크플로우는 바로 수정하지 않는다.
