@@ -7,6 +7,7 @@ owner: "Codex PM"
 source_strategy: "docs/platform/PLATFORM_STRATEGY.md"
 source_tasks: "docs/platform/PLATFORM_TASKS.md"
 source_order: "_order.md"
+related_team_operating_model: "docs/platform/TEAM_AGENT_OPERATING_MODEL.md"
 ---
 
 # DEVELOPMENT_STRATEGY — AI 작업 운영 규칙
@@ -16,6 +17,8 @@ source_order: "_order.md"
 이 문서는 무거운 개발 전략서가 아니다.
 
 문장군 플랫폼에서 여러 AI를 어떻게 나눠 쓸지 정하는 가벼운 운영 규칙이다.
+
+실제 Codex 세션 안에서 서브에이전트를 어떤 팀 역할로 편성하고, 어떤 기준으로 리서치/구현/검수를 나눌지는 `docs/platform/TEAM_AGENT_OPERATING_MODEL.md`를 따른다.
 
 | 담당 | 역할 |
 |---|---|
