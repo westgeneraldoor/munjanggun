@@ -271,7 +271,7 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
       .from('content_assets')
       .select('id, title, description, category, labels, product_type, space_type, region, usage_purpose, library_state, privacy_checked, promotion_consent_checked, used_count, created_by, updated_by, created_at, updated_at')
       .eq('library_state', 'available')
-      .order('updated_at', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(240),
     showroomAdmin
       .from('content_asset_tags')
@@ -338,6 +338,7 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
       usagePurpose: asset.usage_purpose,
       privacyChecked: asset.privacy_checked,
       promotionConsentChecked: asset.promotion_consent_checked,
+      createdAt: asset.created_at,
       updatedAt: asset.updated_at,
       thumbnail: contentAssetFileSummary(assetFiles, 'thumbnail'),
       web: contentAssetFileSummary(assetFiles, 'web'),

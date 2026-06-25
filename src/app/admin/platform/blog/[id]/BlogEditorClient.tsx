@@ -130,6 +130,7 @@ export type ContentAssetPickerItem = {
   usagePurpose: string | null
   privacyChecked: boolean
   promotionConsentChecked: boolean
+  createdAt: string
   updatedAt: string
   thumbnail: ContentAssetFileSummary
   web: ContentAssetFileSummary
@@ -156,7 +157,6 @@ type PickerUploadItem = {
 }
 
 const MAX_UPLOAD_TOTAL_BYTES = 120 * 1024 * 1024
-const TECHNICAL_TITLE_RE = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{8,}$/i
 
 const CATEGORY_OPTIONS: Array<{ value: BlogContentCategory; label: string }> = [
   { value: 'case_study', label: '시공사례' },
@@ -200,15 +200,13 @@ function fallbackPhotoName(index: number) {
   return `사진 ${index + 1}`
 }
 
-function looksTechnicalTitle(value: string | null | undefined) {
-  const text = value?.trim() ?? ''
-  if (!text) return false
-  return TECHNICAL_TITLE_RE.test(text) || (/^[a-f0-9-]{24,}$/i.test(text) && text.includes('-'))
+function fileTitle(fileName: string) {
+  return fileName.replace(/\.[^.]+$/, '').trim() || fileName
 }
 
 function displayAssetTitle(item: Pick<ContentAssetPickerItem, 'title' | 'description'>, index = 0) {
   const title = item.title?.trim() ?? ''
-  if (title && !looksTechnicalTitle(title)) return title
+  if (title) return title
   return item.description?.trim() || fallbackPhotoName(index)
 }
 
@@ -219,6 +217,18 @@ function uploadId(file: File) {
 function formatBytes(value: number) {
   if (value < 1024 * 1024) return `${Math.max(1, Math.round(value / 1024))}KB`
   return `${(value / (1024 * 1024)).toFixed(1)}MB`
+}
+
+function formatAssetDateTime(value: string) {
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Seoul',
+  }).format(new Date(value))
 }
 
 function formatDateTime(value: string | null) {
@@ -407,7 +417,7 @@ function ContentAssetPicker({
       if (category && item.category !== category) return false
       if (query && !searchableAssetText(item).includes(query)) return false
       return true
-    })
+    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   }, [category, items, search])
 
   const selectedItems = selectedIds
@@ -446,11 +456,11 @@ function ContentAssetPicker({
   function handleUploadFiles(event: ChangeEvent<HTMLInputElement>) {
     setUploadItems(current => {
       current.forEach(item => URL.revokeObjectURL(item.previewUrl))
-      return Array.from(event.target.files ?? []).map((file, index) => ({
+      return Array.from(event.target.files ?? []).map(file => ({
         id: uploadId(file),
         file,
         previewUrl: URL.createObjectURL(file),
-        title: fallbackPhotoName(index),
+        title: fileTitle(file.name),
         description: '',
       }))
     })
@@ -624,7 +634,8 @@ function ContentAssetPicker({
                   </div>
                   <div className={styles.assetPickerCardBody}>
                     <strong>{displayAssetTitle(item, index)}</strong>
-                    <span>{item.description || item.category || '설명을 추가해 주세요.'}</span>
+                    <span>{item.description || '설명을 추가해 주세요.'}</span>
+                    <time dateTime={item.createdAt}>{formatAssetDateTime(item.createdAt)}</time>
                     <div className={styles.assetPickerBadges}>
                       {item.category ? <small>{item.category}</small> : null}
                       {ready ? <small>사용 가능</small> : <small>정보 필요</small>}

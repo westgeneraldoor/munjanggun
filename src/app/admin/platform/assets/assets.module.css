@@ -699,11 +699,17 @@
   overflow-wrap: anywhere;
 }
 
-.cardBody > span {
+.cardBody > span,
+.cardBody time {
   color: var(--admin-text-sub);
   font-size: var(--text-xs);
   line-height: 1.45;
   overflow-wrap: anywhere;
+}
+
+.cardBody time {
+  color: var(--admin-text-muted);
+  font-weight: var(--font-semibold);
 }
 
 .cardMeta,

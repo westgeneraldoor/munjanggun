@@ -82,29 +82,25 @@ const FILTER_LABELS: Record<FilterKey, string> = {
 }
 
 const MAX_UPLOAD_TOTAL_BYTES = 120 * 1024 * 1024
-const TECHNICAL_TITLE_RE = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{8,}$/i
 
-function fallbackPhotoName(index: number) {
-  return `사진 ${index + 1}`
-}
-
-function looksTechnicalTitle(value: string | null | undefined) {
-  const text = value?.trim() ?? ''
-  if (!text) return false
-  return TECHNICAL_TITLE_RE.test(text) || (/^[a-f0-9-]{24,}$/i.test(text) && text.includes('-'))
+function fileTitle(fileName: string) {
+  return fileName.replace(/\.[^.]+$/, '').trim() || fileName
 }
 
 function displayAssetTitle(item: ContentAssetLibraryItem, index = 0) {
   const title = textValue(item.title)
-  if (!title || looksTechnicalTitle(title)) return fallbackPhotoName(index)
-  return title
+  return title || item.description?.trim() || `사진 ${index + 1}`
 }
 
-function formatDate(value: string) {
+function formatDateTime(value: string) {
   return new Intl.DateTimeFormat('ko-KR', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Seoul',
   }).format(new Date(value))
 }
 
@@ -120,7 +116,7 @@ function textValue(value: string | null) {
 
 function itemToForm(item: ContentAssetLibraryItem): DetailForm {
   return {
-    title: looksTechnicalTitle(item.title) ? '' : textValue(item.title),
+    title: textValue(item.title),
     description: textValue(item.description),
     category: textValue(item.category),
     tags: item.tags.join(', '),
@@ -181,11 +177,11 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     setSelectedUploads(current => {
       current.forEach(item => URL.revokeObjectURL(item.previewUrl))
-      return Array.from(event.target.files ?? []).map((file, index) => ({
+      return Array.from(event.target.files ?? []).map(file => ({
         id: uploadId(file),
         file,
         previewUrl: URL.createObjectURL(file),
-        title: fallbackPhotoName(index),
+        title: fileTitle(file.name),
         description: '',
       }))
     })
@@ -362,7 +358,7 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
               {result.items.map((item, index) => (
                 <li key={`${item.fileName}-${index}`}>
                   {item.ok ? <CheckCircle2 aria-hidden="true" size={14} /> : <AlertCircle aria-hidden="true" size={14} />}
-                  <span>{fallbackPhotoName(index)}: {item.message}</span>
+                  <span>{fileTitle(item.fileName)}: {item.message}</span>
                 </li>
               ))}
             </ul>
@@ -454,8 +450,8 @@ function AssetDetailPanel({
         )}
       </div>
 
-        <div className={styles.detailMeta}>
-          <span>등록일 {formatDate(item.createdAt)}</span>
+      <div className={styles.detailMeta}>
+          <span>업로드 {formatDateTime(item.createdAt)}</span>
           <span>사용 {item.usedCount}회</span>
           <span>{formatBytes(item.web?.sizeBytes ?? item.thumbnail?.sizeBytes)}</span>
         </div>
@@ -541,7 +537,7 @@ export default function ContentAssetsClient({
       return (Object.entries(filters) as Array<[FilterKey, string]>).every(([key, value]) => {
         return !value || item[key] === value
       })
-    })
+    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   }, [filters, initialItems, search, tagFilter])
 
   const selectedItem = filteredItems.find(item => item.id === selectedId)
@@ -647,7 +643,7 @@ export default function ContentAssetsClient({
         <section className={styles.libraryList} aria-label="사진 목록">
           <div className={styles.listSummary}>
             <strong>{filteredItems.length}장</strong>
-            <span>최근 수정 순</span>
+            <span>최근 업로드 순</span>
           </div>
 
           {filteredItems.length === 0 ? (
@@ -672,17 +668,8 @@ export default function ContentAssetsClient({
                     </div>
                     <div className={styles.cardBody}>
                       <strong>{displayAssetTitle(item, index)}</strong>
-                      <span>{item.description || item.category || '설명을 추가해 주세요.'}</span>
-                      <div className={styles.cardMeta}>
-                        {item.category ? <em>{item.category}</em> : null}
-                        {item.region ? <em>{item.region}</em> : null}
-                      </div>
-                      {item.tags.length > 0 ? (
-                        <div className={styles.cardTags}>
-                          {item.tags.slice(0, 3).map(tag => <small key={tag}>{tag}</small>)}
-                          {item.tags.length > 3 ? <small>+{item.tags.length - 3}</small> : null}
-                        </div>
-                      ) : null}
+                      <span>{item.description || '설명을 추가해 주세요.'}</span>
+                      <time dateTime={item.createdAt}>{formatDateTime(item.createdAt)}</time>
                     </div>
                   </button>
                 )
