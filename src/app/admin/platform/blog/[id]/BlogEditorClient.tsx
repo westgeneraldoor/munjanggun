@@ -822,6 +822,11 @@ export default function BlogEditorClient({
 
   const isPublished = post.status === 'published'
   const selectableMedia = useMemo(() => editorMedia.filter(item => item.usageStatus !== 'rejected'), [editorMedia])
+  const blockMediaIds = useMemo(() => new Set(blocks
+    .filter(block => block.type === 'image' && block.mediaId)
+    .map(block => block.mediaId as string)
+  ), [blocks])
+  const blockMedia = useMemo(() => editorMedia.filter(item => blockMediaIds.has(item.id)), [blockMediaIds, editorMedia])
 
   const blockStats = useMemo(() => ({
     blockCount: blocks.length,
@@ -1167,7 +1172,7 @@ export default function BlogEditorClient({
           <section className={styles.panel}>
             <div className={styles.panelTitle}>
               <ImageIcon size={17} aria-hidden="true" />
-              <h2>글에 넣은 사진</h2>
+              <h2>본문 사진</h2>
             </div>
             <div className={styles.uploadBox}>
               <p className={styles.panelHelp}>본문 사진은 사진보관함에서 선택합니다. 새 사진 업로드와 분류 관리는 사진보관함 화면에서 진행하세요.</p>
@@ -1181,9 +1186,9 @@ export default function BlogEditorClient({
                 </Link>
               </div>
             </div>
-            {editorMedia.length > 0 && (
+            {blockMedia.length > 0 && (
               <ul className={styles.mediaEditorList}>
-                {editorMedia.map(item => (
+                {blockMedia.map(item => (
                   <MediaEditorCard
                     key={item.id}
                     postId={post.id}
@@ -1194,8 +1199,8 @@ export default function BlogEditorClient({
                 ))}
               </ul>
             )}
-            {editorMedia.length === 0 && (
-              <div className={styles.emptyBlocks}>아직 이 글에 넣은 사진이 없습니다. + 이미지를 눌러 사진보관함에서 선택하세요.</div>
+            {blockMedia.length === 0 && (
+              <div className={styles.emptyBlocks}>아직 본문에 들어간 사진이 없습니다. 가운데 본문 영역에서 + 이미지를 눌러 사진보관함에서 선택하세요.</div>
             )}
           </section>
 

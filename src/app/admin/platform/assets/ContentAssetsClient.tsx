@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- 사진보관함은 서버에서 이미 정리한 WebP/썸네일만 렌더링합니다. */
 
-import { useMemo, useState, useTransition, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition, type ChangeEvent, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   AlertCircle,
@@ -65,6 +65,13 @@ type DetailForm = {
 }
 
 type FilterKey = 'category' | 'productType' | 'spaceType' | 'region' | 'usagePurpose'
+type SelectedUpload = {
+  id: string
+  file: File
+  previewUrl: string
+  title: string
+  description: string
+}
 
 const FILTER_LABELS: Record<FilterKey, string> = {
   category: '분류',
@@ -139,29 +146,66 @@ function optionValues(items: ContentAssetLibraryItem[], key: FilterKey) {
     .sort((a, b) => a.localeCompare(b, 'ko-KR'))
 }
 
+function uploadId(file: File) {
+  return `${file.name}-${file.size}-${file.lastModified}`
+}
+
 function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [selectedUploads, setSelectedUploads] = useState<SelectedUpload[]>([])
+  const selectedUploadsRef = useRef<SelectedUpload[]>([])
   const [result, setResult] = useState<UploadContentAssetsResult | null>(null)
-  const totalBytes = selectedFiles.reduce((sum, file) => sum + file.size, 0)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const totalBytes = selectedUploads.reduce((sum, item) => sum + item.file.size, 0)
   const isOverLimit = totalBytes > MAX_UPLOAD_TOTAL_BYTES
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    setSelectedFiles(Array.from(event.target.files ?? []))
+    setSelectedUploads(current => {
+      current.forEach(item => URL.revokeObjectURL(item.previewUrl))
+      return Array.from(event.target.files ?? []).map(file => ({
+        id: uploadId(file),
+        file,
+        previewUrl: URL.createObjectURL(file),
+        title: file.name.replace(/\.[^.]+$/, ''),
+        description: '',
+      }))
+    })
     setResult(null)
   }
+
+  function updateSelectedUpload(id: string, patch: Partial<Pick<SelectedUpload, 'title' | 'description'>>) {
+    setSelectedUploads(current => current.map(item => item.id === id ? { ...item, ...patch } : item))
+  }
+
+  useEffect(() => {
+    selectedUploadsRef.current = selectedUploads
+  }, [selectedUploads])
+
+  useEffect(() => {
+    return () => {
+      selectedUploadsRef.current.forEach(item => URL.revokeObjectURL(item.previewUrl))
+    }
+  }, [])
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = event.currentTarget
     const formData = new FormData(form)
+    formData.set('fileMeta', JSON.stringify(selectedUploads.map(item => ({
+      name: item.file.name,
+      size: item.file.size,
+      lastModified: item.file.lastModified,
+      title: item.title,
+      description: item.description,
+    }))))
 
     startTransition(async () => {
       const nextResult = await uploadContentAssets(formData)
       setResult(nextResult)
       if (nextResult.ok) {
-        setSelectedFiles([])
+        selectedUploads.forEach(item => URL.revokeObjectURL(item.previewUrl))
+        setSelectedUploads([])
         form.reset()
         router.refresh()
         onUploaded()
@@ -188,52 +232,75 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
         />
       </div>
 
-      {selectedFiles.length > 0 ? (
+      {selectedUploads.length > 0 ? (
         <>
           <div className={isOverLimit ? styles.limitWarning : styles.limitInfo}>
-            선택한 사진 {selectedFiles.length}장, 합계 {formatBytes(totalBytes)}
+            선택한 사진 {selectedUploads.length}장, 합계 {formatBytes(totalBytes)}
           </div>
-          <ul className={styles.selectedFiles} aria-label="선택한 사진">
-            {selectedFiles.map(file => (
-              <li key={`${file.name}-${file.size}`}>
-                <span>{file.name}</span>
-                <small>{formatBytes(file.size)}</small>
+          <ul className={styles.selectedPreviews} aria-label="선택한 사진 미리보기">
+            {selectedUploads.map(item => (
+              <li key={item.id}>
+                <div className={styles.selectedPreviewImage}>
+                  <img src={item.previewUrl} alt={item.title || item.file.name} />
+                </div>
+                <div className={styles.selectedPreviewBody}>
+                  <label>
+                    사진 이름
+                    <input
+                      value={item.title}
+                      onChange={event => updateSelectedUpload(item.id, { title: event.target.value })}
+                      placeholder="예: 현관 중문 설치 후"
+                    />
+                  </label>
+                  <label>
+                    짧은 설명
+                    <textarea
+                      value={item.description}
+                      onChange={event => updateSelectedUpload(item.id, { description: event.target.value })}
+                      rows={2}
+                      placeholder="예: 좁은 현관에 맞춘 3연동 중문"
+                    />
+                  </label>
+                  <small>{item.file.name} · {formatBytes(item.file.size)}</small>
+                </div>
               </li>
             ))}
           </ul>
         </>
       ) : null}
 
-      <div className={styles.uploadFields}>
-        <label>
-          사진 설명
-          <textarea name="description" rows={3} placeholder="예: 현관 중문 설치 전 확인용 사진" />
-        </label>
-        <label>
-          분류
-          <input name="category" placeholder="예: 중문, 현관, 시공후" />
-        </label>
-        <label>
-          태그
-          <input name="tags" placeholder="예: 3연동, 화이트, 좁은현관" />
-        </label>
-        <label>
-          제품군
-          <input name="productType" placeholder="예: 중문" />
-        </label>
-        <label>
-          공간
-          <input name="spaceType" placeholder="예: 현관" />
-        </label>
-        <label>
-          지역
-          <input name="region" placeholder="예: 동탄" />
-        </label>
-        <label>
-          사용 목적
-          <input name="usagePurpose" placeholder="예: 블로그, 상담자료" />
-        </label>
-      </div>
+      <details className={styles.optionalFields} open={advancedOpen} onToggle={event => setAdvancedOpen(event.currentTarget.open)}>
+        <summary>
+          <span>선택 정보</span>
+          <small>분류, 태그, 제품군, 공간, 지역, 사용 목적은 나중에 수정해도 됩니다.</small>
+        </summary>
+        <div className={styles.uploadFields}>
+          <label>
+            분류
+            <input name="category" placeholder="예: 중문, 현관, 시공후" />
+          </label>
+          <label>
+            태그
+            <input name="tags" placeholder="예: 3연동, 화이트, 좁은현관" />
+          </label>
+          <label>
+            제품군
+            <input name="productType" placeholder="예: 중문" />
+          </label>
+          <label>
+            공간
+            <input name="spaceType" placeholder="예: 현관" />
+          </label>
+          <label>
+            지역
+            <input name="region" placeholder="예: 동탄" />
+          </label>
+          <label>
+            사용 목적
+            <input name="usagePurpose" placeholder="예: 블로그, 상담자료" />
+          </label>
+        </div>
+      </details>
 
       <div className={styles.checkGrid}>
         <label className={styles.checkRow}>
@@ -245,9 +312,10 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
           <span>블로그/홍보 사용 가능</span>
         </label>
       </div>
+      <p className={styles.uploadHint}>본문에 바로 넣을 사진은 두 항목을 체크해두면 편합니다. 나중에 사진 상세에서 다시 수정할 수 있습니다.</p>
 
       <div className={styles.uploadActions}>
-        <button type="submit" className={styles.primaryButton} disabled={isPending || selectedFiles.length === 0 || isOverLimit}>
+        <button type="submit" className={styles.primaryButton} disabled={isPending || selectedUploads.length === 0 || isOverLimit}>
           {isPending ? <Loader2 aria-hidden="true" size={16} className={styles.spin} /> : <UploadCloud aria-hidden="true" size={16} />}
           사진 보관
         </button>
@@ -506,41 +574,47 @@ export default function ContentAssetsClient({
             placeholder="사진명, 설명, 태그로 검색"
           />
         </label>
-        <div className={styles.filterGrid}>
-          {(Object.keys(FILTER_LABELS) as FilterKey[]).map(key => (
-            <label key={key}>
-              <span>{FILTER_LABELS[key]}</span>
-              <select
-                value={filters[key]}
-                onChange={event => setFilters(current => ({ ...current, [key]: event.target.value }))}
-              >
-                <option value="">전체</option>
-                {options[key].map(value => <option key={value} value={value}>{value}</option>)}
-              </select>
-            </label>
-          ))}
-        </div>
-        {tagOptions.length > 0 ? (
-          <div className={styles.tagFilters} aria-label="태그 필터">
-            <button
-              type="button"
-              className={!tagFilter ? styles.tagActive : styles.tagButton}
-              onClick={() => setTagFilter('')}
-            >
-              전체 태그
-            </button>
-            {tagOptions.map(tag => (
-              <button
-                key={tag.id}
-                type="button"
-                className={tagFilter === tag.name ? styles.tagActive : styles.tagButton}
-                onClick={() => setTagFilter(tag.name)}
-              >
-                {tag.name}
-              </button>
+        <details className={styles.filterDetails}>
+          <summary>
+            <span>상세 필터</span>
+            <small>분류, 제품군, 공간, 지역, 목적, 태그로 좁혀보기</small>
+          </summary>
+          <div className={styles.filterGrid}>
+            {(Object.keys(FILTER_LABELS) as FilterKey[]).map(key => (
+              <label key={key}>
+                <span>{FILTER_LABELS[key]}</span>
+                <select
+                  value={filters[key]}
+                  onChange={event => setFilters(current => ({ ...current, [key]: event.target.value }))}
+                >
+                  <option value="">전체</option>
+                  {options[key].map(value => <option key={value} value={value}>{value}</option>)}
+                </select>
+              </label>
             ))}
           </div>
-        ) : null}
+          {tagOptions.length > 0 ? (
+            <div className={styles.tagFilters} aria-label="태그 필터">
+              <button
+                type="button"
+                className={!tagFilter ? styles.tagActive : styles.tagButton}
+                onClick={() => setTagFilter('')}
+              >
+                전체 태그
+              </button>
+              {tagOptions.map(tag => (
+                <button
+                  key={tag.id}
+                  type="button"
+                  className={tagFilter === tag.name ? styles.tagActive : styles.tagButton}
+                  onClick={() => setTagFilter(tag.name)}
+                >
+                  {tag.name}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </details>
       </section>
 
       {mobileDetailOpen && selectedItem ? (
