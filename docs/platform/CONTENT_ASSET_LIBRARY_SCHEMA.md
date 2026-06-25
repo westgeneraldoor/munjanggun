@@ -301,3 +301,81 @@ PR-08 구현 후 검증할 항목:
 - admin은 목록/검색/수정 가능
 - 기존 Content OS publish flow가 깨지지 않음
 - public HTML에 original bucket path 미노출
+
+## 8. PR-08 implementation result
+
+Date: 2026-06-25
+
+Project ref: `cebafroyvmllbyivevjd`
+
+Migration:
+
+- `supabase/migrations/20260625051019_content_asset_library_foundation.sql`
+
+Created schema objects:
+
+- `showroom.content_assets`
+- `showroom.content_asset_files`
+- `showroom.content_asset_tags`
+- `showroom.content_asset_tag_links`
+- `showroom.content_asset_usages`
+- `showroom.content_asset_events`
+
+Created enum objects:
+
+- `showroom.content_asset_library_state`
+- `showroom.content_asset_file_role`
+- `showroom.content_asset_transform_status`
+- `showroom.content_asset_usage_context`
+- `showroom.content_asset_usage_role`
+
+Storage buckets:
+
+- `content-assets-private`: private originals, max 100MB, image/jpeg, image/png, image/webp, image/heic, image/heif.
+- `content-assets-public`: public web/thumbnail derivatives, max 20MB, image/webp only.
+
+Storage policies:
+
+- `content_assets_public_select`
+- `content_assets_public_admin_insert`
+- `content_assets_public_admin_delete`
+- `content_assets_private_admin_select`
+- `content_assets_private_admin_insert`
+- `content_assets_private_admin_delete`
+
+No `storage.objects` UPDATE policy is created. Public overwrite/upsert remains intentionally unsupported.
+
+Bridge:
+
+- `showroom.blog_media.content_asset_id` was added as a nullable bridge to `showroom.content_assets`.
+- Existing `blog_media`, existing blog image blocks, and existing Content OS publish flow remain the active MVP path.
+- PR-09 can create `blog_media` rows from selected content assets without replacing the existing publish gate.
+
+Server-only transform utility:
+
+- `src/lib/content-assets/image-transforms.ts`
+
+Responsibilities:
+
+- Validate allowed image MIME and max original size.
+- Generate safe object paths.
+- Calculate SHA-256 checksums.
+- Generate WebP web derivatives.
+- Generate WebP thumbnails.
+- Rotate by metadata and strip original metadata from derivatives through re-encoding.
+
+RLS summary:
+
+- anon can see only minimal asset/file/usage data for assets used by published blog content.
+- anon cannot read original file rows, internal object paths, tag internals, events, or hidden/unpublished asset metadata.
+- authenticated administrators can CRUD the library tables through `platform_private.is_admin()`.
+- service role is granted server-side access for upload, transform, cleanup, and future publish/bridge jobs.
+
+Out of scope for PR-08:
+
+- Photo library UI.
+- Multi-upload UI.
+- Blog editor `+ image` modal.
+- Publish flow changes.
+- Existing `blog-media` and `blog-media-private` policy changes.
+- Body component expansion.

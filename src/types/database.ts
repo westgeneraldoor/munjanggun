@@ -51,6 +51,33 @@ export type BlogMediaSourceType =
   | 'external_reference'
   | 'showroom_asset'
 
+export type ContentAssetLibraryState = 'available' | 'hidden' | 'archived'
+
+export type ContentAssetFileRole = 'original' | 'web' | 'thumbnail'
+
+export type ContentAssetTransformStatus = 'pending' | 'ready' | 'failed'
+
+export type ContentAssetUsageContext =
+  | 'blog_post'
+  | 'blog_block'
+  | 'showroom_page'
+  | 'area_page'
+  | 'service_page'
+  | 'instagram'
+  | 'reels'
+  | 'proposal'
+  | 'other'
+
+export type ContentAssetUsageRole =
+  | 'cover'
+  | 'body'
+  | 'inline'
+  | 'before'
+  | 'after'
+  | 'detail'
+  | 'thumbnail'
+  | 'other'
+
 export interface Database {
   showroom: {
     Tables: {
@@ -294,6 +321,225 @@ export interface Database {
           created_at?: string
         }
       }
+      content_assets: {
+        Row: {
+          id: string
+          title: string | null
+          description: string | null
+          category: string | null
+          labels: Json
+          product_type: string | null
+          space_type: string | null
+          region: string | null
+          usage_purpose: string | null
+          library_state: ContentAssetLibraryState
+          privacy_checked: boolean
+          promotion_consent_checked: boolean
+          used_count: number
+          created_by: string | null
+          updated_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title?: string | null
+          description?: string | null
+          category?: string | null
+          labels?: Json
+          product_type?: string | null
+          space_type?: string | null
+          region?: string | null
+          usage_purpose?: string | null
+          library_state?: ContentAssetLibraryState
+          privacy_checked?: boolean
+          promotion_consent_checked?: boolean
+          used_count?: number
+          created_by?: string | null
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string | null
+          description?: string | null
+          category?: string | null
+          labels?: Json
+          product_type?: string | null
+          space_type?: string | null
+          region?: string | null
+          usage_purpose?: string | null
+          library_state?: ContentAssetLibraryState
+          privacy_checked?: boolean
+          promotion_consent_checked?: boolean
+          used_count?: number
+          created_by?: string | null
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      content_asset_files: {
+        Row: {
+          id: string
+          asset_id: string
+          file_role: ContentAssetFileRole
+          bucket: string
+          object_path: string
+          public_url: string | null
+          mime_type: string
+          size_bytes: number | null
+          width: number | null
+          height: number | null
+          checksum_sha256: string | null
+          storage_etag: string | null
+          transform_status: ContentAssetTransformStatus
+          transform_error: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          asset_id: string
+          file_role: ContentAssetFileRole
+          bucket: string
+          object_path: string
+          public_url?: string | null
+          mime_type: string
+          size_bytes?: number | null
+          width?: number | null
+          height?: number | null
+          checksum_sha256?: string | null
+          storage_etag?: string | null
+          transform_status?: ContentAssetTransformStatus
+          transform_error?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          asset_id?: string
+          file_role?: ContentAssetFileRole
+          bucket?: string
+          object_path?: string
+          public_url?: string | null
+          mime_type?: string
+          size_bytes?: number | null
+          width?: number | null
+          height?: number | null
+          checksum_sha256?: string | null
+          storage_etag?: string | null
+          transform_status?: ContentAssetTransformStatus
+          transform_error?: string | null
+          created_at?: string
+        }
+      }
+      content_asset_tags: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          tag_group: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          tag_group?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          tag_group?: string | null
+          created_at?: string
+        }
+      }
+      content_asset_tag_links: {
+        Row: {
+          asset_id: string
+          tag_id: string
+          created_at: string
+        }
+        Insert: {
+          asset_id: string
+          tag_id: string
+          created_at?: string
+        }
+        Update: {
+          asset_id?: string
+          tag_id?: string
+          created_at?: string
+        }
+      }
+      content_asset_usages: {
+        Row: {
+          id: string
+          asset_id: string
+          usage_context: ContentAssetUsageContext
+          ref_table: string
+          ref_id: string
+          role: ContentAssetUsageRole
+          caption_override: string | null
+          alt_text_override: string | null
+          metadata: Json
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          asset_id: string
+          usage_context: ContentAssetUsageContext
+          ref_table: string
+          ref_id: string
+          role?: ContentAssetUsageRole
+          caption_override?: string | null
+          alt_text_override?: string | null
+          metadata?: Json
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          asset_id?: string
+          usage_context?: ContentAssetUsageContext
+          ref_table?: string
+          ref_id?: string
+          role?: ContentAssetUsageRole
+          caption_override?: string | null
+          alt_text_override?: string | null
+          metadata?: Json
+          created_by?: string | null
+          created_at?: string
+        }
+      }
+      content_asset_events: {
+        Row: {
+          id: string
+          asset_id: string
+          event_type: string
+          actor_id: string | null
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          asset_id: string
+          event_type: string
+          actor_id?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          asset_id?: string
+          event_type?: string
+          actor_id?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+      }
       blog_posts: {
         Row: {
           id: string
@@ -390,6 +636,7 @@ export interface Database {
         Row: {
           id: string
           post_id: string | null
+          content_asset_id: string | null
           source_type: BlogMediaSourceType
           source_measurement_media_id: string | null
           source_as_media_id: string | null
@@ -415,6 +662,7 @@ export interface Database {
         Insert: {
           id?: string
           post_id?: string | null
+          content_asset_id?: string | null
           source_type: BlogMediaSourceType
           source_measurement_media_id?: string | null
           source_as_media_id?: string | null
@@ -440,6 +688,7 @@ export interface Database {
         Update: {
           id?: string
           post_id?: string | null
+          content_asset_id?: string | null
           source_type?: BlogMediaSourceType
           source_measurement_media_id?: string | null
           source_as_media_id?: string | null
@@ -543,6 +792,11 @@ export interface Database {
       blog_block_type: BlogBlockType
       blog_media_usage_status: BlogMediaUsageStatus
       blog_media_source_type: BlogMediaSourceType
+      content_asset_library_state: ContentAssetLibraryState
+      content_asset_file_role: ContentAssetFileRole
+      content_asset_transform_status: ContentAssetTransformStatus
+      content_asset_usage_context: ContentAssetUsageContext
+      content_asset_usage_role: ContentAssetUsageRole
     }
   }
   platform: {
