@@ -48,6 +48,26 @@ export type MediaActionResult = {
   message: string
 }
 
+export type ContentAssetBlogMedia = {
+  id: string
+  sourceLabel: string | null
+  usageStatus: BlogMediaUsageStatus
+  altText: string | null
+  caption: string | null
+  privacyChecked: boolean
+  promotionConsentChecked: boolean
+  usedAsCover: boolean
+  previewUrl: string | null
+  approvedAt: string | null
+  createdAt: string
+}
+
+export type AttachContentAssetResult = {
+  ok: boolean
+  message: string
+  media?: ContentAssetBlogMedia
+}
+
 export type PublishBlogPostResult = {
   ok: boolean
   message: string
@@ -78,6 +98,8 @@ const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'i
 type BlogPost = Database['showroom']['Tables']['blog_posts']['Row']
 type BlogBlock = Database['showroom']['Tables']['blog_blocks']['Row']
 type BlogMedia = Database['showroom']['Tables']['blog_media']['Row']
+type ContentAsset = Database['showroom']['Tables']['content_assets']['Row']
+type ContentAssetFile = Database['showroom']['Tables']['content_asset_files']['Row']
 
 function cleanText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
@@ -144,7 +166,7 @@ function validatePayload(payload: SaveBlogEditorPayload) {
 
   for (const block of payload.blocks) {
     if (block.type === 'image' && !block.mediaId) {
-      return '이미지 블록은 연결된 blog_media가 필요합니다.'
+      return '이미지 블록에는 사진 선택이 필요합니다.'
     }
 
     if (block.type !== 'image') {
@@ -204,18 +226,37 @@ async function requireOwnedMedia(
   const media = mediaData as Pick<Database['showroom']['Tables']['blog_media']['Row'], 'id' | 'post_id' | 'usage_status'> | null
 
   if (mediaError || !media) {
-    return { ok: false as const, message: '수정할 blog_media를 찾지 못했습니다.' }
+    return { ok: false as const, message: '수정할 사진을 찾지 못했습니다.' }
   }
 
   if (media.post_id !== postId) {
-    return { ok: false as const, message: '다른 글의 blog_media는 수정할 수 없습니다.' }
+    return { ok: false as const, message: '다른 글의 사진은 수정할 수 없습니다.' }
   }
 
   if (media.usage_status === 'published') {
-    return { ok: false as const, message: 'published 미디어는 이번 PR에서 수정할 수 없습니다.' }
+    return { ok: false as const, message: '발행된 사진은 이 화면에서 수정할 수 없습니다.' }
   }
 
   return { ok: true as const, media }
+}
+
+function toAttachedMedia(
+  media: Pick<BlogMedia, 'id' | 'source_label' | 'usage_status' | 'alt_text' | 'caption' | 'privacy_checked' | 'promotion_consent_checked' | 'used_as_cover' | 'approved_at' | 'created_at'>,
+  previewUrl: string | null,
+): ContentAssetBlogMedia {
+  return {
+    id: media.id,
+    sourceLabel: media.source_label,
+    usageStatus: media.usage_status,
+    altText: media.alt_text,
+    caption: media.caption,
+    privacyChecked: media.privacy_checked,
+    promotionConsentChecked: media.promotion_consent_checked,
+    usedAsCover: media.used_as_cover,
+    previewUrl,
+    approvedAt: media.approved_at,
+    createdAt: media.created_at,
+  }
 }
 
 async function validateImageMediaOwnership(
@@ -242,12 +283,12 @@ async function validateImageMediaOwnership(
   const missingMediaIds = imageMediaIds.filter(mediaId => !foundIds.has(mediaId))
 
   if (missingMediaIds.length > 0) {
-    return '연결할 수 없는 blog_media가 포함되어 있습니다.'
+    return '연결할 수 없는 사진이 포함되어 있습니다.'
   }
 
   const hasForeignMedia = mediaRows.some(media => media.post_id !== payload.postId)
   if (hasForeignMedia) {
-    return '다른 글의 blog_media는 이미지 블록에 연결할 수 없습니다.'
+    return '다른 글의 사진은 이미지 블록에 연결할 수 없습니다.'
   }
 
   return null
@@ -255,7 +296,7 @@ async function validateImageMediaOwnership(
 
 export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<SaveBlogEditorResult> {
   try {
-    await requireAdministrator()
+    const actorId = await requireAdministrator()
 
     const validationError = validatePayload(payload)
     if (validationError) {
@@ -282,6 +323,28 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
     const mediaOwnershipError = await validateImageMediaOwnership(showroomAdmin, payload)
     if (mediaOwnershipError) {
       return { ok: false, message: mediaOwnershipError }
+    }
+
+    const imageMediaIds = [
+      ...new Set(payload.blocks
+        .filter(block => block.type === 'image' && block.mediaId)
+        .map(block => block.mediaId as string)),
+    ]
+    const mediaAssetById = new Map<string, Pick<BlogMedia, 'id' | 'content_asset_id' | 'alt_text' | 'caption' | 'source_label'>>()
+
+    if (imageMediaIds.length > 0) {
+      const { data: mediaAssetData, error: mediaAssetError } = await showroomAdmin
+        .from('blog_media')
+        .select('id, content_asset_id, alt_text, caption, source_label')
+        .in('id', imageMediaIds)
+
+      if (mediaAssetError) {
+        return { ok: false, message: mediaAssetError.message }
+      }
+
+      for (const item of (mediaAssetData ?? []) as Array<Pick<BlogMedia, 'id' | 'content_asset_id' | 'alt_text' | 'caption' | 'source_label'>>) {
+        if (item.content_asset_id) mediaAssetById.set(item.id, item)
+      }
     }
 
     const postUpdate: Database['showroom']['Tables']['blog_posts']['Update'] = {
@@ -352,6 +415,8 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
       }
     }
 
+    const nextUsages: Database['showroom']['Tables']['content_asset_usages']['Insert'][] = []
+
     for (const [index, block] of payload.blocks.entries()) {
       const blockPayload: Database['showroom']['Tables']['blog_blocks']['Insert'] = {
         post_id: payload.postId,
@@ -363,6 +428,8 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
         metadata: toJsonObject(block.metadata),
       }
 
+      let savedBlockId = block.id && existingBlockIds.has(block.id) ? block.id : null
+
       if (block.id && existingBlockIds.has(block.id)) {
         const { error } = await showroomAdmin
           .from('blog_blocks')
@@ -371,11 +438,57 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
 
         if (error) return { ok: false, message: error.message }
       } else {
-        const { error } = await showroomAdmin
+        const { data: insertedBlockData, error } = await showroomAdmin
           .from('blog_blocks')
           .insert(blockPayload as never)
+          .select('id')
+          .single()
 
         if (error) return { ok: false, message: error.message }
+        savedBlockId = (insertedBlockData as { id: string } | null)?.id ?? null
+      }
+
+      if (block.type === 'image' && block.mediaId && savedBlockId) {
+        const mediaAsset = mediaAssetById.get(block.mediaId)
+        if (mediaAsset?.content_asset_id) {
+          nextUsages.push({
+            asset_id: mediaAsset.content_asset_id,
+            usage_context: 'blog_block',
+            ref_table: 'showroom.blog_blocks',
+            ref_id: savedBlockId,
+            role: 'body',
+            caption_override: cleanText(mediaAsset.caption),
+            alt_text_override: cleanText(mediaAsset.alt_text),
+            metadata: {
+              post_id: payload.postId,
+              blog_media_id: block.mediaId,
+              source_label: mediaAsset.source_label,
+            },
+            created_by: actorId,
+          })
+        }
+      }
+    }
+
+    if (existingBlocks.length > 0) {
+      const { error: usageDeleteError } = await showroomAdmin
+        .from('content_asset_usages')
+        .delete()
+        .eq('ref_table', 'showroom.blog_blocks')
+        .in('ref_id', existingBlocks.map(block => block.id))
+
+      if (usageDeleteError) {
+        return { ok: false, message: usageDeleteError.message }
+      }
+    }
+
+    if (nextUsages.length > 0) {
+      const { error: usageInsertError } = await showroomAdmin
+        .from('content_asset_usages')
+        .insert(nextUsages as never)
+
+      if (usageInsertError) {
+        return { ok: false, message: usageInsertError.message }
       }
     }
 
@@ -487,6 +600,154 @@ export async function uploadBlogMedia(formData: FormData): Promise<MediaActionRe
   }
 }
 
+export async function attachContentAssetToBlogMedia(payload: {
+  postId: string
+  assetId: string
+}): Promise<AttachContentAssetResult> {
+  let insertedMediaId: string | null = null
+
+  try {
+    const actorId = await requireAdministrator()
+    const postId = cleanText(payload.postId)
+    const assetId = cleanText(payload.assetId)
+
+    if (!postId || !assetId) {
+      return { ok: false, message: '선택할 사진을 찾지 못했습니다.' }
+    }
+
+    const showroomAdmin = createShowroomAdminClient()
+    const editablePost = await requireEditablePost(showroomAdmin, postId)
+    if (!editablePost.ok) return { ok: false, message: editablePost.message }
+
+    const { data: assetData, error: assetError } = await showroomAdmin
+      .from('content_assets')
+      .select('id, title, description, category, labels, product_type, space_type, region, usage_purpose, library_state, privacy_checked, promotion_consent_checked, used_count, created_by, updated_by, created_at, updated_at')
+      .eq('id', assetId)
+      .eq('library_state', 'available')
+      .single()
+
+    const asset = assetData as ContentAsset | null
+    if (assetError || !asset) {
+      return { ok: false, message: '사진보관함에서 선택한 사진을 찾지 못했습니다.' }
+    }
+
+    const { data: assetFilesData, error: assetFilesError } = await showroomAdmin
+      .from('content_asset_files')
+      .select('id, asset_id, file_role, bucket, object_path, public_url, mime_type, size_bytes, width, height, checksum_sha256, storage_etag, transform_status, transform_error, created_at')
+      .eq('asset_id', assetId)
+      .in('file_role', ['original', 'web', 'thumbnail'])
+
+    if (assetFilesError) {
+      return { ok: false, message: assetFilesError.message }
+    }
+
+    const files = (assetFilesData ?? []) as ContentAssetFile[]
+    const originalFile = files.find(file => file.file_role === 'original' && file.transform_status === 'ready')
+    const webFile = files.find(file => file.file_role === 'web' && file.transform_status === 'ready')
+    const thumbnailFile = files.find(file => file.file_role === 'thumbnail' && file.transform_status === 'ready')
+    const previewUrl = thumbnailFile?.public_url ?? webFile?.public_url ?? null
+
+    if (!originalFile) {
+      return { ok: false, message: '선택한 사진의 원본을 확인하지 못했습니다.' }
+    }
+
+    const { data: existingMediaData, error: existingMediaError } = await showroomAdmin
+      .from('blog_media')
+      .select('id, source_label, usage_status, alt_text, caption, privacy_checked, promotion_consent_checked, used_as_cover, approved_at, created_at')
+      .eq('post_id', postId)
+      .eq('content_asset_id', assetId)
+      .neq('usage_status', 'rejected')
+      .order('created_at', { ascending: false })
+      .limit(1)
+
+    if (existingMediaError) {
+      return { ok: false, message: existingMediaError.message }
+    }
+
+    const existingMedia = ((existingMediaData ?? []) as Array<Pick<BlogMedia, 'id' | 'source_label' | 'usage_status' | 'alt_text' | 'caption' | 'privacy_checked' | 'promotion_consent_checked' | 'used_as_cover' | 'approved_at' | 'created_at'>>)[0]
+    if (existingMedia) {
+      return {
+        ok: true,
+        message: '이미 이 글에 연결된 사진입니다.',
+        media: toAttachedMedia(existingMedia, previewUrl),
+      }
+    }
+
+    const altText = cleanText(asset.title) ?? cleanText(asset.description)
+    const caption = cleanText(asset.description)
+    const sourceLabel = cleanText(asset.title) ?? cleanText(asset.category) ?? '사진보관함 사진'
+    if (!altText) {
+      return { ok: false, message: '본문에 넣으려면 사진명 또는 설명이 필요합니다.' }
+    }
+
+    if (!asset.privacy_checked || !asset.promotion_consent_checked) {
+      return { ok: false, message: '민감정보 확인과 블로그/홍보 사용 가능 확인이 필요합니다.' }
+    }
+
+    const now = new Date().toISOString()
+
+    const insertPayload: Database['showroom']['Tables']['blog_media']['Insert'] = {
+      post_id: postId,
+      content_asset_id: asset.id,
+      source_type: 'showroom_asset',
+      private_bucket: originalFile.bucket,
+      private_object_path: originalFile.object_path,
+      source_label: sourceLabel,
+      alt_text: altText,
+      caption,
+      usage_status: 'approved',
+      privacy_checked: asset.privacy_checked,
+      promotion_consent_checked: asset.promotion_consent_checked,
+      used_as_cover: false,
+      approved_by: actorId,
+      approved_at: now,
+    }
+
+    const { data: mediaData, error: mediaError } = await showroomAdmin
+      .from('blog_media')
+      .insert(insertPayload as never)
+      .select('id, source_label, usage_status, alt_text, caption, privacy_checked, promotion_consent_checked, used_as_cover, approved_at, created_at')
+      .single()
+
+    const media = mediaData as Pick<BlogMedia, 'id' | 'source_label' | 'usage_status' | 'alt_text' | 'caption' | 'privacy_checked' | 'promotion_consent_checked' | 'used_as_cover' | 'approved_at' | 'created_at'> | null
+    if (mediaError || !media) {
+      return { ok: false, message: mediaError?.message ?? '사진을 글에 연결하지 못했습니다.' }
+    }
+
+    insertedMediaId = media.id
+
+    await showroomAdmin
+      .from('content_asset_events')
+      .insert({
+        asset_id: asset.id,
+        event_type: 'attached_to_blog_post',
+        actor_id: actorId,
+        metadata: {
+          post_id: postId,
+          blog_media_id: media.id,
+        },
+      } as never)
+
+    revalidatePath(`/admin/platform/blog/${postId}`)
+
+    return {
+      ok: true,
+      message: '사진을 본문에 넣었습니다.',
+      media: toAttachedMedia(media, previewUrl),
+    }
+  } catch (error) {
+    if (insertedMediaId) {
+      const showroomAdmin = createShowroomAdminClient()
+      await showroomAdmin.from('blog_media').delete().eq('id', insertedMediaId)
+    }
+
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : '사진을 글에 연결하는 중 오류가 발생했습니다.',
+    }
+  }
+}
+
 export async function updateBlogMedia(payload: UpdateBlogMediaPayload): Promise<MediaActionResult> {
   try {
     const actorId = await requireAdministrator()
@@ -496,7 +757,7 @@ export async function updateBlogMedia(payload: UpdateBlogMediaPayload): Promise<
     }
 
     if (payload.usageStatus === 'published') {
-      return { ok: false, message: 'published 전환은 PR-06 발행 server action에서만 처리합니다.' }
+      return { ok: false, message: '발행 전환은 최종 발행 검수에서만 처리합니다.' }
     }
 
     const showroomAdmin = createShowroomAdminClient()
@@ -512,21 +773,25 @@ export async function updateBlogMedia(payload: UpdateBlogMediaPayload): Promise<
     const rejectionReason = cleanText(payload.rejectionReason)
 
     if (payload.usageStatus === 'approved') {
-      if (!altText) return { ok: false, message: '승인하려면 alt_text가 필요합니다.' }
-      if (!payload.privacyChecked) return { ok: false, message: '승인하려면 개인정보 확인이 필요합니다.' }
-      if (!payload.promotionConsentChecked) return { ok: false, message: '승인하려면 홍보 사용 동의 확인이 필요합니다.' }
+      if (!altText) return { ok: false, message: '사용 가능으로 표시하려면 대체 설명이 필요합니다.' }
+      if (!payload.privacyChecked) return { ok: false, message: '사용 가능으로 표시하려면 개인정보 확인이 필요합니다.' }
+      if (!payload.promotionConsentChecked) return { ok: false, message: '사용 가능으로 표시하려면 블로그/홍보 사용 가능 확인이 필요합니다.' }
     }
 
     if (payload.usageStatus === 'rejected' && !rejectionReason) {
-      return { ok: false, message: '거절 처리하려면 rejection_reason이 필요합니다.' }
+      return { ok: false, message: '제외하려면 사유가 필요합니다.' }
     }
 
     if (payload.usedAsCover && payload.usageStatus !== 'rejected') {
-      await showroomAdmin
+      const { error: coverResetError } = await showroomAdmin
         .from('blog_media')
         .update({ used_as_cover: false } as never)
         .eq('post_id', payload.postId)
         .neq('id', payload.mediaId)
+
+      if (coverResetError) {
+        return { ok: false, message: coverResetError.message }
+      }
     }
 
     const now = new Date().toISOString()
@@ -562,7 +827,7 @@ export async function updateBlogMedia(payload: UpdateBlogMediaPayload): Promise<
 
     const updatedRows = (updatedData ?? []) as Array<{ id: string }>
     if (updatedRows.length !== 1) {
-      return { ok: false, message: 'published 미디어는 이번 PR에서 수정할 수 없습니다.' }
+      return { ok: false, message: '발행된 사진은 이 화면에서 수정할 수 없습니다.' }
     }
 
     revalidatePath(`/admin/platform/blog/${payload.postId}`)

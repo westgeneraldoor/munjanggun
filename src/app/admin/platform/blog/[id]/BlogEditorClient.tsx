@@ -12,12 +12,13 @@ import {
   Eye,
   FileText,
   Image as ImageIcon,
+  Images,
   Plus,
   RotateCcw,
   Rocket,
   Save,
+  Search,
   Trash2,
-  Upload,
   XCircle,
 } from 'lucide-react'
 import type {
@@ -28,10 +29,11 @@ import type {
   BlogPostStatus,
 } from '@/types/database'
 import {
+  attachContentAssetToBlogMedia,
   publishBlogPost,
   saveBlogEditor,
   updateBlogMedia,
-  uploadBlogMedia,
+  type ContentAssetBlogMedia,
   type SaveBlogEditorPayload,
   type UpdateBlogMediaPayload,
 } from './actions'
@@ -107,6 +109,30 @@ export type BlogEditorMedia = {
   createdAt: string
 }
 
+type ContentAssetFileSummary = {
+  url: string | null
+  width: number | null
+  height: number | null
+  ready: boolean
+} | null
+
+export type ContentAssetPickerItem = {
+  id: string
+  title: string | null
+  description: string | null
+  category: string | null
+  tags: string[]
+  productType: string | null
+  spaceType: string | null
+  region: string | null
+  usagePurpose: string | null
+  privacyChecked: boolean
+  promotionConsentChecked: boolean
+  updatedAt: string
+  thumbnail: ContentAssetFileSummary
+  web: ContentAssetFileSummary
+}
+
 export type BlogEditorEvent = {
   id: string
   type: string
@@ -118,6 +144,7 @@ export type BlogEditorEvent = {
 
 type EditablePost = Omit<BlogEditorPost, 'gateSummary' | 'publishedAt' | 'createdAt' | 'updatedAt'>
 type EditableBlock = BlogEditorBlock & { clientId: string }
+type AssetPickerTarget = { type: 'new' } | { type: 'replace'; clientId: string }
 
 const CATEGORY_OPTIONS: Array<{ value: BlogContentCategory; label: string }> = [
   { value: 'case_study', label: '시공사례' },
@@ -140,16 +167,16 @@ const STATUS_LABEL: Record<BlogPostStatus, string> = {
 const BLOCK_LABEL: Record<BlogBlockType, string> = {
   heading: 'Heading',
   paragraph: 'Paragraph',
-  image: 'Image Slot',
+  image: '이미지',
   qa: 'Q&A',
   cta: 'CTA',
 }
 
 const MEDIA_STATUS_LABEL: Record<BlogMediaUsageStatus, string> = {
-  candidate: '후보',
-  approved: '승인',
-  published: '공개',
-  rejected: '거절',
+  candidate: '확인필요',
+  approved: '사용가능',
+  published: '발행됨',
+  rejected: '제외',
 }
 
 function emptyToNull(value: string) {
@@ -182,7 +209,7 @@ function fromDateTimeLocal(value: string) {
   return new Date(value).toISOString()
 }
 
-function createBlock(type: BlogBlockType): EditableBlock {
+function createBlock(type: BlogBlockType, options: { mediaId?: string | null; photoSlotLabel?: string } = {}): EditableBlock {
   const clientId = `tmp-${Date.now()}-${Math.random().toString(16).slice(2)}`
   const base = {
     id: '',
@@ -190,7 +217,7 @@ function createBlock(type: BlogBlockType): EditableBlock {
     type,
     headingLevel: type === 'heading' ? 2 : null,
     text: '',
-    mediaId: null,
+    mediaId: options.mediaId ?? null,
     metadata: {},
     displayOrder: 0,
   }
@@ -204,7 +231,7 @@ function createBlock(type: BlogBlockType): EditableBlock {
   }
 
   if (type === 'image') {
-    return { ...base, metadata: { photo_slot_label: '', required_media: '' } }
+    return { ...base, metadata: { photo_slot_label: options.photoSlotLabel ?? '', required_media: '' } }
   }
 
   return base
@@ -252,10 +279,197 @@ function MediaStatus({ media }: { media: BlogEditorMedia }) {
       <span className={`${styles.mediaBadge} ${styles[`media_${media.usageStatus}`]}`}>
         {MEDIA_STATUS_LABEL[media.usageStatus]}
       </span>
-      <span>{media.usedAsCover ? '대표' : '본문'}</span>
-      <span>{media.altText ? 'alt 있음' : 'alt 없음'}</span>
+      <span>{media.usedAsCover ? '대표사진' : '본문사진'}</span>
+      <span>{media.altText ? '대체 설명 있음' : '대체 설명 필요'}</span>
       <span>{media.privacyChecked ? '개인정보 확인' : '개인정보 미확인'}</span>
-      <span>{media.promotionConsentChecked ? '홍보동의 확인' : '홍보동의 미확인'}</span>
+      <span>{media.promotionConsentChecked ? '홍보 사용 가능' : '홍보 사용 확인 필요'}</span>
+    </div>
+  )
+}
+
+function assetImageUrl(item: ContentAssetPickerItem) {
+  return item.thumbnail?.url ?? item.web?.url ?? null
+}
+
+function searchableAssetText(item: ContentAssetPickerItem) {
+  return [
+    item.title,
+    item.description,
+    item.category,
+    item.productType,
+    item.spaceType,
+    item.region,
+    item.usagePurpose,
+    ...item.tags,
+  ].filter(Boolean).join(' ').toLowerCase()
+}
+
+function toEditorMediaFromAttached(media: ContentAssetBlogMedia): BlogEditorMedia {
+  return {
+    id: media.id,
+    sourceType: 'showroom_asset',
+    sourceLabel: media.sourceLabel,
+    usageStatus: media.usageStatus,
+    altText: media.altText,
+    caption: media.caption,
+    privacyChecked: media.privacyChecked,
+    promotionConsentChecked: media.promotionConsentChecked,
+    usedAsCover: media.usedAsCover,
+    publicUrl: null,
+    signedPreviewUrl: media.previewUrl,
+    hasPrivateObject: true,
+    hasPublicObject: false,
+    approvedAt: media.approvedAt,
+    publishedAt: null,
+    rejectionReason: null,
+    createdAt: media.createdAt,
+  }
+}
+
+function ContentAssetPicker({
+  open,
+  items,
+  pending,
+  message,
+  onClose,
+  onSelect,
+}: {
+  open: boolean
+  items: ContentAssetPickerItem[]
+  pending: boolean
+  message: { ok: boolean; text: string } | null
+  onClose: () => void
+  onSelect: (asset: ContentAssetPickerItem) => void
+}) {
+  const [search, setSearch] = useState('')
+  const [category, setCategory] = useState('')
+  const [selectedId, setSelectedId] = useState('')
+
+  const categories = useMemo(() => {
+    return [...new Set(items.map(item => item.category).filter((value): value is string => Boolean(value)))]
+      .sort((a, b) => a.localeCompare(b, 'ko-KR'))
+  }, [items])
+
+  const filteredItems = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    return items.filter(item => {
+      if (category && item.category !== category) return false
+      if (query && !searchableAssetText(item).includes(query)) return false
+      return true
+    })
+  }, [category, items, search])
+
+  const selectedItem = filteredItems.find(item => item.id === selectedId) ?? null
+  const selectedReady = Boolean(selectedItem?.privacyChecked && selectedItem?.promotionConsentChecked && (selectedItem.title || selectedItem.description))
+
+  if (!open) return null
+
+  return (
+    <div className={styles.assetPickerOverlay} role="dialog" aria-modal="true" aria-labelledby="asset-picker-title">
+      <div className={styles.assetPicker}>
+        <div className={styles.assetPickerHeader}>
+          <div>
+            <span>사진보관함</span>
+            <h2 id="asset-picker-title">본문에 넣을 사진 선택</h2>
+          </div>
+          <button type="button" onClick={onClose} aria-label="사진보관함 닫기" className={styles.iconOnlyButton}>
+            <XCircle size={18} aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className={styles.assetPickerTools}>
+          <label className={styles.assetSearch}>
+            <Search size={16} aria-hidden="true" />
+            <input
+              value={search}
+              onChange={event => setSearch(event.target.value)}
+              placeholder="사진명, 설명, 태그 검색"
+            />
+          </label>
+          <label className={styles.assetFilter}>
+            <span>분류</span>
+            <select value={category} onChange={event => setCategory(event.target.value)}>
+              <option value="">전체</option>
+              {categories.map(value => <option key={value} value={value}>{value}</option>)}
+            </select>
+          </label>
+        </div>
+
+        {items.length === 0 ? (
+          <div className={styles.assetPickerEmpty}>
+            <Images size={24} aria-hidden="true" />
+            <strong>아직 사진보관함에 사진이 없습니다.</strong>
+            <span>사진을 추가하면 블로그 본문에 바로 넣을 수 있습니다.</span>
+            <Link href="/admin/platform/assets">사진보관함에서 사진 추가</Link>
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className={styles.assetPickerEmpty}>
+            <Search size={24} aria-hidden="true" />
+            <strong>조건에 맞는 사진이 없습니다.</strong>
+            <span>검색어를 줄이거나 분류를 바꿔보세요.</span>
+          </div>
+        ) : (
+          <div className={styles.assetPickerGrid}>
+            {filteredItems.map(item => {
+              const imageUrl = assetImageUrl(item)
+              const selected = selectedItem?.id === item.id
+              const ready = Boolean(item.privacyChecked && item.promotionConsentChecked && (item.title || item.description))
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`${styles.assetPickerCard} ${selected ? styles.assetPickerCardSelected : ''}`}
+                  onClick={() => setSelectedId(item.id)}
+                >
+                  <div className={styles.assetPickerThumb}>
+                    {imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={imageUrl} alt={item.title || item.description || '사진보관함 사진'} />
+                    ) : (
+                      <ImageIcon size={24} aria-hidden="true" />
+                    )}
+                  </div>
+                  <div className={styles.assetPickerCardBody}>
+                    <strong>{item.title || '이름 없는 사진'}</strong>
+                    <span>{item.description || item.category || '설명을 추가해 주세요.'}</span>
+                    <div className={styles.assetPickerBadges}>
+                      {item.category ? <small>{item.category}</small> : null}
+                      {ready ? <small>바로 사용 가능</small> : <small>확인 필요</small>}
+                    </div>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        )}
+
+        {message ? (
+          <div className={`${styles.saveMessage} ${message.ok ? styles.saveOk : styles.saveError}`} role="status">
+            {message.text}
+          </div>
+        ) : null}
+
+        <div className={styles.assetPickerFooter}>
+          <div>
+            {selectedItem ? (
+              <>
+                <strong>{selectedItem.title || selectedItem.description || '선택한 사진'}</strong>
+                <span>{selectedReady ? '본문에 넣을 수 있습니다.' : '사진명/설명, 민감정보 확인, 블로그 사용 가능 확인이 필요합니다.'}</span>
+              </>
+            ) : (
+              <span>본문에 넣을 사진을 선택하세요.</span>
+            )}
+          </div>
+          <button
+            type="button"
+            className={styles.primaryButton}
+            disabled={!selectedItem || !selectedReady || pending}
+            onClick={() => selectedItem && onSelect(selectedItem)}
+          >
+            {pending ? '사진을 정리하고 있습니다' : '본문에 넣기'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -269,7 +483,7 @@ function MediaEditorCard({
   postId: string
   media: BlogEditorMedia
   disabled: boolean
-  onChanged: () => void
+  onChanged: (next: BlogEditorMedia) => void
 }) {
   const [isPending, startTransition] = useTransition()
   const [altText, setAltText] = useState(media.altText ?? '')
@@ -301,7 +515,19 @@ function MediaEditorCard({
         rejectionReason,
       })
       setMessage({ ok: result.ok, text: result.message })
-      if (result.ok) onChanged()
+      if (result.ok) {
+        onChanged({
+          ...media,
+          altText: emptyToNull(altText),
+          caption: emptyToNull(caption),
+          sourceLabel: emptyToNull(sourceLabel),
+          privacyChecked,
+          promotionConsentChecked,
+          usedAsCover: usageStatus === 'rejected' ? false : usedAsCover,
+          usageStatus,
+          rejectionReason: usageStatus === 'rejected' ? emptyToNull(rejectionReason) : null,
+        })
+      }
     })
   }
 
@@ -310,7 +536,7 @@ function MediaEditorCard({
       <div className={styles.mediaFrame}>
         {media.signedPreviewUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={media.signedPreviewUrl} alt={media.altText || media.sourceLabel || 'blog media preview'} />
+          <img src={media.signedPreviewUrl} alt={media.altText || media.sourceLabel || '사진 미리보기'} />
         ) : (
           <div className={styles.mediaNoPreview}>
             <ImageIcon size={24} aria-hidden="true" />
@@ -322,20 +548,20 @@ function MediaEditorCard({
       <div className={styles.mediaEditorBody}>
         <div className={styles.mediaEditorTop}>
           <div>
-            <strong>{media.sourceLabel || media.id.slice(0, 8)}</strong>
+            <strong>{media.sourceLabel || '이름 없는 사진'}</strong>
             <p>{formatDateTime(media.createdAt)}</p>
           </div>
           <MediaStatus media={{ ...media, altText, caption, privacyChecked, promotionConsentChecked, usedAsCover }} />
         </div>
 
         <div className={styles.formStack}>
-          <Field label="alt text">
+          <Field label="대체 설명">
             <input value={altText} onChange={event => setAltText(event.target.value)} disabled={isDisabled} />
           </Field>
-          <Field label="caption">
+          <Field label="사진 설명">
             <textarea value={caption} onChange={event => setCaption(event.target.value)} disabled={isDisabled} rows={2} />
           </Field>
-          <Field label="source label">
+          <Field label="사진 이름">
             <input value={sourceLabel} onChange={event => setSourceLabel(event.target.value)} disabled={isDisabled} />
           </Field>
           <div className={styles.mediaChecks}>
@@ -345,14 +571,14 @@ function MediaEditorCard({
             </label>
             <label className={styles.checkField}>
               <input type="checkbox" checked={promotionConsentChecked} onChange={event => setPromotionConsentChecked(event.target.checked)} disabled={isDisabled} />
-              <span>홍보동의 확인</span>
+              <span>블로그/홍보 사용 가능</span>
             </label>
             <label className={styles.checkField}>
               <input type="checkbox" checked={usedAsCover} onChange={event => setUsedAsCover(event.target.checked)} disabled={isDisabled || media.usageStatus === 'rejected'} />
               <span>대표 이미지</span>
             </label>
           </div>
-          <Field label="rejection reason">
+          <Field label="제외 사유">
             <textarea value={rejectionReason} onChange={event => setRejectionReason(event.target.value)} disabled={isDisabled} rows={2} />
           </Field>
         </div>
@@ -368,20 +594,20 @@ function MediaEditorCard({
           </button>
           <button type="button" onClick={() => saveMedia('approved')} disabled={!canApprove}>
             <CheckCircle2 size={15} aria-hidden="true" />
-            승인
+            사용 가능
           </button>
           <button type="button" onClick={() => saveMedia('candidate')} disabled={isDisabled}>
             <RotateCcw size={15} aria-hidden="true" />
-            후보
+            확인 필요
           </button>
           <button type="button" onClick={() => saveMedia('rejected')} disabled={isDisabled || !rejectionReason.trim()} className={styles.mediaRejectButton}>
             <XCircle size={15} aria-hidden="true" />
-            거절
+            제외
           </button>
         </div>
 
         {!canApprove && !isDisabled && (
-          <div className={styles.slotNotice}>승인하려면 alt, 개인정보 확인, 홍보동의 확인이 모두 필요합니다.</div>
+          <div className={styles.slotNotice}>사용 가능으로 표시하려면 대체 설명, 개인정보 확인, 블로그/홍보 사용 가능 확인이 필요합니다.</div>
         )}
         {message && (
           <div className={`${styles.saveMessage} ${message.ok ? styles.saveOk : styles.saveError}`} role="status">
@@ -399,6 +625,7 @@ function BlockEditor({
   index,
   total,
   onChange,
+  onPickImage,
   onMove,
   onRemove,
 }: {
@@ -407,10 +634,12 @@ function BlockEditor({
   index: number
   total: number
   onChange: (next: EditableBlock) => void
+  onPickImage: () => void
   onMove: (direction: -1 | 1) => void
   onRemove: () => void
 }) {
   const selectedMedia = block.mediaId ? media.find(item => item.id === block.mediaId) ?? null : null
+  const selectedImageUrl = selectedMedia?.signedPreviewUrl ?? selectedMedia?.publicUrl ?? null
 
   const updateMetadata = (key: string, value: string) => {
     onChange({
@@ -469,36 +698,51 @@ function BlockEditor({
       {block.type === 'image' && (
         <div className={styles.blockStack}>
           <div className={styles.blockGrid}>
-            <Field label="사진 슬롯명">
+            <Field label="사진 카드명">
               <input value={block.metadata.photo_slot_label ?? ''} onChange={event => updateMetadata('photo_slot_label', event.target.value)} />
             </Field>
-            <Field label="필요 사진 유형">
+            <Field label="필요한 사진 설명">
               <input value={block.metadata.required_media ?? ''} onChange={event => updateMetadata('required_media', event.target.value)} />
             </Field>
           </div>
-          <Field label="연결 media">
-            <select
-              value={block.mediaId ?? ''}
-              onChange={event => onChange({ ...block, mediaId: emptyToNull(event.target.value) })}
-            >
-              <option value="">선택 필요</option>
-              {media.map(item => (
-                <option key={item.id} value={item.id}>
-                  {item.sourceLabel || item.id.slice(0, 8)} · {MEDIA_STATUS_LABEL[item.usageStatus]} · {item.altText || 'alt 없음'}
-                </option>
-              ))}
-            </select>
-          </Field>
           {selectedMedia ? (
-            <div className={styles.mediaPreview}>
-              <div>
-                <strong>{selectedMedia.sourceLabel || selectedMedia.id}</strong>
-                <p>{selectedMedia.caption || 'caption 없음'}</p>
+            <div className={styles.imageBlockPreview}>
+              <div className={styles.imageBlockFrame}>
+                {selectedImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={selectedImageUrl} alt={selectedMedia.altText || selectedMedia.sourceLabel || '선택한 사진'} />
+                ) : (
+                  <ImageIcon size={24} aria-hidden="true" />
+                )}
               </div>
-              <MediaStatus media={selectedMedia} />
+              <div className={styles.imageBlockInfo}>
+                <strong>{selectedMedia.sourceLabel || '선택한 사진'}</strong>
+                <p>{selectedMedia.caption || selectedMedia.altText || '사진 설명을 확인해 주세요.'}</p>
+                <MediaStatus media={selectedMedia} />
+                <div className={styles.imageBlockActions}>
+                  <button type="button" onClick={onPickImage}>
+                    <Images size={15} aria-hidden="true" />
+                    교체
+                  </button>
+                  <button type="button" onClick={() => onChange({ ...block, mediaId: null })}>
+                    <XCircle size={15} aria-hidden="true" />
+                    연결 해제
+                  </button>
+                </div>
+              </div>
             </div>
           ) : (
-            <div className={styles.slotNotice}>이미지 블록은 승인 전 후보 media도 연결할 수 있습니다. public 승격은 PR-06에서 처리합니다.</div>
+            <div className={styles.imageBlockEmpty}>
+              <ImageIcon size={22} aria-hidden="true" />
+              <div>
+                <strong>아직 사진이 없습니다.</strong>
+                <span>사진보관함에서 본문에 넣을 사진을 선택하세요.</span>
+              </div>
+              <button type="button" onClick={onPickImage}>
+                <Images size={15} aria-hidden="true" />
+                사진 선택
+              </button>
+            </div>
           )}
         </div>
       )}
@@ -532,16 +776,18 @@ export default function BlogEditorClient({
   initialPost,
   initialBlocks,
   media,
+  contentAssets,
   events,
 }: {
   initialPost: BlogEditorPost
   initialBlocks: BlogEditorBlock[]
   media: BlogEditorMedia[]
+  contentAssets: ContentAssetPickerItem[]
   events: BlogEditorEvent[]
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [isMediaPending, startMediaTransition] = useTransition()
+  const [isAssetPending, startAssetTransition] = useTransition()
   const [post, setPost] = useState<EditablePost>({
     id: initialPost.id,
     title: initialPost.title,
@@ -570,14 +816,12 @@ export default function BlogEditorClient({
   })))
   const [saveMessage, setSaveMessage] = useState<{ ok: boolean; text: string } | null>(null)
   const [publishMessage, setPublishMessage] = useState<{ ok: boolean; text: string; issues?: string[] } | null>(null)
-  const [uploadFile, setUploadFile] = useState<File | null>(null)
-  const [uploadSourceLabel, setUploadSourceLabel] = useState('')
-  const [uploadInputKey, setUploadInputKey] = useState(0)
-  const [mediaMessage, setMediaMessage] = useState<{ ok: boolean; text: string } | null>(null)
+  const [editorMedia, setEditorMedia] = useState<BlogEditorMedia[]>(media)
+  const [assetPickerTarget, setAssetPickerTarget] = useState<AssetPickerTarget | null>(null)
+  const [assetPickerMessage, setAssetPickerMessage] = useState<{ ok: boolean; text: string } | null>(null)
 
   const isPublished = post.status === 'published'
-  const selectableMedia = useMemo(() => media.filter(item => item.usageStatus !== 'rejected'), [media])
-  const canAddImage = selectableMedia.length > 0
+  const selectableMedia = useMemo(() => editorMedia.filter(item => item.usageStatus !== 'rejected'), [editorMedia])
 
   const blockStats = useMemo(() => ({
     blockCount: blocks.length,
@@ -590,8 +834,14 @@ export default function BlogEditorClient({
     setPost(prev => ({ ...prev, [key]: value }))
   }
 
-  const addBlock = (type: BlogBlockType) => {
+  const addBlock = (type: Exclude<BlogBlockType, 'image'>) => {
     setBlocks(prev => [...prev, createBlock(type)])
+  }
+
+  const openAssetPicker = (target: AssetPickerTarget) => {
+    if (isPublished) return
+    setAssetPickerTarget(target)
+    setAssetPickerMessage(null)
   }
 
   const updateBlock = (clientId: string, next: EditableBlock) => {
@@ -665,32 +915,65 @@ export default function BlogEditorClient({
     })
   }
 
-  const handleUploadMedia = () => {
-    setMediaMessage(null)
+  const handleSelectContentAsset = (asset: ContentAssetPickerItem) => {
+    if (!assetPickerTarget) return
+    setAssetPickerMessage(null)
 
-    if (!uploadFile) {
-      setMediaMessage({ ok: false, text: '업로드할 이미지 파일을 선택해주세요.' })
-      return
-    }
+    startAssetTransition(async () => {
+      const result = await attachContentAssetToBlogMedia({
+        postId: post.id,
+        assetId: asset.id,
+      })
 
-    startMediaTransition(async () => {
-      const formData = new FormData()
-      formData.set('postId', post.id)
-      formData.set('sourceLabel', uploadSourceLabel)
-      formData.set('file', uploadFile)
-
-      const result = await uploadBlogMedia(formData)
-      setMediaMessage({ ok: result.ok, text: result.message })
-      if (result.ok) {
-        setUploadFile(null)
-        setUploadSourceLabel('')
-        setUploadInputKey(prev => prev + 1)
-        router.refresh()
+      if (!result.ok || !result.media) {
+        setAssetPickerMessage({ ok: false, text: result.message })
+        return
       }
+
+      const nextMedia = toEditorMediaFromAttached(result.media)
+      if (assetPickerTarget.type === 'new' && blocks.some(block => block.mediaId === nextMedia.id)) {
+        setAssetPickerMessage({ ok: false, text: '이미 본문에 들어간 사진입니다. 위치를 바꾸려면 카드의 위/아래 버튼을 사용하세요.' })
+        return
+      }
+
+      setEditorMedia(prev => {
+        const exists = prev.some(item => item.id === nextMedia.id)
+        if (exists) {
+          return prev.map(item => item.id === nextMedia.id ? { ...item, ...nextMedia } : item)
+        }
+        return [nextMedia, ...prev]
+      })
+
+      if (assetPickerTarget.type === 'replace') {
+        setBlocks(prev => prev.map(block => block.clientId === assetPickerTarget.clientId
+          ? {
+              ...block,
+              mediaId: nextMedia.id,
+              metadata: {
+                ...block.metadata,
+                photo_slot_label: block.metadata.photo_slot_label || asset.title || asset.category || '',
+              },
+            }
+          : block
+        ))
+      } else {
+        setBlocks(prev => [...prev, createBlock('image', {
+          mediaId: nextMedia.id,
+          photoSlotLabel: asset.title || asset.category || '',
+        })])
+      }
+
+      setAssetPickerMessage({ ok: true, text: result.message })
+      setAssetPickerTarget(null)
     })
   }
 
-  const handleMediaChanged = () => {
+  const handleMediaChanged = (nextMedia: BlogEditorMedia) => {
+    setEditorMedia(prev => prev.map(item => {
+      if (item.id === nextMedia.id) return nextMedia
+      if (nextMedia.usedAsCover) return { ...item, usedAsCover: false }
+      return item
+    }))
     router.refresh()
   }
 
@@ -745,10 +1028,21 @@ export default function BlogEditorClient({
         )}
         {isPublished && (
           <div className={styles.lockNotice} role="alert">
-            발행 완료 글은 이번 PR에서 읽기 전용입니다. published 전환과 발행 후 수정은 별도 server action에서 다룹니다.
+            발행 완료 글은 이 화면에서 읽기 전용입니다. 발행 후 수정은 별도 검수 흐름에서 다룹니다.
           </div>
         )}
       </header>
+
+      <ContentAssetPicker
+        open={Boolean(assetPickerTarget)}
+        items={contentAssets}
+        pending={isAssetPending}
+        message={assetPickerMessage}
+        onClose={() => {
+          if (!isAssetPending) setAssetPickerTarget(null)
+        }}
+        onSelect={handleSelectContentAsset}
+      />
 
       <div className={styles.editorLayout}>
         <aside className={styles.gatePanel}>
@@ -801,13 +1095,10 @@ export default function BlogEditorClient({
             <div className={styles.blockToolbar} aria-label="블록 추가">
               <button type="button" onClick={() => addBlock('heading')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> Heading</button>
               <button type="button" onClick={() => addBlock('paragraph')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> Paragraph</button>
-              <button type="button" onClick={() => addBlock('image')} disabled={isPublished || !canAddImage}><Plus size={15} aria-hidden="true" /> Image</button>
+              <button type="button" onClick={() => openAssetPicker({ type: 'new' })} disabled={isPublished}><Plus size={15} aria-hidden="true" /> 이미지</button>
               <button type="button" onClick={() => addBlock('qa')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> Q&A</button>
               <button type="button" onClick={() => addBlock('cta')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> CTA</button>
             </div>
-            {!canAddImage && (
-              <div className={styles.slotNotice}>연결 가능한 blog_media가 없어 이미지 슬롯 추가는 비활성화되어 있습니다.</div>
-            )}
             <div className={styles.blockList}>
               {blocks.length === 0 ? (
                 <div className={styles.emptyBlocks}>본문 블록이 없습니다. Heading 또는 Paragraph부터 추가하세요.</div>
@@ -820,6 +1111,7 @@ export default function BlogEditorClient({
                     index={index}
                     total={blocks.length}
                     onChange={(next) => updateBlock(block.clientId, next)}
+                    onPickImage={() => openAssetPicker({ type: 'replace', clientId: block.clientId })}
                     onMove={(direction) => moveBlock(block.clientId, direction)}
                     onRemove={() => removeBlock(block.clientId)}
                   />
@@ -875,40 +1167,23 @@ export default function BlogEditorClient({
           <section className={styles.panel}>
             <div className={styles.panelTitle}>
               <ImageIcon size={17} aria-hidden="true" />
-              <h2>이미지 슬롯</h2>
+              <h2>글에 넣은 사진</h2>
             </div>
             <div className={styles.uploadBox}>
-              <Field label="private 후보 업로드" hint="private 후보 저장소에만 저장됩니다. public 승격은 PR-06 범위입니다.">
-                <input
-                  key={uploadInputKey}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                  onChange={event => setUploadFile(event.target.files?.[0] ?? null)}
-                  disabled={isPublished || isMediaPending}
-                />
-              </Field>
-              <Field label="source label">
-                <input
-                  type="text"
-                  value={uploadSourceLabel}
-                  onChange={event => setUploadSourceLabel(event.target.value)}
-                  disabled={isPublished || isMediaPending}
-                  placeholder="예: 현장 후보 사진"
-                />
-              </Field>
-              <button type="button" onClick={handleUploadMedia} disabled={isPublished || isMediaPending || !uploadFile} className={styles.mediaUploadButton}>
-                <Upload size={15} aria-hidden="true" />
-                {isMediaPending ? '업로드 중' : '후보 추가'}
-              </button>
-              {mediaMessage && (
-                <div className={`${styles.saveMessage} ${mediaMessage.ok ? styles.saveOk : styles.saveError}`} role="status">
-                  {mediaMessage.text}
-                </div>
-              )}
+              <p className={styles.panelHelp}>본문 사진은 사진보관함에서 선택합니다. 새 사진 업로드와 분류 관리는 사진보관함 화면에서 진행하세요.</p>
+              <div className={styles.mediaActions}>
+                <button type="button" onClick={() => openAssetPicker({ type: 'new' })} disabled={isPublished}>
+                  <Images size={15} aria-hidden="true" />
+                  사진보관함에서 선택
+                </button>
+                <Link href="/admin/platform/assets" className={styles.mediaLinkButton}>
+                  사진보관함 열기
+                </Link>
+              </div>
             </div>
-            {media.length > 0 && (
+            {editorMedia.length > 0 && (
               <ul className={styles.mediaEditorList}>
-                {media.map(item => (
+                {editorMedia.map(item => (
                   <MediaEditorCard
                     key={item.id}
                     postId={post.id}
@@ -919,21 +1194,8 @@ export default function BlogEditorClient({
                 ))}
               </ul>
             )}
-            {media.length === 0 ? (
-              <div className={styles.emptyBlocks}>연결된 blog_media가 없습니다. private 후보 이미지를 먼저 추가하세요.</div>
-            ) : (
-              <ul className={styles.mediaList}>
-                {media.map(item => (
-                  <li key={item.id} className={styles.mediaCard}>
-                    <div>
-                      <strong>{item.sourceLabel || item.id}</strong>
-                      <p>{item.caption || 'caption 없음'}</p>
-                    </div>
-                    <MediaStatus media={item} />
-                    {item.rejectionReason && <small className={styles.rejection}>{item.rejectionReason}</small>}
-                  </li>
-                ))}
-              </ul>
+            {editorMedia.length === 0 && (
+              <div className={styles.emptyBlocks}>아직 이 글에 넣은 사진이 없습니다. + 이미지를 눌러 사진보관함에서 선택하세요.</div>
             )}
           </section>
 
