@@ -24,6 +24,33 @@ export type QueueWorkStatus =
 
 export type QueueSourceType = 'measurement' | 'as'
 
+export type BlogPostStatus =
+  | 'ai_draft'
+  | 'reviewing'
+  | 'needs_media'
+  | 'ready'
+  | 'published'
+  | 'archived'
+
+export type BlogContentCategory =
+  | 'case_study'
+  | 'product_guide'
+  | 'customer_qa'
+  | 'field_knowhow'
+  | 'price_guide'
+  | 'area_guide'
+
+export type BlogBlockType = 'heading' | 'paragraph' | 'image' | 'cta' | 'qa'
+
+export type BlogMediaUsageStatus = 'candidate' | 'approved' | 'published' | 'rejected'
+
+export type BlogMediaSourceType =
+  | 'manual_upload'
+  | 'measurement_media'
+  | 'as_media'
+  | 'external_reference'
+  | 'showroom_asset'
+
 export interface Database {
   showroom: {
     Tables: {
@@ -267,6 +294,255 @@ export interface Database {
           created_at?: string
         }
       }
+      blog_posts: {
+        Row: {
+          id: string
+          title: string
+          slug: string
+          excerpt: string | null
+          seo_title: string | null
+          meta_description: string | null
+          canonical_url: string | null
+          status: BlogPostStatus
+          category: BlogContentCategory
+          primary_keyword: string | null
+          target_question: string | null
+          summary_answer: string | null
+          related_questions: Json
+          service_area: string | null
+          product_type: string | null
+          source_evidence: Json
+          brand_check_result: Json
+          ai_model: string | null
+          source_prompt: string | null
+          ai_citation_ready: boolean
+          last_fact_checked_at: string | null
+          media_missing_reason: string | null
+          created_by: string | null
+          reviewed_by: string | null
+          published_by: string | null
+          published_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          slug: string
+          excerpt?: string | null
+          seo_title?: string | null
+          meta_description?: string | null
+          canonical_url?: string | null
+          status?: BlogPostStatus
+          category: BlogContentCategory
+          primary_keyword?: string | null
+          target_question?: string | null
+          summary_answer?: string | null
+          related_questions?: Json
+          service_area?: string | null
+          product_type?: string | null
+          source_evidence?: Json
+          brand_check_result?: Json
+          ai_model?: string | null
+          source_prompt?: string | null
+          ai_citation_ready?: boolean
+          last_fact_checked_at?: string | null
+          media_missing_reason?: string | null
+          created_by?: string | null
+          reviewed_by?: string | null
+          published_by?: string | null
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          slug?: string
+          excerpt?: string | null
+          seo_title?: string | null
+          meta_description?: string | null
+          canonical_url?: string | null
+          status?: BlogPostStatus
+          category?: BlogContentCategory
+          primary_keyword?: string | null
+          target_question?: string | null
+          summary_answer?: string | null
+          related_questions?: Json
+          service_area?: string | null
+          product_type?: string | null
+          source_evidence?: Json
+          brand_check_result?: Json
+          ai_model?: string | null
+          source_prompt?: string | null
+          ai_citation_ready?: boolean
+          last_fact_checked_at?: string | null
+          media_missing_reason?: string | null
+          created_by?: string | null
+          reviewed_by?: string | null
+          published_by?: string | null
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      blog_media: {
+        Row: {
+          id: string
+          post_id: string | null
+          source_type: BlogMediaSourceType
+          source_measurement_media_id: string | null
+          source_as_media_id: string | null
+          private_bucket: string | null
+          private_object_path: string | null
+          public_bucket: string | null
+          public_object_path: string | null
+          public_url: string | null
+          alt_text: string | null
+          caption: string | null
+          source_label: string | null
+          usage_status: BlogMediaUsageStatus
+          privacy_checked: boolean
+          promotion_consent_checked: boolean
+          used_as_cover: boolean
+          approved_by: string | null
+          approved_at: string | null
+          published_at: string | null
+          rejection_reason: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          post_id?: string | null
+          source_type: BlogMediaSourceType
+          source_measurement_media_id?: string | null
+          source_as_media_id?: string | null
+          private_bucket?: string | null
+          private_object_path?: string | null
+          public_bucket?: string | null
+          public_object_path?: string | null
+          public_url?: string | null
+          alt_text?: string | null
+          caption?: string | null
+          source_label?: string | null
+          usage_status?: BlogMediaUsageStatus
+          privacy_checked?: boolean
+          promotion_consent_checked?: boolean
+          used_as_cover?: boolean
+          approved_by?: string | null
+          approved_at?: string | null
+          published_at?: string | null
+          rejection_reason?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          post_id?: string | null
+          source_type?: BlogMediaSourceType
+          source_measurement_media_id?: string | null
+          source_as_media_id?: string | null
+          private_bucket?: string | null
+          private_object_path?: string | null
+          public_bucket?: string | null
+          public_object_path?: string | null
+          public_url?: string | null
+          alt_text?: string | null
+          caption?: string | null
+          source_label?: string | null
+          usage_status?: BlogMediaUsageStatus
+          privacy_checked?: boolean
+          promotion_consent_checked?: boolean
+          used_as_cover?: boolean
+          approved_by?: string | null
+          approved_at?: string | null
+          published_at?: string | null
+          rejection_reason?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      blog_blocks: {
+        Row: {
+          id: string
+          post_id: string
+          display_order: number
+          type: BlogBlockType
+          heading_level: number | null
+          text: string | null
+          media_id: string | null
+          metadata: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          display_order: number
+          type: BlogBlockType
+          heading_level?: number | null
+          text?: string | null
+          media_id?: string | null
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          display_order?: number
+          type?: BlogBlockType
+          heading_level?: number | null
+          text?: string | null
+          media_id?: string | null
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      blog_post_events: {
+        Row: {
+          id: string
+          post_id: string
+          actor_id: string | null
+          event_type: string
+          from_status: BlogPostStatus | null
+          to_status: BlogPostStatus | null
+          memo: string | null
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          actor_id?: string | null
+          event_type: string
+          from_status?: BlogPostStatus | null
+          to_status?: BlogPostStatus | null
+          memo?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          actor_id?: string | null
+          event_type?: string
+          from_status?: BlogPostStatus | null
+          to_status?: BlogPostStatus | null
+          memo?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+      }
+    }
+    Enums: {
+      blog_post_status: BlogPostStatus
+      blog_content_category: BlogContentCategory
+      blog_block_type: BlogBlockType
+      blog_media_usage_status: BlogMediaUsageStatus
+      blog_media_source_type: BlogMediaSourceType
     }
   }
   platform: {

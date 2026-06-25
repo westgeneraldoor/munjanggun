@@ -3,6 +3,7 @@ import { ViewTransition } from 'react';
 import { Playfair_Display } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
 import PublicUserMenu from "@/components/customer/PublicUserMenu";
+import { getSiteUrl } from "@/lib/content-os/site-url";
 import "./globals.css";
 
 const playfairDisplay = Playfair_Display({
@@ -25,6 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const description = siteSettings?.site_description || "영업사원이 현장 컬러북을 넘어서 보내는 프리미엄 디지털 쇼룸"
   
   return {
+    metadataBase: new URL(getSiteUrl()),
     title,
     description,
     openGraph: {

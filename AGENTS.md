@@ -9,3 +9,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 Before editing customer portal, customer intake, or platform admin UI, read and follow `docs/platform/PLATFORM_UI_CONSTITUTION.md`.
 
 The platform must feel like one product. Shared customer intake flows must reuse the same shell, loading, top navigation, completion, and exit patterns unless there is a documented reason not to. Admin UI must keep button state contrast readable across default, hover, active, active-hover, disabled, and focus-visible states.
+
+## Team / Agent Operating Model
+
+Before planning or delegating platform work, read `docs/platform/PLATFORM_STRATEGY.md`, `docs/platform/PLATFORM_TASKS.md`, `docs/platform/DEVELOPMENT_STRATEGY.md`, and `docs/platform/TEAM_AGENT_OPERATING_MODEL.md`.
+
+Use Codex as the coordinating PM/tech lead. Use subagents for scoped research, implementation, review, and red-team checks when the work can be split safely. Keep `docs/platform/PLATFORM_STRATEGY.md` as the product north star and `docs/platform/PLATFORM_TASKS.md` as the execution order.

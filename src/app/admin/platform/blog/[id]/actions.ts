@@ -1,0 +1,897 @@
+'use server'
+
+import { randomUUID } from 'crypto'
+import { revalidatePath } from 'next/cache'
+import { createPlatformClient } from '@/lib/supabase/platform-server'
+import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
+import type { BlogBlockType, BlogContentCategory, BlogMediaUsageStatus, Database, Json } from '@/types/database'
+
+type SaveableBlock = {
+  id: string | null
+  type: BlogBlockType
+  headingLevel: number | null
+  text: string | null
+  mediaId: string | null
+  metadata: Record<string, string>
+}
+
+export type SaveBlogEditorPayload = {
+  postId: string
+  post: {
+    title: string
+    slug: string
+    excerpt: string | null
+    category: BlogContentCategory
+    seoTitle: string | null
+    metaDescription: string | null
+    canonicalUrl: string | null
+    primaryKeyword: string | null
+    targetQuestion: string | null
+    summaryAnswer: string | null
+    relatedQuestions: string[]
+    serviceArea: string | null
+    productType: string | null
+    aiCitationReady: boolean
+    lastFactCheckedAt: string | null
+  }
+  blocks: SaveableBlock[]
+}
+
+export type SaveBlogEditorResult = {
+  ok: boolean
+  message: string
+  savedAt?: string
+}
+
+export type MediaActionResult = {
+  ok: boolean
+  message: string
+}
+
+export type PublishBlogPostResult = {
+  ok: boolean
+  message: string
+  publishedAt?: string
+  slug?: string
+  issues?: string[]
+}
+
+export type UpdateBlogMediaPayload = {
+  postId: string
+  mediaId: string
+  altText: string | null
+  caption: string | null
+  sourceLabel: string | null
+  privacyChecked: boolean
+  promotionConsentChecked: boolean
+  usedAsCover: boolean
+  usageStatus: BlogMediaUsageStatus
+  rejectionReason: string | null
+}
+
+const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+const PRIVATE_MEDIA_BUCKET = 'blog-media-private'
+const PUBLIC_MEDIA_BUCKET = 'blog-media'
+const MAX_UPLOAD_SIZE = 50 * 1024 * 1024
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'])
+
+type BlogPost = Database['showroom']['Tables']['blog_posts']['Row']
+type BlogBlock = Database['showroom']['Tables']['blog_blocks']['Row']
+type BlogMedia = Database['showroom']['Tables']['blog_media']['Row']
+
+function cleanText(value: string | null | undefined) {
+  const trimmed = value?.trim() ?? ''
+  return trimmed.length > 0 ? trimmed : null
+}
+
+function isJsonObject(value: Json): value is Record<string, Json> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function jsonString(value: Json | undefined) {
+  return typeof value === 'string' ? value : ''
+}
+
+function hasForbiddenExpression(value: Json) {
+  if (!isJsonObject(value)) return false
+
+  const warningCount =
+    (Array.isArray(value.warnings) ? value.warnings.length : 0) +
+    (Array.isArray(value.forbidden_terms) ? value.forbidden_terms.length : 0) +
+    (Array.isArray(value.prohibited_terms) ? value.prohibited_terms.length : 0) +
+    (Array.isArray(value.blockers) ? value.blockers.length : 0)
+
+  return (
+    value.passed === false ||
+    jsonString(value.status) === 'failed' ||
+    jsonString(value.status) === 'blocked' ||
+    warningCount > 0
+  )
+}
+
+async function requireAdministrator() {
+  const platformClient = await createPlatformClient()
+  const { data: { user } } = await platformClient.auth.getUser()
+
+  if (!user) {
+    throw new Error('로그인이 필요합니다.')
+  }
+
+  const { data: profileData } = await platformClient
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  const profile = profileData as { role: 'customer' | 'sales_manager' | 'administrator' } | null
+
+  if (!profile || profile.role !== 'administrator') {
+    throw new Error('관리자만 저장할 수 있습니다.')
+  }
+
+  return user.id
+}
+
+function validatePayload(payload: SaveBlogEditorPayload) {
+  const title = cleanText(payload.post.title)
+  const slug = cleanText(payload.post.slug)
+
+  if (!payload.postId) return '글 ID가 없습니다.'
+  if (!title) return '제목을 입력해야 합니다.'
+  if (!slug || !SLUG_PATTERN.test(slug)) {
+    return 'slug는 영문 소문자, 숫자, 하이픈만 사용할 수 있습니다.'
+  }
+
+  for (const block of payload.blocks) {
+    if (block.type === 'image' && !block.mediaId) {
+      return '이미지 블록은 연결된 blog_media가 필요합니다.'
+    }
+
+    if (block.type !== 'image') {
+      const hasText = Boolean(cleanText(block.text))
+      const hasMetadata = Object.values(block.metadata).some(value => cleanText(value))
+      if (!hasText && !hasMetadata) {
+        return '이미지 외 블록은 본문 또는 메타 정보를 입력해야 합니다.'
+      }
+    }
+  }
+
+  return null
+}
+
+function toJsonObject(metadata: Record<string, string>): Json {
+  return Object.entries(metadata).reduce<Record<string, Json>>((acc, [key, value]) => {
+    const cleaned = cleanText(value)
+    if (cleaned) acc[key] = cleaned
+    return acc
+  }, {})
+}
+
+async function requireEditablePost(
+  showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
+  postId: string,
+) {
+  const { data: postData, error: postError } = await showroomAdmin
+    .from('blog_posts')
+    .select('id, status')
+    .eq('id', postId)
+    .single()
+
+  const post = postData as Pick<Database['showroom']['Tables']['blog_posts']['Row'], 'id' | 'status'> | null
+
+  if (postError || !post) {
+    return { ok: false as const, message: '저장할 글을 찾지 못했습니다.' }
+  }
+
+  if (post.status === 'published') {
+    return { ok: false as const, message: '발행 완료 글은 이번 PR에서 수정할 수 없습니다.' }
+  }
+
+  return { ok: true as const, post }
+}
+
+async function requireOwnedMedia(
+  showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
+  postId: string,
+  mediaId: string,
+) {
+  const { data: mediaData, error: mediaError } = await showroomAdmin
+    .from('blog_media')
+    .select('id, post_id, usage_status')
+    .eq('id', mediaId)
+    .single()
+
+  const media = mediaData as Pick<Database['showroom']['Tables']['blog_media']['Row'], 'id' | 'post_id' | 'usage_status'> | null
+
+  if (mediaError || !media) {
+    return { ok: false as const, message: '수정할 blog_media를 찾지 못했습니다.' }
+  }
+
+  if (media.post_id !== postId) {
+    return { ok: false as const, message: '다른 글의 blog_media는 수정할 수 없습니다.' }
+  }
+
+  if (media.usage_status === 'published') {
+    return { ok: false as const, message: 'published 미디어는 이번 PR에서 수정할 수 없습니다.' }
+  }
+
+  return { ok: true as const, media }
+}
+
+async function validateImageMediaOwnership(
+  showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
+  payload: SaveBlogEditorPayload,
+) {
+  const imageMediaIds = [
+    ...new Set(payload.blocks
+      .filter(block => block.type === 'image' && block.mediaId)
+      .map(block => block.mediaId as string)),
+  ]
+
+  if (imageMediaIds.length === 0) return null
+
+  const { data: mediaData, error: mediaError } = await showroomAdmin
+    .from('blog_media')
+    .select('id, post_id')
+    .in('id', imageMediaIds)
+
+  if (mediaError) return mediaError.message
+
+  const mediaRows = (mediaData ?? []) as Array<{ id: string; post_id: string | null }>
+  const foundIds = new Set(mediaRows.map(media => media.id))
+  const missingMediaIds = imageMediaIds.filter(mediaId => !foundIds.has(mediaId))
+
+  if (missingMediaIds.length > 0) {
+    return '연결할 수 없는 blog_media가 포함되어 있습니다.'
+  }
+
+  const hasForeignMedia = mediaRows.some(media => media.post_id !== payload.postId)
+  if (hasForeignMedia) {
+    return '다른 글의 blog_media는 이미지 블록에 연결할 수 없습니다.'
+  }
+
+  return null
+}
+
+export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<SaveBlogEditorResult> {
+  try {
+    await requireAdministrator()
+
+    const validationError = validatePayload(payload)
+    if (validationError) {
+      return { ok: false, message: validationError }
+    }
+
+    const showroomAdmin = createShowroomAdminClient()
+    const { data: currentPostData, error: currentPostError } = await showroomAdmin
+      .from('blog_posts')
+      .select('id, status')
+      .eq('id', payload.postId)
+      .single()
+
+    const currentPost = currentPostData as Pick<Database['showroom']['Tables']['blog_posts']['Row'], 'id' | 'status'> | null
+
+    if (currentPostError || !currentPost) {
+      return { ok: false, message: '저장할 글을 찾지 못했습니다.' }
+    }
+
+    if (currentPost.status === 'published') {
+      return { ok: false, message: '발행 완료 글은 이번 PR에서 저장할 수 없습니다.' }
+    }
+
+    const mediaOwnershipError = await validateImageMediaOwnership(showroomAdmin, payload)
+    if (mediaOwnershipError) {
+      return { ok: false, message: mediaOwnershipError }
+    }
+
+    const postUpdate: Database['showroom']['Tables']['blog_posts']['Update'] = {
+      title: payload.post.title.trim(),
+      slug: payload.post.slug.trim(),
+      excerpt: cleanText(payload.post.excerpt),
+      category: payload.post.category,
+      seo_title: cleanText(payload.post.seoTitle),
+      meta_description: cleanText(payload.post.metaDescription),
+      canonical_url: cleanText(payload.post.canonicalUrl),
+      primary_keyword: cleanText(payload.post.primaryKeyword),
+      target_question: cleanText(payload.post.targetQuestion),
+      summary_answer: cleanText(payload.post.summaryAnswer),
+      related_questions: payload.post.relatedQuestions.map(question => question.trim()).filter(Boolean),
+      service_area: cleanText(payload.post.serviceArea),
+      product_type: cleanText(payload.post.productType),
+      ai_citation_ready: payload.post.aiCitationReady,
+      last_fact_checked_at: cleanText(payload.post.lastFactCheckedAt),
+      updated_at: new Date().toISOString(),
+    }
+
+    const { data: updatedPostData, error: postError } = await showroomAdmin
+      .from('blog_posts')
+      .update(postUpdate as never)
+      .eq('id', payload.postId)
+      .neq('status', 'published')
+      .select('id')
+
+    if (postError) {
+      return { ok: false, message: postError.message }
+    }
+
+    const updatedPostRows = (updatedPostData ?? []) as Array<{ id: string }>
+    if (updatedPostRows.length !== 1) {
+      return { ok: false, message: '발행 완료 글은 저장할 수 없습니다.' }
+    }
+
+    const { data: existingBlocksData, error: existingBlocksError } = await showroomAdmin
+      .from('blog_blocks')
+      .select('id, display_order')
+      .eq('post_id', payload.postId)
+
+    if (existingBlocksError) {
+      return { ok: false, message: existingBlocksError.message }
+    }
+
+    const existingBlocks = (existingBlocksData ?? []) as Array<{ id: string; display_order: number }>
+    const existingBlockIds = new Set(existingBlocks.map(block => block.id))
+    const incomingExistingIds = new Set(payload.blocks.map(block => block.id).filter(Boolean) as string[])
+    const removedIds = [...existingBlockIds].filter(id => !incomingExistingIds.has(id))
+
+    if (existingBlocks.length > 0) {
+      await Promise.all(existingBlocks.map(block => showroomAdmin
+        .from('blog_blocks')
+        .update({ display_order: block.display_order + 10000 } as never)
+        .eq('id', block.id)
+      ))
+    }
+
+    if (removedIds.length > 0) {
+      const { error: deleteError } = await showroomAdmin
+        .from('blog_blocks')
+        .delete()
+        .in('id', removedIds)
+
+      if (deleteError) {
+        return { ok: false, message: deleteError.message }
+      }
+    }
+
+    for (const [index, block] of payload.blocks.entries()) {
+      const blockPayload: Database['showroom']['Tables']['blog_blocks']['Insert'] = {
+        post_id: payload.postId,
+        display_order: index,
+        type: block.type,
+        heading_level: block.type === 'heading' ? block.headingLevel : null,
+        text: cleanText(block.text),
+        media_id: block.type === 'image' ? block.mediaId : null,
+        metadata: toJsonObject(block.metadata),
+      }
+
+      if (block.id && existingBlockIds.has(block.id)) {
+        const { error } = await showroomAdmin
+          .from('blog_blocks')
+          .update(blockPayload as never)
+          .eq('id', block.id)
+
+        if (error) return { ok: false, message: error.message }
+      } else {
+        const { error } = await showroomAdmin
+          .from('blog_blocks')
+          .insert(blockPayload as never)
+
+        if (error) return { ok: false, message: error.message }
+      }
+    }
+
+    const savedAt = new Date().toISOString()
+    revalidatePath('/admin/platform/blog')
+    revalidatePath(`/admin/platform/blog/${payload.postId}`)
+
+    return { ok: true, message: '저장했습니다.', savedAt }
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : '저장 중 오류가 발생했습니다.',
+    }
+  }
+}
+
+function extensionForFile(file: File) {
+  const nameExtension = file.name.split('.').pop()?.toLowerCase()
+  if (nameExtension && /^[a-z0-9]+$/.test(nameExtension)) return nameExtension
+
+  if (file.type === 'image/jpeg') return 'jpg'
+  if (file.type === 'image/png') return 'png'
+  if (file.type === 'image/webp') return 'webp'
+  if (file.type === 'image/heic') return 'heic'
+  if (file.type === 'image/heif') return 'heif'
+
+  return 'bin'
+}
+
+export async function uploadBlogMedia(formData: FormData): Promise<MediaActionResult> {
+  let uploadedPath: string | null = null
+
+  try {
+    await requireAdministrator()
+
+    const postId = String(formData.get('postId') ?? '')
+    const file = formData.get('file')
+    const sourceLabel = cleanText(String(formData.get('sourceLabel') ?? ''))
+
+    if (!postId) {
+      return { ok: false, message: '글 ID가 없습니다.' }
+    }
+
+    if (!(file instanceof File) || file.size === 0) {
+      return { ok: false, message: '업로드할 이미지 파일을 선택해주세요.' }
+    }
+
+    if (file.size > MAX_UPLOAD_SIZE) {
+      return { ok: false, message: '이미지는 50MB 이하만 업로드할 수 있습니다.' }
+    }
+
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      return { ok: false, message: 'jpeg, png, webp, heic 이미지만 업로드할 수 있습니다.' }
+    }
+
+    const showroomAdmin = createShowroomAdminClient()
+    const editablePost = await requireEditablePost(showroomAdmin, postId)
+    if (!editablePost.ok) return { ok: false, message: editablePost.message }
+
+    const objectPath = `${postId}/${Date.now()}-${randomUUID()}.${extensionForFile(file)}`
+    const { error: uploadError } = await showroomAdmin.storage
+      .from(PRIVATE_MEDIA_BUCKET)
+      .upload(objectPath, file, {
+        cacheControl: '3600',
+        contentType: file.type,
+        upsert: false,
+      })
+
+    if (uploadError) {
+      return { ok: false, message: uploadError.message }
+    }
+
+    uploadedPath = objectPath
+
+    const insertPayload: Database['showroom']['Tables']['blog_media']['Insert'] = {
+      post_id: postId,
+      source_type: 'manual_upload',
+      private_bucket: PRIVATE_MEDIA_BUCKET,
+      private_object_path: objectPath,
+      source_label: sourceLabel ?? file.name,
+      usage_status: 'candidate',
+      privacy_checked: false,
+      promotion_consent_checked: false,
+      used_as_cover: false,
+    }
+
+    const { error: insertError } = await showroomAdmin
+      .from('blog_media')
+      .insert(insertPayload as never)
+
+    if (insertError) {
+      await showroomAdmin.storage.from(PRIVATE_MEDIA_BUCKET).remove([objectPath])
+      uploadedPath = null
+      return { ok: false, message: insertError.message }
+    }
+
+    revalidatePath(`/admin/platform/blog/${postId}`)
+    return { ok: true, message: '미디어 후보를 업로드했습니다.' }
+  } catch (error) {
+    if (uploadedPath) {
+      const showroomAdmin = createShowroomAdminClient()
+      await showroomAdmin.storage.from(PRIVATE_MEDIA_BUCKET).remove([uploadedPath])
+    }
+
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : '미디어 업로드 중 오류가 발생했습니다.',
+    }
+  }
+}
+
+export async function updateBlogMedia(payload: UpdateBlogMediaPayload): Promise<MediaActionResult> {
+  try {
+    const actorId = await requireAdministrator()
+
+    if (!payload.postId || !payload.mediaId) {
+      return { ok: false, message: '미디어 ID가 없습니다.' }
+    }
+
+    if (payload.usageStatus === 'published') {
+      return { ok: false, message: 'published 전환은 PR-06 발행 server action에서만 처리합니다.' }
+    }
+
+    const showroomAdmin = createShowroomAdminClient()
+    const editablePost = await requireEditablePost(showroomAdmin, payload.postId)
+    if (!editablePost.ok) return { ok: false, message: editablePost.message }
+
+    const ownedMedia = await requireOwnedMedia(showroomAdmin, payload.postId, payload.mediaId)
+    if (!ownedMedia.ok) return { ok: false, message: ownedMedia.message }
+
+    const altText = cleanText(payload.altText)
+    const caption = cleanText(payload.caption)
+    const sourceLabel = cleanText(payload.sourceLabel)
+    const rejectionReason = cleanText(payload.rejectionReason)
+
+    if (payload.usageStatus === 'approved') {
+      if (!altText) return { ok: false, message: '승인하려면 alt_text가 필요합니다.' }
+      if (!payload.privacyChecked) return { ok: false, message: '승인하려면 개인정보 확인이 필요합니다.' }
+      if (!payload.promotionConsentChecked) return { ok: false, message: '승인하려면 홍보 사용 동의 확인이 필요합니다.' }
+    }
+
+    if (payload.usageStatus === 'rejected' && !rejectionReason) {
+      return { ok: false, message: '거절 처리하려면 rejection_reason이 필요합니다.' }
+    }
+
+    if (payload.usedAsCover && payload.usageStatus !== 'rejected') {
+      await showroomAdmin
+        .from('blog_media')
+        .update({ used_as_cover: false } as never)
+        .eq('post_id', payload.postId)
+        .neq('id', payload.mediaId)
+    }
+
+    const now = new Date().toISOString()
+    const mediaUpdate: Database['showroom']['Tables']['blog_media']['Update'] = {
+      alt_text: altText,
+      caption,
+      source_label: sourceLabel,
+      privacy_checked: payload.privacyChecked,
+      promotion_consent_checked: payload.promotionConsentChecked,
+      used_as_cover: payload.usageStatus === 'rejected' ? false : payload.usedAsCover,
+      usage_status: payload.usageStatus,
+      approved_by: payload.usageStatus === 'approved' ? actorId : null,
+      approved_at: payload.usageStatus === 'approved' ? now : null,
+      rejection_reason: payload.usageStatus === 'rejected' ? rejectionReason : null,
+      public_bucket: null,
+      public_object_path: null,
+      public_url: null,
+      published_at: null,
+      updated_at: now,
+    }
+
+    const { data: updatedData, error: updateError } = await showroomAdmin
+      .from('blog_media')
+      .update(mediaUpdate as never)
+      .eq('id', payload.mediaId)
+      .eq('post_id', payload.postId)
+      .neq('usage_status', 'published')
+      .select('id')
+
+    if (updateError) {
+      return { ok: false, message: updateError.message }
+    }
+
+    const updatedRows = (updatedData ?? []) as Array<{ id: string }>
+    if (updatedRows.length !== 1) {
+      return { ok: false, message: 'published 미디어는 이번 PR에서 수정할 수 없습니다.' }
+    }
+
+    revalidatePath(`/admin/platform/blog/${payload.postId}`)
+    return { ok: true, message: '미디어 정보를 저장했습니다.' }
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : '미디어 저장 중 오류가 발생했습니다.',
+    }
+  }
+}
+
+function validatePublishGate(post: BlogPost, blocks: BlogBlock[], media: BlogMedia[]) {
+  const issues: string[] = []
+  const imageBlocks = blocks.filter(block => block.type === 'image')
+  const ctaBlocks = blocks.filter(block => block.type === 'cta')
+  const mediaById = new Map(media.map(item => [item.id, item]))
+  const mediaToValidate = new Map<string, BlogMedia>()
+
+  if (post.status !== 'ready') issues.push('status가 ready인 글만 발행할 수 있습니다.')
+  if (!cleanText(post.title)) issues.push('제목이 필요합니다.')
+  if (!cleanText(post.slug) || !SLUG_PATTERN.test(post.slug)) issues.push('slug 형식이 올바르지 않습니다.')
+  const metaDescription = cleanText(post.meta_description)
+  if (!metaDescription) issues.push('meta description이 필요합니다.')
+  if (metaDescription && (metaDescription.length < 50 || metaDescription.length > 180)) {
+    issues.push('meta description은 50-180자여야 합니다.')
+  }
+  if (!cleanText(post.target_question)) issues.push('target question이 필요합니다.')
+  if (!cleanText(post.summary_answer)) issues.push('summary answer가 필요합니다.')
+  if (!post.last_fact_checked_at) issues.push('last_fact_checked_at이 필요합니다.')
+  if (blocks.length === 0) issues.push('본문 블록이 필요합니다.')
+  if (ctaBlocks.length === 0) issues.push('CTA 블록이 필요합니다.')
+  if (hasForbiddenExpression(post.brand_check_result)) issues.push('금지표현/브랜드 검수 blocker가 남아 있습니다.')
+
+  for (const block of blocks) {
+    if (block.type !== 'image') continue
+    if (!block.media_id) {
+      issues.push('연결되지 않은 이미지 블록이 있습니다.')
+      continue
+    }
+
+    const linkedMedia = mediaById.get(block.media_id)
+    if (!linkedMedia || linkedMedia.post_id !== post.id) {
+      issues.push('이미지 블록에 이 글 소속이 아닌 media가 연결되어 있습니다.')
+      continue
+    }
+
+    mediaToValidate.set(linkedMedia.id, linkedMedia)
+  }
+
+  for (const coverMedia of media.filter(item => item.used_as_cover)) {
+    mediaToValidate.set(coverMedia.id, coverMedia)
+  }
+
+  for (const linkedMedia of mediaToValidate.values()) {
+    if (linkedMedia.usage_status !== 'approved') {
+      issues.push('공개 승격 대상 media는 approved 상태여야 합니다.')
+    }
+    if (!cleanText(linkedMedia.alt_text)) {
+      issues.push('공개 이미지 alt_text가 필요합니다.')
+    }
+
+    if (!linkedMedia.privacy_checked) {
+      issues.push('공개 이미지 개인정보 확인이 필요합니다.')
+    }
+
+    if (!linkedMedia.promotion_consent_checked) {
+      issues.push('공개 이미지 홍보 사용 동의 확인이 필요합니다.')
+    }
+
+    if (!linkedMedia.private_bucket || !linkedMedia.private_object_path) {
+      issues.push('승격할 private 원본 이미지 경로가 필요합니다.')
+    }
+  }
+
+  const usedImageMediaIds = new Set(imageBlocks.map(block => block.media_id).filter(Boolean) as string[])
+  const mediaToPublish = media.filter(item => usedImageMediaIds.has(item.id) || item.used_as_cover)
+
+  return {
+    issues: [...new Set(issues)],
+    mediaToPublish,
+  }
+}
+
+function publicObjectPathForMedia(postId: string, mediaId: string) {
+  return `${postId}/${mediaId}.webp`
+}
+
+async function convertToPublicWebp(source: Blob) {
+  const { default: sharp } = await import('sharp')
+  const input = Buffer.from(await source.arrayBuffer())
+  return sharp(input)
+    .rotate()
+    .webp({ quality: 84, effort: 4 })
+    .toBuffer()
+}
+
+async function cleanupPublicObjects(paths: string[]) {
+  if (paths.length === 0) return
+  const showroomAdmin = createShowroomAdminClient()
+  await showroomAdmin.storage.from(PUBLIC_MEDIA_BUCKET).remove(paths)
+}
+
+async function rollbackPublishedMedia(mediaIds: string[]) {
+  if (mediaIds.length === 0) return
+  const showroomAdmin = createShowroomAdminClient()
+  await showroomAdmin
+    .from('blog_media')
+    .update({
+      usage_status: 'approved',
+      public_bucket: null,
+      public_object_path: null,
+      public_url: null,
+      published_at: null,
+      updated_at: new Date().toISOString(),
+    } as never)
+    .in('id', mediaIds)
+}
+
+async function promoteMediaForPublish(
+  showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
+  postId: string,
+  mediaRows: BlogMedia[],
+  publishedAt: string,
+) {
+  const uploadedPaths: string[] = []
+  const publishedMediaIds: string[] = []
+
+  try {
+    for (const media of mediaRows) {
+      if (!media.private_bucket || !media.private_object_path) {
+        throw new Error('승격할 private 원본 이미지 경로가 없습니다.')
+      }
+
+      const { data: privateObject, error: downloadError } = await showroomAdmin.storage
+        .from(media.private_bucket)
+        .download(media.private_object_path)
+
+      if (downloadError || !privateObject) {
+        throw new Error(downloadError?.message ?? 'private 이미지를 불러오지 못했습니다.')
+      }
+
+      const publicObjectPath = publicObjectPathForMedia(postId, media.id)
+      const publicWebp = await convertToPublicWebp(privateObject)
+      const { error: uploadError } = await showroomAdmin.storage
+        .from(PUBLIC_MEDIA_BUCKET)
+        .upload(publicObjectPath, publicWebp, {
+          cacheControl: '31536000',
+          contentType: 'image/webp',
+          upsert: false,
+        })
+
+      if (uploadError) {
+        throw new Error(uploadError.message)
+      }
+
+      uploadedPaths.push(publicObjectPath)
+
+      const { data: publicUrlData } = showroomAdmin.storage
+        .from(PUBLIC_MEDIA_BUCKET)
+        .getPublicUrl(publicObjectPath)
+
+      const { data: updatedMediaData, error: updateError } = await showroomAdmin
+        .from('blog_media')
+        .update({
+          usage_status: 'published',
+          public_bucket: PUBLIC_MEDIA_BUCKET,
+          public_object_path: publicObjectPath,
+          public_url: publicUrlData.publicUrl,
+          published_at: publishedAt,
+          updated_at: publishedAt,
+        } as never)
+        .eq('id', media.id)
+        .eq('post_id', postId)
+        .eq('usage_status', 'approved')
+        .select('id')
+
+      if (updateError) {
+        throw new Error(updateError.message)
+      }
+
+      const updatedRows = (updatedMediaData ?? []) as Array<{ id: string }>
+      if (updatedRows.length !== 1) {
+        throw new Error('승인된 media만 published로 승격할 수 있습니다.')
+      }
+
+      publishedMediaIds.push(media.id)
+    }
+
+    return {
+      uploadedPaths,
+      publishedMediaIds,
+    }
+  } catch (error) {
+    await rollbackPublishedMedia(publishedMediaIds)
+    await cleanupPublicObjects(uploadedPaths)
+    throw error
+  }
+}
+
+export async function publishBlogPost(postId: string): Promise<PublishBlogPostResult> {
+  let uploadedPaths: string[] = []
+  let publishedMediaIds: string[] = []
+
+  try {
+    const actorId = await requireAdministrator()
+
+    if (!postId) {
+      return { ok: false, message: '글 ID가 없습니다.' }
+    }
+
+    const showroomAdmin = createShowroomAdminClient()
+    const [postResult, blocksResult, mediaResult] = await Promise.all([
+      showroomAdmin
+        .from('blog_posts')
+        .select('id, title, slug, excerpt, seo_title, meta_description, canonical_url, status, category, primary_keyword, target_question, summary_answer, related_questions, service_area, product_type, source_evidence, brand_check_result, ai_citation_ready, last_fact_checked_at, media_missing_reason, created_by, reviewed_by, published_by, published_at, created_at, updated_at')
+        .eq('id', postId)
+        .single(),
+      showroomAdmin
+        .from('blog_blocks')
+        .select('id, post_id, display_order, type, heading_level, text, media_id, metadata, created_at, updated_at')
+        .eq('post_id', postId)
+        .order('display_order', { ascending: true }),
+      showroomAdmin
+        .from('blog_media')
+        .select('id, post_id, source_type, source_measurement_media_id, source_as_media_id, private_bucket, private_object_path, public_bucket, public_object_path, public_url, alt_text, caption, source_label, usage_status, privacy_checked, promotion_consent_checked, used_as_cover, approved_by, approved_at, published_at, rejection_reason, created_at, updated_at')
+        .eq('post_id', postId),
+    ])
+
+    const post = postResult.data as BlogPost | null
+    const blocks = (blocksResult.data ?? []) as BlogBlock[]
+    const media = (mediaResult.data ?? []) as BlogMedia[]
+
+    if (postResult.error || !post) {
+      return { ok: false, message: '발행할 글을 찾지 못했습니다.' }
+    }
+
+    if (blocksResult.error) {
+      return { ok: false, message: blocksResult.error.message }
+    }
+
+    if (mediaResult.error) {
+      return { ok: false, message: mediaResult.error.message }
+    }
+
+    const gate = validatePublishGate(post, blocks, media)
+    if (gate.issues.length > 0) {
+      return {
+        ok: false,
+        message: '발행 전 검수 게이트를 통과하지 못했습니다.',
+        issues: gate.issues,
+      }
+    }
+
+    const publishedAt = new Date().toISOString()
+    const promotion = await promoteMediaForPublish(showroomAdmin, post.id, gate.mediaToPublish, publishedAt)
+    uploadedPaths = promotion.uploadedPaths
+    publishedMediaIds = promotion.publishedMediaIds
+
+    const { data: updatedPostData, error: postUpdateError } = await showroomAdmin
+      .from('blog_posts')
+      .update({
+        status: 'published',
+        published_by: actorId,
+        published_at: publishedAt,
+        updated_at: publishedAt,
+      } as never)
+      .eq('id', post.id)
+      .eq('status', 'ready')
+      .select('id, slug')
+
+    if (postUpdateError) {
+      throw new Error(postUpdateError.message)
+    }
+
+    const updatedPostRows = (updatedPostData ?? []) as Array<{ id: string; slug: string }>
+    if (updatedPostRows.length !== 1) {
+      throw new Error('ready 상태의 글만 published로 전환할 수 있습니다.')
+    }
+
+    const { error: eventError } = await showroomAdmin
+      .from('blog_post_events')
+      .insert({
+        post_id: post.id,
+        actor_id: actorId,
+        event_type: 'published',
+        from_status: post.status,
+        to_status: 'published',
+        memo: 'Content OS publish gate passed; approved media promoted to public bucket.',
+        metadata: {
+          published_media_ids: publishedMediaIds,
+          public_bucket: PUBLIC_MEDIA_BUCKET,
+        },
+      } as never)
+
+    if (eventError) {
+      await showroomAdmin
+        .from('blog_posts')
+        .update({
+          status: 'ready',
+          published_by: null,
+          published_at: null,
+          updated_at: new Date().toISOString(),
+        } as never)
+        .eq('id', post.id)
+        .eq('status', 'published')
+
+      throw new Error(eventError.message)
+    }
+
+    revalidatePath('/blog')
+    revalidatePath(`/blog/${post.slug}`)
+    revalidatePath('/sitemap.xml')
+    revalidatePath(`/admin/platform/blog/${post.id}`)
+    revalidatePath(`/admin/platform/blog/${post.id}/preview`)
+
+    return {
+      ok: true,
+      message: '발행이 완료되었습니다.',
+      publishedAt,
+      slug: post.slug,
+    }
+  } catch (error) {
+    await rollbackPublishedMedia(publishedMediaIds)
+    await cleanupPublicObjects(uploadedPaths)
+
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : '발행 중 오류가 발생했습니다.',
+    }
+  }
+}

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Settings, LogOut, Menu, X, FolderTree, ClipboardList, Sliders } from 'lucide-react'
+import { Settings, LogOut, Menu, X, FolderTree, ClipboardList, Sliders, Newspaper } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import styles from './AdminSidebar.module.css'
 
@@ -29,6 +29,7 @@ export default function AdminSidebar() {
   const navItems = [
     { name: '접수 큐', path: '/admin/platform', icon: ClipboardList },
     { name: '견적 설정', path: '/admin/platform/settings', icon: Sliders },
+    { name: '블로그 초안', path: '/admin/platform/blog', icon: Newspaper },
     { name: '노드 관리', path: '/admin/nodes', icon: FolderTree },
     { name: '사이트 설정', path: '/admin/settings', icon: Settings },
   ]
@@ -63,7 +64,7 @@ export default function AdminSidebar() {
               const Icon = item.icon
               // 중복 매칭 버그 수정: /admin/platform/settings 가 /admin/platform 에 startsWith 매칭되지 않도록 함
               const isActive = item.path === '/admin/platform'
-                ? pathname === '/admin/platform' || (pathname.startsWith('/admin/platform/') && !pathname.startsWith('/admin/platform/settings'))
+                ? pathname === '/admin/platform' || (pathname.startsWith('/admin/platform/') && !pathname.startsWith('/admin/platform/settings') && !pathname.startsWith('/admin/platform/blog'))
                 : pathname.startsWith(item.path)
               const isPending = pendingPath === item.path && !isActive
 
