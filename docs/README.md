@@ -2,6 +2,12 @@
 
 현재 플랫폼 제작 문서는 `docs/platform/`이 기준이다.
 
+## Brand
+
+- `docs/brand/BRAND_SOURCE.md` — 중앙 브랜드 원본 폴더와 필수 참조 문서
+- `docs/brand/PROJECT_BRAND_ADAPTER.md` — 이 웹 플랫폼/Content OS에 중앙 브랜드를 적용하는 방식
+- `docs/brand/BRAND_SYNC_AUDIT_2026-06-25.md` — 중앙 브랜드 원본과 프로젝트 문서 차이 감사
+
 ## Platform
 
 - `docs/platform/PLATFORM_TASKS.md` — 플랫폼 제작 일정, 페이즈, 오더 순서

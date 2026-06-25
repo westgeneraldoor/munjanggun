@@ -15,3 +15,20 @@ The platform must feel like one product. Shared customer intake flows must reuse
 Before planning or delegating platform work, read `docs/platform/PLATFORM_STRATEGY.md`, `docs/platform/PLATFORM_TASKS.md`, `docs/platform/DEVELOPMENT_STRATEGY.md`, and `docs/platform/TEAM_AGENT_OPERATING_MODEL.md`.
 
 Use Codex as the coordinating PM/tech lead. Use subagents for scoped research, implementation, review, and red-team checks when the work can be split safely. Keep `docs/platform/PLATFORM_STRATEGY.md` as the product north star and `docs/platform/PLATFORM_TASKS.md` as the execution order.
+
+## Munjanggun Brand Source
+
+Before creating or editing Munjanggun brand, content, blog, design, video, automation, or QA work, read the central brand source first:
+
+- `C:\Users\hjh\안티그래비티\문장군_브랜드\BRAND_CONTEXT.md`
+- `C:\Users\hjh\안티그래비티\문장군_브랜드\FIELD_JUDGMENT_RULES.md`
+- `C:\Users\hjh\안티그래비티\문장군_브랜드\DESIGN.md`
+- `C:\Users\hjh\안티그래비티\문장군_브랜드\PROJECT_ADAPTERS.md`
+- `C:\Users\hjh\안티그래비티\문장군_브랜드\CHANGELOG.md`
+
+Then read this project's brand bridge:
+
+- `docs/brand/BRAND_SOURCE.md`
+- `docs/brand/PROJECT_BRAND_ADAPTER.md`
+
+Treat `docs/platform/BRAND_CONTEXT.md` as legacy project context, not the primary brand source. Do not place customer names, phone numbers, detailed addresses, AppSheet raw records, consultation transcripts, Naver admin raw exports, original field photos, private revenue/account data, tokens, cookies, or other secrets in central or project brand documents. Use de-identified summaries or evidence references instead.
