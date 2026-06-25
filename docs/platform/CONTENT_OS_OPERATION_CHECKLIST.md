@@ -71,6 +71,77 @@ storage.objects policy remote application is not confirmed from this Codex sessi
 Confirm it with a DB owner or linked Supabase CLI before production publishing.
 ```
 
+## 2.1 HARDEN-00 Remote Storage Policy Result
+
+Status as of 2026-06-25:
+
+```text
+Supabase project: munjanggun-apt
+Project ref: cebafroyvmllbyivevjd
+Applied by: Supabase MCP execute_sql
+Scope: storage.objects policies for Content OS media buckets only
+Result: passed
+```
+
+Applied policies:
+
+```text
+blog_media_public_select
+blog_media_admin_insert_public
+blog_media_admin_delete_public
+blog_media_private_admin_select
+blog_media_private_admin_insert
+blog_media_private_admin_delete
+```
+
+Verified `pg_policies` result:
+
+- All 6 expected policies exist on `storage.objects`.
+- `blog_media_public_select` is `SELECT TO anon` with `bucket_id = 'blog-media'`.
+- `blog_media_admin_insert_public` is `INSERT TO authenticated` with `bucket_id = 'blog-media'` and `platform_private.is_admin()`.
+- `blog_media_admin_delete_public` is `DELETE TO authenticated` with `bucket_id = 'blog-media'` and `platform_private.is_admin()`.
+- `blog_media_private_admin_select` is `SELECT TO authenticated` with `bucket_id = 'blog-media-private'` and `platform_private.is_admin()`.
+- `blog_media_private_admin_insert` is `INSERT TO authenticated` with `bucket_id = 'blog-media-private'` and `platform_private.is_admin()`.
+- `blog_media_private_admin_delete` is `DELETE TO authenticated` with `bucket_id = 'blog-media-private'` and `platform_private.is_admin()`.
+- No Content OS `UPDATE` policy exists for `blog-media` or `blog-media-private`.
+
+Behavior verification:
+
+- anon upload to `blog-media-private`: blocked by RLS.
+- anon upload to `blog-media`: blocked by RLS.
+- authenticated administrator upload to `blog-media-private`: passed.
+- authenticated administrator signed URL for `blog-media-private`: passed.
+- authenticated administrator download from `blog-media-private`: passed.
+- direct public URL for `blog-media-private`: blocked with non-200 response.
+- authenticated administrator upload to `blog-media`: passed.
+- public URL for `blog-media`: returned HTTP 200.
+- anon download from `blog-media`: passed.
+- authenticated administrator upsert/overwrite attempt on existing `blog-media` object: blocked by RLS.
+- authenticated administrator delete from both Content OS buckets: passed.
+
+Publish rehearsal after HARDEN-00:
+
+- One temporary ready post was created.
+- One approved private media object was attached.
+- Admin publish action succeeded.
+- Approved private media was promoted to `blog-media` as WebP.
+- `blog_posts.status` became `published`.
+- `blog_media.usage_status` became `published`.
+- A `published` event was recorded.
+- Public `/blog/[slug]` rendered successfully.
+- Public HTML did not include `source_prompt`, `source_evidence`, `brand_check_result`, `blog-media-private`, or the private object path.
+- 390px mobile overflow check passed.
+- Temporary post, media rows, events, blocks, and storage objects were cleaned up.
+
+Operational decision:
+
+```text
+Content OS MVP storage policy: go
+Content OS internal operation test: go
+Real sample content publishing: go after operator sign-off
+Remaining hardening: HARDEN-01 admin preview image proxy is recommended but not blocking
+```
+
 ## 3. Storage Policy Remote Confirmation
 
 ### 3.1 Expected Buckets
