@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -574,6 +574,8 @@ export default function BlogEditorClient({
   const [uploadSourceLabel, setUploadSourceLabel] = useState('')
   const [uploadInputKey, setUploadInputKey] = useState(0)
   const [mediaMessage, setMediaMessage] = useState<{ ok: boolean; text: string } | null>(null)
+  const uploadBoxRef = useRef<HTMLDivElement | null>(null)
+  const uploadInputRef = useRef<HTMLInputElement | null>(null)
 
   const isPublished = post.status === 'published'
   const selectableMedia = useMemo(() => media.filter(item => item.usageStatus !== 'rejected'), [media])
@@ -592,6 +594,20 @@ export default function BlogEditorClient({
 
   const addBlock = (type: BlogBlockType) => {
     setBlocks(prev => [...prev, createBlock(type)])
+  }
+
+  const handleImageBlockIntent = () => {
+    if (canAddImage) {
+      addBlock('image')
+      return
+    }
+
+    setMediaMessage({
+      ok: false,
+      text: '이미지 블록을 추가하려면 먼저 private 후보 이미지를 업로드해주세요.',
+    })
+    uploadBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    window.setTimeout(() => uploadInputRef.current?.focus(), 250)
   }
 
   const updateBlock = (clientId: string, next: EditableBlock) => {
@@ -801,12 +817,12 @@ export default function BlogEditorClient({
             <div className={styles.blockToolbar} aria-label="블록 추가">
               <button type="button" onClick={() => addBlock('heading')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> Heading</button>
               <button type="button" onClick={() => addBlock('paragraph')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> Paragraph</button>
-              <button type="button" onClick={() => addBlock('image')} disabled={isPublished || !canAddImage}><Plus size={15} aria-hidden="true" /> Image</button>
+              <button type="button" onClick={handleImageBlockIntent} disabled={isPublished}><Plus size={15} aria-hidden="true" /> Image</button>
               <button type="button" onClick={() => addBlock('qa')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> Q&A</button>
               <button type="button" onClick={() => addBlock('cta')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> CTA</button>
             </div>
             {!canAddImage && (
-              <div className={styles.slotNotice}>연결 가능한 blog_media가 없어 이미지 슬롯 추가는 비활성화되어 있습니다.</div>
+              <div className={styles.slotNotice}>이미지 블록은 먼저 private 후보 이미지를 업로드한 뒤 연결할 수 있습니다. Image 버튼을 누르면 업로드 영역으로 이동합니다.</div>
             )}
             <div className={styles.blockList}>
               {blocks.length === 0 ? (
@@ -877,10 +893,11 @@ export default function BlogEditorClient({
               <ImageIcon size={17} aria-hidden="true" />
               <h2>이미지 슬롯</h2>
             </div>
-            <div className={styles.uploadBox}>
+            <div className={styles.uploadBox} ref={uploadBoxRef}>
               <Field label="private 후보 업로드" hint="private 후보 저장소에만 저장됩니다. public 승격은 PR-06 범위입니다.">
                 <input
                   key={uploadInputKey}
+                  ref={uploadInputRef}
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
                   onChange={event => setUploadFile(event.target.files?.[0] ?? null)}

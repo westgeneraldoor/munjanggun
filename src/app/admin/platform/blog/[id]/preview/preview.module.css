@@ -1,6 +1,8 @@
 .previewNav {
   min-width: 0;
-  padding: var(--space-4) var(--space-4) 0;
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: var(--space-4) clamp(16px, 4vw, 40px) 0;
   background: #f7f5f0;
   font-family: var(--font-sans);
 }
