@@ -19,6 +19,13 @@ const MAX_UPLOAD_TOTAL_BYTES = 120 * 1024 * 1024
 type ContentAssetInsert = Database['showroom']['Tables']['content_assets']['Insert']
 type ContentAssetFileInsert = Database['showroom']['Tables']['content_asset_files']['Insert']
 type ContentAssetTagRow = Database['showroom']['Tables']['content_asset_tags']['Row']
+type UploadFileMeta = {
+  name: string
+  size: number
+  lastModified: number
+  title?: string
+  description?: string
+}
 
 export type UploadAssetItemResult = {
   fileName: string
@@ -60,6 +67,31 @@ function cleanText(value: FormDataEntryValue | string | null | undefined) {
 
 function fileTitle(fileName: string) {
   return fileName.replace(/\.[^.]+$/, '').trim() || fileName
+}
+
+function fileMetaKey(file: Pick<File, 'name' | 'size' | 'lastModified'>) {
+  return `${file.name}-${file.size}-${file.lastModified}`
+}
+
+function parseUploadFileMeta(value: FormDataEntryValue | null): Map<string, UploadFileMeta> {
+  if (typeof value !== 'string') return new Map()
+
+  try {
+    const parsed = JSON.parse(value) as unknown
+    if (!Array.isArray(parsed)) return new Map()
+
+    const rows = parsed.filter((item): item is UploadFileMeta => (
+      Boolean(item) &&
+      typeof item === 'object' &&
+      typeof item.name === 'string' &&
+      typeof item.size === 'number' &&
+      typeof item.lastModified === 'number'
+    ))
+
+    return new Map(rows.map(item => [fileMetaKey(item), item]))
+  } catch {
+    return new Map()
+  }
 }
 
 function parseTags(value: FormDataEntryValue | string[] | null | undefined) {
@@ -183,8 +215,9 @@ async function uploadOneAsset(params: {
   actorId: string
   file: File
   formData: FormData
+  fileMeta?: UploadFileMeta
 }): Promise<UploadAssetItemResult> {
-  const { actorId, file, formData } = params
+  const { actorId, file, formData, fileMeta } = params
   const showroomAdmin = createShowroomAdminClient()
   let assetId: string | null = null
   const uploaded: Array<{ bucket: string; path: string }> = []
@@ -204,16 +237,16 @@ async function uploadOneAsset(params: {
 
     const now = new Date().toISOString()
     const insertAsset: ContentAssetInsert = {
-      title: cleanText(formData.get('title')) ?? fileTitle(file.name),
-      description: cleanText(formData.get('description')),
+      title: cleanText(fileMeta?.title) ?? cleanText(formData.get('title')) ?? fileTitle(file.name),
+      description: cleanText(fileMeta?.description) ?? cleanText(formData.get('description')),
       category: cleanText(formData.get('category')),
       labels: labelsForTags(tagNames),
       product_type: cleanText(formData.get('productType')),
       space_type: cleanText(formData.get('spaceType')),
       region: cleanText(formData.get('region')),
       usage_purpose: cleanText(formData.get('usagePurpose')),
-      privacy_checked: formData.get('privacyChecked') === 'on',
-      promotion_consent_checked: formData.get('promotionConsentChecked') === 'on',
+      privacy_checked: true,
+      promotion_consent_checked: true,
       created_by: actorId,
       updated_by: actorId,
       created_at: now,
@@ -389,8 +422,14 @@ export async function uploadContentAssets(formData: FormData): Promise<UploadCon
     }
 
     const items: UploadAssetItemResult[] = []
+    const fileMetaByKey = parseUploadFileMeta(formData.get('fileMeta'))
     for (const file of files) {
-      items.push(await uploadOneAsset({ actorId, file, formData }))
+      items.push(await uploadOneAsset({
+        actorId,
+        file,
+        formData,
+        fileMeta: fileMetaByKey.get(fileMetaKey(file)),
+      }))
     }
 
     revalidatePath('/admin/platform/assets')

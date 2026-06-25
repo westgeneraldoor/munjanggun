@@ -2,7 +2,13 @@ import { notFound, redirect } from 'next/navigation'
 import { createPlatformClient } from '@/lib/supabase/platform-server'
 import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
 import type { BlogBlockType, BlogMediaUsageStatus, Database, Json } from '@/types/database'
-import BlogEditorClient, { type BlogEditorBlock, type BlogEditorMedia, type BlogEditorPost, type BlogEditorEvent } from './BlogEditorClient'
+import BlogEditorClient, {
+  type BlogEditorBlock,
+  type BlogEditorMedia,
+  type BlogEditorPost,
+  type BlogEditorEvent,
+  type ContentAssetPickerItem,
+} from './BlogEditorClient'
 
 export const metadata = {
   title: '블로그 초안 편집 | 문장군 관리자',
@@ -18,6 +24,13 @@ type BlogPost = Database['showroom']['Tables']['blog_posts']['Row']
 type BlogBlock = Database['showroom']['Tables']['blog_blocks']['Row']
 type BlogMedia = Database['showroom']['Tables']['blog_media']['Row']
 type BlogEvent = Database['showroom']['Tables']['blog_post_events']['Row']
+type ContentAsset = Database['showroom']['Tables']['content_assets']['Row']
+type ContentAssetFile = Pick<
+  Database['showroom']['Tables']['content_asset_files']['Row'],
+  'asset_id' | 'file_role' | 'public_url' | 'width' | 'height' | 'transform_status'
+>
+type ContentAssetTag = Database['showroom']['Tables']['content_asset_tags']['Row']
+type ContentAssetTagLink = Database['showroom']['Tables']['content_asset_tag_links']['Row']
 
 function isJsonArray(value: Json): value is Json[] {
   return Array.isArray(value)
@@ -192,6 +205,18 @@ function toEditorEvent(event: BlogEvent): BlogEditorEvent {
   }
 }
 
+function contentAssetFileSummary(files: ContentAssetFile[], role: 'web' | 'thumbnail') {
+  const file = files.find(item => item.file_role === role)
+  if (!file) return null
+
+  return {
+    url: file.public_url,
+    width: file.width,
+    height: file.height,
+    ready: file.transform_status === 'ready',
+  }
+}
+
 export default async function AdminPlatformBlogEditorPage({ params }: Props) {
   const { id } = await params
 
@@ -218,6 +243,8 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
     blocksResult,
     mediaResult,
     eventsResult,
+    assetResult,
+    assetTagResult,
   ] = await Promise.all([
     showroomAdmin
       .from('blog_posts')
@@ -240,12 +267,24 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
       .eq('post_id', id)
       .order('created_at', { ascending: false })
       .limit(12),
+    showroomAdmin
+      .from('content_assets')
+      .select('id, title, description, category, labels, product_type, space_type, region, usage_purpose, library_state, privacy_checked, promotion_consent_checked, used_count, created_by, updated_by, created_at, updated_at')
+      .eq('library_state', 'available')
+      .order('created_at', { ascending: false })
+      .limit(240),
+    showroomAdmin
+      .from('content_asset_tags')
+      .select('id, name, slug, tag_group, created_at')
+      .order('name', { ascending: true }),
   ])
 
   const typedPostResult = postResult as { data: BlogPost | null; error: unknown }
   const typedBlocksResult = blocksResult as { data: BlogBlock[] | null }
   const typedMediaResult = mediaResult as { data: BlogMedia[] | null }
   const typedEventsResult = eventsResult as { data: BlogEvent[] | null }
+  const typedAssetResult = assetResult as { data: ContentAsset[] | null }
+  const typedAssetTagResult = assetTagResult as { data: ContentAssetTag[] | null }
 
   if (typedPostResult.error || !typedPostResult.data) {
     notFound()
@@ -255,7 +294,56 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
   const blocks = typedBlocksResult.data ?? []
   const media = typedMediaResult.data ?? []
   const events = typedEventsResult.data ?? []
+  const contentAssets = typedAssetResult.data ?? []
+  const contentAssetTags = typedAssetTagResult.data ?? []
+  const contentAssetIds = contentAssets.map(asset => asset.id)
+  const [assetFileResult, assetTagLinkResult] = contentAssetIds.length > 0
+    ? await Promise.all([
+        showroomAdmin
+          .from('content_asset_files')
+          .select('asset_id, file_role, public_url, width, height, transform_status')
+          .in('asset_id', contentAssetIds)
+          .in('file_role', ['web', 'thumbnail']),
+        showroomAdmin
+          .from('content_asset_tag_links')
+          .select('asset_id, tag_id, created_at')
+          .in('asset_id', contentAssetIds),
+      ])
+    : [{ data: [] }, { data: [] }]
+  const contentAssetFiles = (assetFileResult.data ?? []) as ContentAssetFile[]
+  const contentAssetTagLinks = (assetTagLinkResult.data ?? []) as ContentAssetTagLink[]
   const mediaPreviewUrls = await Promise.all(media.map(item => createPrivatePreviewUrl(showroomAdmin, item)))
+  const filesByAsset = contentAssetFiles.reduce<Record<string, ContentAssetFile[]>>((acc, file) => {
+    acc[file.asset_id] = [...(acc[file.asset_id] ?? []), file]
+    return acc
+  }, {})
+  const tagsById = new Map(contentAssetTags.map(tag => [tag.id, tag.name]))
+  const tagsByAsset = contentAssetTagLinks.reduce<Record<string, string[]>>((acc, link) => {
+    const tagName = tagsById.get(link.tag_id)
+    if (!tagName) return acc
+    acc[link.asset_id] = [...(acc[link.asset_id] ?? []), tagName]
+    return acc
+  }, {})
+  const contentAssetPickerItems: ContentAssetPickerItem[] = contentAssets.map(asset => {
+    const assetFiles = filesByAsset[asset.id] ?? []
+    return {
+      id: asset.id,
+      title: asset.title,
+      description: asset.description,
+      category: asset.category,
+      tags: tagsByAsset[asset.id] ?? [],
+      productType: asset.product_type,
+      spaceType: asset.space_type,
+      region: asset.region,
+      usagePurpose: asset.usage_purpose,
+      privacyChecked: asset.privacy_checked,
+      promotionConsentChecked: asset.promotion_consent_checked,
+      createdAt: asset.created_at,
+      updatedAt: asset.updated_at,
+      thumbnail: contentAssetFileSummary(assetFiles, 'thumbnail'),
+      web: contentAssetFileSummary(assetFiles, 'web'),
+    }
+  })
 
   return (
     <BlogEditorClient
@@ -263,6 +351,7 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
       initialBlocks={blocks.map(toEditorBlock)}
       media={media.map((item, index) => toEditorMedia(item, mediaPreviewUrls[index] ?? null))}
       events={events.map(toEditorEvent)}
+      contentAssets={contentAssetPickerItems}
     />
   )
 }

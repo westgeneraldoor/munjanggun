@@ -59,7 +59,7 @@ export default async function AdminPlatformAssetsPage() {
     .from('content_assets')
     .select('id, title, description, category, labels, product_type, space_type, region, usage_purpose, library_state, privacy_checked, promotion_consent_checked, used_count, created_by, updated_by, created_at, updated_at')
     .neq('library_state', 'archived')
-    .order('updated_at', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(300)
 
   const assets = (assetResult.data ?? []) as AssetRow[]
