@@ -19,6 +19,10 @@
 - `docs/platform/CONTENT_OS_SCHEMA.md` — 콘텐츠 OS Supabase DB/RLS/Storage 설계
 - `docs/platform/CONTENT_OS_ADMIN_UX.md` — 블로그 초안 큐와 블록형 에디터 UX
 - `docs/platform/CONTENT_OS_SEO_AEO_SPEC.md` — sitemap/robots/metadata/JSON-LD SEO·AEO 기술 사양
+- `docs/platform/CONTENT_ASSET_LIBRARY_STRATEGY.md` — 문장군 공용 사진보관함 전략
+- `docs/platform/CONTENT_ASSET_LIBRARY_PRD.md` — 사진보관함 제품 요구사항과 MVP 범위
+- `docs/platform/CONTENT_ASSET_LIBRARY_SCHEMA.md` — 사진보관함 DB/Storage/RLS 설계 초안
+- `docs/platform/CONTENT_ASSET_LIBRARY_ADMIN_UX.md` — 사진보관함 어드민 UX와 블로그 `+ 이미지` 흐름
 - `docs/platform/PLATFORM_DB_RBAC_DESIGN.md` — MVP-01/02 최소 DB/RBAC 설계
 - `docs/platform/PRD_PLATFORM_v1.0.md` — 플랫폼 제품 범위
 - `docs/platform/CODEX_PROJECT_BOOTSTRAP.md` — 작업 에이전트 부트스트랩
