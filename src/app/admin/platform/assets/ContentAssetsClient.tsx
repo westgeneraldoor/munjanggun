@@ -82,6 +82,23 @@ const FILTER_LABELS: Record<FilterKey, string> = {
 }
 
 const MAX_UPLOAD_TOTAL_BYTES = 120 * 1024 * 1024
+const TECHNICAL_TITLE_RE = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{8,}$/i
+
+function fallbackPhotoName(index: number) {
+  return `사진 ${index + 1}`
+}
+
+function looksTechnicalTitle(value: string | null | undefined) {
+  const text = value?.trim() ?? ''
+  if (!text) return false
+  return TECHNICAL_TITLE_RE.test(text) || (/^[a-f0-9-]{24,}$/i.test(text) && text.includes('-'))
+}
+
+function displayAssetTitle(item: ContentAssetLibraryItem, index = 0) {
+  const title = textValue(item.title)
+  if (!title || looksTechnicalTitle(title)) return fallbackPhotoName(index)
+  return title
+}
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat('ko-KR', {
@@ -103,7 +120,7 @@ function textValue(value: string | null) {
 
 function itemToForm(item: ContentAssetLibraryItem): DetailForm {
   return {
-    title: textValue(item.title),
+    title: looksTechnicalTitle(item.title) ? '' : textValue(item.title),
     description: textValue(item.description),
     category: textValue(item.category),
     tags: item.tags.join(', '),
@@ -157,21 +174,23 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
   const selectedUploadsRef = useRef<SelectedUpload[]>([])
   const [result, setResult] = useState<UploadContentAssetsResult | null>(null)
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const totalBytes = selectedUploads.reduce((sum, item) => sum + item.file.size, 0)
   const isOverLimit = totalBytes > MAX_UPLOAD_TOTAL_BYTES
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     setSelectedUploads(current => {
       current.forEach(item => URL.revokeObjectURL(item.previewUrl))
-      return Array.from(event.target.files ?? []).map(file => ({
+      return Array.from(event.target.files ?? []).map((file, index) => ({
         id: uploadId(file),
         file,
         previewUrl: URL.createObjectURL(file),
-        title: file.name.replace(/\.[^.]+$/, ''),
+        title: fallbackPhotoName(index),
         description: '',
       }))
     })
     setResult(null)
+    setUploadProgress(0)
   }
 
   function updateSelectedUpload(id: string, patch: Partial<Pick<SelectedUpload, 'title' | 'description'>>) {
@@ -188,6 +207,16 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
     }
   }, [])
 
+  useEffect(() => {
+    if (!isPending) return
+
+    const timer = window.setInterval(() => {
+      setUploadProgress(current => Math.min(92, current + Math.max(2, Math.round((92 - current) / 7))))
+    }, 450)
+
+    return () => window.clearInterval(timer)
+  }, [isPending])
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = event.currentTarget
@@ -200,8 +229,11 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
       description: item.description,
     }))))
 
+    setUploadProgress(8)
+
     startTransition(async () => {
       const nextResult = await uploadContentAssets(formData)
+      setUploadProgress(100)
       setResult(nextResult)
       if (nextResult.ok) {
         selectedUploads.forEach(item => URL.revokeObjectURL(item.previewUrl))
@@ -261,7 +293,7 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
                       placeholder="예: 좁은 현관에 맞춘 3연동 중문"
                     />
                   </label>
-                  <small>{item.file.name} · {formatBytes(item.file.size)}</small>
+                  <small>{formatBytes(item.file.size)}</small>
                 </div>
               </li>
             ))}
@@ -302,17 +334,18 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
         </div>
       </details>
 
-      <div className={styles.checkGrid}>
-        <label className={styles.checkRow}>
-          <input type="checkbox" name="privacyChecked" />
-          <span>주소나 얼굴 등 민감정보 없음</span>
-        </label>
-        <label className={styles.checkRow}>
-          <input type="checkbox" name="promotionConsentChecked" />
-          <span>블로그/홍보 사용 가능</span>
-        </label>
-      </div>
-      <p className={styles.uploadHint}>본문에 바로 넣을 사진은 두 항목을 체크해두면 편합니다. 나중에 사진 상세에서 다시 수정할 수 있습니다.</p>
+      {isPending || uploadProgress > 0 ? (
+        <div className={styles.uploadProgress} role="status" aria-live="polite">
+          <div className={styles.uploadProgressTop}>
+            <strong>{isPending ? '사진을 정리하고 있습니다' : '사진 정리 완료'}</strong>
+            <span>{uploadProgress}%</span>
+          </div>
+          <div className={styles.progressTrack} aria-hidden="true">
+            <div className={styles.progressFill} style={{ width: `${uploadProgress}%` }} />
+          </div>
+          <p>원본 보관, 웹용 변환, 썸네일 생성을 처리 중입니다. 사진이 많으면 잠시 걸릴 수 있습니다.</p>
+        </div>
+      ) : null}
 
       <div className={styles.uploadActions}>
         <button type="submit" className={styles.primaryButton} disabled={isPending || selectedUploads.length === 0 || isOverLimit}>
@@ -326,10 +359,10 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
           <strong>{result.message}</strong>
           {result.items.length > 0 ? (
             <ul>
-              {result.items.map(item => (
-                <li key={item.fileName}>
+              {result.items.map((item, index) => (
+                <li key={`${item.fileName}-${index}`}>
                   {item.ok ? <CheckCircle2 aria-hidden="true" size={14} /> : <AlertCircle aria-hidden="true" size={14} />}
-                  <span>{item.fileName}: {item.message}</span>
+                  <span>{fallbackPhotoName(index)}: {item.message}</span>
                 </li>
               ))}
             </ul>
@@ -421,11 +454,11 @@ function AssetDetailPanel({
         )}
       </div>
 
-      <div className={styles.detailMeta}>
-        <span>등록일 {formatDate(item.createdAt)}</span>
-        <span>사용 {item.usedCount}회</span>
-        <span>{formatBytes(item.web?.sizeBytes ?? item.thumbnail?.sizeBytes)}</span>
-      </div>
+        <div className={styles.detailMeta}>
+          <span>등록일 {formatDate(item.createdAt)}</span>
+          <span>사용 {item.usedCount}회</span>
+          <span>{formatBytes(item.web?.sizeBytes ?? item.thumbnail?.sizeBytes)}</span>
+        </div>
 
       <form className={styles.detailForm} onSubmit={handleSubmit}>
         <label>
@@ -436,51 +469,38 @@ function AssetDetailPanel({
           사진 설명
           <textarea rows={4} value={form.description} onChange={event => setField('description', event.target.value)} />
         </label>
-        <div className={styles.detailGrid}>
-          <label>
-            분류
-            <input value={form.category} onChange={event => setField('category', event.target.value)} />
-          </label>
-          <label>
-            태그
-            <input value={form.tags} onChange={event => setField('tags', event.target.value)} />
-          </label>
-          <label>
-            제품군
-            <input value={form.productType} onChange={event => setField('productType', event.target.value)} />
-          </label>
-          <label>
-            공간
-            <input value={form.spaceType} onChange={event => setField('spaceType', event.target.value)} />
-          </label>
-          <label>
-            지역
-            <input value={form.region} onChange={event => setField('region', event.target.value)} />
-          </label>
-          <label>
-            사용 목적
-            <input value={form.usagePurpose} onChange={event => setField('usagePurpose', event.target.value)} />
-          </label>
-        </div>
-
-        <div className={styles.checkGrid}>
-          <label className={styles.checkRow}>
-            <input
-              type="checkbox"
-              checked={form.privacyChecked}
-              onChange={event => setField('privacyChecked', event.target.checked)}
-            />
-            <span>주소나 얼굴 등 민감정보 없음</span>
-          </label>
-          <label className={styles.checkRow}>
-            <input
-              type="checkbox"
-              checked={form.promotionConsentChecked}
-              onChange={event => setField('promotionConsentChecked', event.target.checked)}
-            />
-            <span>블로그/홍보 사용 가능</span>
-          </label>
-        </div>
+        <details className={styles.optionalFields}>
+          <summary>
+            <span>선택 정보</span>
+            <small>분류, 태그, 제품군, 공간, 지역, 사용 목적은 필요할 때만 채우면 됩니다.</small>
+          </summary>
+          <div className={styles.detailGrid}>
+            <label>
+              분류
+              <input value={form.category} onChange={event => setField('category', event.target.value)} />
+            </label>
+            <label>
+              태그
+              <input value={form.tags} onChange={event => setField('tags', event.target.value)} />
+            </label>
+            <label>
+              제품군
+              <input value={form.productType} onChange={event => setField('productType', event.target.value)} />
+            </label>
+            <label>
+              공간
+              <input value={form.spaceType} onChange={event => setField('spaceType', event.target.value)} />
+            </label>
+            <label>
+              지역
+              <input value={form.region} onChange={event => setField('region', event.target.value)} />
+            </label>
+            <label>
+              사용 목적
+              <input value={form.usagePurpose} onChange={event => setField('usagePurpose', event.target.value)} />
+            </label>
+          </div>
+        </details>
 
         <button type="submit" className={styles.primaryButton} disabled={isPending}>
           {isPending ? <Loader2 aria-hidden="true" size={16} className={styles.spin} /> : <Save aria-hidden="true" size={16} />}
@@ -638,7 +658,7 @@ export default function ContentAssetsClient({
             </div>
           ) : (
             <div className={styles.assetGrid}>
-              {filteredItems.map(item => {
+              {filteredItems.map((item, index) => {
                 const isSelected = selectedItem?.id === item.id
                 return (
                   <button
@@ -651,12 +671,11 @@ export default function ContentAssetsClient({
                       <AssetThumbnail item={item} />
                     </div>
                     <div className={styles.cardBody}>
-                      <strong>{item.title || '이름 없는 사진'}</strong>
+                      <strong>{displayAssetTitle(item, index)}</strong>
                       <span>{item.description || item.category || '설명을 추가해 주세요.'}</span>
                       <div className={styles.cardMeta}>
                         {item.category ? <em>{item.category}</em> : null}
                         {item.region ? <em>{item.region}</em> : null}
-                        {item.promotionConsentChecked ? <em>홍보 가능</em> : null}
                       </div>
                       {item.tags.length > 0 ? (
                         <div className={styles.cardTags}>

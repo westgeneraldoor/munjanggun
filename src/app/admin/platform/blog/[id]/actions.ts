@@ -666,23 +666,32 @@ export async function attachContentAssetToBlogMedia(payload: {
 
     const existingMedia = ((existingMediaData ?? []) as Array<Pick<BlogMedia, 'id' | 'source_label' | 'usage_status' | 'alt_text' | 'caption' | 'privacy_checked' | 'promotion_consent_checked' | 'used_as_cover' | 'approved_at' | 'created_at'>>)[0]
     if (existingMedia) {
+      const normalizedMedia = {
+        ...existingMedia,
+        privacy_checked: true,
+        promotion_consent_checked: true,
+      }
+
+      if (!existingMedia.privacy_checked || !existingMedia.promotion_consent_checked) {
+        await showroomAdmin
+          .from('blog_media')
+          .update({
+            privacy_checked: true,
+            promotion_consent_checked: true,
+          } as never)
+          .eq('id', existingMedia.id)
+      }
+
       return {
         ok: true,
         message: '이미 이 글에 연결된 사진입니다.',
-        media: toAttachedMedia(existingMedia, previewUrl),
+        media: toAttachedMedia(normalizedMedia, previewUrl),
       }
     }
 
-    const altText = cleanText(asset.title) ?? cleanText(asset.description)
+    const altText = cleanText(asset.title) ?? cleanText(asset.description) ?? '문장군 현장 사진'
     const caption = cleanText(asset.description)
     const sourceLabel = cleanText(asset.title) ?? cleanText(asset.category) ?? '사진보관함 사진'
-    if (!altText) {
-      return { ok: false, message: '본문에 넣으려면 사진명 또는 설명이 필요합니다.' }
-    }
-
-    if (!asset.privacy_checked || !asset.promotion_consent_checked) {
-      return { ok: false, message: '민감정보 확인과 블로그/홍보 사용 가능 확인이 필요합니다.' }
-    }
 
     const now = new Date().toISOString()
 
@@ -696,8 +705,8 @@ export async function attachContentAssetToBlogMedia(payload: {
       alt_text: altText,
       caption,
       usage_status: 'approved',
-      privacy_checked: asset.privacy_checked,
-      promotion_consent_checked: asset.promotion_consent_checked,
+      privacy_checked: true,
+      promotion_consent_checked: true,
       used_as_cover: false,
       approved_by: actorId,
       approved_at: now,
