@@ -615,3 +615,57 @@ Rollback owner:
 Go decision: go / no-go
 Notes:
 ```
+
+## 12. PR-08 Content Asset Library Foundation Verification
+
+Date: 2026-06-25
+
+Project ref: `cebafroyvmllbyivevjd`
+
+Scope:
+
+- Added shared photo library database foundation.
+- Added private original and public derivative storage buckets.
+- Added storage object policies for the new content asset buckets.
+- Added server-only image transform utility.
+- Added nullable `showroom.blog_media.content_asset_id` bridge.
+
+Remote verification checklist:
+
+- [x] `showroom.content_assets` exists.
+- [x] `showroom.content_asset_files` exists.
+- [x] `showroom.content_asset_tags` exists.
+- [x] `showroom.content_asset_tag_links` exists.
+- [x] `showroom.content_asset_usages` exists.
+- [x] `showroom.content_asset_events` exists.
+- [x] RLS is enabled on all six tables.
+- [x] `content-assets-private` bucket exists and is private.
+- [x] `content-assets-public` bucket exists and is public.
+- [x] `content-assets-public` allows WebP derivatives only.
+- [x] Required `storage.objects` policies exist.
+- [x] No `storage.objects` UPDATE policy exists for `content-assets-public`.
+
+Required storage policies:
+
+```text
+content_assets_public_select
+content_assets_public_admin_insert
+content_assets_public_admin_delete
+content_assets_private_admin_select
+content_assets_private_admin_insert
+content_assets_private_admin_delete
+```
+
+Pass criteria:
+
+- Public reads are limited to public derivative objects and published blog asset metadata.
+- Original files remain in `content-assets-private`.
+- Public overwrite/upsert is blocked by the absence of UPDATE policy.
+- Existing `blog-media` and `blog-media-private` policies are unchanged.
+- Existing Content OS publish flow is unchanged.
+
+Next PR boundary:
+
+- PR-09 may implement the operator-facing photo library and multi-upload flow.
+- PR-09 must keep operator language simple: photo library, upload, select, description, category, tag.
+- PR-09 must not expose bucket names, object paths, private/public states, or transform internals in the UI.
