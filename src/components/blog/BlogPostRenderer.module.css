@@ -168,8 +168,9 @@
   display: block;
   width: 100%;
   max-width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
+  height: auto;
+  max-height: 760px;
+  object-fit: contain;
   background: #ddd4c7;
   border-radius: var(--radius-lg);
   border: 1px solid #ded6ca;
