@@ -1139,6 +1139,12 @@ export default function BlogEditorClient({
     }, 180)
   }
 
+  const afterNextPaint = (callback: () => void) => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(callback)
+    })
+  }
+
   const jumpToBlock = (clientId: string | null | undefined) => {
     if (!clientId) {
       scrollAndFocus(blockToolbarRef.current)
@@ -1150,12 +1156,12 @@ export default function BlogEditorClient({
 
   const jumpToSeoField = (ref: RefObject<HTMLElement | null>) => {
     setEditorMode('seo')
-    window.setTimeout(() => scrollAndFocus(ref.current), 80)
+    afterNextPaint(() => scrollAndFocus(ref.current))
   }
 
   const jumpToWriteTarget = (target: () => HTMLElement | null) => {
     setEditorMode('write')
-    window.setTimeout(() => scrollAndFocus(target()), 80)
+    afterNextPaint(() => scrollAndFocus(target()))
   }
 
   const gateItems = [
@@ -1224,7 +1230,7 @@ export default function BlogEditorClient({
     }
     if (key === 'image') {
       setEditorMode('write')
-      window.setTimeout(() => jumpToBlock(firstUnlinkedImageBlock?.clientId ?? firstAltMissingImageBlock?.clientId), 80)
+      afterNextPaint(() => jumpToBlock(firstUnlinkedImageBlock?.clientId ?? firstAltMissingImageBlock?.clientId))
       return
     }
     if (key === 'cover') {
@@ -1233,7 +1239,7 @@ export default function BlogEditorClient({
     }
     if (key === 'cta') {
       setEditorMode('write')
-      window.setTimeout(() => jumpToBlock(firstCtaBlock?.clientId), 80)
+      afterNextPaint(() => jumpToBlock(firstCtaBlock?.clientId))
       return
     }
     if (key === 'seo') {
