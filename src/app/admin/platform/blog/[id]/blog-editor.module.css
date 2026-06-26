@@ -730,6 +730,37 @@
   background: #ffffff !important;
 }
 
+.paragraphComposer {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.paragraphPhotoButton {
+  width: max-content;
+  max-width: 100%;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-3);
+  color: #7a5b22;
+  background: #fffaf0;
+  border: 1px solid #ead9b5;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+}
+
+.paragraphPhotoButton:hover,
+.paragraphPhotoButton:active {
+  color: var(--admin-text);
+  background: #fff4d9;
+  border-color: var(--admin-accent);
+}
+
 .qaComposer {
   min-width: 0;
   display: grid;
@@ -1739,6 +1770,11 @@
 
   .paragraphTextarea {
     min-height: 220px;
+  }
+
+  .paragraphPhotoButton {
+    width: 100%;
+    justify-content: center;
   }
 
   .mediaActions {
