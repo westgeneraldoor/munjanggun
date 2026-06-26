@@ -185,11 +185,11 @@ const STATUS_LABEL: Record<BlogPostStatus, string> = {
 }
 
 const BLOCK_LABEL: Record<BlogBlockType, string> = {
-  heading: 'Heading',
-  paragraph: 'Paragraph',
-  image: '이미지',
+  heading: '제목',
+  paragraph: '문단',
+  image: '사진',
   qa: 'Q&A',
-  cta: 'CTA',
+  cta: '상담 CTA',
 }
 
 const MEDIA_STATUS_LABEL: Record<BlogMediaUsageStatus, string> = {
@@ -859,27 +859,27 @@ function BlockEditor({
   }
 
   return (
-    <article className={styles.blockCard}>
+    <article className={`${styles.blockCard} ${styles[`blockCard_${block.type}`]}`} data-block-type={block.type}>
       <div className={styles.blockTop}>
-        <div>
+        <div className={styles.blockIdentity}>
           <span className={styles.blockType}>{BLOCK_LABEL[block.type]}</span>
-          <strong>#{index + 1}</strong>
+          <strong>본문 #{index + 1}</strong>
         </div>
-        <div className={styles.iconActions}>
-          <button type="button" onClick={() => onMove(-1)} disabled={index === 0} aria-label="위로 이동">
+        <div className={styles.iconActions} aria-label="블록 위치 및 삭제">
+          <button type="button" onClick={() => onMove(-1)} disabled={index === 0} aria-label="위로 이동" title="위로 이동">
             <ArrowUp size={15} aria-hidden="true" />
           </button>
-          <button type="button" onClick={() => onMove(1)} disabled={index === total - 1} aria-label="아래로 이동">
+          <button type="button" onClick={() => onMove(1)} disabled={index === total - 1} aria-label="아래로 이동" title="아래로 이동">
             <ArrowDown size={15} aria-hidden="true" />
           </button>
-          <button type="button" onClick={onRemove} aria-label="블록 삭제" className={styles.dangerIconButton}>
+          <button type="button" onClick={onRemove} aria-label="블록 삭제" title="블록 삭제" className={styles.dangerIconButton}>
             <Trash2 size={15} aria-hidden="true" />
           </button>
         </div>
       </div>
 
       {block.type === 'heading' && (
-        <div className={styles.blockGrid}>
+        <div className={styles.headingComposer}>
           <Field label="레벨">
             <select
               value={block.headingLevel ?? 2}
@@ -891,27 +891,19 @@ function BlockEditor({
             </select>
           </Field>
           <Field label="제목">
-            <input value={block.text ?? ''} onChange={event => onChange({ ...block, text: event.target.value })} />
+            <input className={styles.headingInput} value={block.text ?? ''} onChange={event => onChange({ ...block, text: event.target.value })} />
           </Field>
         </div>
       )}
 
       {block.type === 'paragraph' && (
         <Field label="문단">
-          <textarea value={block.text ?? ''} onChange={event => onChange({ ...block, text: event.target.value })} rows={5} />
+          <textarea className={styles.paragraphTextarea} value={block.text ?? ''} onChange={event => onChange({ ...block, text: event.target.value })} rows={7} />
         </Field>
       )}
 
       {block.type === 'image' && (
         <div className={styles.blockStack}>
-          <div className={styles.blockGrid}>
-            <Field label="사진 카드명">
-              <input value={block.metadata.photo_slot_label ?? ''} onChange={event => updateMetadata('photo_slot_label', event.target.value)} />
-            </Field>
-            <Field label="필요한 사진 설명">
-              <input value={block.metadata.required_media ?? ''} onChange={event => updateMetadata('required_media', event.target.value)} />
-            </Field>
-          </div>
           {selectedMedia ? (
             <div className={styles.imageBlockPreview}>
               <div className={styles.imageBlockFrame}>
@@ -925,7 +917,6 @@ function BlockEditor({
               <div className={styles.imageBlockInfo}>
                 <strong>{selectedMedia.sourceLabel || '선택한 사진'}</strong>
                 <p>{selectedMedia.caption || selectedMedia.altText || '사진 설명을 확인해 주세요.'}</p>
-                <MediaStatus media={selectedMedia} />
                 <div className={styles.imageBlockActions}>
                   <button type="button" onClick={onPickImage}>
                     <Images size={15} aria-hidden="true" />
@@ -951,22 +942,33 @@ function BlockEditor({
               </button>
             </div>
           )}
+          <details className={styles.blockDetails}>
+            <summary>사진 메모</summary>
+            <div className={styles.blockGrid}>
+              <Field label="사진 카드명">
+                <input value={block.metadata.photo_slot_label ?? ''} onChange={event => updateMetadata('photo_slot_label', event.target.value)} />
+              </Field>
+              <Field label="필요한 사진 설명">
+                <input value={block.metadata.required_media ?? ''} onChange={event => updateMetadata('required_media', event.target.value)} />
+              </Field>
+            </div>
+          </details>
         </div>
       )}
 
       {block.type === 'qa' && (
-        <div className={styles.blockStack}>
+        <div className={styles.qaComposer}>
           <Field label="질문">
-            <input value={block.text ?? ''} onChange={event => onChange({ ...block, text: event.target.value })} />
+            <input className={styles.qaQuestionInput} value={block.text ?? ''} onChange={event => onChange({ ...block, text: event.target.value })} />
           </Field>
           <Field label="답변">
-            <textarea value={block.metadata.answer ?? ''} onChange={event => updateMetadata('answer', event.target.value)} rows={4} />
+            <textarea value={block.metadata.answer ?? ''} onChange={event => updateMetadata('answer', event.target.value)} rows={5} />
           </Field>
         </div>
       )}
 
       {block.type === 'cta' && (
-        <div className={styles.blockGrid}>
+        <div className={styles.ctaComposer}>
           <Field label="CTA 문구">
             <input value={block.text ?? ''} onChange={event => onChange({ ...block, text: event.target.value })} />
           </Field>
@@ -1366,16 +1368,17 @@ export default function BlogEditorClient({
               <FileText size={17} aria-hidden="true" />
               <h2>블록 본문</h2>
             </div>
+            <p className={styles.panelHelp}>본문을 구성해보세요. 문단을 추가하거나 사진을 넣어 글 흐름을 만들 수 있습니다.</p>
             <div className={styles.blockToolbar} aria-label="블록 추가">
-              <button type="button" onClick={() => addBlock('heading')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> Heading</button>
-              <button type="button" onClick={() => addBlock('paragraph')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> Paragraph</button>
-              <button type="button" onClick={() => openAssetPicker({ type: 'new' })} disabled={isPublished}><Plus size={15} aria-hidden="true" /> 이미지</button>
+              <button type="button" onClick={() => addBlock('heading')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> 제목</button>
+              <button type="button" onClick={() => addBlock('paragraph')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> 문단</button>
+              <button type="button" onClick={() => openAssetPicker({ type: 'new' })} disabled={isPublished}><Plus size={15} aria-hidden="true" /> 사진</button>
               <button type="button" onClick={() => addBlock('qa')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> Q&A</button>
-              <button type="button" onClick={() => addBlock('cta')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> CTA</button>
+              <button type="button" onClick={() => addBlock('cta')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> 상담 CTA</button>
             </div>
-            <div className={styles.blockList}>
+            <div className={styles.blockList} data-testid="blog-writing-canvas">
               {blocks.length === 0 ? (
-                <div className={styles.emptyBlocks}>본문 블록이 없습니다. Heading 또는 Paragraph부터 추가하세요.</div>
+                <div className={styles.emptyBlocks}>본문을 구성해보세요. 문단을 추가하거나 사진을 넣을 수 있습니다.</div>
               ) : (
                 blocks.map((block, index) => (
                   <BlockEditor
