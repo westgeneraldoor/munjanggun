@@ -319,7 +319,6 @@ function GateItem({
       <button type="button" onClick={onJump} title={help} aria-label={`${label} ${statusLabel}. ${detail ?? '누르면 해당 위치로 이동합니다.'}`}>
         {ok ? <CheckCircle2 size={15} aria-hidden="true" /> : <AlertTriangle size={15} aria-hidden="true" />}
         <span>{label}</span>
-        <small>{statusLabel}</small>
       </button>
     </li>
   )
@@ -1525,6 +1524,34 @@ export default function BlogEditorClient({
             </button>
           </div>
         </div>
+        <div className={styles.editorWorkbenchBar}>
+          <div className={styles.editorModeTabs} aria-label="편집 모드">
+            <button
+              type="button"
+              className={editorMode === 'write' ? styles.editorModeActive : ''}
+              aria-pressed={editorMode === 'write'}
+              onClick={() => setEditorMode('write')}
+            >
+              작성란
+            </button>
+            <button
+              type="button"
+              className={editorMode === 'seo' ? styles.editorModeActive : ''}
+              aria-pressed={editorMode === 'seo'}
+              onClick={() => setEditorMode('seo')}
+            >
+              SEO/AEO
+            </button>
+          </div>
+          <section className={styles.gateBarPanel} aria-label="발행 전 검수">
+            <span className={styles.gateBarLabel}>검수</span>
+            <ul className={styles.gateList}>
+              {gateItems.map(item => (
+                <GateItem key={item.key} ok={item.ok} label={item.label} detail={item.detail} onJump={() => jumpGateItem(item.key)} />
+              ))}
+            </ul>
+          </section>
+        </div>
         {saveMessage && (
           <div className={`${styles.saveMessage} ${saveMessage.ok ? styles.saveOk : styles.saveError}`} role="status">
             {saveMessage.text}
@@ -1562,37 +1589,6 @@ export default function BlogEditorClient({
 
       <div className={styles.editorLayout}>
         <main className={styles.mainEditor}>
-          <section className={styles.gateBarPanel} aria-label="발행 전 검수">
-            <div className={styles.gateBarTitle}>
-              <span>발행 준비</span>
-              <small>NG를 누르면 고칠 위치로 이동합니다.</small>
-            </div>
-            <ul className={styles.gateList}>
-              {gateItems.map(item => (
-                <GateItem key={item.key} ok={item.ok} label={item.label} detail={item.detail} onJump={() => jumpGateItem(item.key)} />
-              ))}
-            </ul>
-          </section>
-
-          <div className={styles.editorModeTabs} aria-label="편집 모드">
-            <button
-              type="button"
-              className={editorMode === 'write' ? styles.editorModeActive : ''}
-              aria-pressed={editorMode === 'write'}
-              onClick={() => setEditorMode('write')}
-            >
-              작성란
-            </button>
-            <button
-              type="button"
-              className={editorMode === 'seo' ? styles.editorModeActive : ''}
-              aria-pressed={editorMode === 'seo'}
-              onClick={() => setEditorMode('seo')}
-            >
-              SEO/AEO
-            </button>
-          </div>
-
           {editorMode === 'write' && (
           <>
           <section className={styles.panel}>
