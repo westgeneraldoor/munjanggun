@@ -1150,7 +1150,12 @@ export default function BlogEditorClient({
 
   const jumpToSeoField = (ref: RefObject<HTMLElement | null>) => {
     setEditorMode('seo')
-    window.setTimeout(() => scrollAndFocus(ref.current), 0)
+    window.setTimeout(() => scrollAndFocus(ref.current), 80)
+  }
+
+  const jumpToWriteTarget = (target: () => HTMLElement | null) => {
+    setEditorMode('write')
+    window.setTimeout(() => scrollAndFocus(target()), 80)
   }
 
   const gateItems = [
@@ -1206,27 +1211,29 @@ export default function BlogEditorClient({
 
   const jumpGateItem = (key: string) => {
     if (key === 'title') {
-      scrollAndFocus(post.title.trim() ? slugRef.current : titleRef.current)
+      jumpToWriteTarget(() => post.title.trim() ? slugRef.current : titleRef.current)
       return
     }
     if (key === 'body') {
-      scrollAndFocus(summaryAnswerRef.current)
+      jumpToWriteTarget(() => summaryAnswerRef.current)
       return
     }
     if (key === 'body-blocks') {
-      scrollAndFocus(blockStats.blockCount > 0 ? blockListRef.current : blockToolbarRef.current)
+      jumpToWriteTarget(() => blockStats.blockCount > 0 ? blockListRef.current : blockToolbarRef.current)
       return
     }
     if (key === 'image') {
-      jumpToBlock(firstUnlinkedImageBlock?.clientId ?? firstAltMissingImageBlock?.clientId)
+      setEditorMode('write')
+      window.setTimeout(() => jumpToBlock(firstUnlinkedImageBlock?.clientId ?? firstAltMissingImageBlock?.clientId), 80)
       return
     }
     if (key === 'cover') {
-      scrollAndFocus(coverPickerRef.current)
+      jumpToWriteTarget(() => coverPickerRef.current)
       return
     }
     if (key === 'cta') {
-      jumpToBlock(firstCtaBlock?.clientId)
+      setEditorMode('write')
+      window.setTimeout(() => jumpToBlock(firstCtaBlock?.clientId), 80)
       return
     }
     if (key === 'seo') {
