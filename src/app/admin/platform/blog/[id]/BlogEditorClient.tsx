@@ -148,6 +148,7 @@ export type BlogEditorEvent = {
 type EditablePost = Omit<BlogEditorPost, 'gateSummary' | 'publishedAt' | 'createdAt' | 'updatedAt'>
 type EditableBlock = BlogEditorBlock & { clientId: string }
 type AssetPickerTarget = { type: 'new' } | { type: 'replace'; clientId: string }
+type EditorMode = 'write' | 'photos' | 'seo' | 'publish'
 type PickerUploadItem = {
   id: string
   file: File
@@ -157,6 +158,13 @@ type PickerUploadItem = {
 }
 
 const MAX_UPLOAD_TOTAL_BYTES = 120 * 1024 * 1024
+
+const EDITOR_MODES: Array<{ value: EditorMode; label: string; description: string }> = [
+  { value: 'write', label: 'Write', description: '글쓰기' },
+  { value: 'photos', label: 'Photos', description: '사진' },
+  { value: 'seo', label: 'SEO/AEO', description: '검색' },
+  { value: 'publish', label: 'Publish QA', description: '발행 검수' },
+]
 
 const CATEGORY_OPTIONS: Array<{ value: BlogContentCategory; label: string }> = [
   { value: 'case_study', label: '시공사례' },
@@ -681,11 +689,13 @@ function ContentAssetPicker({
 function MediaEditorCard({
   postId,
   media,
+  positionLabel,
   disabled,
   onChanged,
 }: {
   postId: string
   media: BlogEditorMedia
+  positionLabel?: string
   disabled: boolean
   onChanged: (next: BlogEditorMedia) => void
 }) {
@@ -752,6 +762,7 @@ function MediaEditorCard({
       <div className={styles.mediaEditorBody}>
         <div className={styles.mediaEditorTop}>
           <div>
+            {positionLabel && <span className={styles.mediaPosition}>{positionLabel}</span>}
             <strong>{media.sourceLabel || '이름 없는 사진'}</strong>
             <p>{formatDateTime(media.createdAt)}</p>
           </div>
@@ -1015,14 +1026,23 @@ export default function BlogEditorClient({
   const [editorMedia, setEditorMedia] = useState<BlogEditorMedia[]>(media)
   const [assetPickerTarget, setAssetPickerTarget] = useState<AssetPickerTarget | null>(null)
   const [assetPickerMessage, setAssetPickerMessage] = useState<{ ok: boolean; text: string } | null>(null)
+  const [activeMode, setActiveMode] = useState<EditorMode>('write')
 
   const isPublished = post.status === 'published'
   const selectableMedia = useMemo(() => editorMedia.filter(item => item.usageStatus !== 'rejected'), [editorMedia])
-  const blockMediaIds = useMemo(() => new Set(blocks
+  const blockMedia = useMemo(() => blocks
     .filter(block => block.type === 'image' && block.mediaId)
-    .map(block => block.mediaId as string)
-  ), [blocks])
-  const blockMedia = useMemo(() => editorMedia.filter(item => blockMediaIds.has(item.id)), [blockMediaIds, editorMedia])
+    .map(block => editorMedia.find(item => item.id === block.mediaId))
+    .filter((item): item is BlogEditorMedia => Boolean(item)), [blocks, editorMedia])
+  const blockMediaPositions = useMemo(() => {
+    const next = new Map<string, string>()
+    blocks.forEach((block, index) => {
+      if (block.type === 'image' && block.mediaId && !next.has(block.mediaId)) {
+        next.set(block.mediaId, `본문 #${index + 1}`)
+      }
+    })
+    return next
+  }, [blocks])
 
   const blockStats = useMemo(() => ({
     blockCount: blocks.length,
@@ -1264,6 +1284,21 @@ export default function BlogEditorClient({
         )}
       </header>
 
+      <nav className={styles.modeTabs} aria-label="블로그 편집 모드">
+        {EDITOR_MODES.map(mode => (
+          <button
+            key={mode.value}
+            type="button"
+            className={`${styles.modeTab} ${activeMode === mode.value ? styles.modeTabActive : ''}`}
+            aria-pressed={activeMode === mode.value}
+            onClick={() => setActiveMode(mode.value)}
+          >
+            <strong>{mode.label}</strong>
+            <span>{mode.description}</span>
+          </button>
+        ))}
+      </nav>
+
       <ContentAssetPicker
         open={Boolean(assetPickerTarget)}
         items={contentAssets}
@@ -1277,7 +1312,8 @@ export default function BlogEditorClient({
         onUploaded={() => router.refresh()}
       />
 
-      <div className={styles.editorLayout}>
+      <div className={`${styles.editorLayout} ${styles[`mode_${activeMode}`]}`}>
+        {activeMode === 'publish' && (
         <aside className={styles.gatePanel}>
           <section className={styles.panel}>
             <h2>검수 게이트</h2>
@@ -1295,7 +1331,9 @@ export default function BlogEditorClient({
             </ul>
           </section>
         </aside>
+        )}
 
+        {activeMode === 'write' && (
         <main className={styles.mainEditor}>
           <section className={styles.panel}>
             <div className={styles.panelTitle}>
@@ -1316,6 +1354,9 @@ export default function BlogEditorClient({
               </Field>
               <Field label="excerpt">
                 <textarea value={post.excerpt ?? ''} onChange={event => updatePost('excerpt', event.target.value)} disabled={isPublished} rows={3} />
+              </Field>
+              <Field label="summary answer">
+                <textarea value={post.summaryAnswer ?? ''} onChange={event => updatePost('summaryAnswer', event.target.value)} disabled={isPublished} rows={3} />
               </Field>
             </div>
           </section>
@@ -1353,8 +1394,11 @@ export default function BlogEditorClient({
             </div>
           </section>
         </main>
+        )}
 
+        {activeMode !== 'write' && (
         <aside className={styles.sidePanel}>
+          {activeMode === 'seo' && (
           <section className={styles.panel}>
             <h2>SEO/AEO</h2>
             <div className={styles.formStack}>
@@ -1396,7 +1440,9 @@ export default function BlogEditorClient({
               </label>
             </div>
           </section>
+          )}
 
+          {activeMode === 'photos' && (
           <section className={styles.panel}>
             <div className={styles.panelTitle}>
               <ImageIcon size={17} aria-hidden="true" />
@@ -1418,6 +1464,7 @@ export default function BlogEditorClient({
                     key={item.id}
                     postId={post.id}
                     media={item}
+                    positionLabel={blockMediaPositions.get(item.id)}
                     disabled={isPublished}
                     onChanged={handleMediaChanged}
                   />
@@ -1428,8 +1475,41 @@ export default function BlogEditorClient({
               <div className={styles.emptyBlocks}>아직 본문에 들어간 사진이 없습니다. 가운데 본문 영역에서 + 이미지를 눌러 사진보관함에서 선택하세요.</div>
             )}
           </section>
+          )}
 
+          {activeMode === 'publish' && (
+          <>
           <section className={styles.panel}>
+            <div className={styles.panelTitle}>
+              <Rocket size={17} aria-hidden="true" />
+              <h2>발행 작업</h2>
+            </div>
+            <p className={styles.panelHelp}>저장과 미리보기를 확인한 뒤 발행 검수를 통과하면 공개 전환을 실행합니다.</p>
+            <div className={styles.publishModeActions}>
+              <Link href={`/admin/platform/blog/${post.id}/preview`} className={styles.previewButton}>
+                <Eye size={16} aria-hidden="true" />
+                미리보기
+              </Link>
+              <button type="button" onClick={handleSave} disabled={isPending || isPublished} className={styles.primaryButton}>
+                <Save size={16} aria-hidden="true" />
+                {isPending ? '저장 중' : '저장'}
+              </button>
+              <button
+                type="button"
+                onClick={handlePublish}
+                disabled={isPending || isPublished}
+                className={styles.publishButton}
+                data-testid="publish-blog-post-qa"
+              >
+                <Rocket size={16} aria-hidden="true" />
+                {isPending ? '발행 중' : '발행'}
+              </button>
+            </div>
+          </section>
+
+          <details className={styles.activityDetails}>
+            <summary>최근 활동</summary>
+            <section className={styles.panel}>
             <h2>최근 이벤트</h2>
             {events.length === 0 ? (
               <div className={styles.emptyBlocks}>이벤트가 없습니다.</div>
@@ -1444,8 +1524,12 @@ export default function BlogEditorClient({
                 ))}
               </ul>
             )}
-          </section>
+            </section>
+          </details>
+          </>
+          )}
         </aside>
+        )}
       </div>
     </div>
   )
