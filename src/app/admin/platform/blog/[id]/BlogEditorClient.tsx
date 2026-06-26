@@ -152,7 +152,7 @@ type AssetPickerTarget =
   | { type: 'cover' }
   | { type: 'replace'; clientId: string }
   | { type: 'insertBefore'; clientId: string }
-type SidePanelMode = 'preview' | 'seo'
+type EditorMode = 'write' | 'seo'
 type PickerUploadItem = {
   id: string
   file: File
@@ -1088,7 +1088,7 @@ export default function BlogEditorClient({
   const [editorMedia, setEditorMedia] = useState<BlogEditorMedia[]>(media)
   const [assetPickerTarget, setAssetPickerTarget] = useState<AssetPickerTarget | null>(null)
   const [assetPickerMessage, setAssetPickerMessage] = useState<{ ok: boolean; text: string } | null>(null)
-  const [sidePanelMode, setSidePanelMode] = useState<SidePanelMode>('preview')
+  const [editorMode, setEditorMode] = useState<EditorMode>('write')
   const titleRef = useRef<HTMLInputElement>(null)
   const slugRef = useRef<HTMLInputElement>(null)
   const summaryAnswerRef = useRef<HTMLTextAreaElement>(null)
@@ -1150,7 +1150,7 @@ export default function BlogEditorClient({
   }
 
   const jumpToSeoField = (ref: RefObject<HTMLElement | null>) => {
-    setSidePanelMode('seo')
+    setEditorMode('seo')
     window.setTimeout(() => scrollAndFocus(ref.current), 0)
   }
 
@@ -1545,37 +1545,6 @@ export default function BlogEditorClient({
             발행 완료 글은 이 화면에서 읽기 전용입니다. 발행 후 수정은 별도 검수 흐름에서 다룹니다.
           </div>
         )}
-        <div className={styles.workbar}>
-          <section className={styles.gateBarPanel} aria-label="발행 전 검수">
-            <div className={styles.gateBarTitle}>
-              <span>검수 게이트</span>
-              <small>누르면 고칠 위치로 이동합니다.</small>
-            </div>
-            <ul className={styles.gateList}>
-              {gateItems.map(item => (
-                <GateItem key={item.key} ok={item.ok} label={item.label} detail={item.detail} onJump={() => jumpGateItem(item.key)} />
-              ))}
-            </ul>
-          </section>
-          <div className={styles.workbarTabs} aria-label="보조 패널">
-            <button
-              type="button"
-              className={sidePanelMode === 'preview' ? styles.sideTabActive : ''}
-              aria-pressed={sidePanelMode === 'preview'}
-              onClick={() => setSidePanelMode('preview')}
-            >
-              모바일 미리보기
-            </button>
-            <button
-              type="button"
-              className={sidePanelMode === 'seo' ? styles.sideTabActive : ''}
-              aria-pressed={sidePanelMode === 'seo'}
-              onClick={() => setSidePanelMode('seo')}
-            >
-              SEO/AEO
-            </button>
-          </div>
-        </div>
       </header>
 
       <ContentAssetPicker
@@ -1593,6 +1562,39 @@ export default function BlogEditorClient({
 
       <div className={styles.editorLayout}>
         <main className={styles.mainEditor}>
+          <section className={styles.gateBarPanel} aria-label="발행 전 검수">
+            <div className={styles.gateBarTitle}>
+              <span>발행 준비</span>
+              <small>NG를 누르면 고칠 위치로 이동합니다.</small>
+            </div>
+            <ul className={styles.gateList}>
+              {gateItems.map(item => (
+                <GateItem key={item.key} ok={item.ok} label={item.label} detail={item.detail} onJump={() => jumpGateItem(item.key)} />
+              ))}
+            </ul>
+          </section>
+
+          <div className={styles.editorModeTabs} aria-label="편집 모드">
+            <button
+              type="button"
+              className={editorMode === 'write' ? styles.editorModeActive : ''}
+              aria-pressed={editorMode === 'write'}
+              onClick={() => setEditorMode('write')}
+            >
+              작성란
+            </button>
+            <button
+              type="button"
+              className={editorMode === 'seo' ? styles.editorModeActive : ''}
+              aria-pressed={editorMode === 'seo'}
+              onClick={() => setEditorMode('seo')}
+            >
+              SEO/AEO
+            </button>
+          </div>
+
+          {editorMode === 'write' && (
+          <>
           <section className={styles.panel}>
             <div className={styles.panelTitle}>
               <FileText size={17} aria-hidden="true" />
@@ -1693,21 +1695,10 @@ export default function BlogEditorClient({
               )}
             </div>
           </section>
-        </main>
-
-        <aside className={styles.sidePanel}>
-          {sidePanelMode === 'preview' && (
-          <section className={`${styles.panel} ${styles.previewPanel}`}>
-            <div className={styles.panelTitle}>
-              <Eye size={17} aria-hidden="true" />
-              <h2>모바일 미리보기</h2>
-            </div>
-            <p className={styles.panelHelp}>저장 전 편집 중인 내용을 빠르게 확인하는 화면입니다.</p>
-            <EditorMobilePreview post={post} blocks={blocks} media={selectableMedia} relatedQuestions={relatedQuestionsForPreview} />
-          </section>
+          </>
           )}
 
-          {sidePanelMode === 'seo' && (
+          {editorMode === 'seo' && (
           <section className={`${styles.panel} ${styles.seoPanel}`}>
             <h2>SEO/AEO</h2>
             <div className={styles.formStack}>
@@ -1744,13 +1735,9 @@ export default function BlogEditorClient({
                 <input ref={factCheckedRef} type="datetime-local" value={factCheckedLocal} onChange={event => setFactCheckedLocal(event.target.value)} disabled={isPublished} />
               </Field>
             </div>
-          </section>
-          )}
 
-          <details className={styles.activityDetails}>
-            <summary>최근 활동</summary>
-            <section className={styles.panel}>
-              <h2>최근 이벤트</h2>
+            <details className={styles.activityDetails}>
+              <summary>최근 활동</summary>
               {events.length === 0 ? (
                 <div className={styles.emptyBlocks}>이벤트가 없습니다.</div>
               ) : (
@@ -1764,8 +1751,15 @@ export default function BlogEditorClient({
                   ))}
                 </ul>
               )}
-            </section>
-          </details>
+            </details>
+          </section>
+          )}
+        </main>
+
+        <aside className={styles.sidePanel} aria-label="모바일 미리보기">
+          <div className={styles.mobilePreviewDock}>
+            <EditorMobilePreview post={post} blocks={blocks} media={selectableMedia} relatedQuestions={relatedQuestionsForPreview} />
+          </div>
         </aside>
       </div>
     </div>
