@@ -1175,7 +1175,6 @@
 .mobilePreviewCover img {
   width: 100%;
   height: auto;
-  max-height: 560px;
   display: block;
   background: #e7e2d9;
   border: 1px solid #d9c6a5;
@@ -1241,8 +1240,8 @@
 }
 
 .mobilePreviewBlocks img {
+  display: block;
   height: auto;
-  max-height: 560px;
 }
 
 .mobilePreviewImageEmpty {
