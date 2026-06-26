@@ -147,7 +147,10 @@ export type BlogEditorEvent = {
 
 type EditablePost = Omit<BlogEditorPost, 'gateSummary' | 'publishedAt' | 'createdAt' | 'updatedAt'>
 type EditableBlock = BlogEditorBlock & { clientId: string }
-type AssetPickerTarget = { type: 'new' } | { type: 'replace'; clientId: string }
+type AssetPickerTarget =
+  | { type: 'new' }
+  | { type: 'replace'; clientId: string }
+  | { type: 'insertBefore'; clientId: string }
 type EditorMode = 'write' | 'photos' | 'seo' | 'publish'
 type PickerUploadItem = {
   id: string
@@ -832,6 +835,7 @@ function BlockEditor({
   index,
   total,
   onChange,
+  onInsertImageBefore,
   onPickImage,
   onMove,
   onRemove,
@@ -841,6 +845,7 @@ function BlockEditor({
   index: number
   total: number
   onChange: (next: EditableBlock) => void
+  onInsertImageBefore: () => void
   onPickImage: () => void
   onMove: (direction: -1 | 1) => void
   onRemove: () => void
@@ -897,9 +902,15 @@ function BlockEditor({
       )}
 
       {block.type === 'paragraph' && (
-        <Field label="문단">
-          <textarea className={styles.paragraphTextarea} value={block.text ?? ''} onChange={event => onChange({ ...block, text: event.target.value })} rows={7} />
-        </Field>
+        <div className={styles.paragraphComposer}>
+          <button type="button" className={styles.paragraphPhotoButton} onClick={onInsertImageBefore}>
+            <Images size={15} aria-hidden="true" />
+            이 문단 위에 사진
+          </button>
+          <Field label="문단">
+            <textarea className={styles.paragraphTextarea} value={block.text ?? ''} onChange={event => onChange({ ...block, text: event.target.value })} rows={7} />
+          </Field>
+        </div>
       )}
 
       {block.type === 'image' && (
@@ -1161,7 +1172,7 @@ export default function BlogEditorClient({
         }
 
         const nextMedia = toEditorMediaFromAttached(result.media)
-        if (assetPickerTarget.type === 'new' && existingBlockMediaIds.has(nextMedia.id)) {
+        if (assetPickerTarget.type !== 'replace' && existingBlockMediaIds.has(nextMedia.id)) {
           skipped += 1
           continue
         }
@@ -1202,13 +1213,25 @@ export default function BlogEditorClient({
           : block
         ))
       } else {
-        setBlocks(prev => [
-          ...prev,
-          ...attached.map(item => createBlock('image', {
+        const imageBlocks = attached.map(item => createBlock('image', {
             mediaId: item.media.id,
             photoSlotLabel: displayAssetTitle(item.asset) || item.asset.category || '',
-          })),
-        ])
+        }))
+
+        setBlocks(prev => {
+          if (assetPickerTarget.type !== 'insertBefore') {
+            return [...prev, ...imageBlocks]
+          }
+
+          const targetIndex = prev.findIndex(block => block.clientId === assetPickerTarget.clientId)
+          if (targetIndex < 0) return [...prev, ...imageBlocks]
+
+          return [
+            ...prev.slice(0, targetIndex),
+            ...imageBlocks,
+            ...prev.slice(targetIndex),
+          ]
+        })
       }
 
       setAssetPickerMessage({
@@ -1306,7 +1329,7 @@ export default function BlogEditorClient({
         items={contentAssets}
         pending={isAssetPending}
         message={assetPickerMessage}
-        multiple={assetPickerTarget?.type === 'new'}
+        multiple={assetPickerTarget?.type !== 'replace'}
         onClose={() => {
           if (!isAssetPending) setAssetPickerTarget(null)
         }}
@@ -1388,6 +1411,7 @@ export default function BlogEditorClient({
                     index={index}
                     total={blocks.length}
                     onChange={(next) => updateBlock(block.clientId, next)}
+                    onInsertImageBefore={() => openAssetPicker({ type: 'insertBefore', clientId: block.clientId })}
                     onPickImage={() => openAssetPicker({ type: 'replace', clientId: block.clientId })}
                     onMove={(direction) => moveBlock(block.clientId, direction)}
                     onRemove={() => removeBlock(block.clientId)}
