@@ -681,6 +681,7 @@ function ImageBlockDetails({
   const [altText, setAltText] = useState(media.altText ?? '')
   const [caption, setCaption] = useState(media.caption ?? '')
   const [sourceLabel, setSourceLabel] = useState(media.sourceLabel ?? '')
+  const [usedAsCover, setUsedAsCover] = useState(media.usedAsCover)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
   const isDisabled = disabled || media.usageStatus === 'published' || isPending
 
@@ -696,7 +697,7 @@ function ImageBlockDetails({
         sourceLabel,
         privacyChecked: media.privacyChecked,
         promotionConsentChecked: media.promotionConsentChecked,
-        usedAsCover: media.usedAsCover,
+        usedAsCover,
         usageStatus,
         rejectionReason: media.rejectionReason,
       })
@@ -707,6 +708,7 @@ function ImageBlockDetails({
           altText: emptyToNull(altText),
           caption: emptyToNull(caption),
           sourceLabel: emptyToNull(sourceLabel),
+          usedAsCover,
         })
       }
     })
@@ -723,6 +725,15 @@ function ImageBlockDetails({
       <Field label="사진 설명">
         <textarea value={caption} onChange={event => setCaption(event.target.value)} disabled={isDisabled} rows={2} />
       </Field>
+      <label className={styles.coverCheckField}>
+        <input
+          type="checkbox"
+          checked={usedAsCover}
+          onChange={event => setUsedAsCover(event.target.checked)}
+          disabled={isDisabled || media.usageStatus === 'rejected'}
+        />
+        <span>대표사진으로 사용</span>
+      </label>
       <button type="button" className={styles.secondaryButton} onClick={saveMedia} disabled={isDisabled}>
         <Save size={15} aria-hidden="true" />
         사진 설명 저장
@@ -740,12 +751,16 @@ function EditorMobilePreview({
   post,
   blocks,
   media,
+  relatedQuestions,
 }: {
   post: EditablePost
   blocks: EditableBlock[]
   media: BlogEditorMedia[]
+  relatedQuestions: string[]
 }) {
   const mediaById = new Map(media.map(item => [item.id, item]))
+  const cover = media.find(item => item.usedAsCover && (item.signedPreviewUrl || item.publicUrl)) ?? null
+  const coverUrl = cover?.signedPreviewUrl ?? cover?.publicUrl ?? null
 
   return (
     <div className={styles.mobilePreviewShell} aria-label="모바일 미리보기">
@@ -758,7 +773,14 @@ function EditorMobilePreview({
           {post.primaryKeyword && <span>{post.primaryKeyword}</span>}
         </div>
         <h2>{post.title || '제목 없는 초안'}</h2>
+        {coverUrl && (
+          <figure className={styles.mobilePreviewCover}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={coverUrl} alt={cover?.altText || cover?.sourceLabel || '대표사진'} />
+          </figure>
+        )}
         {post.summaryAnswer && <p className={styles.mobilePreviewLead}>{post.summaryAnswer}</p>}
+        {post.excerpt && <p className={styles.mobilePreviewExcerpt}>{post.excerpt}</p>}
         <div className={styles.mobilePreviewBlocks}>
           {blocks.length === 0 ? (
             <p className={styles.mobilePreviewEmpty}>본문을 작성하면 여기에 바로 보입니다.</p>
@@ -802,6 +824,14 @@ function EditorMobilePreview({
             return null
           })}
         </div>
+        {relatedQuestions.length > 0 && (
+          <section className={styles.mobilePreviewRelated}>
+            <strong>함께 확인할 질문</strong>
+            <ul>
+              {relatedQuestions.map(question => <li key={question}>{question}</li>)}
+            </ul>
+          </section>
+        )}
       </article>
     </div>
   )
@@ -1036,6 +1066,11 @@ export default function BlogEditorClient({
 
   const isPublished = post.status === 'published'
   const selectableMedia = useMemo(() => editorMedia.filter(item => item.usageStatus !== 'rejected'), [editorMedia])
+  const relatedQuestionsForPreview = useMemo(
+    () => relatedText.split('\n').map(item => item.trim()).filter(Boolean),
+    [relatedText],
+  )
+  const coverMedia = selectableMedia.find(item => item.usedAsCover) ?? null
 
   const blockStats = useMemo(() => ({
     blockCount: blocks.length,
@@ -1454,6 +1489,14 @@ export default function BlogEditorClient({
                 <textarea ref={summaryAnswerRef} value={post.summaryAnswer ?? ''} onChange={event => updatePost('summaryAnswer', event.target.value)} disabled={isPublished} rows={3} />
               </Field>
             </div>
+            <div className={styles.coverSummary}>
+              <strong>대표사진</strong>
+              <span>
+                {coverMedia
+                  ? `${coverMedia.sourceLabel || '선택한 사진'}을 블로그 썸네일과 상단 이미지로 사용합니다.`
+                  : '이미지 카드에서 “대표사진으로 사용”을 체크하면 블로그 썸네일과 상단 이미지로 표시됩니다.'}
+              </span>
+            </div>
           </section>
 
           <section className={styles.panel}>
@@ -1522,7 +1565,7 @@ export default function BlogEditorClient({
               <h2>모바일 미리보기</h2>
             </div>
             <p className={styles.panelHelp}>저장 전 편집 중인 내용을 빠르게 확인하는 화면입니다.</p>
-            <EditorMobilePreview post={post} blocks={blocks} media={selectableMedia} />
+            <EditorMobilePreview post={post} blocks={blocks} media={selectableMedia} relatedQuestions={relatedQuestionsForPreview} />
           </section>
           )}
 

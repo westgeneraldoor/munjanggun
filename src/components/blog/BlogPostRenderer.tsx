@@ -138,7 +138,7 @@ export default function BlogPostRenderer({
   const { post, blocks, media } = data
   const publishedDate = formatDate(post.publishedAt)
   const updatedDate = formatDate(post.updatedAt)
-  const cover = media.find(item => item.usedAsCover && item.url) ?? media.find(item => item.url) ?? null
+  const cover = media.find(item => item.usedAsCover && item.url) ?? null
   const mediaMap = mediaById(media.filter(item => item.usageStatus !== 'rejected'))
 
   return (
@@ -205,7 +205,6 @@ export default function BlogPostRenderer({
             </section>
           )}
 
-          <CtaBlock text="무료 방문 실측견적 상담으로 우리 집 조건을 먼저 확인하세요." />
         </div>
       </article>
     </main>

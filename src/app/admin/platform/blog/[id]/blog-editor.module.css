@@ -195,6 +195,30 @@
   grid-column: 1 / -1;
 }
 
+.coverSummary {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  color: var(--admin-text-sub);
+  background: var(--admin-surface-elevated);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.coverSummary strong {
+  color: var(--admin-text);
+  font-size: var(--text-sm);
+}
+
+.coverSummary span {
+  overflow-wrap: anywhere;
+}
+
 .formStack,
 .blockStack {
   min-width: 0;
@@ -922,6 +946,34 @@
   line-height: 1.6;
 }
 
+.mobilePreviewCover {
+  min-width: 0;
+  margin: var(--space-4) 0 0;
+}
+
+.mobilePreviewCover img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  display: block;
+  object-fit: cover;
+  background: #e7e2d9;
+  border: 1px solid #d9c6a5;
+  border-radius: var(--radius-lg);
+}
+
+.mobilePreviewExcerpt {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  color: #4b433a;
+  background: #ffffff;
+  border: 1px solid #ded6ca;
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .mobilePreviewBlocks {
   min-width: 0;
   display: flex;
@@ -992,6 +1044,35 @@
   color: #173b31;
   background: #e7f6ec;
   border: 1px solid #cae3d0;
+}
+
+.mobilePreviewRelated {
+  min-width: 0;
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  background: #ffffff;
+  border: 1px solid #ded6ca;
+  border-radius: var(--radius-lg);
+}
+
+.mobilePreviewRelated strong {
+  color: #1f1a14;
+  font-size: var(--text-sm);
+}
+
+.mobilePreviewRelated ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  padding-left: var(--space-4);
+}
+
+.mobilePreviewRelated li {
+  color: #3d352d;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .mobilePreviewEmpty {
@@ -1077,6 +1158,27 @@
   margin-top: var(--space-2);
   padding-top: var(--space-2);
   border-top: 1px solid var(--admin-border);
+}
+
+.coverCheckField {
+  min-width: 0;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
+  color: var(--admin-text);
+  background: var(--admin-surface-elevated);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+}
+
+.coverCheckField input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--admin-accent);
 }
 
 .imageBlockActions {
