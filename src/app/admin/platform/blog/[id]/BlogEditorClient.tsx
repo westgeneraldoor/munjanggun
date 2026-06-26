@@ -282,6 +282,17 @@ function createBlock(type: BlogBlockType, options: { mediaId?: string | null; ph
   return base
 }
 
+function cleanQaQuestion(value: string | null | undefined) {
+  return (value ?? '')
+    .replace(/^(\s*(?:Q|질문)\s*[.:：)]\s*)+/i, '')
+    .split(/\s+(?:A|답변)\s*[.:：)]\s*/i)[0]
+    ?.trim() ?? ''
+}
+
+function cleanQaAnswer(value: string | null | undefined) {
+  return (value ?? '').replace(/^(\s*(?:A|답변)\s*[.:：)]\s*)+/i, '').trim()
+}
+
 function Field({
   label,
   children,
@@ -844,10 +855,13 @@ function EditorMobilePreview({
               )
             }
             if (block.type === 'qa') {
+              const question = cleanQaQuestion(block.text)
+              const answer = cleanQaAnswer(block.metadata.answer)
+
               return (
                 <div key={block.clientId} className={styles.mobilePreviewQa}>
-                  <strong>Q. {block.text || '질문'}</strong>
-                  <p>{block.metadata.answer || '답변'}</p>
+                  <strong>Q. {question || '질문'}</strong>
+                  <p>{answer || '답변'}</p>
                 </div>
               )
             }

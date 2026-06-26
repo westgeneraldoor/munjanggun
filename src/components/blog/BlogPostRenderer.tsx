@@ -26,6 +26,17 @@ function splitParagraphs(text: string) {
   return text.split(/\n{2,}/).map(item => item.trim()).filter(Boolean)
 }
 
+function cleanQaQuestion(value: string | null | undefined) {
+  return (value ?? '')
+    .replace(/^(\s*(?:Q|질문)\s*[.:：)]\s*)+/i, '')
+    .split(/\s+(?:A|답변)\s*[.:：)]\s*/i)[0]
+    ?.trim() ?? ''
+}
+
+function cleanQaAnswer(value: string | null | undefined) {
+  return (value ?? '').replace(/^(\s*(?:A|답변)\s*[.:：)]\s*)+/i, '').trim()
+}
+
 function mediaById(media: BlogRenderMedia[]) {
   return new Map(media.map(item => [item.id, item]))
 }
@@ -110,8 +121,10 @@ function RenderBlock({
   }
 
   if (block.type === 'qa') {
-    const answer = block.metadata.answer || block.metadata.qa_answer
-    if (!block.text?.trim() && !answer?.trim()) return null
+    const question = cleanQaQuestion(block.text)
+    const answer = cleanQaAnswer(block.metadata.answer || block.metadata.qa_answer)
+    if (!question && !answer) return null
+    block = { ...block, text: question || '자주 묻는 질문' }
     return (
       <section className={styles.qaBlock}>
         <div className={styles.qaQuestion}>
