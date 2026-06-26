@@ -91,6 +91,10 @@
   border-color: var(--admin-accent);
 }
 
+.detailCloseButton {
+  min-height: 44px;
+}
+
 .uploadPanel {
   display: flex;
   flex-direction: column;
@@ -887,7 +891,8 @@
   }
 
   .checkRow,
-  .primaryButton {
+  .primaryButton,
+  .detailCloseButton {
     width: 100%;
   }
 }
