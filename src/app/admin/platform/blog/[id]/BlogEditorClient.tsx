@@ -311,12 +311,15 @@ function GateItem({
   detail?: string
   onJump: () => void
 }) {
+  const statusLabel = ok ? 'OK' : 'NG'
+  const help = detail ? `${label}: ${detail}` : `${label}: ${statusLabel}`
+
   return (
     <li className={`${styles.gateItem} ${ok ? styles.gateOk : styles.gateWarn}`}>
-      <button type="button" onClick={onJump}>
+      <button type="button" onClick={onJump} title={help} aria-label={`${label} ${statusLabel}. ${detail ?? '누르면 해당 위치로 이동합니다.'}`}>
         {ok ? <CheckCircle2 size={15} aria-hidden="true" /> : <AlertTriangle size={15} aria-hidden="true" />}
         <span>{label}</span>
-        {detail && <small>{detail}</small>}
+        <small>{statusLabel}</small>
       </button>
     </li>
   )
@@ -680,22 +683,24 @@ function ImageBlockDetails({
   onChanged: (next: BlogEditorMedia) => void
 }) {
   const [isPending, startTransition] = useTransition()
-  const [altText, setAltText] = useState(media.altText ?? '')
-  const [caption, setCaption] = useState(media.caption ?? '')
-  const [sourceLabel, setSourceLabel] = useState(media.sourceLabel ?? '')
+  const savedCaption = media.caption?.trim() ?? ''
+  const [captionMode, setCaptionMode] = useState<'saved' | 'custom' | 'none'>(savedCaption ? 'saved' : 'none')
+  const [customCaption, setCustomCaption] = useState(savedCaption)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
   const isDisabled = disabled || media.usageStatus === 'published' || isPending
 
   const saveMedia = () => {
     setMessage(null)
     startTransition(async () => {
+      const nextCaption = captionMode === 'saved' ? savedCaption : captionMode === 'custom' ? customCaption : ''
+      const nextAltText = nextCaption.trim() || media.altText?.trim() || media.sourceLabel?.trim() || '문장군 현장 사진'
       const usageStatus: UpdateBlogMediaPayload['usageStatus'] = media.usageStatus === 'approved' ? 'approved' : media.usageStatus === 'rejected' ? 'rejected' : 'candidate'
       const result = await updateBlogMedia({
         postId,
         mediaId: media.id,
-        altText,
-        caption,
-        sourceLabel,
+        altText: nextAltText,
+        caption: nextCaption,
+        sourceLabel: media.sourceLabel ?? '',
         privacyChecked: media.privacyChecked,
         promotionConsentChecked: media.promotionConsentChecked,
         usedAsCover: media.usedAsCover,
@@ -706,28 +711,70 @@ function ImageBlockDetails({
       if (result.ok) {
         onChanged({
           ...media,
-          altText: emptyToNull(altText),
-          caption: emptyToNull(caption),
-          sourceLabel: emptyToNull(sourceLabel),
+          altText: emptyToNull(nextAltText),
+          caption: emptyToNull(nextCaption),
         })
       }
     })
   }
 
   return (
-    <div className={styles.imageInlineFields}>
-      <Field label="사진 이름">
-        <input value={sourceLabel} onChange={event => setSourceLabel(event.target.value)} disabled={isDisabled} />
-      </Field>
-      <Field label="대체 설명">
-        <input value={altText} onChange={event => setAltText(event.target.value)} disabled={isDisabled} />
-      </Field>
-      <Field label="사진 설명">
-        <textarea value={caption} onChange={event => setCaption(event.target.value)} disabled={isDisabled} rows={2} />
-      </Field>
+    <div className={styles.imageCaptionControl}>
+      <span className={styles.captionControlTitle}>사진 설명</span>
+      <div className={styles.captionChoiceGroup}>
+        <label className={styles.captionChoice}>
+          <input
+            type="radio"
+            name={`caption-${media.id}`}
+            checked={captionMode === 'saved'}
+            onChange={() => setCaptionMode('saved')}
+            disabled={isDisabled || !savedCaption}
+          />
+          <span>
+            <strong>기존 설명 사용</strong>
+            <small>{savedCaption || '등록된 설명이 없습니다.'}</small>
+          </span>
+        </label>
+        <label className={styles.captionChoice}>
+          <input
+            type="radio"
+            name={`caption-${media.id}`}
+            checked={captionMode === 'custom'}
+            onChange={() => setCaptionMode('custom')}
+            disabled={isDisabled}
+          />
+          <span>
+            <strong>이 글에서만 새 설명 쓰기</strong>
+            <small>사진 아래에 노출할 문장을 직접 씁니다.</small>
+          </span>
+        </label>
+        {captionMode === 'custom' && (
+          <textarea
+            className={styles.captionTextarea}
+            value={customCaption}
+            onChange={event => setCustomCaption(event.target.value)}
+            disabled={isDisabled}
+            rows={3}
+            placeholder="예: 현관 폭과 신발장 간섭을 함께 확인한 사진"
+          />
+        )}
+        <label className={styles.captionChoice}>
+          <input
+            type="radio"
+            name={`caption-${media.id}`}
+            checked={captionMode === 'none'}
+            onChange={() => setCaptionMode('none')}
+            disabled={isDisabled}
+          />
+          <span>
+            <strong>설명 없이 사진만</strong>
+            <small>본문에는 사진만 표시합니다.</small>
+          </span>
+        </label>
+      </div>
       <button type="button" className={styles.secondaryButton} onClick={saveMedia} disabled={isDisabled}>
         <Save size={15} aria-hidden="true" />
-        사진 설명 저장
+        설명 적용
       </button>
       {message && (
         <div className={`${styles.saveMessage} ${message.ok ? styles.saveOk : styles.saveError}`} role="status">
@@ -939,7 +986,7 @@ function BlockEditor({
               </div>
               <div className={styles.imageBlockInfo}>
                 <strong>{selectedMedia.sourceLabel || '선택한 사진'}</strong>
-                <p>{selectedMedia.caption || selectedMedia.altText || '사진 설명을 확인해 주세요.'}</p>
+                <p>{selectedMedia.caption ? selectedMedia.caption : '설명 없이 사진만 표시합니다.'}</p>
                 <div className={styles.imageBlockActions}>
                   <button type="button" onClick={onPickImage} disabled={disabled}>
                     <Images size={15} aria-hidden="true" />
@@ -950,7 +997,7 @@ function BlockEditor({
                     연결 해제
                   </button>
                 </div>
-                <ImageBlockDetails postId={postId} media={selectedMedia} disabled={disabled} onChanged={onMediaChanged} />
+                <ImageBlockDetails key={selectedMedia.id} postId={postId} media={selectedMedia} disabled={disabled} onChanged={onMediaChanged} />
               </div>
             </div>
           ) : (
@@ -966,17 +1013,6 @@ function BlockEditor({
               </button>
             </div>
           )}
-          <details className={styles.blockDetails}>
-            <summary>사진 메모</summary>
-            <div className={styles.blockGrid}>
-              <Field label="사진 카드명">
-                <input value={block.metadata.photo_slot_label ?? ''} onChange={event => updateMetadata('photo_slot_label', event.target.value)} />
-              </Field>
-              <Field label="필요한 사진 설명">
-                <input value={block.metadata.required_media ?? ''} onChange={event => updateMetadata('required_media', event.target.value)} />
-              </Field>
-            </div>
-          </details>
         </div>
       )}
 
@@ -1123,7 +1159,7 @@ export default function BlogEditorClient({
       key: 'title',
       ok: Boolean(post.title.trim() && post.slug.trim()),
       label: '제목',
-      detail: post.title.trim() && post.slug.trim() ? undefined : '제목/slug',
+      detail: post.title.trim() && post.slug.trim() ? undefined : '제목/주소',
     },
     {
       key: 'body',
@@ -1509,17 +1545,37 @@ export default function BlogEditorClient({
             발행 완료 글은 이 화면에서 읽기 전용입니다. 발행 후 수정은 별도 검수 흐름에서 다룹니다.
           </div>
         )}
-        <section className={styles.gateBarPanel} aria-label="발행 전 검수">
-          <div className={styles.gateBarTitle}>
-            <span>검수 게이트</span>
-            <small>누르면 고칠 위치로 이동합니다.</small>
+        <div className={styles.workbar}>
+          <section className={styles.gateBarPanel} aria-label="발행 전 검수">
+            <div className={styles.gateBarTitle}>
+              <span>검수 게이트</span>
+              <small>누르면 고칠 위치로 이동합니다.</small>
+            </div>
+            <ul className={styles.gateList}>
+              {gateItems.map(item => (
+                <GateItem key={item.key} ok={item.ok} label={item.label} detail={item.detail} onJump={() => jumpGateItem(item.key)} />
+              ))}
+            </ul>
+          </section>
+          <div className={styles.workbarTabs} aria-label="보조 패널">
+            <button
+              type="button"
+              className={sidePanelMode === 'preview' ? styles.sideTabActive : ''}
+              aria-pressed={sidePanelMode === 'preview'}
+              onClick={() => setSidePanelMode('preview')}
+            >
+              모바일 미리보기
+            </button>
+            <button
+              type="button"
+              className={sidePanelMode === 'seo' ? styles.sideTabActive : ''}
+              aria-pressed={sidePanelMode === 'seo'}
+              onClick={() => setSidePanelMode('seo')}
+            >
+              SEO/AEO
+            </button>
           </div>
-          <ul className={styles.gateList}>
-            {gateItems.map(item => (
-              <GateItem key={item.key} ok={item.ok} label={item.label} detail={item.detail} onJump={() => jumpGateItem(item.key)} />
-            ))}
-          </ul>
-        </section>
+        </div>
       </header>
 
       <ContentAssetPicker
@@ -1546,7 +1602,7 @@ export default function BlogEditorClient({
               <Field label="제목">
                 <input ref={titleRef} value={post.title} onChange={event => updatePost('title', event.target.value)} disabled={isPublished} />
               </Field>
-              <Field label="slug" hint="영문 소문자, 숫자, 하이픈만 사용">
+              <Field label="주소" hint="영문 소문자, 숫자, 하이픈만 사용">
                 <input ref={slugRef} value={post.slug} onChange={event => updatePost('slug', event.target.value)} disabled={isPublished} />
               </Field>
               <Field label="카테고리">
@@ -1554,10 +1610,10 @@ export default function BlogEditorClient({
                   {CATEGORY_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
               </Field>
-              <Field label="excerpt">
+              <Field label="도입 요약">
                 <textarea value={post.excerpt ?? ''} onChange={event => updatePost('excerpt', event.target.value)} disabled={isPublished} rows={3} />
               </Field>
-              <Field label="summary answer">
+              <Field label="요약 답변">
                 <textarea ref={summaryAnswerRef} value={post.summaryAnswer ?? ''} onChange={event => updatePost('summaryAnswer', event.target.value)} disabled={isPublished} rows={3} />
               </Field>
             </div>
@@ -1640,27 +1696,8 @@ export default function BlogEditorClient({
         </main>
 
         <aside className={styles.sidePanel}>
-          <div className={styles.sideTabs} aria-label="보조 패널">
-            <button
-              type="button"
-              className={sidePanelMode === 'preview' ? styles.sideTabActive : ''}
-              aria-pressed={sidePanelMode === 'preview'}
-              onClick={() => setSidePanelMode('preview')}
-            >
-              모바일 미리보기
-            </button>
-            <button
-              type="button"
-              className={sidePanelMode === 'seo' ? styles.sideTabActive : ''}
-              aria-pressed={sidePanelMode === 'seo'}
-              onClick={() => setSidePanelMode('seo')}
-            >
-              SEO/AEO
-            </button>
-          </div>
-
           {sidePanelMode === 'preview' && (
-          <section className={styles.panel}>
+          <section className={`${styles.panel} ${styles.previewPanel}`}>
             <div className={styles.panelTitle}>
               <Eye size={17} aria-hidden="true" />
               <h2>모바일 미리보기</h2>
@@ -1671,39 +1708,39 @@ export default function BlogEditorClient({
           )}
 
           {sidePanelMode === 'seo' && (
-          <section className={styles.panel}>
+          <section className={`${styles.panel} ${styles.seoPanel}`}>
             <h2>SEO/AEO</h2>
             <div className={styles.formStack}>
-              <Field label="SEO title">
+              <Field label="검색 제목">
                 <input value={post.seoTitle ?? ''} onChange={event => updatePost('seoTitle', event.target.value)} disabled={isPublished} />
               </Field>
-              <Field label="meta description">
+              <Field label="검색 설명">
                 <textarea ref={metaDescriptionRef} value={post.metaDescription ?? ''} onChange={event => updatePost('metaDescription', event.target.value)} disabled={isPublished} rows={3} />
               </Field>
-              <Field label="canonical URL">
+              <Field label="대표 URL">
                 <input value={post.canonicalUrl ?? ''} onChange={event => updatePost('canonicalUrl', event.target.value)} disabled={isPublished} />
               </Field>
-              <Field label="primary keyword">
+              <Field label="핵심 키워드">
                 <input value={post.primaryKeyword ?? ''} onChange={event => updatePost('primaryKeyword', event.target.value)} disabled={isPublished} />
               </Field>
-              <Field label="target question">
+              <Field label="대표 질문">
                 <textarea ref={targetQuestionRef} value={post.targetQuestion ?? ''} onChange={event => updatePost('targetQuestion', event.target.value)} disabled={isPublished} rows={2} />
               </Field>
-              <Field label="summary answer">
+              <Field label="요약 답변">
                 <textarea value={post.summaryAnswer ?? ''} onChange={event => updatePost('summaryAnswer', event.target.value)} disabled={isPublished} rows={4} />
               </Field>
-              <Field label="related questions" hint="한 줄에 하나씩 입력">
+              <Field label="함께 볼 질문" hint="한 줄에 하나씩 입력">
                 <textarea value={relatedText} onChange={event => setRelatedText(event.target.value)} disabled={isPublished} rows={4} />
               </Field>
               <div className={styles.twoFields}>
-                <Field label="service area">
+                <Field label="서비스 지역">
                   <input value={post.serviceArea ?? ''} onChange={event => updatePost('serviceArea', event.target.value)} disabled={isPublished} />
                 </Field>
-                <Field label="product type">
+                <Field label="제품군">
                   <input value={post.productType ?? ''} onChange={event => updatePost('productType', event.target.value)} disabled={isPublished} />
                 </Field>
               </div>
-              <Field label="last fact checked">
+              <Field label="사실 확인일">
                 <input ref={factCheckedRef} type="datetime-local" value={factCheckedLocal} onChange={event => setFactCheckedLocal(event.target.value)} disabled={isPublished} />
               </Field>
             </div>

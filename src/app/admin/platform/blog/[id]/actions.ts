@@ -161,7 +161,7 @@ function validatePayload(payload: SaveBlogEditorPayload) {
   if (!payload.postId) return '글 ID가 없습니다.'
   if (!title) return '제목을 입력해야 합니다.'
   if (!slug || !SLUG_PATTERN.test(slug)) {
-    return 'slug는 영문 소문자, 숫자, 하이픈만 사용할 수 있습니다.'
+    return '주소는 영문 소문자, 숫자, 하이픈만 사용할 수 있습니다.'
   }
 
   for (const block of payload.blocks) {
@@ -173,7 +173,7 @@ function validatePayload(payload: SaveBlogEditorPayload) {
       const hasText = Boolean(cleanText(block.text))
       const hasMetadata = Object.values(block.metadata).some(value => cleanText(value))
       if (!hasText && !hasMetadata) {
-        return '이미지 외 블록은 본문 또는 메타 정보를 입력해야 합니다.'
+        return '비어 있는 본문 카드가 있습니다.'
       }
     }
   }
@@ -206,7 +206,7 @@ async function requireEditablePost(
   }
 
   if (post.status === 'published') {
-    return { ok: false as const, message: '발행 완료 글은 이번 PR에서 수정할 수 없습니다.' }
+    return { ok: false as const, message: '발행 완료된 글은 이 화면에서 수정할 수 없습니다.' }
   }
 
   return { ok: true as const, post }
@@ -276,7 +276,7 @@ async function validateImageMediaOwnership(
     .select('id, post_id')
     .in('id', imageMediaIds)
 
-  if (mediaError) return mediaError.message
+  if (mediaError) return '사진 연결 상태를 확인하지 못했습니다.'
 
   const mediaRows = (mediaData ?? []) as Array<{ id: string; post_id: string | null }>
   const foundIds = new Set(mediaRows.map(media => media.id))
@@ -339,7 +339,7 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
         .in('id', imageMediaIds)
 
       if (mediaAssetError) {
-        return { ok: false, message: mediaAssetError.message }
+        return { ok: false, message: '본문 사진 정보를 확인하지 못했습니다.' }
       }
 
       for (const item of (mediaAssetData ?? []) as Array<Pick<BlogMedia, 'id' | 'content_asset_id' | 'alt_text' | 'caption' | 'source_label'>>) {
@@ -374,7 +374,7 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
       .select('id')
 
     if (postError) {
-      return { ok: false, message: postError.message }
+      return { ok: false, message: '글 기본 정보를 저장하지 못했습니다.' }
     }
 
     const updatedPostRows = (updatedPostData ?? []) as Array<{ id: string }>
@@ -388,7 +388,7 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
       .eq('post_id', payload.postId)
 
     if (existingBlocksError) {
-      return { ok: false, message: existingBlocksError.message }
+      return { ok: false, message: '기존 본문을 확인하지 못했습니다.' }
     }
 
     const existingBlocks = (existingBlocksData ?? []) as Array<{ id: string; display_order: number }>
@@ -411,7 +411,7 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
         .in('id', removedIds)
 
       if (deleteError) {
-        return { ok: false, message: deleteError.message }
+        return { ok: false, message: '삭제한 본문 카드를 정리하지 못했습니다.' }
       }
     }
 
@@ -436,7 +436,7 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
           .update(blockPayload as never)
           .eq('id', block.id)
 
-        if (error) return { ok: false, message: error.message }
+        if (error) return { ok: false, message: '본문 카드를 저장하지 못했습니다.' }
       } else {
         const { data: insertedBlockData, error } = await showroomAdmin
           .from('blog_blocks')
@@ -444,7 +444,7 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
           .select('id')
           .single()
 
-        if (error) return { ok: false, message: error.message }
+        if (error) return { ok: false, message: '본문 카드를 추가하지 못했습니다.' }
         savedBlockId = (insertedBlockData as { id: string } | null)?.id ?? null
       }
 
@@ -478,7 +478,7 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
         .in('ref_id', existingBlocks.map(block => block.id))
 
       if (usageDeleteError) {
-        return { ok: false, message: usageDeleteError.message }
+        return { ok: false, message: '사진 사용 기록을 정리하지 못했습니다.' }
       }
     }
 
@@ -488,7 +488,7 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
         .insert(nextUsages as never)
 
       if (usageInsertError) {
-        return { ok: false, message: usageInsertError.message }
+        return { ok: false, message: '사진 사용 기록을 저장하지 못했습니다.' }
       }
     }
 
@@ -497,10 +497,10 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
     revalidatePath(`/admin/platform/blog/${payload.postId}`)
 
     return { ok: true, message: '저장했습니다.', savedAt }
-  } catch (error) {
+  } catch {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : '저장 중 오류가 발생했습니다.',
+      message: '저장 중 오류가 발생했습니다.',
     }
   }
 }
@@ -558,7 +558,7 @@ export async function uploadBlogMedia(formData: FormData): Promise<MediaActionRe
       })
 
     if (uploadError) {
-      return { ok: false, message: uploadError.message }
+      return { ok: false, message: '사진을 올리지 못했습니다.' }
     }
 
     uploadedPath = objectPath
@@ -582,12 +582,12 @@ export async function uploadBlogMedia(formData: FormData): Promise<MediaActionRe
     if (insertError) {
       await showroomAdmin.storage.from(PRIVATE_MEDIA_BUCKET).remove([objectPath])
       uploadedPath = null
-      return { ok: false, message: insertError.message }
+      return { ok: false, message: '올린 사진을 저장하지 못했습니다.' }
     }
 
     revalidatePath(`/admin/platform/blog/${postId}`)
-    return { ok: true, message: '미디어 후보를 업로드했습니다.' }
-  } catch (error) {
+    return { ok: true, message: '사진을 올렸습니다.' }
+  } catch {
     if (uploadedPath) {
       const showroomAdmin = createShowroomAdminClient()
       await showroomAdmin.storage.from(PRIVATE_MEDIA_BUCKET).remove([uploadedPath])
@@ -595,7 +595,7 @@ export async function uploadBlogMedia(formData: FormData): Promise<MediaActionRe
 
     return {
       ok: false,
-      message: error instanceof Error ? error.message : '미디어 업로드 중 오류가 발생했습니다.',
+      message: '사진 업로드 중 오류가 발생했습니다.',
     }
   }
 }
@@ -638,7 +638,7 @@ export async function attachContentAssetToBlogMedia(payload: {
       .in('file_role', ['original', 'web', 'thumbnail'])
 
     if (assetFilesError) {
-      return { ok: false, message: assetFilesError.message }
+      return { ok: false, message: '선택한 사진 파일을 확인하지 못했습니다.' }
     }
 
     const files = (assetFilesData ?? []) as ContentAssetFile[]
@@ -661,7 +661,7 @@ export async function attachContentAssetToBlogMedia(payload: {
       .limit(1)
 
     if (existingMediaError) {
-      return { ok: false, message: existingMediaError.message }
+      return { ok: false, message: '이 글에 이미 연결된 사진인지 확인하지 못했습니다.' }
     }
 
     const existingMedia = ((existingMediaData ?? []) as Array<Pick<BlogMedia, 'id' | 'source_label' | 'usage_status' | 'alt_text' | 'caption' | 'privacy_checked' | 'promotion_consent_checked' | 'used_as_cover' | 'approved_at' | 'created_at'>>)[0]
@@ -720,7 +720,7 @@ export async function attachContentAssetToBlogMedia(payload: {
 
     const media = mediaData as Pick<BlogMedia, 'id' | 'source_label' | 'usage_status' | 'alt_text' | 'caption' | 'privacy_checked' | 'promotion_consent_checked' | 'used_as_cover' | 'approved_at' | 'created_at'> | null
     if (mediaError || !media) {
-      return { ok: false, message: mediaError?.message ?? '사진을 글에 연결하지 못했습니다.' }
+      return { ok: false, message: '사진을 글에 연결하지 못했습니다.' }
     }
 
     insertedMediaId = media.id
@@ -744,7 +744,7 @@ export async function attachContentAssetToBlogMedia(payload: {
       message: '사진을 본문에 넣었습니다.',
       media: toAttachedMedia(media, previewUrl),
     }
-  } catch (error) {
+  } catch {
     if (insertedMediaId) {
       const showroomAdmin = createShowroomAdminClient()
       await showroomAdmin.from('blog_media').delete().eq('id', insertedMediaId)
@@ -752,7 +752,7 @@ export async function attachContentAssetToBlogMedia(payload: {
 
     return {
       ok: false,
-      message: error instanceof Error ? error.message : '사진을 글에 연결하는 중 오류가 발생했습니다.',
+      message: '사진을 글에 연결하는 중 오류가 발생했습니다.',
     }
   }
 }
@@ -762,7 +762,7 @@ export async function updateBlogMedia(payload: UpdateBlogMediaPayload): Promise<
     const actorId = await requireAdministrator()
 
     if (!payload.postId || !payload.mediaId) {
-      return { ok: false, message: '미디어 ID가 없습니다.' }
+      return { ok: false, message: '사진 ID가 없습니다.' }
     }
 
     if (payload.usageStatus === 'published') {
@@ -782,9 +782,9 @@ export async function updateBlogMedia(payload: UpdateBlogMediaPayload): Promise<
     const rejectionReason = cleanText(payload.rejectionReason)
 
     if (payload.usageStatus === 'approved') {
-      if (!altText) return { ok: false, message: '사용 가능으로 표시하려면 대체 설명이 필요합니다.' }
-      if (!payload.privacyChecked) return { ok: false, message: '사용 가능으로 표시하려면 개인정보 확인이 필요합니다.' }
-      if (!payload.promotionConsentChecked) return { ok: false, message: '사용 가능으로 표시하려면 블로그/홍보 사용 가능 확인이 필요합니다.' }
+      if (!altText) return { ok: false, message: '사진 설명이 필요합니다.' }
+      if (!payload.privacyChecked) return { ok: false, message: '사진의 민감정보 확인이 필요합니다.' }
+      if (!payload.promotionConsentChecked) return { ok: false, message: '사진의 블로그 사용 가능 여부 확인이 필요합니다.' }
     }
 
     if (payload.usageStatus === 'rejected' && !rejectionReason) {
@@ -799,7 +799,7 @@ export async function updateBlogMedia(payload: UpdateBlogMediaPayload): Promise<
         .neq('id', payload.mediaId)
 
       if (coverResetError) {
-        return { ok: false, message: coverResetError.message }
+        return { ok: false, message: '대표사진 설정을 정리하지 못했습니다.' }
       }
     }
 
@@ -831,7 +831,7 @@ export async function updateBlogMedia(payload: UpdateBlogMediaPayload): Promise<
       .select('id')
 
     if (updateError) {
-      return { ok: false, message: updateError.message }
+      return { ok: false, message: '사진 설명을 저장하지 못했습니다.' }
     }
 
     const updatedRows = (updatedData ?? []) as Array<{ id: string }>
@@ -840,11 +840,11 @@ export async function updateBlogMedia(payload: UpdateBlogMediaPayload): Promise<
     }
 
     revalidatePath(`/admin/platform/blog/${payload.postId}`)
-    return { ok: true, message: '미디어 정보를 저장했습니다.' }
-  } catch (error) {
+    return { ok: true, message: '사진 설명을 저장했습니다.' }
+  } catch {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : '미디어 저장 중 오류가 발생했습니다.',
+      message: '사진 설명 저장 중 오류가 발생했습니다.',
     }
   }
 }
@@ -856,17 +856,17 @@ function validatePublishGate(post: BlogPost, blocks: BlogBlock[], media: BlogMed
   const mediaById = new Map(media.map(item => [item.id, item]))
   const mediaToValidate = new Map<string, BlogMedia>()
 
-  if (post.status !== 'ready') issues.push('status가 ready인 글만 발행할 수 있습니다.')
+  if (post.status !== 'ready') issues.push('발행 준비 상태인 글만 공개할 수 있습니다.')
   if (!cleanText(post.title)) issues.push('제목이 필요합니다.')
-  if (!cleanText(post.slug) || !SLUG_PATTERN.test(post.slug)) issues.push('slug 형식이 올바르지 않습니다.')
+  if (!cleanText(post.slug) || !SLUG_PATTERN.test(post.slug)) issues.push('글 주소 형식이 올바르지 않습니다.')
   const metaDescription = cleanText(post.meta_description)
-  if (!metaDescription) issues.push('meta description이 필요합니다.')
+  if (!metaDescription) issues.push('검색 설명이 필요합니다.')
   if (metaDescription && (metaDescription.length < 50 || metaDescription.length > 180)) {
-    issues.push('meta description은 50-180자여야 합니다.')
+    issues.push('검색 설명은 50-180자로 작성해야 합니다.')
   }
-  if (!cleanText(post.target_question)) issues.push('target question이 필요합니다.')
-  if (!cleanText(post.summary_answer)) issues.push('summary answer가 필요합니다.')
-  if (!post.last_fact_checked_at) issues.push('last_fact_checked_at이 필요합니다.')
+  if (!cleanText(post.target_question)) issues.push('대표 질문이 필요합니다.')
+  if (!cleanText(post.summary_answer)) issues.push('요약 답변이 필요합니다.')
+  if (!post.last_fact_checked_at) issues.push('사실 확인 날짜가 필요합니다.')
   if (blocks.length === 0) issues.push('본문 블록이 필요합니다.')
   if (ctaBlocks.length === 0) issues.push('CTA 블록이 필요합니다.')
   if (hasForbiddenExpression(post.brand_check_result)) issues.push('금지표현/브랜드 검수 blocker가 남아 있습니다.')
@@ -874,13 +874,13 @@ function validatePublishGate(post: BlogPost, blocks: BlogBlock[], media: BlogMed
   for (const block of blocks) {
     if (block.type !== 'image') continue
     if (!block.media_id) {
-      issues.push('연결되지 않은 이미지 블록이 있습니다.')
+      issues.push('본문에 사진이 비어 있는 카드가 있습니다.')
       continue
     }
 
     const linkedMedia = mediaById.get(block.media_id)
     if (!linkedMedia || linkedMedia.post_id !== post.id) {
-      issues.push('이미지 블록에 이 글 소속이 아닌 media가 연결되어 있습니다.')
+      issues.push('이 글에 연결되지 않은 사진이 포함되어 있습니다.')
       continue
     }
 
@@ -893,22 +893,22 @@ function validatePublishGate(post: BlogPost, blocks: BlogBlock[], media: BlogMed
 
   for (const linkedMedia of mediaToValidate.values()) {
     if (linkedMedia.usage_status !== 'approved') {
-      issues.push('공개 승격 대상 media는 approved 상태여야 합니다.')
+      issues.push('사진보관함에서 바로 사용할 수 있는 사진만 발행할 수 있습니다.')
     }
     if (!cleanText(linkedMedia.alt_text)) {
-      issues.push('공개 이미지 alt_text가 필요합니다.')
+      issues.push('사진 설명이 필요합니다.')
     }
 
     if (!linkedMedia.privacy_checked) {
-      issues.push('공개 이미지 개인정보 확인이 필요합니다.')
+      issues.push('사진의 민감정보 확인이 필요합니다.')
     }
 
     if (!linkedMedia.promotion_consent_checked) {
-      issues.push('공개 이미지 홍보 사용 동의 확인이 필요합니다.')
+      issues.push('사진의 블로그 사용 가능 여부 확인이 필요합니다.')
     }
 
     if (!linkedMedia.private_bucket || !linkedMedia.private_object_path) {
-      issues.push('승격할 private 원본 이미지 경로가 필요합니다.')
+      issues.push('사진 원본을 확인할 수 없습니다.')
     }
   }
 
@@ -968,7 +968,7 @@ async function promoteMediaForPublish(
   try {
     for (const media of mediaRows) {
       if (!media.private_bucket || !media.private_object_path) {
-        throw new Error('승격할 private 원본 이미지 경로가 없습니다.')
+        throw new Error('사진 원본을 확인할 수 없습니다.')
       }
 
       const { data: privateObject, error: downloadError } = await showroomAdmin.storage
@@ -976,7 +976,7 @@ async function promoteMediaForPublish(
         .download(media.private_object_path)
 
       if (downloadError || !privateObject) {
-        throw new Error(downloadError?.message ?? 'private 이미지를 불러오지 못했습니다.')
+        throw new Error('사진 원본을 불러오지 못했습니다.')
       }
 
       const publicObjectPath = publicObjectPathForMedia(postId, media.id)
@@ -990,7 +990,7 @@ async function promoteMediaForPublish(
         })
 
       if (uploadError) {
-        throw new Error(uploadError.message)
+        throw new Error('공개용 사진을 준비하지 못했습니다.')
       }
 
       uploadedPaths.push(publicObjectPath)
@@ -1015,12 +1015,12 @@ async function promoteMediaForPublish(
         .select('id')
 
       if (updateError) {
-        throw new Error(updateError.message)
+        throw new Error('공개용 사진 정보를 저장하지 못했습니다.')
       }
 
       const updatedRows = (updatedMediaData ?? []) as Array<{ id: string }>
       if (updatedRows.length !== 1) {
-        throw new Error('승인된 media만 published로 승격할 수 있습니다.')
+        throw new Error('확인된 사진만 발행용으로 준비할 수 있습니다.')
       }
 
       publishedMediaIds.push(media.id)
@@ -1075,11 +1075,11 @@ export async function publishBlogPost(postId: string): Promise<PublishBlogPostRe
     }
 
     if (blocksResult.error) {
-      return { ok: false, message: blocksResult.error.message }
+      return { ok: false, message: '본문 정보를 불러오지 못했습니다.' }
     }
 
     if (mediaResult.error) {
-      return { ok: false, message: mediaResult.error.message }
+      return { ok: false, message: '사진 정보를 불러오지 못했습니다.' }
     }
 
     const gate = validatePublishGate(post, blocks, media)
@@ -1109,12 +1109,12 @@ export async function publishBlogPost(postId: string): Promise<PublishBlogPostRe
       .select('id, slug')
 
     if (postUpdateError) {
-      throw new Error(postUpdateError.message)
+      throw new Error('글을 공개 상태로 바꾸지 못했습니다.')
     }
 
     const updatedPostRows = (updatedPostData ?? []) as Array<{ id: string; slug: string }>
     if (updatedPostRows.length !== 1) {
-      throw new Error('ready 상태의 글만 published로 전환할 수 있습니다.')
+      throw new Error('발행 준비가 끝난 글만 공개할 수 있습니다.')
     }
 
     const { error: eventError } = await showroomAdmin
@@ -1125,7 +1125,7 @@ export async function publishBlogPost(postId: string): Promise<PublishBlogPostRe
         event_type: 'published',
         from_status: post.status,
         to_status: 'published',
-        memo: 'Content OS publish gate passed; approved media promoted to public bucket.',
+        memo: '발행 검수를 통과해 공개용 사진 준비까지 완료했습니다.',
         metadata: {
           published_media_ids: publishedMediaIds,
           public_bucket: PUBLIC_MEDIA_BUCKET,
@@ -1144,7 +1144,7 @@ export async function publishBlogPost(postId: string): Promise<PublishBlogPostRe
         .eq('id', post.id)
         .eq('status', 'published')
 
-      throw new Error(eventError.message)
+      throw new Error('발행 기록을 남기지 못했습니다.')
     }
 
     revalidatePath('/blog')
