@@ -1,7 +1,9 @@
 # 문장군 디지털 쇼룸 V2 — 전체 태스크 현황
-📅 마지막 업데이트: 2026-04-30
+📅 마지막 업데이트: 2026-05-30
 
-> V1 히스토리는 `_archive.md`에 보관
+
+> 플랫폼 제작 일정의 기준은 `docs/platform/PLATFORM_TASKS.md`다.
+> V1/V2 히스토리는 `docs/archive/showroom/`와 아래 쇼룸 Phase 기록에 보관한다.
 
 ## V2 Phase 0: 기반 설정 ✅
 - [x] Git 브랜치 `v2-cms` 생성 (main 보호) ✅ 오더 #015
@@ -67,12 +69,12 @@
 - [x] 코드 위생 (100dvh fallback, ScrollRestorer, emptyState 상수화) ✅ 오더 #036
 - [x] Playfair Display 실적용 + LQIP 블러 프리뷰 ✅ 오더 #037
 - [x] 한글 slug 데이터 정리 ✅ 완료
-- [ ] EVAL-01 ~ EVAL-21 전수 검사
-- [ ] 카카오톡 인앱 브라우저 호환 테스트
-- [ ] 이미지 로딩 성능 확인
+- [x] EVAL-01 ~ EVAL-21 전수 검사
+- [x] 카카오톡 인앱 브라우저 호환 테스트
+- [x] 이미지 로딩 성능 확인
 - [x] 에러 핸들링 (네트워크 실패, 이미지 fallback)
 - [x] 접근성 확인 (alt, 키보드 네비게이션)
-- [ ] 최종 빌드 → Vercel 배포 (v2-cms → main merge)
+- [x] 최종 빌드 → Vercel 배포 (v2-cms → main merge)
 
 ## V2 Phase 5-A: "시네마틱 갤러리" 체험 고도화
 - [x] 전략 논의: 🅰️시네마틱갤러리 → 🅱️매끄러운전환 → 🅲️소재인터랙션 순서 확정 ✅

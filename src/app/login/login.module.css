@@ -1,0 +1,329 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: var(--space-6);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  padding: var(--space-8) var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.closeLink {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  color: var(--color-text-sub);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+}
+
+.closeLink:hover {
+  color: var(--color-accent);
+  border-color: rgba(196, 162, 101, 0.38);
+}
+
+.homeLink {
+  align-self: flex-start;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--space-5);
+  color: var(--color-text-sub);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  text-decoration: none;
+}
+
+.homeLink:hover {
+  color: var(--color-accent);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--color-accent);
+  margin-bottom: var(--space-2);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.brandSub {
+  font-size: var(--text-sm);
+  color: var(--color-text-sub);
+  margin-bottom: var(--space-8);
+  letter-spacing: 0.1em;
+}
+
+.title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  margin-bottom: var(--space-2);
+  color: var(--color-text);
+}
+
+.description {
+  font-size: var(--text-sm);
+  color: var(--color-text-sub);
+  margin-bottom: var(--space-4);
+  line-height: var(--leading-relaxed);
+}
+
+.reassurance {
+  width: 100%;
+  margin-bottom: var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text-sub);
+  background: rgba(196, 162, 101, 0.08);
+  border: 1px solid rgba(196, 162, 101, 0.2);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+}
+
+.buttonContainer {
+  width: 100%;
+  margin-bottom: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* 카카오 버튼 */
+.kakaoButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 52px;
+  padding: 0 var(--space-4);
+  background-color: #FEE500;
+  color: #191919;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.kakaoButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  opacity: 0.95;
+}
+
+.kakaoButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.kakaoButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.kakaoIcon {
+  width: 20px;
+  height: 20px;
+  margin-right: var(--space-3);
+  flex-shrink: 0;
+}
+
+/* 구분선 */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  margin: var(--space-1) 0;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-border);
+}
+
+/* 이메일 버튼 */
+.emailButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 52px;
+  padding: 0 var(--space-4);
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.emailButton:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  background: var(--color-surface-elevated);
+}
+
+.emailButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.emailIcon {
+  width: 18px;
+  height: 18px;
+  margin-right: var(--space-3);
+  flex-shrink: 0;
+}
+
+/* 폼 공통 */
+.form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.fieldLabel {
+  text-align: left;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-sub);
+}
+
+.input {
+  width: 100%;
+  height: 52px;
+  padding: 0 var(--space-4);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: var(--text-base);
+  font-family: var(--font-sans);
+  transition: border-color var(--transition-fast);
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.otpInput {
+  text-align: center;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  letter-spacing: 0.3em;
+}
+
+/* 기본 CTA 버튼 */
+.primaryButton {
+  width: 100%;
+  height: 52px;
+  padding: 0 var(--space-4);
+  background: var(--color-accent);
+  color: var(--color-accent-foreground);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.primaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 뒤로가기 */
+.backButton {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  padding: var(--space-2);
+  transition: color var(--transition-fast);
+}
+
+.backButton:hover {
+  color: var(--color-text-sub);
+}
+
+/* 성공 메시지 */
+.successMsg {
+  padding: var(--space-3) var(--space-4);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius-sm);
+  color: var(--color-success);
+  font-size: var(--text-sm);
+  text-align: left;
+  line-height: var(--leading-relaxed);
+}
+
+/* 에러 */
+.error {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-sm);
+  color: #EF4444;
+  font-size: var(--text-sm);
+  width: 100%;
+  text-align: center;
+}
+
+/* 푸터 */
+.footer {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-4);
+  line-height: var(--leading-normal);
+}

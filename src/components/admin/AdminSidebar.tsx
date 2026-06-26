@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Package, Settings, LogOut, Menu, X, FolderTree } from 'lucide-react'
+import { Settings, LogOut, Menu, X, FolderTree, ClipboardList, Sliders, Newspaper, Images } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import styles from './AdminSidebar.module.css'
 
 export default function AdminSidebar() {
   const [isOpen, setIsOpen] = useState(false)
+  const [pendingPath, setPendingPath] = useState<string | null>(null)
   const pathname = usePathname()
   const router = useRouter()
   const toggleSidebar = () => setIsOpen(!isOpen)
@@ -26,6 +27,10 @@ export default function AdminSidebar() {
   }
 
   const navItems = [
+    { name: '접수 큐', path: '/admin/platform', icon: ClipboardList },
+    { name: '견적 설정', path: '/admin/platform/settings', icon: Sliders },
+    { name: '블로그 초안', path: '/admin/platform/blog', icon: Newspaper },
+    { name: '사진보관함', path: '/admin/platform/assets', icon: Images },
     { name: '노드 관리', path: '/admin/nodes', icon: FolderTree },
     { name: '사이트 설정', path: '/admin/settings', icon: Settings },
   ]
@@ -58,13 +63,21 @@ export default function AdminSidebar() {
           <ul className={styles.navList}>
             {navItems.map((item) => {
               const Icon = item.icon
-              const isActive = pathname.startsWith(item.path)
+              // 중복 매칭 버그 수정: /admin/platform/settings 가 /admin/platform 에 startsWith 매칭되지 않도록 함
+              const isActive = item.path === '/admin/platform'
+                ? pathname === '/admin/platform' || (pathname.startsWith('/admin/platform/') && !pathname.startsWith('/admin/platform/settings') && !pathname.startsWith('/admin/platform/blog') && !pathname.startsWith('/admin/platform/assets'))
+                : pathname.startsWith(item.path)
+              const isPending = pendingPath === item.path && !isActive
+
               return (
                 <li key={item.path}>
                   <Link
                     href={item.path}
-                    className={`${styles.navItem} ${isActive ? styles.active : ''}`}
-                    onClick={() => setIsOpen(false)}
+                    className={`${styles.navItem} ${isActive || isPending ? styles.active : ''} ${isPending ? styles.pending : ''}`}
+                    onClick={() => {
+                      setPendingPath(item.path)
+                      setIsOpen(false)
+                    }}
                   >
                     <Icon size={24} />
                     <span>{item.name}</span>

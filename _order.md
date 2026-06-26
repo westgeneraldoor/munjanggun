@@ -1,109 +1,101 @@
-# 작업지시서 #051
-📅 발행: 2026-05-06 14:10
-🤖 추천 모델: Gemini Pro
-⏱️ 예상 시간: ~20분
+# 현재 작업 오더 - n8n/AppSheet 견적·결제 흐름 지도화
 
-## 작업 목표
-**A. CTA 바 리디자인 — 울트라 미니멀 스타일**
-**B. 모바일 브레드크럼 수정 — 골드 통일 + 사이즈 업**
+발행: 2026-06-10
+브랜치: `platform-v1`
+상태: 대화로 방향 확정, 구현 전 운영 흐름 정리
 
----
+## 목표
 
-## A. CTA 바 리디자인
+MVP-03/04/05 구현으로 바로 가지 않는다.
 
-### 디자인 사양 (프리뷰 확정 — `_cta_preview.html`의 "개선안 C")
+먼저 현재 문장군의 실제 견적 발송과 결제 안내 흐름을 지도화한다. 목적은 영업부 담당자에게 이중 입력을 만들지 않고, 기존 AppSheet+n8n+솔라피 알림톡 흐름을 살리면서 플랫폼이 어디에 붙어야 하는지 결정하는 것이다.
 
-**바 컨테이너 (.container):**
-- border-radius: `999px` (완전 필 형태)
-- background: `rgba(20, 20, 24, 0.9)`
-- backdrop-filter: `blur(20px)`
-- border: `1px solid rgba(255,255,255,0.07)`
-- box-shadow: `0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)`
-- padding: `8px 10px`
-- gap: `8px`
+## 현재 이해
 
-**바 상단 골드 라인 (::before):**
-- top: -1px, left: 20%, right: 20%
-- height: 1px
-- background: `linear-gradient(to right, transparent, rgba(196,162,101,0.4), transparent)`
+현재 운영 흐름:
 
-**아이콘 버튼 (.homeButton, .shareButton):**
-- 36x36px (기존 44px에서 축소)
-- border-radius: 50%
-- border: none
-- background: transparent
-- color: `var(--color-text-sub)`
-- 호버: color → `var(--color-accent)`, background → `rgba(196,162,101,0.08)`
+```text
+영업부 담당자
+-> AppSheet에 고객 발주/견적/시공/스펙 등록
+-> AppSheet의 견적서 보내기 액션 실행
+-> n8n으로 payload 전달
+-> n8n이 데이터 가공
+-> HTML 견적서 생성
+-> 솔라피 알림톡 발송
+-> 고객은 알림톡 버튼으로 상세 견적서 확인
+-> 결제는 네이버 결제, 일반/계좌 결제, 유선 안내 등으로 분기
+```
 
-**메인 버튼 (.button):**
-- height: 40px
-- border-radius: `999px` (필 형태)
-- font-size: `var(--text-sm)` (13px)
-- letter-spacing: 0.2px
+중요한 사실:
 
-**Primary (.primary):**
-- background: `var(--color-accent)` (단순 단색, 기존 볼록 gradient 제거)
-- color: `var(--color-accent-foreground)`
-- box-shadow: `0 2px 8px rgba(196,162,101,0.2)`
-- 호버: background → `var(--color-accent-hover)`, shadow 강화, translateY(-1px)
+- 영업부 담당자는 생성된 HTML 견적서 링크를 직접 알거나 붙여넣지 않는다.
+- 기존 HTML 견적서에는 고객명, 주소, 견적일자, 품목, 온라인 결제 항목, 일반 결제 항목, 계약금, 잔금, 입금계좌, 담당자 정보가 들어간다.
+- 플랫폼이 견적서를 새로 작성하게 만들면 AppSheet와 이중 입력이 될 위험이 크다.
+- 결제는 플랫폼 결제만으로 고정할 수 없다.
 
-**Secondary (.secondary):**
-- background: `rgba(255,255,255,0.05)`
-- color: `var(--color-text)`
-- border: `1px solid rgba(255,255,255,0.08)`
-- 호버: background → `rgba(255,255,255,0.1)`, border 밝아짐
+## 먼저 정리할 분기
 
-**데스크탑 (1024px+):**
-- 동일 필 스타일 유지, max-width: 600px, 중앙 정렬
-- 아이콘/메인 버튼 사이즈 동일 (변경 없음)
+견적 1건은 결제 경로를 가져야 한다.
 
-**제거할 것:**
-- 기존 볼록 gradient (`background-image: linear-gradient(...)`) 전부 제거
-- 기존 복잡한 box-shadow (inset 다중) 전부 제거
-- 기존 shine sweep `::after` pseudo-element 전부 제거
-- `slideUpDesktop` 애니메이션은 radius 999px + translateX(-50%) 조합 유지
+```text
+payment_route:
+- naver
+- bank_transfer
+- platform
+- split
+```
 
-### 수정 파일
-- `src/components/customer/CTABar.module.css` — 전면 리라이트
-- `src/components/customer/CTABar.tsx` — 변경 없음 (구조 유지)
+각 경로의 의미:
 
----
+- `naver`: 네이버 결제 또는 네이버 장바구니/결제 안내 중심
+- `bank_transfer`: 계좌이체/일반 결제 안내 중심
+- `platform`: 문장군 플랫폼에서 결제 진행
+- `split`: 계약금/잔금 또는 혼합 결제. 예: 계약금 계좌, 잔금 플랫폼
 
-## B. 모바일 브레드크럼 수정
+## 작업 범위
 
-### B-1. 색상 통일
-- `.mobileLink` color를 `var(--color-text-sub)` → `var(--color-accent)`로 변경
-- 데스크탑 `.link`와 동일하게 골드로 통일
+1. 현재 AppSheet 견적/시공/스펙 입력 항목 목록화
+2. n8n이 받는 payload 예시 확보
+3. n8n 워크플로우 단계 지도화
+4. 기존 HTML 견적서에 들어가는 필드 목록화
+5. 솔라피 알림톡 템플릿 버튼 구조 확인
+6. 네이버 결제 / 일반 결제 / 플랫폼 결제 / split 분기표 작성
+7. 플랫폼이 맡을 역할 정의
+8. n8n MCP 연결이 필요한 영역과 단순 API/Webhook이면 충분한 영역 분리
 
-### B-2. 사이즈 업
-- `.mobileList` font-size를 `var(--text-xs)` → `var(--text-sm)`로 변경
+## 산출물
 
-### 수정 파일
-- `src/components/customer/Breadcrumb.module.css`
+새 문서:
 
----
+- `docs/platform/QUOTE_PAYMENT_FLOW_MAP.md`
 
-## 참고 파일
-- `_cta_preview.html` — 확정된 디자인 C의 CSS 참조 (`.new-bar-c` 클래스)
+문서에 반드시 포함할 것:
 
-## ⚠️ 금지
-- CTABar.tsx의 JSX 구조 변경 금지 (CSS만 수정)
-- Breadcrumb.tsx 수정 금지 (CSS만 수정)
-- 어드민 파일 수정 금지
-- `prefers-reduced-motion` 대응 제거 금지 — 반드시 유지
-- 데스크탑 중앙 정렬(translateX(-50%)) 로직 제거 금지
+- 현재 운영 흐름 다이어그램
+- AppSheet, n8n, 솔라피, HTML 견적서, 플랫폼의 역할 경계
+- 결제 경로별 고객 화면/알림톡/어드민 큐 동작
+- 영업부 이중 입력 방지 원칙
+- n8n을 버리지 않고 AI와 유기적으로 쓰기 위한 다음 단계
+- 플랫폼 결제 구현 전 반드시 확인할 리스크
+
+## 금지
+
+- 이 오더에서 결제 기능을 구현하지 않는다.
+- 이 오더에서 n8n 운영 워크플로우를 바로 수정하지 않는다.
+- 이 오더에서 AppSheet를 대체한다고 전제하지 않는다.
+- 영업부가 AppSheet와 플랫폼에 같은 견적/스펙을 두 번 입력하는 구조를 제안하지 않는다.
+
+## 확인 질문 후보
+
+- AppSheet에서 n8n으로 넘어가는 실제 payload를 어디서 볼 수 있는가?
+- 현재 n8n 워크플로우를 복사본으로 테스트할 수 있는가?
+- 솔라피 알림톡 템플릿 버튼은 몇 개까지 쓸 수 있고, 어떤 버튼명이 현재 승인되어 있는가?
+- 기존 HTML 견적서 링크를 계속 유지할지, 플랫폼 링크를 메인으로 바꿀지 단계별 전환이 가능한가?
+- 네이버 결제/일반 결제/플랫폼 결제 중 어떤 경로가 현재 매출 비중이 가장 큰가?
 
 ## 완료 기준
-- [x] `npm run lint` — 에러 0개
-- [x] `npm run build` — 성공
-- [x] CTA 바: 필(pill) 형태, 투명 아이콘 버튼, 단색 골드 primary, 미세 보더 secondary
-- [x] CTA 바: 데스크탑에서 중앙 정렬 + 필 형태 유지
-- [x] 모바일 브레드크럼: 골드 링크 + 13px 사이즈
-- [x] prefers-reduced-motion 대응 유지
 
----
-## 작업 결과 (작업자가 작성)
-CTA 바와 모바일 브레드크럼의 울트라 미니멀 디자인 업데이트를 완료했습니다.
-- CTABar.module.css 를 _cta_preview.html 개선안 C 사양에 맞춰 전면 수정했습니다. (볼록 gradient 및 복잡한 shadow 제거, 필 형태 반투명 UI, 중앙 정렬 등)
-- Breadcrumb.module.css 의 모바일 폰트 사이즈를 xs에서 sm으로 변경하고 텍스트 컬러를 골드로 통일했습니다.
-- lint 경고(에러 0개) 및 build 에러 없음을 확인했습니다.
+- `QUOTE_PAYMENT_FLOW_MAP.md`가 작성된다.
+- `DECISION_LOG.md`에 "플랫폼 결제 직행 보류, n8n/AppSheet 흐름 지도화 우선" 결정이 기록된다.
+- `PLATFORM_TASKS.md`의 MVP-03/04/05 순서가 현재 결정과 충돌하지 않게 보정된다.
+- 사용자가 보고 "이제 어느 흐름부터 건드릴지 감이 온다"고 판단할 수 있다.

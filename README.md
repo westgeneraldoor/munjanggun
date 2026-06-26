@@ -39,9 +39,14 @@ munjanggun/
 │   ├── components/     # 고객(customer)/어드민(admin) 분리된 재사용 컴포넌트
 │   ├── lib/            # Supabase 클라이언트, 유틸리티, 로거
 │   └── types/          # 데이터베이스 및 전역 타입 정의
-├── docs/               # PRD, 디자인 시스템 등 설계 문서
+├── docs/
+│   ├── platform/       # 플랫폼 전략, 태스크, PRD, DB/RBAC, 감사, 브랜드 맥락
+│   ├── showroom/       # 기존 V2 쇼룸 PRD, 디자인 시스템, 브리프
+│   └── archive/        # 과거 감사, 출시 점검, 아카이브
 └── public/             # 정적 에셋
 ```
+
+플랫폼 제작 일정은 `docs/platform/PLATFORM_TASKS.md`를 기준으로 확인합니다.
 
 ---
 
