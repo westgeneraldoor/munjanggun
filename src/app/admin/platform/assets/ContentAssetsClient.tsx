@@ -433,10 +433,15 @@ function AssetDetailPanel({
 
   return (
     <aside className={styles.detailPanel} aria-label="사진 상세 정보">
-      {mode === 'mobile' && onClose ? (
-        <button type="button" className={styles.secondaryButton} onClick={onClose}>
+      {onClose ? (
+        <button
+          type="button"
+          className={`${styles.secondaryButton} ${styles.detailCloseButton}`}
+          onClick={onClose}
+          aria-label="사진 상세 닫기"
+        >
           <X aria-hidden="true" size={16} />
-          목록으로
+          {mode === 'mobile' ? '목록으로' : '상세 닫기'}
         </button>
       ) : null}
 
@@ -527,7 +532,7 @@ export default function ContentAssetsClient({
     usagePurpose: '',
   })
   const [tagFilter, setTagFilter] = useState('')
-  const [selectedId, setSelectedId] = useState(initialItems[0]?.id ?? '')
+  const [selectedId, setSelectedId] = useState('')
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
 
   const filteredItems = useMemo(() => {
@@ -540,10 +545,9 @@ export default function ContentAssetsClient({
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   }, [filters, initialItems, search, tagFilter])
 
-  const selectedItem = filteredItems.find(item => item.id === selectedId)
-    ?? filteredItems[0]
-    ?? initialItems.find(item => item.id === selectedId)
-    ?? null
+  const selectedItem = selectedId
+    ? filteredItems.find(item => item.id === selectedId) ?? null
+    : null
 
   const options = useMemo(() => ({
     category: optionValues(initialItems, 'category'),
@@ -554,8 +558,14 @@ export default function ContentAssetsClient({
   }), [initialItems])
 
   function chooseItem(id: string) {
-    setSelectedId(id)
-    setMobileDetailOpen(true)
+    const isClosingCurrent = selectedId === id
+    setSelectedId(isClosingCurrent ? '' : id)
+    setMobileDetailOpen(!isClosingCurrent)
+  }
+
+  function closeDetail() {
+    setSelectedId('')
+    setMobileDetailOpen(false)
   }
 
   return (
@@ -635,7 +645,7 @@ export default function ContentAssetsClient({
 
       {mobileDetailOpen && selectedItem ? (
         <div className={styles.mobileDetail}>
-          <AssetDetailPanel key={`mobile-${selectedItem.id}`} item={selectedItem} mode="mobile" onClose={() => setMobileDetailOpen(false)} />
+          <AssetDetailPanel key={`mobile-${selectedItem.id}`} item={selectedItem} mode="mobile" onClose={closeDetail} />
         </div>
       ) : null}
 
@@ -680,7 +690,7 @@ export default function ContentAssetsClient({
 
         {selectedItem ? (
           <div className={styles.desktopDetail}>
-            <AssetDetailPanel key={`desktop-${selectedItem.id}`} item={selectedItem} mode="desktop" />
+            <AssetDetailPanel key={`desktop-${selectedItem.id}`} item={selectedItem} mode="desktop" onClose={closeDetail} />
           </div>
         ) : null}
       </div>

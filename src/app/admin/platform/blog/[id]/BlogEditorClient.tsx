@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   ArrowDown,
   ArrowLeft,
+  ArrowRight,
   ArrowUp,
   CheckCircle2,
   Eye,
@@ -148,6 +149,7 @@ type EditablePost = Omit<BlogEditorPost, 'gateSummary' | 'publishedAt' | 'create
 type EditableBlock = BlogEditorBlock & { clientId: string }
 type AssetPickerTarget =
   | { type: 'new' }
+  | { type: 'cover' }
   | { type: 'replace'; clientId: string }
   | { type: 'insertBefore'; clientId: string }
 type SidePanelMode = 'preview' | 'seo'
@@ -681,7 +683,6 @@ function ImageBlockDetails({
   const [altText, setAltText] = useState(media.altText ?? '')
   const [caption, setCaption] = useState(media.caption ?? '')
   const [sourceLabel, setSourceLabel] = useState(media.sourceLabel ?? '')
-  const [usedAsCover, setUsedAsCover] = useState(media.usedAsCover)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
   const isDisabled = disabled || media.usageStatus === 'published' || isPending
 
@@ -697,7 +698,7 @@ function ImageBlockDetails({
         sourceLabel,
         privacyChecked: media.privacyChecked,
         promotionConsentChecked: media.promotionConsentChecked,
-        usedAsCover,
+        usedAsCover: media.usedAsCover,
         usageStatus,
         rejectionReason: media.rejectionReason,
       })
@@ -708,7 +709,6 @@ function ImageBlockDetails({
           altText: emptyToNull(altText),
           caption: emptyToNull(caption),
           sourceLabel: emptyToNull(sourceLabel),
-          usedAsCover,
         })
       }
     })
@@ -725,15 +725,6 @@ function ImageBlockDetails({
       <Field label="사진 설명">
         <textarea value={caption} onChange={event => setCaption(event.target.value)} disabled={isDisabled} rows={2} />
       </Field>
-      <label className={styles.coverCheckField}>
-        <input
-          type="checkbox"
-          checked={usedAsCover}
-          onChange={event => setUsedAsCover(event.target.checked)}
-          disabled={isDisabled || media.usageStatus === 'rejected'}
-        />
-        <span>대표사진으로 사용</span>
-      </label>
       <button type="button" className={styles.secondaryButton} onClick={saveMedia} disabled={isDisabled}>
         <Save size={15} aria-hidden="true" />
         사진 설명 저장
@@ -802,7 +793,7 @@ function EditorMobilePreview({
                   ) : (
                     <div className={styles.mobilePreviewImageEmpty}>사진 없음</div>
                   )}
-                  {(item?.caption || item?.sourceLabel) && <figcaption>{item.caption || item.sourceLabel}</figcaption>}
+                  {item?.caption && <figcaption>{item.caption}</figcaption>}
                 </figure>
               )
             }
@@ -817,7 +808,14 @@ function EditorMobilePreview({
             if (block.type === 'cta') {
               return (
                 <div key={block.clientId} className={styles.mobilePreviewCta}>
-                  <strong>{block.text || '무료방문 실측견적 상담'}</strong>
+                  <div>
+                    <span>무료 방문 실측견적 상담</span>
+                    <strong>{block.text || '우리 집에 맞는 문과 시공 조건을 먼저 확인해보세요.'}</strong>
+                  </div>
+                  <em>
+                    상담 신청
+                    <ArrowRight size={14} aria-hidden="true" />
+                  </em>
                 </div>
               )
             }
@@ -1061,6 +1059,7 @@ export default function BlogEditorClient({
   const metaDescriptionRef = useRef<HTMLTextAreaElement>(null)
   const targetQuestionRef = useRef<HTMLTextAreaElement>(null)
   const factCheckedRef = useRef<HTMLInputElement>(null)
+  const coverPickerRef = useRef<HTMLDivElement>(null)
   const blockToolbarRef = useRef<HTMLDivElement>(null)
   const blockListRef = useRef<HTMLDivElement>(null)
 
@@ -1071,6 +1070,7 @@ export default function BlogEditorClient({
     [relatedText],
   )
   const coverMedia = selectableMedia.find(item => item.usedAsCover) ?? null
+  const coverMediaUrl = coverMedia?.signedPreviewUrl ?? coverMedia?.publicUrl ?? null
 
   const blockStats = useMemo(() => ({
     blockCount: blocks.length,
@@ -1144,6 +1144,12 @@ export default function BlogEditorClient({
       detail: blockStats.unlinkedImages > 0 ? `${blockStats.unlinkedImages}개 미연결` : altMissingCount > 0 ? `${altMissingCount}개 설명 필요` : undefined,
     },
     {
+      key: 'cover',
+      ok: Boolean(coverMedia),
+      label: '대표사진',
+      detail: coverMedia ? undefined : '선택 필요',
+    },
+    {
       key: 'cta',
       ok: blockStats.ctaCount > 0,
       label: 'CTA',
@@ -1178,6 +1184,10 @@ export default function BlogEditorClient({
     }
     if (key === 'image') {
       jumpToBlock(firstUnlinkedImageBlock?.clientId ?? firstAltMissingImageBlock?.clientId)
+      return
+    }
+    if (key === 'cover') {
+      scrollAndFocus(coverPickerRef.current)
       return
     }
     if (key === 'cta') {
@@ -1280,7 +1290,7 @@ export default function BlogEditorClient({
 
   const handleSelectContentAsset = (assets: ContentAssetPickerItem[]) => {
     if (!assetPickerTarget) return
-    const selectedAssets = assetPickerTarget.type === 'replace' ? assets.slice(0, 1) : assets
+    const selectedAssets = assetPickerTarget.type === 'replace' || assetPickerTarget.type === 'cover' ? assets.slice(0, 1) : assets
     if (selectedAssets.length === 0) return
     setAssetPickerMessage(null)
 
@@ -1301,6 +1311,43 @@ export default function BlogEditorClient({
         }
 
         const nextMedia = toEditorMediaFromAttached(result.media)
+        if (assetPickerTarget.type === 'cover') {
+          const usageStatus: UpdateBlogMediaPayload['usageStatus'] =
+            nextMedia.usageStatus === 'approved' ? 'approved' : nextMedia.usageStatus === 'rejected' ? 'rejected' : 'candidate'
+          const coverResult = await updateBlogMedia({
+            postId: post.id,
+            mediaId: nextMedia.id,
+            altText: nextMedia.altText ?? nextMedia.sourceLabel ?? '',
+            caption: nextMedia.caption ?? '',
+            sourceLabel: nextMedia.sourceLabel ?? '',
+            privacyChecked: nextMedia.privacyChecked,
+            promotionConsentChecked: nextMedia.promotionConsentChecked,
+            usedAsCover: true,
+            usageStatus,
+            rejectionReason: nextMedia.rejectionReason,
+          })
+
+          if (!coverResult.ok) {
+            setAssetPickerMessage({ ok: false, text: coverResult.message })
+            return
+          }
+
+          setEditorMedia(prev => {
+            const withoutCover = prev.map(mediaItem => ({ ...mediaItem, usedAsCover: false }))
+            const index = withoutCover.findIndex(mediaItem => mediaItem.id === nextMedia.id)
+            const coverMedia = { ...nextMedia, usedAsCover: true, altText: nextMedia.altText ?? nextMedia.sourceLabel }
+            if (index >= 0) {
+              withoutCover[index] = { ...withoutCover[index], ...coverMedia }
+              return withoutCover
+            }
+            return [coverMedia, ...withoutCover]
+          })
+          setAssetPickerMessage({ ok: true, text: '대표사진을 설정했습니다.' })
+          setAssetPickerTarget(null)
+          router.refresh()
+          return
+        }
+
         if (assetPickerTarget.type !== 'replace' && existingBlockMediaIds.has(nextMedia.id)) {
           skipped += 1
           continue
@@ -1373,6 +1420,32 @@ export default function BlogEditorClient({
     })
   }
 
+  const handleRemoveCover = () => {
+    if (!coverMedia || isPublished) return
+    setAssetPickerMessage(null)
+    startAssetTransition(async () => {
+      const usageStatus: UpdateBlogMediaPayload['usageStatus'] =
+        coverMedia.usageStatus === 'approved' ? 'approved' : coverMedia.usageStatus === 'rejected' ? 'rejected' : 'candidate'
+      const result = await updateBlogMedia({
+        postId: post.id,
+        mediaId: coverMedia.id,
+        altText: coverMedia.altText ?? '',
+        caption: coverMedia.caption ?? '',
+        sourceLabel: coverMedia.sourceLabel ?? '',
+        privacyChecked: coverMedia.privacyChecked,
+        promotionConsentChecked: coverMedia.promotionConsentChecked,
+        usedAsCover: false,
+        usageStatus,
+        rejectionReason: coverMedia.rejectionReason,
+      })
+
+      if (result.ok) {
+        setEditorMedia(prev => prev.map(item => item.id === coverMedia.id ? { ...item, usedAsCover: false } : item))
+        router.refresh()
+      }
+    })
+  }
+
   const handleMediaChanged = (nextMedia: BlogEditorMedia) => {
     setEditorMedia(prev => prev.map(item => {
       if (item.id === nextMedia.id) return nextMedia
@@ -1436,6 +1509,17 @@ export default function BlogEditorClient({
             발행 완료 글은 이 화면에서 읽기 전용입니다. 발행 후 수정은 별도 검수 흐름에서 다룹니다.
           </div>
         )}
+        <section className={styles.gateBarPanel} aria-label="발행 전 검수">
+          <div className={styles.gateBarTitle}>
+            <span>검수 게이트</span>
+            <small>누르면 고칠 위치로 이동합니다.</small>
+          </div>
+          <ul className={styles.gateList}>
+            {gateItems.map(item => (
+              <GateItem key={item.key} ok={item.ok} label={item.label} detail={item.detail} onJump={() => jumpGateItem(item.key)} />
+            ))}
+          </ul>
+        </section>
       </header>
 
       <ContentAssetPicker
@@ -1443,7 +1527,7 @@ export default function BlogEditorClient({
         items={contentAssets}
         pending={isAssetPending}
         message={assetPickerMessage}
-        multiple={assetPickerTarget?.type !== 'replace'}
+        multiple={assetPickerTarget?.type !== 'replace' && assetPickerTarget?.type !== 'cover'}
         onClose={() => {
           if (!isAssetPending) setAssetPickerTarget(null)
         }}
@@ -1453,18 +1537,6 @@ export default function BlogEditorClient({
 
       <div className={styles.editorLayout}>
         <main className={styles.mainEditor}>
-          <section className={styles.gateBarPanel} aria-label="발행 전 검수">
-            <div className={styles.gateBarTitle}>
-              <span>검수 게이트</span>
-              <small>누르면 고칠 위치로 이동합니다.</small>
-            </div>
-            <ul className={styles.gateList}>
-              {gateItems.map(item => (
-                <GateItem key={item.key} ok={item.ok} label={item.label} detail={item.detail} onJump={() => jumpGateItem(item.key)} />
-              ))}
-            </ul>
-          </section>
-
           <section className={styles.panel}>
             <div className={styles.panelTitle}>
               <FileText size={17} aria-hidden="true" />
@@ -1489,13 +1561,42 @@ export default function BlogEditorClient({
                 <textarea ref={summaryAnswerRef} value={post.summaryAnswer ?? ''} onChange={event => updatePost('summaryAnswer', event.target.value)} disabled={isPublished} rows={3} />
               </Field>
             </div>
-            <div className={styles.coverSummary}>
-              <strong>대표사진</strong>
-              <span>
-                {coverMedia
-                  ? `${coverMedia.sourceLabel || '선택한 사진'}을 블로그 썸네일과 상단 이미지로 사용합니다.`
-                  : '이미지 카드에서 “대표사진으로 사용”을 체크하면 블로그 썸네일과 상단 이미지로 표시됩니다.'}
-              </span>
+            <div className={styles.coverPicker} ref={coverPickerRef} tabIndex={-1}>
+              <div className={styles.coverPickerText}>
+                <strong>대표사진</strong>
+                <span>블로그 목록 썸네일과 포스팅 상단에 표시할 사진입니다.</span>
+              </div>
+              {coverMedia ? (
+                <div className={styles.coverPickerCard}>
+                  <div className={styles.coverPickerThumb}>
+                    {coverMediaUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={coverMediaUrl} alt={coverMedia.altText || coverMedia.sourceLabel || '대표사진'} />
+                    ) : (
+                      <ImageIcon size={22} aria-hidden="true" />
+                    )}
+                  </div>
+                  <div className={styles.coverPickerMeta}>
+                    <strong>{coverMedia.sourceLabel || '선택한 사진'}</strong>
+                    <span>{coverMedia.caption || coverMedia.altText || '대표사진으로 사용 중'}</span>
+                  </div>
+                  <div className={styles.coverPickerActions}>
+                    <button type="button" onClick={() => openAssetPicker({ type: 'cover' })} disabled={isPublished || isAssetPending}>
+                      <Images size={15} aria-hidden="true" />
+                      교체
+                    </button>
+                    <button type="button" onClick={handleRemoveCover} disabled={isPublished || isAssetPending}>
+                      <XCircle size={15} aria-hidden="true" />
+                      제거
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button type="button" className={styles.coverEmptyButton} onClick={() => openAssetPicker({ type: 'cover' })} disabled={isPublished || isAssetPending}>
+                  <ImageIcon size={18} aria-hidden="true" />
+                  대표사진 선택
+                </button>
+              )}
             </div>
           </section>
 

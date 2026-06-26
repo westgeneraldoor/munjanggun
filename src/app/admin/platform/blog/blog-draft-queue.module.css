@@ -497,6 +497,7 @@
   border: 0;
   font: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
 }
 

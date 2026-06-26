@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { ArrowLeft, FilePenLine, Search, ShieldAlert } from 'lucide-react'
 import type { BlogContentCategory, BlogMediaUsageStatus, BlogPostStatus } from '@/types/database'
 import styles from './blog-draft-queue.module.css'
@@ -219,6 +220,7 @@ export default function BlogDraftQueueClient({
   initialRows: BlogDraftQueueRow[]
   loadError: string | null
 }) {
+  const router = useRouter()
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [search, setSearch] = useState('')
@@ -238,6 +240,10 @@ export default function BlogDraftQueueClient({
   const riskCount = initialRows.reduce((sum, row) => sum + getRiskCount(row), 0)
 
   const resetSelection = () => setSelectedId(null)
+
+  const openEditor = (row: BlogDraftQueueRow) => {
+    router.push(`/admin/platform/blog/${row.id}`)
+  }
 
   const updateStatus = (next: StatusFilter) => {
     setStatusFilter(next)
@@ -312,7 +318,7 @@ export default function BlogDraftQueueClient({
         <section className={styles.queueListPanel}>
           <div className={styles.queueSummary}>
             <strong>{filteredRows.length}건</strong>
-            <span>초안을 선택하면 요약 패널에서 검수 상태를 확인합니다.</span>
+            <span>초안을 클릭하면 바로 에디터로 이동합니다.</span>
           </div>
 
           {loadError ? (
@@ -344,13 +350,15 @@ export default function BlogDraftQueueClient({
                       <tr
                         key={row.id}
                         className={`${styles.row} ${row.id === selectedId ? styles.rowSelected : ''}`}
-                        onClick={() => setSelectedId(row.id)}
+                        onClick={() => openEditor(row)}
                         onKeyDown={(event) => {
                           if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault()
-                            setSelectedId(row.id)
+                            openEditor(row)
                           }
                         }}
+                        aria-label={`${row.title} 에디터 열기`}
+                        role="link"
                         tabIndex={0}
                       >
                         <td className={styles.titleCell}>
@@ -392,7 +400,12 @@ export default function BlogDraftQueueClient({
               <ul className={styles.mobileList}>
                 {filteredRows.map(row => (
                   <li key={row.id} className={styles.mobileCard}>
-                    <button type="button" className={styles.mobileCardButton} onClick={() => setSelectedId(row.id)}>
+                    <Link
+                      href={`/admin/platform/blog/${row.id}`}
+                      className={styles.mobileCardButton}
+                      prefetch={false}
+                      aria-label={`${row.title} 에디터 열기`}
+                    >
                       <div className={styles.mobileCardTop}>
                         <span className={`${styles.statusBadge} ${styles[`status_${row.status}`]}`}>
                           {STATUS_LABEL[row.status]}
@@ -409,7 +422,7 @@ export default function BlogDraftQueueClient({
                         <span>{row.productType || '제품군 없음'}</span>
                       </div>
                       <RiskBadges row={row} />
-                    </button>
+                    </Link>
                   </li>
                 ))}
               </ul>

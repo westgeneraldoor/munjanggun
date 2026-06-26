@@ -23,6 +23,12 @@ function getCanonicalUrl(data: BlogRenderData) {
 }
 
 function getCoverImages(data: BlogRenderData) {
+  const coverImages = data.media
+    .filter(media => media.usedAsCover && media.url)
+    .map(media => media.url as string)
+
+  if (coverImages.length > 0) return coverImages
+
   return data.media
     .filter(media => media.url)
     .map(media => media.url as string)

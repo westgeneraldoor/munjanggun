@@ -33,9 +33,11 @@ function mediaById(media: BlogRenderMedia[]) {
 function BlogImage({
   media,
   preview,
+  showCaption = true,
 }: {
   media: BlogRenderMedia
   preview: boolean
+  showCaption?: boolean
 }) {
   if (!media.url) {
     if (!preview) return null
@@ -46,7 +48,7 @@ function BlogImage({
     <figure className={styles.figure}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={media.url} alt={media.altText || media.sourceLabel || '문장군 블로그 이미지'} className={styles.image} />
-      {media.caption && <figcaption>{media.caption}</figcaption>}
+      {showCaption && media.caption && <figcaption>{media.caption}</figcaption>}
     </figure>
   )
 }
@@ -99,7 +101,7 @@ function RenderBlock({
       if (mode !== 'preview') return null
       return (
         <div className={styles.previewMissing}>
-          이 이미지 슬롯은 공개 렌더링 가능한 approved/published media가 아직 없습니다.
+          이 사진 자리는 아직 미리보기로 표시할 사진이 없습니다.
         </div>
       )
     }
@@ -146,7 +148,7 @@ export default function BlogPostRenderer({
       {mode === 'preview' && (
         <div className={styles.previewBanner}>
           <strong>미리보기 모드</strong>
-          <span>검색 노출 대상이 아니며 approved/published media만 렌더링합니다.</span>
+          <span>검색에 노출되지 않는 관리자 확인용 화면입니다.</span>
         </div>
       )}
 
@@ -175,7 +177,7 @@ export default function BlogPostRenderer({
 
           {cover && (
             <div className={styles.coverWrap}>
-              <BlogImage media={cover} preview={mode === 'preview'} />
+              <BlogImage media={cover} preview={mode === 'preview'} showCaption={false} />
             </div>
           )}
         </header>
