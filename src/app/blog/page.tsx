@@ -7,11 +7,11 @@ import styles from './blog.module.css'
 
 const CATEGORY_LABEL: Record<string, string> = {
   case_study: '시공 사례',
-  product_guide: '제품 가이드',
-  customer_qa: '고객 Q&A',
-  field_knowhow: '현장 노하우',
-  price_guide: '견적 가이드',
-  area_guide: '지역 안내',
+  product_guide: '제품과 선택',
+  customer_qa: '고객 질문',
+  field_knowhow: '현장 조건',
+  price_guide: '가격과 견적',
+  area_guide: '지역 이야기',
 }
 
 const CATEGORY_ORDER = [
@@ -24,16 +24,17 @@ const CATEGORY_ORDER = [
 ]
 
 export const metadata: Metadata = {
-  title: '문장군 시공 가이드',
-  description: '중문과 도어 시공 전, 우리 집 구조와 견적 조건을 먼저 확인할 수 있는 문장군 공식 가이드입니다.',
+  title: '문장군 블로그',
+  description: '중문과 도어, 현장 조건, 고객 질문, 제작과 시공 이야기를 모아두는 문장군 공식 블로그입니다.',
 }
 
 export const revalidate = 60
 
 const TRUST_ITEMS = [
-  '무료 방문실측',
-  '직접 제작·전속 시공',
-  '공개 가능한 실제 사례',
+  '고객 질문',
+  '현장 조건',
+  '제품과 선택',
+  '시공 이야기',
 ]
 
 export default async function BlogIndexPage() {
@@ -76,11 +77,11 @@ export default async function BlogIndexPage() {
       <div className={styles.inner}>
         <header className={styles.header}>
           <div>
-            <span className={styles.eyebrow}>문장군 시공 가이드</span>
-            <h1>우리 집 문, 고르기 전에 확인할 것들</h1>
+            <span className={styles.eyebrow}>문장군 블로그</span>
+            <h1>문장군이 현장에서 기록한 이야기</h1>
             <p>
-              중문과 도어는 제품명보다 현장 구조가 먼저입니다. 신발장, 스위치, 바닥 단차, 벽공간처럼
-              견적과 시공 방식에 영향을 주는 기준을 고객 눈높이로 정리합니다.
+              중문과 도어를 고르기 전, 실제 상담에서 자주 나오는 질문과 현장 조건, 제품 선택과 시공 이야기를
+              차근차근 모았습니다.
             </p>
             <div className={styles.trustRow} aria-label="문장군 블로그 신뢰 기준">
               {TRUST_ITEMS.map(item => (
@@ -92,18 +93,18 @@ export default async function BlogIndexPage() {
             </div>
           </div>
           <aside className={styles.headerAside}>
-            <strong>정확한 견적은 집마다 달라집니다.</strong>
-            <span>사진과 글로 먼저 기준을 보고, 무료 방문실측에서 구조와 옵션을 함께 확인하세요.</span>
-            <Link href="/portal/measure/new" className={styles.headerCta}>
-              무료방문 실측견적 신청
+            <strong>어디부터 읽어볼까요?</strong>
+            <span>중문, 도어, 현장 변수, 가격과 견적, 시공 사례를 카테고리별로 이어서 볼 수 있습니다.</span>
+            <a href="#blog-topics" className={styles.headerCta}>
+              카테고리 보기
               <ArrowRight size={16} aria-hidden="true" />
-            </Link>
+            </a>
           </aside>
         </header>
 
         {posts.length === 0 ? (
           <div className={styles.empty}>
-            <strong>아직 공개된 시공 가이드가 없습니다.</strong>
+            <strong>아직 공개된 블로그 글이 없습니다.</strong>
             <span>문장군이 실제 상담과 현장 기준을 바탕으로 차근차근 채워가겠습니다.</span>
           </div>
         ) : (
@@ -112,11 +113,11 @@ export default async function BlogIndexPage() {
 
             <section className={styles.bottomCta} aria-label="문장군 무료 방문실측 안내">
               <div>
-                <span>우리 집 조건은 사진만으로 단정하지 않습니다.</span>
-                <strong>무료 방문실측에서 구조, 옵션, 견적 조건을 함께 확인하세요.</strong>
+                <span>글을 읽어도 우리 집 조건이 애매하다면</span>
+                <strong>무료 방문실측에서 구조, 옵션, 견적 조건을 함께 확인합니다.</strong>
               </div>
               <Link href="/portal/measure/new">
-                상담 신청
+                무료 방문실측 상담
                 <ArrowRight size={16} aria-hidden="true" />
               </Link>
             </section>
