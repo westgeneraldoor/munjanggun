@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import { getPublishedBlogPosts } from '@/lib/content-os/blog-rendering'
+import BlogExplorerClient, { type BlogExplorerCategory, type BlogExplorerPost } from './BlogExplorerClient'
 import styles from './blog.module.css'
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -12,6 +13,15 @@ const CATEGORY_LABEL: Record<string, string> = {
   price_guide: '견적 가이드',
   area_guide: '지역 안내',
 }
+
+const CATEGORY_ORDER = [
+  'case_study',
+  'product_guide',
+  'customer_qa',
+  'field_knowhow',
+  'price_guide',
+  'area_guide',
+]
 
 export const metadata: Metadata = {
   title: '문장군 시공 가이드',
@@ -26,20 +36,40 @@ const TRUST_ITEMS = [
   '공개 가능한 실제 사례',
 ]
 
-function formatDate(value: string | null) {
-  if (!value) return null
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    timeZone: 'Asia/Seoul',
-  }).format(new Date(value))
-}
-
 export default async function BlogIndexPage() {
   const posts = await getPublishedBlogPosts()
-  const featuredPost = posts[0] ?? null
-  const remainingPosts = posts.slice(1)
+  const categoryCounts = posts.reduce((counts, post) => {
+    counts.set(post.category, (counts.get(post.category) ?? 0) + 1)
+    return counts
+  }, new Map<string, number>())
+  const categories: BlogExplorerCategory[] = [
+    { value: 'all', label: '전체', count: posts.length },
+    ...CATEGORY_ORDER.filter(category => categoryCounts.has(category)).map(category => ({
+      value: category,
+      label: CATEGORY_LABEL[category] ?? category,
+      count: categoryCounts.get(category) ?? 0,
+    })),
+  ]
+  const explorerPosts: BlogExplorerPost[] = posts.map(post => ({
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    excerpt: post.excerpt,
+    category: post.category,
+    categoryLabel: CATEGORY_LABEL[post.category] ?? post.category,
+    primaryKeyword: post.primaryKeyword,
+    targetQuestion: post.targetQuestion,
+    summaryAnswer: post.summaryAnswer,
+    serviceArea: post.serviceArea,
+    productType: post.productType,
+    publishedAt: post.publishedAt,
+    coverMedia: post.coverMedia
+      ? {
+          url: post.coverMedia.url,
+          altText: post.coverMedia.altText,
+        }
+      : null,
+  }))
 
   return (
     <main className={styles.page}>
@@ -78,80 +108,7 @@ export default async function BlogIndexPage() {
           </div>
         ) : (
           <>
-            {featuredPost && (
-              <section className={styles.featured} aria-labelledby="featured-blog-title">
-                <div className={styles.sectionHeader}>
-                  <span>먼저 읽기 좋은 글</span>
-                  <h2 id="featured-blog-title">선택 전에 확인할 핵심 기준</h2>
-                </div>
-                <Link href={`/blog/${featuredPost.slug}`} className={styles.featuredCard}>
-                  <div className={styles.featuredImage}>
-                    {featuredPost.coverMedia?.url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={featuredPost.coverMedia.url} alt={featuredPost.coverMedia.altText || featuredPost.title} />
-                    ) : (
-                      <div className={styles.thumbFallback}>{CATEGORY_LABEL[featuredPost.category] ?? featuredPost.category}</div>
-                    )}
-                  </div>
-                  <div className={styles.featuredBody}>
-                    <div className={styles.metaRow}>
-                      <span>{CATEGORY_LABEL[featuredPost.category] ?? featuredPost.category}</span>
-                      {formatDate(featuredPost.publishedAt) && (
-                        <time dateTime={featuredPost.publishedAt ?? undefined}>{formatDate(featuredPost.publishedAt)}</time>
-                      )}
-                    </div>
-                    <h3>{featuredPost.title}</h3>
-                    {featuredPost.summaryAnswer && <p>{featuredPost.summaryAnswer}</p>}
-                    {!featuredPost.summaryAnswer && featuredPost.excerpt && <p>{featuredPost.excerpt}</p>}
-                    {featuredPost.targetQuestion && <strong>{featuredPost.targetQuestion}</strong>}
-                    <span className={styles.readMore}>
-                      글 보기
-                      <ArrowRight size={16} aria-hidden="true" />
-                    </span>
-                  </div>
-                </Link>
-              </section>
-            )}
-
-            {remainingPosts.length > 0 && (
-              <section className={styles.postSection} aria-labelledby="latest-blog-title">
-                <div className={styles.sectionHeader}>
-                  <span>{posts.length}개의 공개 가이드</span>
-                  <h2 id="latest-blog-title">최근 시공 가이드</h2>
-                </div>
-                <div className={styles.grid}>
-                  {remainingPosts.map(post => {
-                    const publishedDate = formatDate(post.publishedAt)
-                    return (
-                      <Link key={post.id} href={`/blog/${post.slug}`} className={styles.card}>
-                        <div className={styles.thumb}>
-                          {post.coverMedia?.url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={post.coverMedia.url} alt={post.coverMedia.altText || post.title} />
-                          ) : (
-                            <div className={styles.thumbFallback}>{CATEGORY_LABEL[post.category] ?? post.category}</div>
-                          )}
-                        </div>
-                        <div className={styles.cardBody}>
-                          <div className={styles.metaRow}>
-                            <span>{CATEGORY_LABEL[post.category] ?? post.category}</span>
-                            {publishedDate && <time dateTime={post.publishedAt ?? undefined}>{publishedDate}</time>}
-                          </div>
-                          <h3>{post.title}</h3>
-                          {post.excerpt && <p>{post.excerpt}</p>}
-                          <div className={styles.tagRow}>
-                            {post.primaryKeyword && <span>{post.primaryKeyword}</span>}
-                            {post.serviceArea && <span>{post.serviceArea}</span>}
-                            {post.productType && <span>{post.productType}</span>}
-                          </div>
-                          {post.targetQuestion && <div className={styles.question}>{post.targetQuestion}</div>}
-                        </div>
-                      </Link>
-                    )
-                  })}
-                </div>
-              </section>
-            )}
+            <BlogExplorerClient posts={explorerPosts} categories={categories} featuredPost={explorerPosts[0] ?? null} />
 
             <section className={styles.bottomCta} aria-label="문장군 무료 방문실측 안내">
               <div>
