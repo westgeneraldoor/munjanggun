@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { ArrowRight, Search, X } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import styles from './blog.module.css'
 
 export type BlogExplorerPost = {
@@ -53,6 +53,7 @@ function formatDate(value: string | null) {
 }
 
 export default function BlogExplorerClient({ posts, categories, featuredPost }: BlogExplorerClientProps) {
+  const searchInputId = useId()
   const [query, setQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
 
@@ -106,10 +107,13 @@ export default function BlogExplorerClient({ posts, categories, featuredPost }: 
         </div>
 
         <div className={styles.searchPanel}>
-          <label className={styles.searchBox}>
+          <div className={styles.searchBox}>
             <Search size={18} aria-hidden="true" />
-            <span className={styles.srOnly}>블로그 글 검색</span>
+            <label htmlFor={searchInputId} className={styles.srOnly}>
+              블로그 글 검색
+            </label>
             <input
+              id={searchInputId}
               type="search"
               value={query}
               onChange={event => setQuery(event.target.value)}
@@ -120,7 +124,7 @@ export default function BlogExplorerClient({ posts, categories, featuredPost }: 
                 <X size={16} aria-hidden="true" />
               </button>
             )}
-          </label>
+          </div>
 
           <div className={styles.categoryTabs} aria-label="카테고리별 글 보기">
             {categories.map(category => (
