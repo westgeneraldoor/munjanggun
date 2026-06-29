@@ -423,12 +423,14 @@ export default function BlogExplorerClient({ posts, categories, featuredPost }: 
             <section className={styles.threadPanel} aria-labelledby="thread-title">
               <div>
                 <span>이어 읽기</span>
-                <h2 id="thread-title">한 글에서 다음 질문으로</h2>
+                <h2 id="thread-title">함께 보면 좋은 내용</h2>
+                <p>궁금한 단어를 누르면 관련 글을 모아볼 수 있습니다.</p>
               </div>
               <div className={styles.threadList}>
                 {threadItems.map(item => (
                   <button key={item} type="button" onClick={() => startSearch(item)}>
-                    {item}
+                    <span>{item}</span>
+                    <ArrowRight size={15} aria-hidden="true" />
                   </button>
                 ))}
               </div>

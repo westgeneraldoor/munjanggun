@@ -92,14 +92,6 @@ export default async function BlogIndexPage() {
               ))}
             </div>
           </div>
-          <aside className={styles.headerAside}>
-            <strong>어디부터 읽어볼까요?</strong>
-            <span>중문, 도어, 현장 변수, 가격과 견적, 시공 사례를 카테고리별로 이어서 볼 수 있습니다.</span>
-            <a href="#blog-topics" className={styles.headerCta}>
-              카테고리 보기
-              <ArrowRight size={16} aria-hidden="true" />
-            </a>
-          </aside>
         </header>
 
         {posts.length === 0 ? (
