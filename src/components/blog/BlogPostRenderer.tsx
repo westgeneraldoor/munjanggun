@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, CheckCircle2, HelpCircle, MapPin } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, HelpCircle, MapPin } from 'lucide-react'
 import type { BlogRenderBlock, BlogRenderData, BlogRenderMedia, BlogRenderMode } from '@/lib/content-os/blog-rendering'
 import styles from './BlogPostRenderer.module.css'
 
@@ -11,6 +11,12 @@ const CATEGORY_LABEL: Record<string, string> = {
   price_guide: '견적 가이드',
   area_guide: '지역 안내',
 }
+
+const HERO_PROOFS = [
+  '무료 방문실측',
+  '현장 구조 확인',
+  '직접 제작·전속 시공',
+]
 
 function formatDate(value: string | null) {
   if (!value) return null
@@ -68,10 +74,10 @@ function CtaBlock({ text }: { text: string | null }) {
   return (
     <aside className={styles.ctaBlock}>
       <div>
-        <span>무료 방문 실측견적 상담</span>
-        <strong>{text?.trim() || '우리 집에 맞는 문과 시공 조건을 먼저 확인해보세요.'}</strong>
+        <span>무료방문 실측견적 상담</span>
+        <strong>{text?.trim() || '우리 집에 맞는 문과 시공 조건을 무료 방문실측으로 먼저 확인하세요.'}</strong>
       </div>
-      <Link href="/portal/measure/new">
+      <Link href="/portal/measure/new" aria-label="무료방문 실측견적 상담 신청">
         상담 신청
         <ArrowRight size={16} aria-hidden="true" />
       </Link>
@@ -166,6 +172,13 @@ export default function BlogPostRenderer({
       )}
 
       <article className={styles.article}>
+        {mode === 'public' && (
+          <Link href="/blog" className={styles.backLink}>
+            <ArrowLeft size={16} aria-hidden="true" />
+            시공 가이드 목록
+          </Link>
+        )}
+
         <header className={styles.hero}>
           <div className={styles.heroText}>
             <div className={styles.metaRow}>
@@ -186,6 +199,14 @@ export default function BlogPostRenderer({
               {post.primaryKeyword && <span>{post.primaryKeyword}</span>}
               {post.productType && <span>{post.productType}</span>}
             </div>
+            <div className={styles.heroProofRow} aria-label="문장군 확인 기준">
+              {HERO_PROOFS.map(item => (
+                <span key={item}>
+                  <CheckCircle2 size={15} aria-hidden="true" />
+                  {item}
+                </span>
+              ))}
+            </div>
           </div>
 
           {cover && (
@@ -196,7 +217,12 @@ export default function BlogPostRenderer({
         </header>
 
         <div className={styles.content}>
-          {post.excerpt && <p className={styles.excerpt}>{post.excerpt}</p>}
+          {post.excerpt && (
+            <section className={styles.excerpt} aria-label="먼저 확인할 핵심">
+              <span>먼저 확인할 핵심</span>
+              <p>{post.excerpt}</p>
+            </section>
+          )}
 
           {blocks.length === 0 ? (
             <div className={styles.emptyBody}>아직 렌더링할 본문 블록이 없습니다.</div>
@@ -209,6 +235,7 @@ export default function BlogPostRenderer({
           {post.relatedQuestions.length > 0 && (
             <section className={styles.relatedQuestions}>
               <h2>함께 확인할 질문</h2>
+              <p>실제 견적과 시공 가능 여부는 집 구조에 따라 달라질 수 있습니다.</p>
               <ul>
                 {post.relatedQuestions.map(question => (
                   <li key={question}>
