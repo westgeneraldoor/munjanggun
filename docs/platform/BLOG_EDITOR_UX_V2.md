@@ -197,7 +197,14 @@ PR-11: Blog Editor UX V2 shell
 PR-12: Write mode canvas refinement
 PR-13: Insert photos above paragraphs
 PR-14: Workbench layout, gate chips, right preview/SEO panel
-PR-15: Body component expansion such as link button, notice box, checklist
+PR-15/PR-19: Body component expansion such as link button, notice box, checklist
 ```
 
 Do not add link buttons, notice boxes, checklists, before/after blocks, or comparison tables in PR-14. Body component expansion should come after the editor workbench is stable.
+
+PR-19 implementation note:
+
+- The first expansion adds `link_button` and `guide_box`.
+- `link_button` uses a customer-facing label and an internal public path only.
+- `guide_box` covers calm guidance, notice, field-condition, and caution tones without adding separate caution/condition enum values.
+- Rich structured blocks such as checklist, before/after, and comparison table remain separate PRs because they need additional editor and responsive rendering rules.
