@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, CheckCircle2, HelpCircle, MapPin } from 'lucide-react'
-import type { BlogRenderBlock, BlogRenderData, BlogRenderMedia, BlogRenderMode } from '@/lib/content-os/blog-rendering'
+import type { BlogRelatedPost, BlogRenderBlock, BlogRenderData, BlogRenderMedia, BlogRenderMode } from '@/lib/content-os/blog-rendering'
 import styles from './BlogPostRenderer.module.css'
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -14,7 +14,7 @@ const CATEGORY_LABEL: Record<string, string> = {
 
 const HERO_PROOFS = [
   '무료 방문실측',
-  '현장 구조 확인',
+  '집 구조 확인',
   '직접 제작·전속 시공',
 ]
 
@@ -70,18 +70,44 @@ function BlogImage({
   )
 }
 
-function CtaBlock({ text }: { text: string | null }) {
+function CtaBlock({ text, final = false }: { text: string | null; final?: boolean }) {
   return (
-    <aside className={styles.ctaBlock}>
+    <aside className={`${styles.ctaBlock} ${final ? styles.finalCtaBlock : ''}`}>
       <div>
-        <span>무료방문 실측견적 상담</span>
-        <strong>{text?.trim() || '우리 집에 맞는 문과 시공 조건을 무료 방문실측으로 먼저 확인하세요.'}</strong>
+        <span>무료 방문실측으로 확인</span>
+        <strong>{text?.trim() || '문 종류를 정하기 전에, 우리 집 구조와 시공 조건부터 같이 확인해드립니다.'}</strong>
       </div>
-      <Link href="/portal/measure/new" aria-label="무료방문 실측견적 상담 신청">
-        상담 신청
+      <Link href="/portal/measure/new" aria-label="무료 방문실측으로 우리 집 조건 확인하기">
+        우리 집 조건 확인하기
         <ArrowRight size={16} aria-hidden="true" />
       </Link>
     </aside>
+  )
+}
+
+function RelatedPostCard({ post }: { post: BlogRelatedPost }) {
+  return (
+    <Link href={`/blog/${post.slug}`} className={styles.relatedPostCard}>
+      {post.coverMedia?.url && (
+        <span className={styles.relatedPostImage}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={post.coverMedia.url} alt={post.coverMedia.altText || post.title} />
+        </span>
+      )}
+      <span className={styles.relatedPostBody}>
+        <span className={styles.relatedPostMeta}>
+          {post.relationLabel}
+          <span aria-hidden="true">·</span>
+          {CATEGORY_LABEL[post.category] ?? post.category}
+        </span>
+        <strong>{post.title}</strong>
+        {post.targetQuestion && <span className={styles.relatedPostQuestion}>{post.targetQuestion}</span>}
+        <span className={styles.relatedPostAction}>
+          이어서 읽기
+          <ArrowRight size={15} aria-hidden="true" />
+        </span>
+      </span>
+    </Link>
   )
 }
 
@@ -156,11 +182,12 @@ export default function BlogPostRenderer({
   data: BlogRenderData
   mode: BlogRenderMode
 }) {
-  const { post, blocks, media } = data
+  const { post, blocks, media, relatedPosts, nextPost } = data
   const publishedDate = formatDate(post.publishedAt)
   const updatedDate = formatDate(post.updatedAt)
   const cover = media.find(item => item.usedAsCover && item.url) ?? null
   const mediaMap = mediaById(media.filter(item => item.usageStatus !== 'rejected'))
+  const hasCtaBlock = blocks.some(block => block.type === 'cta')
 
   return (
     <main className={`${styles.page} ${mode === 'preview' ? styles.previewPage : ''}`}>
@@ -175,7 +202,7 @@ export default function BlogPostRenderer({
         {mode === 'public' && (
           <Link href="/blog" className={styles.backLink}>
             <ArrowLeft size={16} aria-hidden="true" />
-            시공 가이드 목록
+            블로그로 돌아가기
           </Link>
         )}
 
@@ -225,7 +252,7 @@ export default function BlogPostRenderer({
           )}
 
           {blocks.length === 0 ? (
-            <div className={styles.emptyBody}>아직 렌더링할 본문 블록이 없습니다.</div>
+            <div className={styles.emptyBody}>아직 공개할 본문이 준비되지 않았습니다. 다른 글을 먼저 살펴보세요.</div>
           ) : (
             blocks.map(block => (
               <RenderBlock key={block.id} block={block} mediaMap={mediaMap} mode={mode} />
@@ -234,8 +261,8 @@ export default function BlogPostRenderer({
 
           {post.relatedQuestions.length > 0 && (
             <section className={styles.relatedQuestions}>
-              <h2>함께 확인할 질문</h2>
-              <p>실제 견적과 시공 가능 여부는 집 구조에 따라 달라질 수 있습니다.</p>
+              <h2>다음으로 많이 묻는 질문</h2>
+              <p>가격과 시공 가능 여부는 집 구조, 사이즈, 옵션에 따라 달라질 수 있습니다.</p>
               <ul>
                 {post.relatedQuestions.map(question => (
                   <li key={question}>
@@ -247,6 +274,35 @@ export default function BlogPostRenderer({
             </section>
           )}
 
+          {(relatedPosts.length > 0 || nextPost) && (
+            <section className={styles.readingPath} aria-labelledby="reading-path-title">
+              <div className={styles.readingPathHeader}>
+                <span>이어 읽기</span>
+                <h2 id="reading-path-title">비슷한 조건의 글도 함께 보세요</h2>
+                <p>제품군, 현장 조건, 고객 질문이 가까운 글을 먼저 골랐습니다.</p>
+              </div>
+
+              {relatedPosts.length > 0 && (
+                <div className={styles.relatedPostGrid}>
+                  {relatedPosts.map(item => (
+                    <RelatedPostCard key={item.id} post={item} />
+                  ))}
+                </div>
+              )}
+
+              {nextPost && (
+                <Link href={`/blog/${nextPost.slug}`} className={styles.nextPostLink}>
+                  <span>다음 글</span>
+                  <strong>{nextPost.title}</strong>
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              )}
+            </section>
+          )}
+
+          {!hasCtaBlock && (
+            <CtaBlock text={null} final />
+          )}
         </div>
       </article>
     </main>

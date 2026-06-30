@@ -330,16 +330,194 @@
   color: var(--blog-green);
 }
 
+.readingPath {
+  min-width: 0;
+  margin: clamp(34px, 6vw, 56px) 0;
+}
+
+.readingPathHeader {
+  min-width: 0;
+  margin-bottom: var(--space-4);
+}
+
+.readingPathHeader > span {
+  color: var(--blog-terracotta);
+  font-size: var(--text-sm);
+  font-weight: 900;
+}
+
+.readingPathHeader h2 {
+  margin-top: var(--space-1);
+  color: var(--blog-cocoa);
+  font-family: "Noto Serif KR", var(--font-sans);
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 700;
+  line-height: 1.24;
+  letter-spacing: 0;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.readingPathHeader p {
+  margin-top: var(--space-2);
+  color: var(--blog-muted);
+  font-size: var(--text-sm);
+  line-height: 1.62;
+  overflow-wrap: anywhere;
+}
+
+.relatedPostGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.relatedPostCard {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  color: inherit;
+  background: var(--blog-paper);
+  border: 1px solid var(--blog-line);
+  border-radius: 8px;
+  overflow: hidden;
+  text-decoration: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.relatedPostCard:hover,
+.relatedPostCard:focus-visible {
+  border-color: var(--blog-line-strong);
+  box-shadow: 0 14px 34px rgba(44, 34, 30, 0.08);
+  transform: translateY(-1px);
+}
+
+.relatedPostCard:focus-visible {
+  outline: 2px solid var(--blog-terracotta);
+  outline-offset: 3px;
+}
+
+.relatedPostImage {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--blog-almond);
+  overflow: hidden;
+}
+
+.relatedPostImage img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.relatedPostBody {
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+.relatedPostMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  color: var(--blog-terracotta);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.relatedPostBody strong {
+  color: var(--blog-cocoa);
+  font-size: var(--text-base);
+  font-weight: 800;
+  line-height: 1.4;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.relatedPostQuestion {
+  color: var(--blog-body);
+  font-size: var(--text-sm);
+  font-weight: 650;
+  line-height: 1.52;
+  overflow-wrap: anywhere;
+}
+
+.relatedPostAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin-top: auto;
+  color: var(--blog-terracotta);
+  font-size: var(--text-sm);
+  font-weight: 800;
+}
+
+.nextPostLink {
+  min-width: 0;
+  min-height: 56px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  color: inherit;
+  background: rgba(255, 252, 247, 0.72);
+  border: 1px solid var(--blog-line);
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.nextPostLink:hover,
+.nextPostLink:focus-visible {
+  background: var(--blog-paper);
+  border-color: var(--blog-line-strong);
+}
+
+.nextPostLink:focus-visible {
+  outline: 2px solid var(--blog-terracotta);
+  outline-offset: 3px;
+}
+
+.nextPostLink span {
+  color: var(--blog-terracotta);
+  font-size: var(--text-sm);
+  font-weight: 900;
+}
+
+.nextPostLink strong {
+  color: var(--blog-cocoa);
+  font-size: var(--text-base);
+  font-weight: 800;
+  line-height: 1.4;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.nextPostLink svg {
+  color: var(--blog-terracotta);
+}
+
 .ctaBlock {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   color: var(--blog-paper);
-  background:
-    linear-gradient(135deg, rgba(179, 93, 67, 0.22), transparent 52%),
-    var(--blog-cocoa);
+  background: var(--blog-cocoa);
   border-color: var(--blog-cocoa);
+}
+
+.finalCtaBlock {
+  margin-top: clamp(34px, 6vw, 60px);
 }
 
 .ctaBlock div {
@@ -405,6 +583,10 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .relatedPostGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .previewBanner,
   .ctaBlock {
     align-items: stretch;
@@ -420,6 +602,14 @@
   .article {
     padding-left: 14px;
     padding-right: 14px;
+  }
+
+  .nextPostLink {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .nextPostLink span {
+    grid-column: 1 / -1;
   }
 
   .metaRow span,

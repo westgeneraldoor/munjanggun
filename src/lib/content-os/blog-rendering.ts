@@ -71,10 +71,29 @@ export type BlogRenderMedia = {
   usedAsCover: boolean
 }
 
+export type BlogRelatedPost = Pick<
+  BlogRenderPost,
+  | 'id'
+  | 'title'
+  | 'slug'
+  | 'category'
+  | 'primaryKeyword'
+  | 'targetQuestion'
+  | 'summaryAnswer'
+  | 'serviceArea'
+  | 'productType'
+  | 'publishedAt'
+> & {
+  coverMedia: BlogRenderMedia | null
+  relationLabel: string
+}
+
 export type BlogRenderData = {
   post: BlogRenderPost
   blocks: BlogRenderBlock[]
   media: BlogRenderMedia[]
+  relatedPosts: BlogRelatedPost[]
+  nextPost: BlogRelatedPost | null
 }
 
 export type BlogListItem = BlogRenderPost & {
@@ -209,6 +228,107 @@ function toPublicRenderMedia(media: BlogMediaRow): BlogRenderMedia {
   }
 }
 
+function normalizeSearchValue(value: string | null | undefined) {
+  return value?.toLocaleLowerCase('ko-KR').trim() ?? ''
+}
+
+function publishedTime(value: string | null) {
+  if (!value) return 0
+  const time = new Date(value).getTime()
+  return Number.isNaN(time) ? 0 : time
+}
+
+function extractSearchTokens(values: Array<string | null | undefined>) {
+  return Array.from(new Set(
+    values
+      .flatMap(value => normalizeSearchValue(value).split(/[\s,./?？!！:：;；()[\]{}"'“”‘’·|]+/))
+      .map(value => value.trim())
+      .filter(value => value.length >= 2),
+  ))
+}
+
+function relatedPostText(post: BlogListItem) {
+  return [
+    post.title,
+    post.excerpt,
+    post.primaryKeyword,
+    post.targetQuestion,
+    post.summaryAnswer,
+    post.serviceArea,
+    post.productType,
+    ...post.relatedQuestions,
+  ].map(normalizeSearchValue).join(' ')
+}
+
+function scoreRelatedPost(current: BlogRenderPost, candidate: BlogListItem) {
+  let score = 0
+
+  if (current.productType && current.productType === candidate.productType) score += 4
+  if (current.serviceArea && current.serviceArea === candidate.serviceArea) score += 3
+  if (current.primaryKeyword && current.primaryKeyword === candidate.primaryKeyword) score += 3
+  if (current.category === candidate.category) score += 2
+
+  const candidateText = relatedPostText(candidate)
+  const tokens = extractSearchTokens([
+    current.targetQuestion,
+    current.primaryKeyword,
+    current.productType,
+    current.serviceArea,
+    ...current.relatedQuestions,
+  ])
+  const matchedTokenCount = tokens.filter(token => candidateText.includes(token)).length
+
+  return score + Math.min(matchedTokenCount, 3)
+}
+
+function relationLabelFor(current: BlogRenderPost, candidate: BlogListItem, score: number) {
+  if (current.productType && current.productType === candidate.productType) return '같은 제품군'
+  if (current.serviceArea && current.serviceArea === candidate.serviceArea) return '비슷한 지역'
+  if (current.category === candidate.category) return '같은 주제'
+  if (score > 0) return '관련 질문'
+  return '이어 읽기'
+}
+
+function toRelatedPost(current: BlogRenderPost, post: BlogListItem, score = 0): BlogRelatedPost {
+  return {
+    id: post.id,
+    title: post.title,
+    slug: post.slug,
+    category: post.category,
+    primaryKeyword: post.primaryKeyword,
+    targetQuestion: post.targetQuestion,
+    summaryAnswer: post.summaryAnswer,
+    serviceArea: post.serviceArea,
+    productType: post.productType,
+    publishedAt: post.publishedAt,
+    coverMedia: post.coverMedia,
+    relationLabel: relationLabelFor(current, post, score),
+  }
+}
+
+function selectRelatedPosts(current: BlogRenderPost, posts: BlogListItem[]) {
+  const candidates = posts.filter(post => post.id !== current.id)
+  const ranked = candidates
+    .map(post => ({
+      post,
+      score: scoreRelatedPost(current, post),
+    }))
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score
+      return publishedTime(b.post.publishedAt) - publishedTime(a.post.publishedAt)
+    })
+
+  const relatedSlotCount = Math.max(0, Math.min(3, ranked.length - 1))
+  const relatedPosts = ranked.slice(0, relatedSlotCount).map(item => toRelatedPost(current, item.post, item.score))
+  const relatedIds = new Set(relatedPosts.map(post => post.id))
+  const nextCandidate = ranked.find(item => !relatedIds.has(item.post.id)) ?? null
+
+  return {
+    relatedPosts,
+    nextPost: nextCandidate ? toRelatedPost(current, nextCandidate.post, nextCandidate.score) : null,
+  }
+}
+
 async function toPreviewRenderMedia(
   showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
   media: BlogMediaRow,
@@ -298,10 +418,15 @@ export const getPublishedBlogPostBySlug = cache(async (slug: string): Promise<Bl
       .eq('usage_status', 'published'),
   ])
 
+  const renderPost = toRenderPost(post)
+  const allPublishedPosts = await getPublishedBlogPosts()
+  const related = selectRelatedPosts(renderPost, allPublishedPosts)
+
   return {
-    post: toRenderPost(post),
+    post: renderPost,
     blocks: ((blocksResult.data ?? []) as unknown as BlogBlockRow[]).map(toRenderBlock),
     media: ((mediaResult.data ?? []) as unknown as BlogMediaRow[]).map(toPublicRenderMedia),
+    ...related,
   }
 })
 
@@ -336,5 +461,7 @@ export async function getAdminPreviewBlogPost(postId: string): Promise<BlogRende
     post: toRenderPost(post),
     blocks: ((blocksResult.data ?? []) as unknown as BlogBlockRow[]).map(toRenderBlock),
     media,
+    relatedPosts: [],
+    nextPost: null,
   }
 }
