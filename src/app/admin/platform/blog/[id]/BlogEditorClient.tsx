@@ -36,7 +36,6 @@ import {
   updateBlogMedia,
   type ContentAssetBlogMedia,
   type SaveBlogEditorPayload,
-  type UpdateBlogMediaPayload,
 } from './actions'
 import { uploadContentAssets, type UploadContentAssetsResult } from '../../assets/actions'
 import styles from './blog-editor.module.css'
@@ -697,14 +696,13 @@ function ImageBlockDetails({
   const [captionMode, setCaptionMode] = useState<'saved' | 'custom' | 'none'>(savedCaption ? 'saved' : 'none')
   const [customCaption, setCustomCaption] = useState(savedCaption)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
-  const isDisabled = disabled || media.usageStatus === 'published' || isPending
+  const isDisabled = disabled || isPending
 
   const saveMedia = () => {
     setMessage(null)
     startTransition(async () => {
       const nextCaption = captionMode === 'saved' ? savedCaption : captionMode === 'custom' ? customCaption : ''
       const nextAltText = nextCaption.trim() || media.altText?.trim() || media.sourceLabel?.trim() || '문장군 현장 사진'
-      const usageStatus: UpdateBlogMediaPayload['usageStatus'] = media.usageStatus === 'approved' ? 'approved' : media.usageStatus === 'rejected' ? 'rejected' : 'candidate'
       const result = await updateBlogMedia({
         postId,
         mediaId: media.id,
@@ -714,7 +712,7 @@ function ImageBlockDetails({
         privacyChecked: media.privacyChecked,
         promotionConsentChecked: media.promotionConsentChecked,
         usedAsCover: media.usedAsCover,
-        usageStatus,
+        usageStatus: media.usageStatus,
         rejectionReason: media.rejectionReason,
       })
       setMessage({ ok: result.ok, text: result.message })
@@ -1274,7 +1272,6 @@ export default function BlogEditorClient({
   }
 
   const openAssetPicker = (target: AssetPickerTarget) => {
-    if (isPublished) return
     setAssetPickerTarget(target)
     setAssetPickerMessage(null)
   }
@@ -1374,8 +1371,6 @@ export default function BlogEditorClient({
 
         const nextMedia = toEditorMediaFromAttached(result.media)
         if (assetPickerTarget.type === 'cover') {
-          const usageStatus: UpdateBlogMediaPayload['usageStatus'] =
-            nextMedia.usageStatus === 'approved' ? 'approved' : nextMedia.usageStatus === 'rejected' ? 'rejected' : 'candidate'
           const coverResult = await updateBlogMedia({
             postId: post.id,
             mediaId: nextMedia.id,
@@ -1385,7 +1380,7 @@ export default function BlogEditorClient({
             privacyChecked: nextMedia.privacyChecked,
             promotionConsentChecked: nextMedia.promotionConsentChecked,
             usedAsCover: true,
-            usageStatus,
+            usageStatus: nextMedia.usageStatus,
             rejectionReason: nextMedia.rejectionReason,
           })
 
@@ -1483,11 +1478,9 @@ export default function BlogEditorClient({
   }
 
   const handleRemoveCover = () => {
-    if (!coverMedia || isPublished) return
+    if (!coverMedia) return
     setAssetPickerMessage(null)
     startAssetTransition(async () => {
-      const usageStatus: UpdateBlogMediaPayload['usageStatus'] =
-        coverMedia.usageStatus === 'approved' ? 'approved' : coverMedia.usageStatus === 'rejected' ? 'rejected' : 'candidate'
       const result = await updateBlogMedia({
         postId: post.id,
         mediaId: coverMedia.id,
@@ -1497,7 +1490,7 @@ export default function BlogEditorClient({
         privacyChecked: coverMedia.privacyChecked,
         promotionConsentChecked: coverMedia.promotionConsentChecked,
         usedAsCover: false,
-        usageStatus,
+        usageStatus: coverMedia.usageStatus,
         rejectionReason: coverMedia.rejectionReason,
       })
 
@@ -1535,7 +1528,7 @@ export default function BlogEditorClient({
               <Eye size={16} aria-hidden="true" />
               미리보기
             </Link>
-            <button type="button" onClick={handleSave} disabled={isPending || isPublished} className={styles.primaryButton}>
+            <button type="button" onClick={handleSave} disabled={isPending} className={styles.primaryButton}>
               <Save size={16} aria-hidden="true" />
               {isPending ? '저장 중' : '저장'}
             </button>
@@ -1547,7 +1540,7 @@ export default function BlogEditorClient({
               data-testid="publish-blog-post"
             >
               <Rocket size={16} aria-hidden="true" />
-              {isPending ? '발행 중' : '발행'}
+              {isPublished ? '발행완료' : isPending ? '발행 중' : '발행'}
             </button>
           </div>
         </div>
@@ -1595,8 +1588,8 @@ export default function BlogEditorClient({
           </div>
         )}
         {isPublished && (
-          <div className={styles.lockNotice} role="alert">
-            발행 완료 글은 이 화면에서 읽기 전용입니다. 발행 후 수정은 별도 검수 흐름에서 다룹니다.
+          <div className={styles.lockNotice} role="status">
+            발행된 글입니다. 저장하면 공개 블로그 화면에도 반영됩니다.
           </div>
         )}
       </header>
@@ -1625,21 +1618,21 @@ export default function BlogEditorClient({
             </div>
             <div className={styles.formGrid}>
               <Field label="제목">
-                <input ref={titleRef} value={post.title} onChange={event => updatePost('title', event.target.value)} disabled={isPublished} />
+                <input ref={titleRef} value={post.title} onChange={event => updatePost('title', event.target.value)} />
               </Field>
               <Field label="주소" hint="영문 소문자, 숫자, 하이픈만 사용">
-                <input ref={slugRef} value={post.slug} onChange={event => updatePost('slug', event.target.value)} disabled={isPublished} />
+                <input ref={slugRef} value={post.slug} onChange={event => updatePost('slug', event.target.value)} />
               </Field>
               <Field label="카테고리">
-                <select value={post.category} onChange={event => updatePost('category', event.target.value as BlogContentCategory)} disabled={isPublished}>
+                <select value={post.category} onChange={event => updatePost('category', event.target.value as BlogContentCategory)}>
                   {CATEGORY_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
               </Field>
               <Field label="도입 요약">
-                <textarea value={post.excerpt ?? ''} onChange={event => updatePost('excerpt', event.target.value)} disabled={isPublished} rows={3} />
+                <textarea value={post.excerpt ?? ''} onChange={event => updatePost('excerpt', event.target.value)} rows={3} />
               </Field>
               <Field label="요약 답변">
-                <textarea ref={summaryAnswerRef} value={post.summaryAnswer ?? ''} onChange={event => updatePost('summaryAnswer', event.target.value)} disabled={isPublished} rows={3} />
+                <textarea ref={summaryAnswerRef} value={post.summaryAnswer ?? ''} onChange={event => updatePost('summaryAnswer', event.target.value)} rows={3} />
               </Field>
             </div>
             <div className={styles.coverPicker} ref={coverPickerRef} tabIndex={-1}>
@@ -1662,18 +1655,18 @@ export default function BlogEditorClient({
                     <span>{coverMedia.caption || coverMedia.altText || '대표사진으로 사용 중'}</span>
                   </div>
                   <div className={styles.coverPickerActions}>
-                    <button type="button" onClick={() => openAssetPicker({ type: 'cover' })} disabled={isPublished || isAssetPending}>
+                    <button type="button" onClick={() => openAssetPicker({ type: 'cover' })} disabled={isAssetPending}>
                       <Images size={15} aria-hidden="true" />
                       교체
                     </button>
-                    <button type="button" onClick={handleRemoveCover} disabled={isPublished || isAssetPending}>
+                    <button type="button" onClick={handleRemoveCover} disabled={isAssetPending}>
                       <XCircle size={15} aria-hidden="true" />
                       제거
                     </button>
                   </div>
                 </div>
               ) : (
-                <button type="button" className={styles.coverEmptyButton} onClick={() => openAssetPicker({ type: 'cover' })} disabled={isPublished || isAssetPending}>
+                <button type="button" className={styles.coverEmptyButton} onClick={() => openAssetPicker({ type: 'cover' })} disabled={isAssetPending}>
                   <ImageIcon size={18} aria-hidden="true" />
                   대표사진 선택
                 </button>
@@ -1688,11 +1681,11 @@ export default function BlogEditorClient({
             </div>
             <p className={styles.panelHelp}>본문을 구성해보세요. 문단을 추가하거나 사진을 넣어 글 흐름을 만들 수 있습니다.</p>
             <div className={styles.blockToolbar} aria-label="블록 추가" ref={blockToolbarRef}>
-              <button type="button" onClick={() => addBlock('heading')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> 제목</button>
-              <button type="button" onClick={() => addBlock('paragraph')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> 문단</button>
-              <button type="button" onClick={() => openAssetPicker({ type: 'new' })} disabled={isPublished}><Plus size={15} aria-hidden="true" /> 사진</button>
-              <button type="button" onClick={() => addBlock('qa')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> Q&A</button>
-              <button type="button" onClick={() => addBlock('cta')} disabled={isPublished}><Plus size={15} aria-hidden="true" /> 상담 CTA</button>
+              <button type="button" onClick={() => addBlock('heading')}><Plus size={15} aria-hidden="true" /> 제목</button>
+              <button type="button" onClick={() => addBlock('paragraph')}><Plus size={15} aria-hidden="true" /> 문단</button>
+              <button type="button" onClick={() => openAssetPicker({ type: 'new' })}><Plus size={15} aria-hidden="true" /> 사진</button>
+              <button type="button" onClick={() => addBlock('qa')}><Plus size={15} aria-hidden="true" /> Q&A</button>
+              <button type="button" onClick={() => addBlock('cta')}><Plus size={15} aria-hidden="true" /> 상담 CTA</button>
             </div>
             <div className={styles.blockList} data-testid="blog-writing-canvas" ref={blockListRef}>
               {blocks.length === 0 ? (
@@ -1706,7 +1699,7 @@ export default function BlogEditorClient({
                     media={selectableMedia}
                     index={index}
                     total={blocks.length}
-                    disabled={isPublished}
+                    disabled={false}
                     onChange={(next) => updateBlock(block.clientId, next)}
                     onInsertImageBefore={() => openAssetPicker({ type: 'insertBefore', clientId: block.clientId })}
                     onPickImage={() => openAssetPicker({ type: 'replace', clientId: block.clientId })}
@@ -1726,36 +1719,36 @@ export default function BlogEditorClient({
             <h2>SEO/AEO</h2>
             <div className={styles.formStack}>
               <Field label="검색 제목">
-                <input value={post.seoTitle ?? ''} onChange={event => updatePost('seoTitle', event.target.value)} disabled={isPublished} />
+                <input value={post.seoTitle ?? ''} onChange={event => updatePost('seoTitle', event.target.value)} />
               </Field>
               <Field label="검색 설명">
-                <textarea ref={metaDescriptionRef} value={post.metaDescription ?? ''} onChange={event => updatePost('metaDescription', event.target.value)} disabled={isPublished} rows={3} />
+                <textarea ref={metaDescriptionRef} value={post.metaDescription ?? ''} onChange={event => updatePost('metaDescription', event.target.value)} rows={3} />
               </Field>
               <Field label="대표 URL">
-                <input value={post.canonicalUrl ?? ''} onChange={event => updatePost('canonicalUrl', event.target.value)} disabled={isPublished} />
+                <input value={post.canonicalUrl ?? ''} onChange={event => updatePost('canonicalUrl', event.target.value)} />
               </Field>
               <Field label="핵심 키워드">
-                <input value={post.primaryKeyword ?? ''} onChange={event => updatePost('primaryKeyword', event.target.value)} disabled={isPublished} />
+                <input value={post.primaryKeyword ?? ''} onChange={event => updatePost('primaryKeyword', event.target.value)} />
               </Field>
               <Field label="대표 질문">
-                <textarea ref={targetQuestionRef} value={post.targetQuestion ?? ''} onChange={event => updatePost('targetQuestion', event.target.value)} disabled={isPublished} rows={2} />
+                <textarea ref={targetQuestionRef} value={post.targetQuestion ?? ''} onChange={event => updatePost('targetQuestion', event.target.value)} rows={2} />
               </Field>
               <Field label="요약 답변">
-                <textarea value={post.summaryAnswer ?? ''} onChange={event => updatePost('summaryAnswer', event.target.value)} disabled={isPublished} rows={4} />
+                <textarea value={post.summaryAnswer ?? ''} onChange={event => updatePost('summaryAnswer', event.target.value)} rows={4} />
               </Field>
               <Field label="함께 볼 질문" hint="한 줄에 하나씩 입력">
-                <textarea value={relatedText} onChange={event => setRelatedText(event.target.value)} disabled={isPublished} rows={4} />
+                <textarea value={relatedText} onChange={event => setRelatedText(event.target.value)} rows={4} />
               </Field>
               <div className={styles.twoFields}>
                 <Field label="서비스 지역">
-                  <input value={post.serviceArea ?? ''} onChange={event => updatePost('serviceArea', event.target.value)} disabled={isPublished} />
+                  <input value={post.serviceArea ?? ''} onChange={event => updatePost('serviceArea', event.target.value)} />
                 </Field>
                 <Field label="제품군">
-                  <input value={post.productType ?? ''} onChange={event => updatePost('productType', event.target.value)} disabled={isPublished} />
+                  <input value={post.productType ?? ''} onChange={event => updatePost('productType', event.target.value)} />
                 </Field>
               </div>
               <Field label="사실 확인일">
-                <input ref={factCheckedRef} type="datetime-local" value={factCheckedLocal} onChange={event => setFactCheckedLocal(event.target.value)} disabled={isPublished} />
+                <input ref={factCheckedRef} type="datetime-local" value={factCheckedLocal} onChange={event => setFactCheckedLocal(event.target.value)} />
               </Field>
             </div>
 
