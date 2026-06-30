@@ -1,6 +1,6 @@
 import 'server-only'
 import { cache } from 'react'
-import { createPublicShowroomClient } from '@/lib/supabase/public'
+import { createPublicShowroomClient, hasPublicShowroomEnv } from '@/lib/supabase/public'
 import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
 import type { BlogBlockType, BlogContentCategory, BlogMediaUsageStatus, BlogPostStatus, Database, Json } from '@/types/database'
 
@@ -235,6 +235,8 @@ async function toPreviewRenderMedia(
 }
 
 export const getPublishedBlogPosts = cache(async (): Promise<BlogListItem[]> => {
+  if (!hasPublicShowroomEnv()) return []
+
   const showroom = createPublicShowroomClient().schema('showroom')
 
   const { data: postRows } = await showroom
@@ -269,6 +271,8 @@ export const getPublishedBlogPosts = cache(async (): Promise<BlogListItem[]> => 
 })
 
 export const getPublishedBlogPostBySlug = cache(async (slug: string): Promise<BlogRenderData | null> => {
+  if (!hasPublicShowroomEnv()) return null
+
   const showroom = createPublicShowroomClient().schema('showroom')
 
   const { data: postRow, error } = await showroom

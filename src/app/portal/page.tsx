@@ -107,13 +107,25 @@ export default function PortalPage() {
   const [actionBusy, setActionBusy] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
-  const supabase = useMemo(() => createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { db: { schema: 'platform' } }
-  ), [])
+  const supabase = useMemo(() => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseAnonKey) return null
+
+    return createBrowserClient(
+      supabaseUrl,
+      supabaseAnonKey,
+      { db: { schema: 'platform' } }
+    )
+  }, [])
 
   const fetchUser = useCallback(async () => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
 
@@ -183,6 +195,8 @@ export default function PortalPage() {
   }, [fetchUser])
 
   const handleLogout = async () => {
+    if (!supabase) return
+
     try {
       const { error } = await supabase.auth.signOut()
       if (error) logError('Signout error', error)

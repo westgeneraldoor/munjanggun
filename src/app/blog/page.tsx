@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { connection } from 'next/server'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import { getPublishedBlogPosts } from '@/lib/content-os/blog-rendering'
 import BlogExplorerClient, { type BlogExplorerCategory, type BlogExplorerPost } from './BlogExplorerClient'
@@ -38,6 +39,8 @@ const TRUST_ITEMS = [
 ]
 
 export default async function BlogIndexPage() {
+  await connection()
+
   const posts = await getPublishedBlogPosts()
   const categoryCounts = posts.reduce((counts, post) => {
     counts.set(post.category, (counts.get(post.category) ?? 0) + 1)
