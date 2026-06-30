@@ -101,6 +101,7 @@ function RelatedPostCard({ post }: { post: BlogRelatedPost }) {
           {CATEGORY_LABEL[post.category] ?? post.category}
         </span>
         <strong>{post.title}</strong>
+        {post.relationReason && <span className={styles.relatedPostReason}>{post.relationReason}</span>}
         {post.targetQuestion && <span className={styles.relatedPostQuestion}>{post.targetQuestion}</span>}
         <span className={styles.relatedPostAction}>
           이어서 읽기
@@ -182,12 +183,15 @@ export default function BlogPostRenderer({
   data: BlogRenderData
   mode: BlogRenderMode
 }) {
-  const { post, blocks, media, relatedPosts, nextPost } = data
+  const { post, blocks, media, contentGraphSections, relatedPosts, nextPost } = data
   const publishedDate = formatDate(post.publishedAt)
   const updatedDate = formatDate(post.updatedAt)
   const cover = media.find(item => item.usedAsCover && item.url) ?? null
   const mediaMap = mediaById(media.filter(item => item.usageStatus !== 'rejected'))
   const hasCtaBlock = blocks.some(block => block.type === 'cta')
+  const visibleContentGraphSections = contentGraphSections.filter(section => section.posts.length > 0)
+  const fallbackRelatedPosts = visibleContentGraphSections.length === 0 ? relatedPosts : []
+  const hasReadingPath = visibleContentGraphSections.length > 0 || fallbackRelatedPosts.length > 0 || Boolean(nextPost)
 
   return (
     <main className={`${styles.page} ${mode === 'preview' ? styles.previewPage : ''}`}>
@@ -274,17 +278,31 @@ export default function BlogPostRenderer({
             </section>
           )}
 
-          {(relatedPosts.length > 0 || nextPost) && (
+          {hasReadingPath && (
             <section className={styles.readingPath} aria-labelledby="reading-path-title">
               <div className={styles.readingPathHeader}>
                 <span>이어 읽기</span>
-                <h2 id="reading-path-title">비슷한 조건의 글도 함께 보세요</h2>
-                <p>제품군, 현장 조건, 고객 질문이 가까운 글을 먼저 골랐습니다.</p>
+                <h2 id="reading-path-title">이 글 다음에 보면 좋은 길</h2>
+                <p>제품군, 현장 조건, 고객 질문이 가까운 글을 묶어서 볼 수 있게 정리했습니다.</p>
               </div>
 
-              {relatedPosts.length > 0 && (
+              {visibleContentGraphSections.map(section => (
+                <section key={section.id} className={styles.contentGraphSection} aria-labelledby={`content-graph-${section.id}`}>
+                  <div className={styles.contentGraphSectionHeader}>
+                    <h3 id={`content-graph-${section.id}`}>{section.title}</h3>
+                    <p>{section.description}</p>
+                  </div>
+                  <div className={styles.relatedPostGrid}>
+                    {section.posts.map(item => (
+                      <RelatedPostCard key={item.id} post={item} />
+                    ))}
+                  </div>
+                </section>
+              ))}
+
+              {fallbackRelatedPosts.length > 0 && (
                 <div className={styles.relatedPostGrid}>
-                  {relatedPosts.map(item => (
+                  {fallbackRelatedPosts.map(item => (
                     <RelatedPostCard key={item.id} post={item} />
                   ))}
                 </div>
@@ -300,7 +318,7 @@ export default function BlogPostRenderer({
             </section>
           )}
 
-          {!hasCtaBlock && (
+          {(!hasCtaBlock || hasReadingPath) && (
             <CtaBlock text={null} final />
           )}
         </div>
