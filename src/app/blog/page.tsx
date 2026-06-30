@@ -3,16 +3,17 @@ import Link from 'next/link'
 import { connection } from 'next/server'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import { getPublishedBlogPosts } from '@/lib/content-os/blog-rendering'
-import BlogExplorerClient, { type BlogExplorerCategory, type BlogExplorerPost } from './BlogExplorerClient'
+import BlogExplorerClient from './BlogExplorerClient'
+import { buildBlogHomeModel, type BlogHomeCategory, type BlogHomePost } from './blog-home-model'
 import styles from './blog.module.css'
 
 const CATEGORY_LABEL: Record<string, string> = {
   case_study: '시공 사례',
-  product_guide: '제품과 선택',
+  product_guide: '중문·도어 선택',
   customer_qa: '고객 질문',
   field_knowhow: '현장 조건',
-  price_guide: '가격과 견적',
-  area_guide: '지역 이야기',
+  price_guide: '가격·견적',
+  area_guide: '지역 상담 안내',
 }
 
 const CATEGORY_ORDER = [
@@ -34,8 +35,7 @@ export const revalidate = 60
 const TRUST_ITEMS = [
   '고객 질문',
   '현장 조건',
-  '제품과 선택',
-  '시공 이야기',
+  '가격·견적',
 ]
 
 export default async function BlogIndexPage() {
@@ -46,7 +46,7 @@ export default async function BlogIndexPage() {
     counts.set(post.category, (counts.get(post.category) ?? 0) + 1)
     return counts
   }, new Map<string, number>())
-  const categories: BlogExplorerCategory[] = [
+  const categories: BlogHomeCategory[] = [
     { value: 'all', label: '전체', count: posts.length },
     ...CATEGORY_ORDER.filter(category => categoryCounts.has(category)).map(category => ({
       value: category,
@@ -54,7 +54,7 @@ export default async function BlogIndexPage() {
       count: categoryCounts.get(category) ?? 0,
     })),
   ]
-  const explorerPosts: BlogExplorerPost[] = posts.map(post => ({
+  const explorerPosts: BlogHomePost[] = posts.map(post => ({
     id: post.id,
     title: post.title,
     slug: post.slug,
@@ -74,6 +74,7 @@ export default async function BlogIndexPage() {
         }
       : null,
   }))
+  const homeModel = buildBlogHomeModel(explorerPosts, categories)
 
   return (
     <main className={styles.page}>
@@ -104,7 +105,7 @@ export default async function BlogIndexPage() {
           </div>
         ) : (
           <>
-            <BlogExplorerClient posts={explorerPosts} categories={categories} featuredPost={explorerPosts[0] ?? null} />
+            <BlogExplorerClient posts={explorerPosts} categories={categories} homeModel={homeModel} />
 
             <section className={styles.bottomCta} aria-label="문장군 무료 방문실측 안내">
               <div>
