@@ -3,93 +3,25 @@
 import Link from 'next/link'
 import { ArrowRight, Search, X } from 'lucide-react'
 import { useId, useMemo, useRef, useState } from 'react'
+import {
+  BLOG_INITIAL_VISIBLE_POSTS,
+  BLOG_TOPICS,
+  searchBlogPosts,
+  selectTopicPosts,
+  type BlogHomeCategory,
+  type BlogHomeModel,
+  type BlogHomePost,
+} from './blog-home-model'
 import styles from './blog.module.css'
 
-export type BlogExplorerPost = {
-  id: string
-  title: string
-  slug: string
-  excerpt: string | null
-  category: string
-  categoryLabel: string
-  primaryKeyword: string | null
-  targetQuestion: string | null
-  summaryAnswer: string | null
-  serviceArea: string | null
-  productType: string | null
-  publishedAt: string | null
-  coverMedia: {
-    url: string | null
-    altText: string | null
-  } | null
-}
-
-export type BlogExplorerCategory = {
-  value: string
-  label: string
-  count: number
-}
+export type BlogExplorerPost = BlogHomePost
+export type BlogExplorerCategory = BlogHomeCategory
 
 type BlogExplorerClientProps = {
   posts: BlogExplorerPost[]
   categories: BlogExplorerCategory[]
-  featuredPost: BlogExplorerPost | null
+  homeModel: BlogHomeModel
 }
-
-type BlogTopic = {
-  id: string
-  title: string
-  description: string
-  categories: string[]
-  keywords: string[]
-}
-
-const TOPICS: BlogTopic[] = [
-  {
-    id: 'choice',
-    title: '중문과 도어 고르기',
-    description: '제품명보다 우리 집 구조와 쓰임새를 먼저 보는 이야기',
-    categories: ['product_guide', 'customer_qa'],
-    keywords: ['중문', '도어', '문짝', '선택', '제품'],
-  },
-  {
-    id: 'field',
-    title: '현장에서 확인하는 것',
-    description: '신발장, 스위치, 바닥 단차, 벽공간처럼 시공 전에 보는 조건',
-    categories: ['field_knowhow'],
-    keywords: ['현장', '구조', '신발장', '스위치', '단차', '벽공간'],
-  },
-  {
-    id: 'price',
-    title: '가격과 견적',
-    description: '가격이 집마다 달라지는 이유와 실측 때 확인하는 항목',
-    categories: ['price_guide'],
-    keywords: ['가격', '견적', '추가금', '실측', '비용'],
-  },
-  {
-    id: 'case',
-    title: '시공 사례',
-    description: '실제 집에서 어떤 문제를 어떻게 풀었는지 보는 기록',
-    categories: ['case_study'],
-    keywords: ['시공', '사례', '전후', '현관', '마감'],
-  },
-  {
-    id: 'qa',
-    title: '고객 질문',
-    description: '상담에서 자주 묻는 질문을 짧고 쉽게 풀어둔 글',
-    categories: ['customer_qa'],
-    keywords: ['가능한가요', '왜', '어려운가요', '질문', 'Q&A'],
-  },
-  {
-    id: 'making',
-    title: '제작과 운영 이야기',
-    description: '문장군이 직접 제작하고 전속 시공으로 운영하는 방식',
-    categories: ['product_guide', 'field_knowhow'],
-    keywords: ['제작', '공장', '전속', '운영', 'A/S', 'AS'],
-  },
-]
-
-const INITIAL_VISIBLE_POSTS = 12
 
 const dateFormatter = new Intl.DateTimeFormat('ko-KR', {
   year: 'numeric',
@@ -98,54 +30,11 @@ const dateFormatter = new Intl.DateTimeFormat('ko-KR', {
   timeZone: 'Asia/Seoul',
 })
 
-function normalize(value: string | null | undefined) {
-  return value?.toLocaleLowerCase('ko-KR').trim() ?? ''
-}
-
 function formatDate(value: string | null) {
   if (!value) return null
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return null
   return dateFormatter.format(date)
-}
-
-function searchableText(post: BlogExplorerPost) {
-  return [
-    post.title,
-    post.excerpt,
-    post.categoryLabel,
-    post.primaryKeyword,
-    post.targetQuestion,
-    post.summaryAnswer,
-    post.serviceArea,
-    post.productType,
-  ]
-    .map(normalize)
-    .join(' ')
-}
-
-function matchesTopic(post: BlogExplorerPost, topic: BlogTopic) {
-  if (topic.categories.includes(post.category)) return true
-
-  const compactText = [post.primaryKeyword, post.productType, post.categoryLabel].map(normalize).join(' ')
-
-  if (topic.id === 'choice') {
-    return ['중문', '도어', '문짝', '제품'].some(keyword => compactText.includes(keyword))
-  }
-
-  if (topic.id === 'field') {
-    return ['현장', '구조', '신발장', '스위치', '단차'].some(keyword => compactText.includes(keyword))
-  }
-
-  if (topic.id === 'price') {
-    return ['가격', '견적', '추가금', '비용'].some(keyword => compactText.includes(keyword))
-  }
-
-  if (topic.id === 'making') {
-    return ['제작', '공장', '전속', '운영'].some(keyword => compactText.includes(keyword))
-  }
-
-  return topic.keywords.some(keyword => compactText.includes(normalize(keyword)))
 }
 
 function BlogCard({ post, compact = false }: { post: BlogExplorerPost; compact?: boolean }) {
@@ -183,60 +72,60 @@ function BlogCard({ post, compact = false }: { post: BlogExplorerPost; compact?:
   )
 }
 
-export default function BlogExplorerClient({ posts, categories, featuredPost }: BlogExplorerClientProps) {
+function FeaturedCard({ post }: { post: BlogExplorerPost }) {
+  const publishedDate = formatDate(post.publishedAt)
+
+  return (
+    <Link href={`/blog/${post.slug}`} className={styles.featuredCard}>
+      <div className={styles.featuredImage}>
+        {post.coverMedia?.url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={post.coverMedia.url} alt={post.coverMedia.altText || post.title} />
+        ) : (
+          <div className={styles.thumbFallback}>{post.categoryLabel}</div>
+        )}
+      </div>
+      <div className={styles.featuredBody}>
+        <div className={styles.metaRow}>
+          <span>{post.categoryLabel}</span>
+          {publishedDate && <time dateTime={post.publishedAt ?? undefined}>{publishedDate}</time>}
+        </div>
+        <h3>{post.title}</h3>
+        {post.summaryAnswer && <p>{post.summaryAnswer}</p>}
+        {!post.summaryAnswer && post.excerpt && <p>{post.excerpt}</p>}
+        {post.targetQuestion && <strong>{post.targetQuestion}</strong>}
+        <span className={styles.readMore}>
+          글 보기
+          <ArrowRight size={16} aria-hidden="true" />
+        </span>
+      </div>
+    </Link>
+  )
+}
+
+export default function BlogExplorerClient({ posts, categories, homeModel }: BlogExplorerClientProps) {
   const searchInputId = useId()
   const resultSectionRef = useRef<HTMLElement | null>(null)
   const [query, setQuery] = useState('')
   const [selectedTopic, setSelectedTopic] = useState('all')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_POSTS)
+  const [visibleCount, setVisibleCount] = useState(BLOG_INITIAL_VISIBLE_POSTS)
 
-  const topicCounts = useMemo(() => {
-    return new Map(TOPICS.map(topic => [topic.id, posts.filter(post => matchesTopic(post, topic)).length]))
-  }, [posts])
-
-  const selectedTopicConfig = TOPICS.find(topic => topic.id === selectedTopic) ?? null
+  const selectedTopicConfig = BLOG_TOPICS.find(topic => topic.id === selectedTopic) ?? null
 
   const visibleTopicPosts = useMemo(() => {
-    if (!selectedTopicConfig) return posts
-    return posts.filter(post => matchesTopic(post, selectedTopicConfig))
-  }, [posts, selectedTopicConfig])
+    return selectTopicPosts(posts, selectedTopic)
+  }, [posts, selectedTopic])
 
   const searchResults = useMemo(() => {
-    const normalizedQuery = normalize(query)
-    if (!normalizedQuery) return []
-
-    return posts.filter(post => searchableText(post).includes(normalizedQuery))
+    return searchBlogPosts(posts, query)
   }, [posts, query])
-
-  const categoryGroups = useMemo(() => {
-    return categories
-      .filter(category => category.value !== 'all')
-      .map(category => ({
-        category,
-        posts: posts.filter(post => post.category === category.value),
-      }))
-      .filter(group => group.posts.length > 0)
-  }, [categories, posts])
 
   const selectedCategoryConfig = categories.find(category => category.value === selectedCategory) ?? null
   const selectedCategoryPosts = useMemo(() => {
     if (!selectedCategoryConfig) return []
-    return posts.filter(post => post.category === selectedCategoryConfig.value)
-  }, [posts, selectedCategoryConfig])
-
-  const threadItems = useMemo(() => {
-    if (!featuredPost) return []
-
-    return [
-      featuredPost.targetQuestion,
-      featuredPost.primaryKeyword,
-      featuredPost.productType,
-      featuredPost.serviceArea,
-    ]
-      .filter((value): value is string => Boolean(value))
-      .slice(0, 4)
-  }, [featuredPost])
+    return homeModel.allPosts.filter(post => post.category === selectedCategoryConfig.value)
+  }, [homeModel.allPosts, selectedCategoryConfig])
 
   const hasSearch = Boolean(query.trim())
   const hasTopicFilter = selectedTopic !== 'all'
@@ -246,22 +135,25 @@ export default function BlogExplorerClient({ posts, categories, featuredPost }: 
   const selectedResultPosts = hasCategoryFilter ? selectedCategoryPosts : visibleTopicPosts
   const visibleSearchResults = searchResults.slice(0, visibleCount)
   const visibleSelectedResults = selectedResultPosts.slice(0, visibleCount)
-  const visibleAllPosts = posts.slice(0, visibleCount)
+  const visibleAllPosts = homeModel.allPosts.slice(0, visibleCount)
+  const firstStarterPost = homeModel.starterPosts[0] ?? null
+  const secondaryStarterPosts = homeModel.starterPosts.slice(1)
+  const showHomeSections = !hasSearch && !hasTopicFilter && !hasCategoryFilter
 
   function showMore() {
-    setVisibleCount(count => count + INITIAL_VISIBLE_POSTS)
+    setVisibleCount(count => count + BLOG_INITIAL_VISIBLE_POSTS)
   }
 
   function startSearch(value: string) {
     setQuery(value)
     setSelectedTopic('all')
     setSelectedCategory(null)
-    setVisibleCount(INITIAL_VISIBLE_POSTS)
+    setVisibleCount(BLOG_INITIAL_VISIBLE_POSTS)
   }
 
   function resetSearch() {
     setQuery('')
-    setVisibleCount(INITIAL_VISIBLE_POSTS)
+    setVisibleCount(BLOG_INITIAL_VISIBLE_POSTS)
   }
 
   function moveToResults() {
@@ -274,7 +166,7 @@ export default function BlogExplorerClient({ posts, categories, featuredPost }: 
     setQuery('')
     setSelectedCategory(null)
     setSelectedTopic(topicId)
-    setVisibleCount(INITIAL_VISIBLE_POSTS)
+    setVisibleCount(BLOG_INITIAL_VISIBLE_POSTS)
     if (topicId !== 'all') moveToResults()
   }
 
@@ -282,7 +174,7 @@ export default function BlogExplorerClient({ posts, categories, featuredPost }: 
     setQuery('')
     setSelectedTopic('all')
     setSelectedCategory(categoryValue)
-    setVisibleCount(INITIAL_VISIBLE_POSTS)
+    setVisibleCount(BLOG_INITIAL_VISIBLE_POSTS)
     moveToResults()
   }
 
@@ -290,7 +182,7 @@ export default function BlogExplorerClient({ posts, categories, featuredPost }: 
     setQuery('')
     setSelectedTopic('all')
     setSelectedCategory(null)
-    setVisibleCount(INITIAL_VISIBLE_POSTS)
+    setVisibleCount(BLOG_INITIAL_VISIBLE_POSTS)
   }
 
   return (
@@ -333,8 +225,8 @@ export default function BlogExplorerClient({ posts, categories, featuredPost }: 
             <strong>{posts.length}개</strong>
             <p>문장군 블로그에 공개된 모든 글을 최신순으로 봅니다.</p>
           </button>
-          {TOPICS.map(topic => {
-            const count = topicCounts.get(topic.id) ?? 0
+          {BLOG_TOPICS.map(topic => {
+            const count = homeModel.topicCounts[topic.id] ?? 0
             return (
               <button
                 key={topic.id}
@@ -356,7 +248,7 @@ export default function BlogExplorerClient({ posts, categories, featuredPost }: 
         <section className={styles.searchResultStrip} aria-labelledby="search-result-title">
           <div>
             <span>검색 결과</span>
-            <h2 id="search-result-title">{query.trim()}로 찾은 글</h2>
+            <h2 id="search-result-title">{query.trim()} 검색 결과</h2>
           </div>
           <div className={styles.resultHeader}>
             <span>{searchResults.length}개 글</span>
@@ -384,57 +276,57 @@ export default function BlogExplorerClient({ posts, categories, featuredPost }: 
         </section>
       )}
 
-      {featuredPost && !hasSearch && !hasTopicFilter && !hasCategoryFilter && (
-            <section className={styles.featured} aria-labelledby="featured-blog-title">
-              <div className={styles.sectionHeader}>
-                <span>먼저 읽기 좋은 글</span>
-                <h2 id="featured-blog-title">처음 오셨다면 이 이야기부터</h2>
-              </div>
-              <Link href={`/blog/${featuredPost.slug}`} className={styles.featuredCard}>
-                <div className={styles.featuredImage}>
-                  {featuredPost.coverMedia?.url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={featuredPost.coverMedia.url} alt={featuredPost.coverMedia.altText || featuredPost.title} />
-                  ) : (
-                    <div className={styles.thumbFallback}>{featuredPost.categoryLabel}</div>
-                  )}
-                </div>
-                <div className={styles.featuredBody}>
-                  <div className={styles.metaRow}>
-                    <span>{featuredPost.categoryLabel}</span>
-                    {formatDate(featuredPost.publishedAt) && (
-                      <time dateTime={featuredPost.publishedAt ?? undefined}>{formatDate(featuredPost.publishedAt)}</time>
-                    )}
-                  </div>
-                  <h3>{featuredPost.title}</h3>
-                  {featuredPost.summaryAnswer && <p>{featuredPost.summaryAnswer}</p>}
-                  {!featuredPost.summaryAnswer && featuredPost.excerpt && <p>{featuredPost.excerpt}</p>}
-                  {featuredPost.targetQuestion && <strong>{featuredPost.targetQuestion}</strong>}
-                  <span className={styles.readMore}>
-                    글 보기
-                    <ArrowRight size={16} aria-hidden="true" />
-                  </span>
-                </div>
-              </Link>
-            </section>
-      )}
-
-      {threadItems.length > 0 && !hasSearch && !hasTopicFilter && !hasCategoryFilter && (
-            <section className={styles.threadPanel} aria-labelledby="thread-title">
-              <div>
-                <span>이어 읽기</span>
-                <h2 id="thread-title">함께 보면 좋은 내용</h2>
-                <p>궁금한 단어를 누르면 관련 글을 모아볼 수 있습니다.</p>
-              </div>
-              <div className={styles.threadList}>
-                {threadItems.map(item => (
-                  <button key={item} type="button" onClick={() => startSearch(item)}>
-                    <span>{item}</span>
-                    <ArrowRight size={15} aria-hidden="true" />
-                  </button>
+      {firstStarterPost && showHomeSections && (
+        <section className={styles.featured} aria-labelledby="featured-blog-title">
+          <div className={styles.sectionHeader}>
+            <span>먼저 읽기 좋은 글</span>
+            <h2 id="featured-blog-title">처음 오셨다면 여기부터</h2>
+            <p>가격, 가능 여부, 현장 조건처럼 상담 전에 많이 헷갈리는 글을 먼저 골랐습니다.</p>
+          </div>
+          <div className={`${styles.starterLayout} ${secondaryStarterPosts.length === 0 ? styles.starterLayoutSingle : ''}`}>
+            <FeaturedCard post={firstStarterPost} />
+            {secondaryStarterPosts.length > 0 && (
+              <div className={styles.starterSide} aria-label="처음 읽기 좋은 추가 글">
+                {secondaryStarterPosts.map(post => (
+                  <BlogCard key={post.id} post={post} compact />
                 ))}
               </div>
-            </section>
+            )}
+          </div>
+        </section>
+      )}
+
+      {homeModel.latestPosts.length > 0 && showHomeSections && (
+        <section className={styles.postSection} aria-labelledby="latest-posts-title">
+          <div className={styles.sectionHeader}>
+            <span>최근 올라온 글</span>
+            <h2 id="latest-posts-title">새로 발행된 이야기</h2>
+            <p>문장군이 최근 상담과 현장 기준을 바탕으로 정리한 글입니다.</p>
+          </div>
+          <div className={styles.grid}>
+            {homeModel.latestPosts.map(post => (
+              <BlogCard key={post.id} post={post} compact />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {homeModel.threadItems.length > 0 && showHomeSections && (
+        <section className={styles.threadPanel} aria-labelledby="thread-title">
+          <div>
+            <span>궁금한 단어로 이어보기</span>
+            <h2 id="thread-title">비슷한 조건을 찾아보기</h2>
+            <p>단어를 누르면 관련 글만 모아볼 수 있습니다.</p>
+          </div>
+          <div className={styles.threadList}>
+            {homeModel.threadItems.map(item => (
+              <button key={item} type="button" onClick={() => startSearch(item)}>
+                <span>{item}</span>
+                <ArrowRight size={15} aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        </section>
       )}
 
       {(hasTopicFilter || hasCategoryFilter) && (
@@ -469,55 +361,57 @@ export default function BlogExplorerClient({ posts, categories, featuredPost }: 
             </section>
       )}
 
-      {!hasSearch && !hasCategoryFilter && (
-          <section className={styles.categoryStories} aria-labelledby="category-stories-title">
-            <div className={styles.sectionHeader}>
-              <span>카테고리별 이야기</span>
-              <h2 id="category-stories-title">주제별로 모아보기</h2>
-            </div>
-            <div className={styles.storyGroups}>
-              {categoryGroups.map(group => (
-                <article key={group.category.value} className={styles.storyGroup}>
-                  <div className={styles.storyGroupHeader}>
-                    <div>
-                      <span>{group.category.label}</span>
-                      <strong>{group.posts.length}개 글</strong>
-                    </div>
-                    <button type="button" onClick={() => selectCategory(group.category.value)}>
-                      더 보기
-                    </button>
+      {showHomeSections && homeModel.categoryGroups.length > 0 && (
+        <section className={styles.categoryStories} aria-labelledby="category-stories-title">
+          <div className={styles.sectionHeader}>
+            <span>카테고리별 이야기</span>
+            <h2 id="category-stories-title">주제별로 모아보기</h2>
+            <p>글이 쌓인 주제만 묶어서 보여줍니다. 준비 중인 주제는 위에서 먼저 확인할 수 있습니다.</p>
+          </div>
+          <div className={styles.storyGroups}>
+            {homeModel.categoryGroups.map(group => (
+              <article key={group.category.value} className={styles.storyGroup}>
+                <div className={styles.storyGroupHeader}>
+                  <div>
+                    <span>{group.category.label}</span>
+                    <strong>{group.totalCount}개 글</strong>
                   </div>
-                  <div className={styles.storyList}>
-                    {group.posts.slice(0, 3).map(post => (
-                      <Link key={post.id} href={`/blog/${post.slug}`} className={styles.storyLink}>
-                        <strong>{post.title}</strong>
-                        {post.targetQuestion && <span>{post.targetQuestion}</span>}
-                      </Link>
-                    ))}
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
+                  <button type="button" onClick={() => selectCategory(group.category.value)}>
+                    더 보기
+                  </button>
+                </div>
+                <div className={styles.storyList}>
+                  {group.posts.map(post => (
+                    <Link key={post.id} href={`/blog/${post.slug}`} className={styles.storyLink}>
+                      <strong>{post.title}</strong>
+                      {post.targetQuestion && <span>{post.targetQuestion}</span>}
+                    </Link>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
       )}
 
-      {!hasSearch && !hasCategoryFilter && (
-          <section className={styles.postSection} aria-labelledby="all-posts-title">
-            <div className={styles.sectionHeader}>
-              <span>{posts.length}개 글</span>
-              <h2 id="all-posts-title">전체 글</h2>
-            </div>
-            <div className={styles.grid}>
-              {visibleAllPosts.map(post => (
-                <BlogCard key={post.id} post={post} compact />
-              ))}
-            </div>
-            {posts.length > visibleAllPosts.length && (
-              <button type="button" className={styles.moreButton} onClick={showMore}>
-                더 보기
-              </button>
-            )}
-          </section>
+      {showHomeSections && homeModel.showAllPosts && (
+        <section className={styles.postSection} aria-labelledby="all-posts-title">
+          <div className={styles.sectionHeader}>
+            <span>{posts.length}개 글</span>
+            <h2 id="all-posts-title">모든 글</h2>
+            <p>처음 읽기 좋은 글과 최근 글을 지나, 전체 발행 글을 최신순으로 볼 수 있습니다.</p>
+          </div>
+          <div className={styles.grid}>
+            {visibleAllPosts.map(post => (
+              <BlogCard key={post.id} post={post} compact />
+            ))}
+          </div>
+          {posts.length > visibleAllPosts.length && (
+            <button type="button" className={styles.moreButton} onClick={showMore}>
+              더 보기
+            </button>
+          )}
+        </section>
       )}
     </>
   )
