@@ -25,6 +25,8 @@ const HIDDEN_PATH_PREFIXES = [
   '/portal',
 ]
 
+const hasSupabasePublicEnv = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+
 export default function PublicUserMenu() {
   const pathname = usePathname()
   const router = useRouter()
@@ -38,6 +40,10 @@ export default function PublicUserMenu() {
 
   useEffect(() => {
     if (isHidden) {
+      return
+    }
+
+    if (!hasSupabasePublicEnv) {
       return
     }
 
@@ -109,11 +115,13 @@ export default function PublicUserMenu() {
     return () => window.removeEventListener('pointerdown', handlePointerDown)
   }, [open])
 
-  if (isHidden || loading) {
+  if (isHidden || loading || !hasSupabasePublicEnv) {
     return null
   }
 
   const handleLogout = async () => {
+    if (!hasSupabasePublicEnv) return
+
     try {
       const supabase = createPlatformClient()
       const { error } = await supabase.auth.signOut()

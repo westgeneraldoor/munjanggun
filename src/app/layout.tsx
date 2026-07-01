@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import { ViewTransition } from 'react';
 import { Playfair_Display } from "next/font/google";
+import { hasPublicShowroomEnv } from "@/lib/supabase/public";
 import { createClient } from "@/lib/supabase/server";
 import PublicUserMenu from "@/components/customer/PublicUserMenu";
 import { getSiteUrl } from "@/lib/content-os/site-url";
 import "./globals.css";
+
+const FALLBACK_SITE_TITLE = "문장군"
+const FALLBACK_SITE_DESCRIPTION = "좋은 문을 고르는 일, 어렵지 않게 도와드립니다."
 
 const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
@@ -15,6 +19,19 @@ const playfairDisplay = Playfair_Display({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
+  if (!hasPublicShowroomEnv()) {
+    return {
+      metadataBase: new URL(getSiteUrl()),
+      title: FALLBACK_SITE_TITLE,
+      description: FALLBACK_SITE_DESCRIPTION,
+      openGraph: {
+        title: FALLBACK_SITE_TITLE,
+        description: FALLBACK_SITE_DESCRIPTION,
+        images: [],
+      },
+    }
+  }
+
   const supabase = await createClient()
   const { data: siteSettings } = await supabase
     .schema('showroom')
@@ -22,8 +39,8 @@ export async function generateMetadata(): Promise<Metadata> {
     .select('site_title, site_description, og_image_url')
     .single()
 
-  const title = siteSettings?.site_title || "문장군 디지털 컬러북"
-  const description = siteSettings?.site_description || "영업사원이 현장 컬러북을 넘어서 보내는 프리미엄 디지털 쇼룸"
+  const title = siteSettings?.site_title || FALLBACK_SITE_TITLE
+  const description = siteSettings?.site_description || FALLBACK_SITE_DESCRIPTION
   
   return {
     metadataBase: new URL(getSiteUrl()),

@@ -1,6 +1,6 @@
 import 'server-only'
 import { cache } from 'react'
-import { createPublicShowroomClient } from '@/lib/supabase/public'
+import { createPublicShowroomClient, hasPublicShowroomEnv } from '@/lib/supabase/public'
 import { Database } from '@/types/database'
 
 export type NodeRow = Database['showroom']['Tables']['nodes']['Row']
@@ -12,6 +12,8 @@ export type ResolvedSlugChain = {
 }
 
 const resolveSlugPath = cache(async (slugPath: string): Promise<ResolvedSlugChain | null> => {
+  if (!hasPublicShowroomEnv()) return null
+
   const slugs = slugPath.split('/').filter(Boolean)
   const showroomDb = createPublicShowroomClient().schema('showroom')
 
