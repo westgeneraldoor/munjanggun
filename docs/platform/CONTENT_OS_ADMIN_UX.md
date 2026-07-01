@@ -184,6 +184,8 @@ MVP는 복잡한 WYSIWYG가 아니라 블록형 편집이다.
 - Heading
 - Paragraph
 - Image Slot
+- Link Button
+- Guide Box
 - Q&A
 - CTA
 
@@ -212,6 +214,12 @@ CTA 블록:
 - A/S 접수
 
 MVP 기본 CTA는 무료방문 실측견적 상담이다.
+
+PR-19 확장:
+
+- Link Button은 공개 블로그, 관련 글, 무료방문 실측견적 같은 내부 공개 경로로만 연결한다.
+- Guide Box는 안내, 알아두세요, 현장 조건, 주의 성격으로 나누되 고객 화면에는 AEO/GEO/LLMO 같은 내부 용어를 쓰지 않는다.
+- 두 블록 모두 `text`와 문자열 metadata만 사용한다. 배열/객체 metadata 기반 편집은 후속 비교표/체크리스트 PR에서 별도 설계한다.
 
 ## 5. 사진 삽입 UX
 
