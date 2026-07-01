@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { hasPublicShowroomEnv } from '@/lib/supabase/public'
 import { createClient } from '@/lib/supabase/server'
 import styles from './preview.module.css'
 import Image from 'next/image'
@@ -11,6 +12,10 @@ interface PageProps {
 }
 
 export default async function PreviewPage(props: PageProps) {
+  if (!hasPublicShowroomEnv()) {
+    notFound()
+  }
+
   const { token } = await props.params
   const supabase = await createClient()
 
