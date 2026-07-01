@@ -14,6 +14,8 @@ import {
   FileText,
   Image as ImageIcon,
   Images,
+  Info,
+  Link2,
   Plus,
   Rocket,
   Save,
@@ -29,6 +31,7 @@ import type {
   BlogMediaUsageStatus,
   BlogPostStatus,
 } from '@/types/database'
+import { normalizeGuideBoxBlock, normalizeLinkButtonBlock } from '@/lib/content-os/blog-body-blocks'
 import {
   attachContentAssetToBlogMedia,
   publishBlogPost,
@@ -184,6 +187,8 @@ const BLOCK_LABEL: Record<BlogBlockType, string> = {
   heading: '제목',
   paragraph: '문단',
   image: '사진',
+  link_button: '링크 버튼',
+  guide_box: '안내 박스',
   qa: 'Q&A',
   cta: '상담 CTA',
 }
@@ -272,6 +277,18 @@ function createBlock(type: BlogBlockType, options: { mediaId?: string | null; ph
 
   if (type === 'cta') {
     return { ...base, text: '무료방문 실측견적 상담', metadata: { cta_kind: 'measurement_consult' } }
+  }
+
+  if (type === 'link_button') {
+    return { ...base, text: '관련 글 보기', metadata: { href: '/blog', description: '함께 보면 좋은 글로 이어집니다.' } }
+  }
+
+  if (type === 'guide_box') {
+    return {
+      ...base,
+      text: '현장 구조에 따라 달라질 수 있어 실측 때 함께 확인합니다.',
+      metadata: { title: '확인해보세요', tone: 'guide' },
+    }
   }
 
   if (type === 'image') {
@@ -852,6 +869,33 @@ function EditorMobilePreview({
                 </figure>
               )
             }
+            if (block.type === 'link_button') {
+              const link = normalizeLinkButtonBlock(block)
+              if (!link) return null
+
+              return (
+                <div key={block.clientId} className={styles.mobilePreviewLinkButton}>
+                  <span>이어 확인하기</span>
+                  {link.description && <p>{link.description}</p>}
+                  <em>
+                    {link.label}
+                    <ArrowRight size={14} aria-hidden="true" />
+                  </em>
+                </div>
+              )
+            }
+            if (block.type === 'guide_box') {
+              const guide = normalizeGuideBoxBlock(block)
+              if (!guide) return null
+
+              return (
+                <div key={block.clientId} className={`${styles.mobilePreviewGuideBox} ${styles[`mobilePreviewGuide_${guide.tone}`]}`}>
+                  <span>{guide.label}</span>
+                  {guide.title && <strong>{guide.title}</strong>}
+                  <p>{guide.body}</p>
+                </div>
+              )
+            }
             if (block.type === 'qa') {
               const question = cleanQaQuestion(block.text)
               const answer = cleanQaAnswer(block.metadata.answer)
@@ -1024,6 +1068,39 @@ function BlockEditor({
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {block.type === 'link_button' && (
+        <div className={styles.linkButtonComposer}>
+          <Field label="버튼 문구">
+            <input value={block.text ?? ''} onChange={event => onChange({ ...block, text: event.target.value })} />
+          </Field>
+          <Field label="연결 경로" hint="공개 블로그나 무료방문 실측견적처럼 / 로 시작하는 내부 경로만 사용합니다.">
+            <input value={block.metadata.href ?? ''} onChange={event => updateMetadata('href', event.target.value)} />
+          </Field>
+          <Field label="보조 설명">
+            <textarea value={block.metadata.description ?? ''} onChange={event => updateMetadata('description', event.target.value)} rows={3} />
+          </Field>
+        </div>
+      )}
+
+      {block.type === 'guide_box' && (
+        <div className={styles.guideBoxComposer}>
+          <Field label="안내 성격">
+            <select value={block.metadata.tone ?? 'guide'} onChange={event => updateMetadata('tone', event.target.value)}>
+              <option value="guide">안내</option>
+              <option value="notice">알아두세요</option>
+              <option value="condition">현장 조건</option>
+              <option value="caution">주의</option>
+            </select>
+          </Field>
+          <Field label="제목">
+            <input value={block.metadata.title ?? ''} onChange={event => updateMetadata('title', event.target.value)} />
+          </Field>
+          <Field label="안내 문장">
+            <textarea value={block.text ?? ''} onChange={event => onChange({ ...block, text: event.target.value })} rows={5} />
+          </Field>
         </div>
       )}
 
@@ -1684,6 +1761,8 @@ export default function BlogEditorClient({
               <button type="button" onClick={() => addBlock('heading')}><Plus size={15} aria-hidden="true" /> 제목</button>
               <button type="button" onClick={() => addBlock('paragraph')}><Plus size={15} aria-hidden="true" /> 문단</button>
               <button type="button" onClick={() => openAssetPicker({ type: 'new' })}><Plus size={15} aria-hidden="true" /> 사진</button>
+              <button type="button" onClick={() => addBlock('link_button')}><Link2 size={15} aria-hidden="true" /> 링크 버튼</button>
+              <button type="button" onClick={() => addBlock('guide_box')}><Info size={15} aria-hidden="true" /> 안내 박스</button>
               <button type="button" onClick={() => addBlock('qa')}><Plus size={15} aria-hidden="true" /> Q&A</button>
               <button type="button" onClick={() => addBlock('cta')}><Plus size={15} aria-hidden="true" /> 상담 CTA</button>
             </div>

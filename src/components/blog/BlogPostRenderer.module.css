@@ -12,6 +12,8 @@
   --blog-body: #443b34;
   --blog-muted: #6b6259;
   --blog-green: #5c8a62;
+  --blog-navy: #1d3858;
+  --blog-caution: #c74332;
   min-width: 0;
   min-height: 100vh;
   color: var(--blog-ink);
@@ -266,6 +268,8 @@
 }
 
 .qaBlock,
+.guideBox,
+.linkButtonBlock,
 .relatedQuestions,
 .ctaBlock,
 .emptyBody,
@@ -298,6 +302,145 @@
   line-height: 1.35;
   word-break: keep-all;
   overflow-wrap: break-word;
+}
+
+.guideBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--blog-paper);
+  border-left: 4px solid var(--blog-terracotta);
+}
+
+.guideBox_guide {
+  border-left-color: var(--blog-terracotta);
+}
+
+.guideBox_notice {
+  background: var(--blog-soft);
+  border-left-color: var(--blog-navy);
+}
+
+.guideBox_condition {
+  background: var(--blog-almond);
+  border-left-color: var(--blog-green);
+}
+
+.guideBox_caution {
+  background: #fff8f3;
+  border-left-color: var(--blog-caution);
+}
+
+.guideBoxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  max-width: 100%;
+  color: var(--blog-terracotta);
+  font-size: var(--text-sm);
+  font-weight: 900;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.guideBox_notice .guideBoxLabel {
+  color: var(--blog-navy);
+}
+
+.guideBox_condition .guideBoxLabel {
+  color: #426d49;
+}
+
+.guideBox_caution .guideBoxLabel {
+  color: var(--blog-caution);
+}
+
+.guideBoxLabel svg {
+  flex: 0 0 auto;
+}
+
+.guideBox > strong {
+  color: var(--blog-cocoa);
+  font-size: clamp(18px, 2vw, 22px);
+  font-weight: 850;
+  line-height: 1.36;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.guideBoxBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.guideBoxBody p {
+  color: var(--blog-body);
+  font-size: clamp(15px, 1.5vw, 17px);
+  line-height: 1.78;
+  overflow-wrap: anywhere;
+}
+
+.linkButtonBlock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  background: rgba(255, 252, 247, 0.78);
+}
+
+.linkButtonBlock div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.linkButtonBlock span {
+  color: var(--blog-terracotta);
+  font-size: var(--text-sm);
+  font-weight: 900;
+}
+
+.linkButtonBlock p {
+  color: var(--blog-body);
+  font-size: var(--text-sm);
+  line-height: 1.62;
+  overflow-wrap: anywhere;
+}
+
+.linkButtonBlock a {
+  flex: 0 0 auto;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  padding: 0 var(--space-4);
+  color: #ffffff;
+  background: var(--blog-terracotta);
+  border: 1px solid var(--blog-terracotta);
+  border-radius: 8px;
+  font-size: var(--text-sm);
+  font-weight: 850;
+  line-height: 1.28;
+  text-align: center;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.linkButtonBlock a:hover,
+.linkButtonBlock a:focus-visible {
+  color: #ffffff;
+  background: var(--blog-terracotta-dark);
+  border-color: var(--blog-terracotta-dark);
+}
+
+.linkButtonBlock a:focus-visible {
+  outline: 2px solid var(--blog-cocoa);
+  outline-offset: 3px;
 }
 
 .relatedQuestions > p {
@@ -623,11 +766,13 @@
   }
 
   .previewBanner,
+  .linkButtonBlock,
   .ctaBlock {
     align-items: stretch;
     flex-direction: column;
   }
 
+  .linkButtonBlock a,
   .ctaBlock a {
     width: 100%;
   }
