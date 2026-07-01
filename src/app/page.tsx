@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { hasPublicShowroomEnv } from '@/lib/supabase/public'
 import { createClient } from '@/lib/supabase/server'
 import NodeCard from '@/components/customer/NodeCard'
 import HomeHeroV2 from '@/components/customer/HomeHeroV2'
@@ -10,6 +11,13 @@ import { EMPTY_STATE_TITLE, EMPTY_STATE_SUBTITLE } from '@/lib/constants'
 import styles from './page.module.css'
 
 export async function generateMetadata(): Promise<Metadata> {
+  if (!hasPublicShowroomEnv()) {
+    return {
+      title: '문장군',
+      description: '좋은 문을 고르는 일, 어렵지 않게 도와드립니다.',
+    }
+  }
+
   const supabase = await createClient()
   const showroomDb = supabase.schema('showroom')
 
@@ -28,6 +36,21 @@ export async function generateMetadata(): Promise<Metadata> {
 export const revalidate = 0
 
 export default async function Home() {
+  if (!hasPublicShowroomEnv()) {
+    return (
+      <main className={styles.main}>
+        <div className={styles.content}>
+          <div className={styles.emptyState}>
+            <p className={styles.emptyText}>{EMPTY_STATE_TITLE}</p>
+            <p className={styles.emptySubtext}>{EMPTY_STATE_SUBTITLE}</p>
+          </div>
+        </div>
+
+        <CTABar reservationUrl={null} storeUrl={null} />
+      </main>
+    )
+  }
+
   const supabase = await createClient()
   const showroomDb = supabase.schema('showroom')
 
