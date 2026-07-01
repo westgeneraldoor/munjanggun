@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, CheckCircle2, HelpCircle, MapPin } from 'lucide-react'
 import type { BlogRelatedPost, BlogRenderBlock, BlogRenderData, BlogRenderMedia, BlogRenderMode } from '@/lib/content-os/blog-rendering'
+import BlogArticleActions from './BlogArticleActions'
 import styles from './BlogPostRenderer.module.css'
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -316,6 +317,10 @@ export default function BlogPostRenderer({
                 </Link>
               )}
             </section>
+          )}
+
+          {mode === 'public' && (
+            <BlogArticleActions postSlug={post.slug} postTitle={post.title} />
           )}
 
           {(!hasCtaBlock || hasReadingPath) && (

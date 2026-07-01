@@ -1,0 +1,133 @@
+.actions {
+  min-width: 0;
+  margin: clamp(28px, 5vw, 48px) 0;
+  padding: clamp(18px, 3vw, 28px);
+  color: var(--blog-body);
+  background: rgba(255, 252, 247, 0.82);
+  border: 1px solid var(--blog-line);
+  border-radius: 8px;
+}
+
+.copy {
+  min-width: 0;
+}
+
+.copy span {
+  display: inline-flex;
+  margin-bottom: var(--space-1);
+  color: var(--blog-terracotta);
+  font-size: var(--text-sm);
+  font-weight: 900;
+}
+
+.copy h2 {
+  color: var(--blog-cocoa);
+  font-size: clamp(20px, 2.4vw, 26px);
+  font-weight: 850;
+  line-height: 1.35;
+  letter-spacing: 0;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.copy p {
+  margin-top: var(--space-2);
+  color: var(--blog-muted);
+  font-size: var(--text-sm);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.controls {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.secondaryButton,
+.primaryLink {
+  min-width: 0;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 var(--space-3);
+  border-radius: 8px;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 850;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+  overflow-wrap: anywhere;
+}
+
+.secondaryButton {
+  color: var(--blog-cocoa);
+  background: var(--blog-paper);
+  border: 1px solid var(--blog-line);
+}
+
+.secondaryButton:hover,
+.secondaryButton:focus-visible,
+.activeButton {
+  color: var(--blog-cocoa);
+  background: var(--blog-almond);
+  border-color: var(--blog-line-strong);
+}
+
+.primaryLink {
+  color: #ffffff;
+  background: var(--blog-terracotta);
+  border: 1px solid var(--blog-terracotta);
+}
+
+.primaryLink:hover,
+.primaryLink:focus-visible {
+  color: #ffffff;
+  background: var(--blog-terracotta-dark);
+  border-color: var(--blog-terracotta-dark);
+}
+
+.secondaryButton:focus-visible,
+.primaryLink:focus-visible {
+  outline: 2px solid var(--blog-terracotta);
+  outline-offset: 3px;
+}
+
+.primaryLink:focus-visible {
+  outline-color: var(--blog-cocoa);
+}
+
+.secondaryButton svg,
+.primaryLink svg {
+  flex: 0 0 auto;
+}
+
+.status {
+  min-height: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  color: var(--blog-muted);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.status span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 620px) {
+  .controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
