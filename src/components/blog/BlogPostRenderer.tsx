@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, HelpCircle, Info, MapPin } from 'lucide-react'
 import { normalizeGuideBoxBlock, normalizeLinkButtonBlock } from '@/lib/content-os/blog-body-blocks'
 import type { BlogRelatedPost, BlogRenderBlock, BlogRenderData, BlogRenderMedia, BlogRenderMode } from '@/lib/content-os/blog-rendering'
+import BlogArticleActions from './BlogArticleActions'
 import styles from './BlogPostRenderer.module.css'
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -364,6 +365,10 @@ export default function BlogPostRenderer({
                 </Link>
               )}
             </section>
+          )}
+
+          {mode === 'public' && (
+            <BlogArticleActions postSlug={post.slug} postTitle={post.title} />
           )}
 
           {(!hasCtaBlock || hasReadingPath) && (
