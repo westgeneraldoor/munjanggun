@@ -40,7 +40,7 @@ export type BlogContentCategory =
   | 'price_guide'
   | 'area_guide'
 
-export type BlogBlockType = 'heading' | 'paragraph' | 'image' | 'cta' | 'qa'
+export type BlogBlockType = 'heading' | 'paragraph' | 'image' | 'link_button' | 'guide_box' | 'cta' | 'qa'
 
 export type BlogMediaUsageStatus = 'candidate' | 'approved' | 'published' | 'rejected'
 

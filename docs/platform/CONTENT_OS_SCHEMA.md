@@ -53,6 +53,8 @@ archived
 heading
 paragraph
 image
+link_button
+guide_box
 cta
 qa
 ```
@@ -170,6 +172,49 @@ MVP에서는 enum보다 text/check 또는 lookup 테이블을 우선 검토한�
   "cta_kind": null
 }
 ```
+
+PR-19 본문 확장 블록은 별도 테이블 없이 같은 `blog_blocks` 구조를 사용한다. 현재 렌더러와 에디터는 `metadata`를 문자열 맵으로 좁혀 읽으므로 배열/객체를 넣지 않는다.
+
+`link_button`:
+
+```json
+{
+  "type": "link_button",
+  "text": "우리 집 조건 확인하기",
+  "metadata": {
+    "href": "/portal/measure/new",
+    "description": "무료 방문실측으로 현장 조건을 확인합니다."
+  }
+}
+```
+
+원칙:
+
+- `href`는 `/`로 시작하는 내부 공개 경로만 사용한다.
+- `/admin`, `/api`, `/preview`, `/drafts`, `/private` 경로는 공개 본문 링크로 쓰지 않는다.
+- 외부 URL은 별도 보안/운영 정책이 생기기 전까지 지원하지 않는다.
+
+`guide_box`:
+
+```json
+{
+  "type": "guide_box",
+  "text": "신발장, 스위치, 바닥 단차는 실측 때 함께 확인하면 판단하기 쉽습니다.",
+  "metadata": {
+    "title": "실측 전에 보면 좋은 조건",
+    "tone": "condition"
+  }
+}
+```
+
+허용 `tone`:
+
+- `guide`: 안내
+- `notice`: 알아두세요
+- `condition`: 현장 조건
+- `caution`: 주의
+
+`guide_box`는 고객 판단을 돕는 본문 요소다. AEO/GEO/LLMO 같은 내부 최적화 언어를 고객 화면에 노출하지 않는다.
 
 ### `showroom.blog_media`
 

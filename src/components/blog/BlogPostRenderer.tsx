@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, CheckCircle2, HelpCircle, MapPin } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, HelpCircle, Info, MapPin } from 'lucide-react'
+import { normalizeGuideBoxBlock, normalizeLinkButtonBlock } from '@/lib/content-os/blog-body-blocks'
 import type { BlogRelatedPost, BlogRenderBlock, BlogRenderData, BlogRenderMedia, BlogRenderMode } from '@/lib/content-os/blog-rendering'
 import BlogArticleActions from './BlogArticleActions'
 import styles from './BlogPostRenderer.module.css'
@@ -86,6 +87,45 @@ function CtaBlock({ text, final = false }: { text: string | null; final?: boolea
   )
 }
 
+function LinkButtonBlock({ block }: { block: BlogRenderBlock }) {
+  const link = normalizeLinkButtonBlock(block)
+  if (!link) return null
+
+  return (
+    <aside className={styles.linkButtonBlock}>
+      <div>
+        <span>이어 확인하기</span>
+        {link.description && <p>{link.description}</p>}
+      </div>
+      <Link href={link.href}>
+        {link.label}
+        <ArrowRight size={16} aria-hidden="true" />
+      </Link>
+    </aside>
+  )
+}
+
+function GuideBoxBlock({ block }: { block: BlogRenderBlock }) {
+  const guide = normalizeGuideBoxBlock(block)
+  if (!guide) return null
+  const Icon = guide.tone === 'caution' ? AlertTriangle : Info
+
+  return (
+    <aside className={`${styles.guideBox} ${styles[`guideBox_${guide.tone}`]}`}>
+      <div className={styles.guideBoxLabel}>
+        <Icon size={17} aria-hidden="true" />
+        <span>{guide.label}</span>
+      </div>
+      {guide.title && <strong>{guide.title}</strong>}
+      <div className={styles.guideBoxBody}>
+        {splitParagraphs(guide.body).map(paragraph => (
+          <p key={paragraph}>{paragraph}</p>
+        ))}
+      </div>
+    </aside>
+  )
+}
+
 function RelatedPostCard({ post }: { post: BlogRelatedPost }) {
   return (
     <Link href={`/blog/${post.slug}`} className={styles.relatedPostCard}>
@@ -152,6 +192,14 @@ function RenderBlock({
     }
 
     return <BlogImage media={media} preview={mode === 'preview'} />
+  }
+
+  if (block.type === 'link_button') {
+    return <LinkButtonBlock block={block} />
+  }
+
+  if (block.type === 'guide_box') {
+    return <GuideBoxBlock block={block} />
   }
 
   if (block.type === 'qa') {

@@ -235,6 +235,7 @@ MVP에서 공통 site-level JSON-LD로 검토한다.
 FAQ는 MVP에서 다음처럼 관리한다.
 
 - `blog_blocks.type = qa`
+- `blog_blocks.type = link_button` / `guide_box`는 본문 안에서 보이는 고객 안내와 내부 이동을 보강한다.
 - `related_questions`
 - 글 내부 Q&A 섹션
 - AI 초안 생성과 내부 링크 추천의 입력 데이터
@@ -244,6 +245,7 @@ FAQ는 MVP에서 다음처럼 관리한다.
 - FAQ JSON-LD는 Google FAQ rich result 노출 보장 목적이 아니다.
 - MVP 필수 구현은 Q&A 블록 렌더링과 데이터 관리다.
 - FAQ rich result 제거/deprecation을 고려해, 리치결과 기대 문구를 제품/관리자 UI에 쓰지 않는다.
+- `link_button`과 `guide_box`는 JSON-LD 필드를 늘리는 장치가 아니다. 화면에 보이는 본문 이해와 자연스러운 내부 이동을 돕는 블록으로만 다룬다.
 
 ## 7. AEO 필드
 

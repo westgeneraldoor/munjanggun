@@ -23,7 +23,34 @@ function getSafeLoginNextParam(request: NextRequest) {
   return nextParam
 }
 
+function hasSupabasePublicEnv() {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+}
+
 export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  const isAdminRoute = pathname.startsWith('/admin')
+  const isAdminLoginRoute = pathname === '/admin/login'
+  const isManagerRoute = pathname.startsWith('/manager')
+  const isPortalRoute = pathname.startsWith('/portal')
+  const isMeasureRoute = pathname.startsWith('/measure')
+  const isCustomerLoginRoute = pathname === '/login'
+
+  if (!hasSupabasePublicEnv()) {
+    if ((isAdminRoute && !isAdminLoginRoute) || isManagerRoute) {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+
+    if (isPortalRoute || isMeasureRoute) {
+      return NextResponse.redirect(getCustomerLoginUrl(request))
+    }
+
+    return NextResponse.next({
+      request,
+    })
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -54,15 +81,7 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const pathname = request.nextUrl.pathname
-
   // 1. 경로 타입 식별
-  const isAdminRoute = pathname.startsWith('/admin')
-  const isAdminLoginRoute = pathname === '/admin/login'
-  const isManagerRoute = pathname.startsWith('/manager')
-  const isPortalRoute = pathname.startsWith('/portal')
-  const isMeasureRoute = pathname.startsWith('/measure')
-  const isCustomerLoginRoute = pathname === '/login'
   const needsRoleLookup = isAdminRoute || isManagerRoute
 
   // 2. 로그인 여부에 따른 1차 처리 및 역할(role) 조회
