@@ -8,6 +8,7 @@ source_strategy: "docs/platform/CONTENT_OS_STRATEGY.md"
 related_schema: "docs/platform/CONTENT_OS_SCHEMA.md"
 related_admin_ux: "docs/platform/CONTENT_OS_ADMIN_UX.md"
 related_seo_aeo_spec: "docs/platform/CONTENT_OS_SEO_AEO_SPEC.md"
+related_operating_routine: "docs/platform/BLOG_CONTENT_OPERATING_ROUTINE.md"
 ---
 
 # CONTENT_OS_PRD - MVP-CONTENTOS-01 문장군 SEO/AEO 콘텐츠 OS
@@ -211,3 +212,8 @@ MVP 이후 검토:
 - AppSheet 시공 사진/라벨 연동
 - 지역/서비스 페이지 확장
 - 콘텐츠 성과 대시보드
+
+운영 시작 문서:
+
+- `docs/platform/BLOG_CONTENT_OPERATING_ROUTINE.md`: 주간 발행, 카테고리 템플릿, 제목/톤/사진/Search Console 기준
+- `docs/platform/BLOG_FIRST_10_TOPICS.md`: 첫 10개 고객 질문형 주제와 발행 순서

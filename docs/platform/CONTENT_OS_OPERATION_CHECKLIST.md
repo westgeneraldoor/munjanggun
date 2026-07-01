@@ -9,6 +9,9 @@ source_schema: "docs/platform/CONTENT_OS_SCHEMA.md"
 source_admin_ux: "docs/platform/CONTENT_OS_ADMIN_UX.md"
 source_seo_aeo_spec: "docs/platform/CONTENT_OS_SEO_AEO_SPEC.md"
 related_pr: "PR-03 / codex/content-os-mvp"
+related_operating_routine:
+  - "docs/platform/BLOG_CONTENT_OPERATING_ROUTINE.md"
+  - "docs/platform/BLOG_FIRST_10_TOPICS.md"
 ---
 
 # CONTENT_OS_OPERATION_CHECKLIST - OPS-01
@@ -495,6 +498,8 @@ Inspected URL:
 Indexing request status:
 Notes:
 ```
+
+For recurring blog publication, use the shorter weekly routine in `docs/platform/BLOG_CONTENT_OPERATING_ROUTINE.md`. This checklist remains the full pre-production and sample-publish rehearsal.
 
 ## 9. Rollback
 
