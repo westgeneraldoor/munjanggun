@@ -13,7 +13,7 @@ async function openFirstBlogPost(page: Page) {
   const href = await firstPostLink.getAttribute('href')
   expect(href).toMatch(/^\/blog\/[^/]+$/)
 
-  await page.goto(href!, { waitUntil: 'networkidle' })
+  await page.goto(href!, { waitUntil: 'domcontentloaded' })
   await page.evaluate(() => {
     Object.keys(window.localStorage)
       .filter(key => key.startsWith('munjanggun:blog-helpful:') || key.startsWith('munjanggun:blog-question-draft:'))
