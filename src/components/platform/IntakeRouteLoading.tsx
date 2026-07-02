@@ -9,9 +9,12 @@ interface IntakeRouteLoadingProps {
 
 export default function IntakeRouteLoading({ title, description }: IntakeRouteLoadingProps) {
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-mg-theme="portal">
       <header className={styles.topbar}>
-        <Link href="/" className={styles.brand}>MUNJANGGUN</Link>
+        <Link href="/" className={styles.brand} aria-label="문장군 홈으로 이동">
+          <span className={styles.brandKo}>문장군</span>
+          <span className={styles.brandEn}>MUNJANGGUN</span>
+        </Link>
         <div className={styles.topActions}>
           <Link href="/portal" className={styles.topLink}>
             <ChevronLeft size={16} strokeWidth={2} aria-hidden="true" />

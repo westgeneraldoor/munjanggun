@@ -2,7 +2,7 @@
 
 import { randomUUID } from 'crypto'
 import { revalidatePath } from 'next/cache'
-import { createPlatformClient } from '@/lib/supabase/platform-server'
+import { createPlatformAdminClient, createPlatformClient } from '@/lib/supabase/platform-server'
 import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
 import type { BlogBlockType, BlogContentCategory, BlogMediaUsageStatus, Database, Json } from '@/types/database'
 
@@ -100,6 +100,13 @@ type BlogBlock = Database['showroom']['Tables']['blog_blocks']['Row']
 type BlogMedia = Database['showroom']['Tables']['blog_media']['Row']
 type ContentAsset = Database['showroom']['Tables']['content_assets']['Row']
 type ContentAssetFile = Database['showroom']['Tables']['content_asset_files']['Row']
+
+type BlogQuestionApproval = {
+  questionId: string
+  blockId: string
+  approvedQuestion: string
+  approvedAnswer: string
+}
 
 function cleanText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
@@ -350,6 +357,52 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
       }
     }
 
+    const rawSourceQuestionIds = payload.blocks
+      .filter(block => block.type === 'qa')
+      .map(block => cleanText(block.metadata.source_blog_question_id))
+      .filter((questionId): questionId is string => Boolean(questionId))
+    const sourceQuestionIds = [...new Set(rawSourceQuestionIds)]
+
+    if (sourceQuestionIds.length !== rawSourceQuestionIds.length) {
+      return { ok: false, message: '하나의 고객 질문은 하나의 공개 Q&A 블록에만 연결할 수 있습니다.' }
+    }
+
+    for (const block of payload.blocks) {
+      const sourceQuestionId = cleanText(block.metadata.source_blog_question_id)
+      if (block.type !== 'qa' || !sourceQuestionId) continue
+
+      const approvedQuestion = cleanText(block.text)
+      const approvedAnswer = cleanText(block.metadata.answer)
+      if (!approvedQuestion || !approvedAnswer) {
+        return { ok: false, message: '고객 질문으로 만든 Q&A는 공개 질문과 답변을 모두 작성해야 합니다.' }
+      }
+      if (approvedQuestion.length > 240) {
+        return { ok: false, message: '공개용 질문은 240자 이내로 작성해주세요.' }
+      }
+      if (approvedAnswer.length > 2000) {
+        return { ok: false, message: '공개용 답변은 2000자 이내로 작성해주세요.' }
+      }
+    }
+
+    if (sourceQuestionIds.length > 0) {
+      const platformAdmin = createPlatformAdminClient()
+      const { data: questionRowsData, error: questionRowsError } = await platformAdmin
+        .from('blog_article_questions')
+        .select('id')
+        .eq('post_id', payload.postId)
+        .in('id', sourceQuestionIds)
+
+      if (questionRowsError) {
+        return { ok: false, message: '연결된 고객 질문을 확인하지 못했습니다.' }
+      }
+
+      const foundQuestionIds = new Set(((questionRowsData ?? []) as Array<{ id: string }>).map(row => row.id))
+      const missingQuestionId = sourceQuestionIds.find(questionId => !foundQuestionIds.has(questionId))
+      if (missingQuestionId) {
+        return { ok: false, message: '연결된 고객 질문을 찾지 못했습니다.' }
+      }
+    }
+
     const postUpdate: Database['showroom']['Tables']['blog_posts']['Update'] = {
       title: payload.post.title.trim(),
       slug: payload.post.slug.trim(),
@@ -387,17 +440,21 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
 
     const { data: existingBlocksData, error: existingBlocksError } = await showroomAdmin
       .from('blog_blocks')
-      .select('id, display_order')
+      .select('id, display_order, type, metadata')
       .eq('post_id', payload.postId)
 
     if (existingBlocksError) {
       return { ok: false, message: '기존 본문을 확인하지 못했습니다.' }
     }
 
-    const existingBlocks = (existingBlocksData ?? []) as Array<{ id: string; display_order: number }>
+    const existingBlocks = (existingBlocksData ?? []) as Array<{ id: string; display_order: number; type: BlogBlockType; metadata: Json }>
     const existingBlockIds = new Set(existingBlocks.map(block => block.id))
     const incomingExistingIds = new Set(payload.blocks.map(block => block.id).filter(Boolean) as string[])
     const removedIds = [...existingBlockIds].filter(id => !incomingExistingIds.has(id))
+    const removedQuestionIds = existingBlocks
+      .filter(block => removedIds.includes(block.id) && block.type === 'qa' && isJsonObject(block.metadata))
+      .map(block => isJsonObject(block.metadata) ? jsonString(block.metadata.source_blog_question_id) : '')
+      .filter((questionId): questionId is string => Boolean(questionId))
 
     if (existingBlocks.length > 0) {
       await Promise.all(existingBlocks.map(block => showroomAdmin
@@ -405,6 +462,23 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
         .update({ display_order: block.display_order + 10000 } as never)
         .eq('id', block.id)
       ))
+    }
+
+    if (removedQuestionIds.length > 0) {
+      const platformAdmin = createPlatformAdminClient()
+      const { error: resetQuestionError } = await platformAdmin
+        .from('blog_article_questions')
+        .update({
+          status: 'pending_review',
+          published_block_id: null,
+          published_at: null,
+        } as never)
+        .eq('post_id', payload.postId)
+        .in('id', removedQuestionIds)
+
+      if (resetQuestionError) {
+        return { ok: false, message: '삭제된 Q&A와 연결된 고객 질문 상태를 되돌리지 못했습니다.' }
+      }
     }
 
     if (removedIds.length > 0) {
@@ -419,6 +493,7 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
     }
 
     const nextUsages: Database['showroom']['Tables']['content_asset_usages']['Insert'][] = []
+    const questionApprovals: BlogQuestionApproval[] = []
 
     for (const [index, block] of payload.blocks.entries()) {
       const blockPayload: Database['showroom']['Tables']['blog_blocks']['Insert'] = {
@@ -471,6 +546,22 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
           })
         }
       }
+
+      const sourceQuestionId = cleanText(block.metadata.source_blog_question_id)
+      const approvedQuestion = cleanText(block.text)
+      const approvedAnswer = cleanText(block.metadata.answer)
+      if (block.type === 'qa' && sourceQuestionId && savedBlockId) {
+        if (!approvedQuestion || !approvedAnswer) {
+          return { ok: false, message: '고객 질문으로 만든 Q&A는 공개 질문과 답변을 모두 작성해야 합니다.' }
+        }
+
+        questionApprovals.push({
+          questionId: sourceQuestionId,
+          blockId: savedBlockId,
+          approvedQuestion,
+          approvedAnswer,
+        })
+      }
     }
 
     if (existingBlocks.length > 0) {
@@ -492,6 +583,37 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
 
       if (usageInsertError) {
         return { ok: false, message: '사진 사용 기록을 저장하지 못했습니다.' }
+      }
+    }
+
+    if (questionApprovals.length > 0) {
+      const platformAdmin = createPlatformAdminClient()
+      const reviewedAt = new Date().toISOString()
+
+      for (const approval of questionApprovals) {
+        const { data: questionData, error: questionError } = await platformAdmin
+          .from('blog_article_questions')
+          .update({
+            status: 'approved',
+            approved_question: approval.approvedQuestion,
+            approved_answer: approval.approvedAnswer,
+            reviewed_by: actorId,
+            reviewed_at: reviewedAt,
+            published_block_id: approval.blockId,
+            published_at: reviewedAt,
+          } as never)
+          .eq('id', approval.questionId)
+          .eq('post_id', payload.postId)
+          .select('id')
+
+        if (questionError) {
+          return { ok: false, message: '고객 질문 승인 상태를 저장하지 못했습니다.' }
+        }
+
+        const questionRows = (questionData ?? []) as Array<{ id: string }>
+        if (questionRows.length !== 1) {
+          return { ok: false, message: '연결된 고객 질문을 찾지 못했습니다.' }
+        }
       }
     }
 

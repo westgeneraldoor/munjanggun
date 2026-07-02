@@ -24,6 +24,13 @@ export type QueueWorkStatus =
 
 export type QueueSourceType = 'measurement' | 'as'
 
+export type BlogQuestionStatus =
+  | 'private'
+  | 'pending_review'
+  | 'approved'
+  | 'rejected'
+  | 'archived'
+
 export type BlogPostStatus =
   | 'ai_draft'
   | 'reviewing'
@@ -859,6 +866,123 @@ export interface Database {
           updated_at?: string
         }
       }
+      blog_article_helpful_votes: {
+        Row: {
+          id: string
+          user_id: string
+          post_id: string
+          post_slug: string
+          post_title_snapshot: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          post_id: string
+          post_slug: string
+          post_title_snapshot: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          post_id?: string
+          post_slug?: string
+          post_title_snapshot?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      blog_article_saves: {
+        Row: {
+          id: string
+          user_id: string
+          post_id: string
+          post_slug: string
+          post_title_snapshot: string
+          post_excerpt_snapshot: string | null
+          post_published_at_snapshot: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          post_id: string
+          post_slug: string
+          post_title_snapshot: string
+          post_excerpt_snapshot?: string | null
+          post_published_at_snapshot?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          post_id?: string
+          post_slug?: string
+          post_title_snapshot?: string
+          post_excerpt_snapshot?: string | null
+          post_published_at_snapshot?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      blog_article_questions: {
+        Row: {
+          id: string
+          user_id: string
+          post_id: string | null
+          post_slug: string
+          post_title_snapshot: string
+          question_body: string
+          approved_question: string | null
+          approved_answer: string | null
+          status: BlogQuestionStatus
+          admin_note: string | null
+          reviewed_by: string | null
+          reviewed_at: string | null
+          published_block_id: string | null
+          published_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          post_id?: string | null
+          post_slug: string
+          post_title_snapshot: string
+          question_body: string
+          approved_question?: string | null
+          approved_answer?: string | null
+          status?: BlogQuestionStatus
+          admin_note?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          published_block_id?: string | null
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          post_id?: string | null
+          post_slug?: string
+          post_title_snapshot?: string
+          question_body?: string
+          approved_question?: string | null
+          approved_answer?: string | null
+          status?: BlogQuestionStatus
+          admin_note?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          published_block_id?: string | null
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       measurement_requests: {
         Row: {
           id: string
@@ -1300,6 +1424,7 @@ export interface Database {
       measurement_status: 'submitted' | 'appsheet_pending' | 'appsheet_registered' | 'contacted' | 'assigned' | 'scheduled' | 'measured' | 'cancelled'
       product_family: 'middle_door' | 'abs_door' | 'front_door' | 'molding_baseboard' | 'other'
       appsheet_status: 'pending' | 'registered' | 'skipped'
+      blog_question_status: BlogQuestionStatus
     }
   }
 }

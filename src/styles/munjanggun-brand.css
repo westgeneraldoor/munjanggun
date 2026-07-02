@@ -1,0 +1,190 @@
+/**
+ * Munjanggun project design-system tokens.
+ * Source snapshot: central brand tokens v3.0.
+ *
+ * Keep legacy --color-* and --admin-* tokens in globals.css while pages migrate.
+ * New platform components should consume semantic --mg-* aliases from here.
+ */
+
+:root {
+  --mg-cocoa-oak: #2C221E;
+  --mg-clay-terracotta: #B35D43;
+  --mg-clay-terracotta-hover: #9E4F39;
+  --mg-cashmere-cream: #F5EFE6;
+  --mg-toasted-almond: #C5B9A5;
+  --mg-verified-navy: #1D3858;
+  --mg-paper-white: #FFFCF7;
+  --mg-warm-line: #E2D7C8;
+  --mg-warm-line-strong: #C5B9A5;
+  --mg-ink-warm: #171512;
+  --mg-body-warm: #443B34;
+  --mg-muted-warm: #6B6259;
+  --mg-cream-soft: #FAF7F0;
+  --mg-almond-soft: #EFE6DA;
+  --mg-navy-soft: #E7EEF5;
+  --mg-caution-red: #C74332;
+  --mg-success-green: #5C8A62;
+  --mg-on-dark: #FFFCF7;
+  --mg-on-terracotta: #FFFFFF;
+
+  --mg-font-brand-ko: "Noto Serif KR", "Song Myung", "Noto Serif CJK KR", serif;
+  --mg-font-body: "Pretendard Variable", "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --mg-font-latin: "Manrope", "Inter", "Pretendard", system-ui, sans-serif;
+
+  --mg-font-size-body: 16px;
+  --mg-font-size-body-mobile: 15px;
+  --mg-font-size-label: 13px;
+  --mg-font-size-label-mobile: 12px;
+  --mg-font-size-caption: 13px;
+  --mg-font-size-caption-mobile: 12px;
+  --mg-line-height-body: 1.72;
+  --mg-line-height-body-strong: 1.62;
+  --mg-line-height-label: 1.3;
+  --mg-line-height-caption: 1.55;
+  --mg-font-weight-regular: 400;
+  --mg-font-weight-strong: 650;
+  --mg-font-weight-label: 750;
+  --mg-letter-spacing: 0;
+
+  --mg-radius-xs: 4px;
+  --mg-radius-sm: 6px;
+  --mg-radius-md: 8px;
+  --mg-radius-lg: 12px;
+  --mg-radius-full: 999px;
+
+  --mg-space-xs: 6px;
+  --mg-space-sm: 10px;
+  --mg-space-md: 16px;
+  --mg-space-lg: 24px;
+  --mg-space-xl: 36px;
+  --mg-space-xxl: 56px;
+  --mg-space-section: 88px;
+
+  --mg-surface-page: var(--mg-cashmere-cream);
+  --mg-surface-page-soft: var(--mg-cream-soft);
+  --mg-surface-card: var(--mg-paper-white);
+  --mg-surface-card-subtle: var(--mg-almond-soft);
+  --mg-surface-inverse: var(--mg-cocoa-oak);
+  --mg-border-subtle: var(--mg-warm-line);
+  --mg-border-strong: var(--mg-warm-line-strong);
+  --mg-text-primary: var(--mg-ink-warm);
+  --mg-text-body: var(--mg-body-warm);
+  --mg-text-muted: var(--mg-muted-warm);
+  --mg-action-primary: var(--mg-clay-terracotta);
+  --mg-action-primary-hover: var(--mg-clay-terracotta-hover);
+  --mg-action-primary-active: #873F2F;
+  --mg-action-primary-text: var(--mg-on-terracotta);
+  --mg-action-secondary: var(--mg-paper-white);
+  --mg-action-secondary-hover: var(--mg-cream-soft);
+  --mg-action-secondary-text: var(--mg-cocoa-oak);
+  --mg-focus-ring: var(--mg-clay-terracotta);
+  --mg-state-success: var(--mg-success-green);
+  --mg-state-danger: var(--mg-caution-red);
+  --mg-state-danger-hover: #A73729;
+  --mg-state-proof: var(--mg-verified-navy);
+  --mg-state-pending: #8A6127;
+  --mg-state-pending-surface: #F7E8C8;
+  --mg-state-success-surface: #E7F1E5;
+  --mg-state-danger-surface: #F9E4DF;
+  --mg-disabled-surface: var(--mg-warm-line);
+  --mg-disabled-text: var(--mg-muted-warm);
+  --mg-overlay-scrim: rgba(44, 34, 30, 0.48);
+  --mg-shadow-card: 0 14px 34px rgba(44, 34, 30, 0.08);
+  --mg-shadow-elevated: 0 26px 70px rgba(44, 34, 30, 0.18);
+  --mg-kakao-bg: #FEE500;
+  --mg-kakao-text: #191919;
+  --mg-button-height: 50px;
+  --mg-button-height-sm: 40px;
+  --mg-form-field-height: 48px;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --mg-current-body: var(--mg-font-size-body-mobile);
+    --mg-current-label: var(--mg-font-size-label-mobile);
+    --mg-current-caption: var(--mg-font-size-caption-mobile);
+  }
+}
+
+@media (min-width: 641px) {
+  :root {
+    --mg-current-body: var(--mg-font-size-body);
+    --mg-current-label: var(--mg-font-size-label);
+    --mg-current-caption: var(--mg-font-size-caption);
+  }
+}
+
+[data-mg-theme="portal"] {
+  color-scheme: light;
+  --mg-current-bg: var(--mg-surface-page);
+  --mg-current-surface: var(--mg-surface-card);
+  --mg-current-text: var(--mg-text-primary);
+  --mg-surface-page: var(--mg-cashmere-cream);
+  --mg-surface-page-soft: var(--mg-cream-soft);
+  --mg-surface-card: var(--mg-paper-white);
+  --mg-surface-card-subtle: var(--mg-almond-soft);
+  --mg-surface-inverse: var(--mg-cocoa-oak);
+  --mg-border-subtle: var(--mg-warm-line);
+  --mg-border-strong: var(--mg-warm-line-strong);
+  --mg-text-primary: var(--mg-ink-warm);
+  --mg-text-body: var(--mg-body-warm);
+  --mg-text-muted: var(--mg-muted-warm);
+  --mg-action-primary: var(--mg-clay-terracotta);
+  --mg-action-primary-hover: var(--mg-clay-terracotta-hover);
+  --mg-action-primary-active: #873F2F;
+  --mg-action-primary-text: var(--mg-on-terracotta);
+  --mg-action-secondary: var(--mg-paper-white);
+  --mg-action-secondary-hover: var(--mg-cream-soft);
+  --mg-action-secondary-text: var(--mg-cocoa-oak);
+  --mg-focus-ring: var(--mg-clay-terracotta);
+}
+
+[data-mg-theme="showroom-dark"] {
+  color-scheme: dark;
+  --mg-current-bg: var(--color-bg);
+  --mg-current-surface: var(--color-surface);
+  --mg-current-text: var(--color-text);
+  --mg-surface-page: var(--color-bg);
+  --mg-surface-page-soft: var(--color-surface);
+  --mg-surface-card: var(--color-surface-elevated);
+  --mg-surface-card-subtle: var(--color-surface);
+  --mg-surface-inverse: var(--mg-paper-white);
+  --mg-border-subtle: var(--color-border);
+  --mg-border-strong: var(--color-accent);
+  --mg-text-primary: var(--color-text);
+  --mg-text-body: var(--color-text-sub);
+  --mg-text-muted: var(--color-text-muted);
+  --mg-action-primary: var(--color-accent);
+  --mg-action-primary-hover: var(--color-accent-hover);
+  --mg-action-primary-active: var(--color-accent);
+  --mg-action-primary-text: var(--color-accent-foreground);
+  --mg-action-secondary: var(--color-surface-elevated);
+  --mg-action-secondary-hover: var(--color-surface);
+  --mg-action-secondary-text: var(--color-text);
+  --mg-focus-ring: var(--color-ring);
+}
+
+[data-mg-theme="admin"] {
+  color-scheme: light;
+  --mg-current-bg: var(--admin-bg);
+  --mg-current-surface: var(--admin-surface);
+  --mg-current-text: var(--admin-text);
+  --mg-surface-page: var(--admin-bg);
+  --mg-surface-page-soft: var(--admin-surface-elevated);
+  --mg-surface-card: var(--admin-surface);
+  --mg-surface-card-subtle: var(--admin-surface-elevated);
+  --mg-surface-inverse: var(--admin-text);
+  --mg-border-subtle: var(--admin-border);
+  --mg-border-strong: var(--admin-text-muted);
+  --mg-text-primary: var(--admin-text);
+  --mg-text-body: var(--admin-text-sub);
+  --mg-text-muted: var(--admin-text-muted);
+  --mg-action-primary: var(--admin-accent);
+  --mg-action-primary-hover: var(--admin-accent-hover);
+  --mg-action-primary-active: var(--admin-accent-hover);
+  --mg-action-primary-text: var(--mg-cocoa-oak);
+  --mg-action-secondary: var(--admin-surface);
+  --mg-action-secondary-hover: var(--admin-surface-elevated);
+  --mg-action-secondary-text: var(--admin-text);
+  --mg-focus-ring: var(--admin-ring);
+}

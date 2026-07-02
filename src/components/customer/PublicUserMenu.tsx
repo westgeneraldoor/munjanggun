@@ -36,7 +36,9 @@ export default function PublicUserMenu() {
   const [open, setOpen] = useState(false)
 
   const isHidden = HIDDEN_PATH_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+  const isBlogArticle = /^\/blog\/[^/]+$/.test(pathname || '')
   const loginHref = `/login?next=${encodeURIComponent(pathname || '/')}`
+  const containerClassName = `${styles.container} ${isBlogArticle ? styles.blogArticleContainer : ''}`
 
   useEffect(() => {
     if (isHidden) {
@@ -136,7 +138,7 @@ export default function PublicUserMenu() {
 
   if (!profile) {
     return (
-      <div className={styles.container}>
+      <div className={containerClassName}>
         <Link href={loginHref} className={styles.loginLink} id="public-login-link">
           <LogIn size={17} aria-hidden="true" />
           <span>로그인</span>
@@ -151,7 +153,7 @@ export default function PublicUserMenu() {
     : profile.displayName
 
   return (
-    <div className={styles.container} ref={menuRef}>
+    <div className={containerClassName} ref={menuRef}>
       <button
         type="button"
         className={styles.trigger}

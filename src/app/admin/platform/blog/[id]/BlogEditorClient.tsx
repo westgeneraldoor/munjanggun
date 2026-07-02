@@ -30,6 +30,7 @@ import type {
   BlogMediaSourceType,
   BlogMediaUsageStatus,
   BlogPostStatus,
+  BlogQuestionStatus,
 } from '@/types/database'
 import { normalizeGuideBoxBlock, normalizeLinkButtonBlock } from '@/lib/content-os/blog-body-blocks'
 import {
@@ -147,6 +148,23 @@ export type BlogEditorEvent = {
   createdAt: string
 }
 
+export type BlogEditorQuestion = {
+  id: string
+  postId: string | null
+  postSlug: string
+  postTitleSnapshot: string
+  questionBody: string
+  status: BlogQuestionStatus
+  adminNote: string | null
+  approvedQuestion: string | null
+  approvedAnswer: string | null
+  publishedBlockId: string | null
+  publishedAt: string | null
+  reviewedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 type EditablePost = Omit<BlogEditorPost, 'gateSummary' | 'publishedAt' | 'createdAt' | 'updatedAt'>
 type EditableBlock = BlogEditorBlock & { clientId: string }
 type AssetPickerTarget =
@@ -180,6 +198,14 @@ const STATUS_LABEL: Record<BlogPostStatus, string> = {
   needs_media: '사진필요',
   ready: '발행대기',
   published: '발행완료',
+  archived: '보관',
+}
+
+const QUESTION_STATUS_LABEL: Record<BlogQuestionStatus, string> = {
+  private: '비공개',
+  pending_review: '검토중',
+  approved: '승인됨',
+  rejected: '반려',
   archived: '보관',
 }
 
@@ -324,6 +350,82 @@ function Field({
       {children}
       {hint && <small>{hint}</small>}
     </label>
+  )
+}
+
+function ReaderQuestionPanel({
+  questions,
+  queuedQuestionIds,
+  onChange,
+  onUseAsQa,
+}: {
+  questions: BlogEditorQuestion[]
+  queuedQuestionIds: Set<string>
+  onChange: (id: string, patch: Partial<Pick<BlogEditorQuestion, 'approvedQuestion' | 'approvedAnswer' | 'adminNote'>>) => void
+  onUseAsQa: (question: BlogEditorQuestion) => void
+}) {
+  return (
+    <section className={styles.panel}>
+      <div className={styles.panelTitle}>
+        <Info size={17} aria-hidden="true" />
+        <h2>독자 질문</h2>
+      </div>
+      <p className={styles.panelHelp}>고객이 남긴 비공개 질문입니다. 공개할 때는 공개용 질문과 답변을 새로 정리해서 Q&A 블록으로 넣어주세요.</p>
+      {questions.length === 0 ? (
+        <div className={styles.emptyBlocks}>아직 이 글에 연결된 독자 질문이 없습니다.</div>
+      ) : (
+        <div className={styles.readerQuestionList}>
+          {questions.map(question => {
+            const approvedQuestion = question.approvedQuestion ?? ''
+            const approvedAnswer = question.approvedAnswer ?? ''
+            const canUse = approvedQuestion.trim().length >= 2 && approvedAnswer.trim().length >= 2
+            const alreadyPublished = Boolean(question.publishedBlockId)
+            const alreadyQueued = queuedQuestionIds.has(question.id)
+
+            return (
+              <article key={question.id} className={styles.readerQuestionCard}>
+                <div className={styles.readerQuestionHeader}>
+                  <span className={`${styles.questionStatus} ${styles[`questionStatus_${question.status}`]}`}>
+                    {QUESTION_STATUS_LABEL[question.status]}
+                  </span>
+                  <time dateTime={question.createdAt}>{formatDateTime(question.createdAt)}</time>
+                </div>
+                <details className={styles.readerQuestionOriginal}>
+                  <summary>비공개 원문 보기</summary>
+                  <p>{question.questionBody}</p>
+                </details>
+                <div className={styles.readerQuestionFields}>
+                  <Field label="공개용 질문">
+                    <input
+                      value={approvedQuestion}
+                      onChange={event => onChange(question.id, { approvedQuestion: event.target.value })}
+                      disabled={alreadyPublished}
+                      maxLength={240}
+                    />
+                  </Field>
+                  <Field label="공개용 답변">
+                    <textarea
+                      value={approvedAnswer}
+                      onChange={event => onChange(question.id, { approvedAnswer: event.target.value })}
+                      disabled={alreadyPublished}
+                      maxLength={2000}
+                      rows={4}
+                    />
+                  </Field>
+                </div>
+                <div className={styles.readerQuestionActions}>
+                  <button type="button" onClick={() => onUseAsQa(question)} disabled={!canUse || alreadyPublished || alreadyQueued}>
+                    <Plus size={15} aria-hidden="true" />
+                    {alreadyPublished ? '이미 반영됨' : alreadyQueued ? '추가됨' : 'Q&A 블록으로 넣기'}
+                  </button>
+                  {question.reviewedAt && <span>검토 {formatDateTime(question.reviewedAt)}</span>}
+                </div>
+              </article>
+            )
+          })}
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -1135,12 +1237,14 @@ export default function BlogEditorClient({
   media,
   contentAssets,
   events,
+  initialQuestions,
 }: {
   initialPost: BlogEditorPost
   initialBlocks: BlogEditorBlock[]
   media: BlogEditorMedia[]
   contentAssets: ContentAssetPickerItem[]
   events: BlogEditorEvent[]
+  initialQuestions: BlogEditorQuestion[]
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -1174,6 +1278,7 @@ export default function BlogEditorClient({
   const [saveMessage, setSaveMessage] = useState<{ ok: boolean; text: string } | null>(null)
   const [publishMessage, setPublishMessage] = useState<{ ok: boolean; text: string; issues?: string[] } | null>(null)
   const [editorMedia, setEditorMedia] = useState<BlogEditorMedia[]>(media)
+  const [readerQuestions, setReaderQuestions] = useState<BlogEditorQuestion[]>(initialQuestions)
   const [assetPickerTarget, setAssetPickerTarget] = useState<AssetPickerTarget | null>(null)
   const [assetPickerMessage, setAssetPickerMessage] = useState<{ ok: boolean; text: string } | null>(null)
   const [editorMode, setEditorMode] = useState<EditorMode>('write')
@@ -1202,6 +1307,11 @@ export default function BlogEditorClient({
     imageCount: blocks.filter(block => block.type === 'image').length,
     unlinkedImages: blocks.filter(block => block.type === 'image' && !block.mediaId).length,
   }), [blocks])
+  const queuedQuestionIds = useMemo(() => new Set(blocks
+    .filter(block => block.type === 'qa')
+    .map(block => block.metadata.source_blog_question_id)
+    .filter((questionId): questionId is string => Boolean(questionId))),
+  [blocks])
   const firstCtaBlock = blocks.find(block => block.type === 'cta') ?? null
   const firstUnlinkedImageBlock = blocks.find(block => block.type === 'image' && !block.mediaId) ?? null
   const firstAltMissingImageBlock = blocks.find(block => {
@@ -1346,6 +1456,43 @@ export default function BlogEditorClient({
 
   const addBlock = (type: Exclude<BlogBlockType, 'image'>) => {
     setBlocks(prev => [...prev, createBlock(type)])
+  }
+
+  const updateReaderQuestion = (
+    id: string,
+    patch: Partial<Pick<BlogEditorQuestion, 'approvedQuestion' | 'approvedAnswer' | 'adminNote'>>,
+  ) => {
+    setReaderQuestions(prev => prev.map(question => question.id === id ? { ...question, ...patch } : question))
+  }
+
+  const addReaderQuestionAsQa = (question: BlogEditorQuestion) => {
+    const approvedQuestion = question.approvedQuestion?.trim() ?? ''
+    const approvedAnswer = question.approvedAnswer?.trim() ?? ''
+    const alreadyQueued = blocks.some(block => block.type === 'qa' && block.metadata.source_blog_question_id === question.id)
+
+    if (approvedQuestion.length < 2 || approvedAnswer.length < 2) {
+      setSaveMessage({ ok: false, text: '공개용 질문과 답변을 먼저 작성해주세요.' })
+      return
+    }
+
+    if (alreadyQueued) {
+      setSaveMessage({ ok: false, text: '이미 이 질문으로 만든 Q&A 블록이 있습니다.' })
+      return
+    }
+
+    const nextBlock = {
+      ...createBlock('qa'),
+      text: approvedQuestion,
+      metadata: {
+        answer: approvedAnswer,
+        source_blog_question_id: question.id,
+      },
+    }
+
+    setBlocks(prev => [...prev, nextBlock])
+    setEditorMode('write')
+    setSaveMessage({ ok: true, text: 'Q&A 블록을 추가했습니다. 저장하면 독자 질문이 승인 상태로 연결됩니다.' })
+    afterNextPaint(() => jumpToBlock(nextBlock.clientId))
   }
 
   const openAssetPicker = (target: AssetPickerTarget) => {
@@ -1750,6 +1897,13 @@ export default function BlogEditorClient({
               )}
             </div>
           </section>
+
+          <ReaderQuestionPanel
+            questions={readerQuestions}
+            queuedQuestionIds={queuedQuestionIds}
+            onChange={updateReaderQuestion}
+            onUseAsQa={addReaderQuestionAsQa}
+          />
 
           <section className={styles.panel}>
             <div className={styles.panelTitle}>

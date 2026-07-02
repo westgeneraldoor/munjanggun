@@ -1,0 +1,24 @@
+.card {
+  min-width: 0;
+  border-radius: var(--mg-radius-md);
+  box-shadow: var(--mg-shadow-card);
+}
+
+.default {
+  color: var(--mg-text-primary);
+  background: var(--mg-surface-card);
+  border: 1px solid var(--mg-border-subtle);
+}
+
+.subtle {
+  color: var(--mg-text-primary);
+  background: var(--mg-surface-page-soft);
+  border: 1px solid var(--mg-border-subtle);
+  box-shadow: none;
+}
+
+.inverse {
+  color: var(--mg-on-dark);
+  background: var(--mg-surface-inverse);
+  border: 1px solid color-mix(in srgb, var(--mg-on-dark) 14%, transparent);
+}

@@ -1,0 +1,120 @@
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mg-space-md);
+  padding: 0 clamp(18px, 4vw, 44px);
+  background: color-mix(in srgb, var(--mg-surface-card) 88%, transparent);
+  border-bottom: 1px solid var(--mg-border-subtle);
+  backdrop-filter: blur(14px);
+}
+
+.brand {
+  color: var(--mg-text-primary);
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1px;
+  font-weight: var(--mg-font-weight-label);
+  letter-spacing: 0;
+  line-height: 1.05;
+  text-decoration: none;
+}
+
+.brandKo {
+  font-family: var(--mg-font-brand-ko);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.brandEn {
+  color: var(--mg-text-muted);
+  font-family: var(--mg-font-latin);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: var(--mg-space-xs);
+}
+
+.topLink,
+.iconLink {
+  min-height: var(--mg-button-height-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mg-space-xs);
+  color: var(--mg-text-body);
+  background: var(--mg-action-secondary);
+  border: 1px solid var(--mg-border-subtle);
+  border-radius: var(--mg-radius-md);
+  font-family: var(--mg-font-body);
+  font-size: var(--mg-current-label);
+  font-weight: var(--mg-font-weight-label);
+  text-decoration: none;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
+}
+
+.topLink {
+  padding: 0 12px 0 9px;
+}
+
+.iconLink {
+  width: var(--mg-button-height-sm);
+}
+
+.brand:hover,
+.topLink:hover,
+.iconLink:hover {
+  color: var(--mg-text-primary);
+}
+
+.topLink:hover,
+.iconLink:hover {
+  background: var(--mg-action-secondary-hover);
+  border-color: var(--mg-border-strong);
+}
+
+.topLink:active,
+.iconLink:active {
+  transform: translateY(1px);
+  background: color-mix(in srgb, var(--mg-action-secondary-hover) 76%, var(--mg-border-subtle));
+  border-color: var(--mg-action-primary);
+}
+
+.brand:focus-visible,
+.topLink:focus-visible,
+.iconLink:focus-visible {
+  outline: 2px solid var(--mg-focus-ring);
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    min-height: 58px;
+    padding: 0 14px;
+  }
+
+  .topActions {
+    gap: 6px;
+  }
+
+  .topLink {
+    min-width: 0;
+    padding: 0 10px 0 8px;
+  }
+
+  .brandKo {
+    font-size: 17px;
+  }
+}

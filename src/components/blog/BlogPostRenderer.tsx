@@ -3,6 +3,7 @@ import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, HelpCircle, Info, M
 import { normalizeGuideBoxBlock, normalizeLinkButtonBlock } from '@/lib/content-os/blog-body-blocks'
 import type { BlogRelatedPost, BlogRenderBlock, BlogRenderData, BlogRenderMedia, BlogRenderMode } from '@/lib/content-os/blog-rendering'
 import BlogArticleActions from './BlogArticleActions'
+import BlogReadingTopBar from './BlogReadingTopBar'
 import styles from './BlogPostRenderer.module.css'
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -250,6 +251,7 @@ export default function BlogPostRenderer({
           <span>검색에 노출되지 않는 관리자 확인용 화면입니다.</span>
         </div>
       )}
+      {mode === 'public' && <BlogReadingTopBar />}
 
       <article className={styles.article}>
         {mode === 'public' && (

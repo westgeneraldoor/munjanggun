@@ -8,13 +8,13 @@ import {
   Camera,
   Check,
   CheckCircle2,
-  Home,
   MapPin,
   Paperclip,
   Trash2,
 } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import DaumAddressSearch from '@/components/platform/DaumAddressSearch'
+import { CustomerIntakeTopNav } from '@/components/platform/customer/CustomerIntakeTopNav'
 import { logError } from '@/lib/logger'
 import styles from './as-form.module.css'
 
@@ -253,19 +253,8 @@ export default function AsForm({ userId }: Props) {
 
   if (isDone) {
     return (
-      <div className={styles.container}>
-        <header className={styles.topbar}>
-          <Link href="/" className={styles.logoLink}>MUNJANGGUN</Link>
-          <div className={styles.topActions}>
-            <Link href="/portal" className={styles.topLink}>
-              <ArrowLeft size={16} aria-hidden="true" />
-              <span>마이페이지</span>
-            </Link>
-            <Link href="/" className={styles.iconLink} aria-label="홈으로 이동">
-              <Home size={17} aria-hidden="true" />
-            </Link>
-          </div>
-        </header>
+      <div className={styles.container} data-mg-theme="portal">
+        <CustomerIntakeTopNav brandId="btn-as-done-home" />
         <main className={styles.doneShell}>
           <div className={styles.donePanel}>
             <CheckCircle2 size={44} aria-hidden="true" />
@@ -285,19 +274,8 @@ export default function AsForm({ userId }: Props) {
   }
 
   return (
-    <div className={styles.container}>
-      <header className={styles.topbar}>
-        <Link href="/" className={styles.logoLink}>MUNJANGGUN</Link>
-        <div className={styles.topActions}>
-          <Link href="/portal" className={styles.topLink}>
-            <ArrowLeft size={16} aria-hidden="true" />
-            <span>마이페이지</span>
-          </Link>
-          <Link href="/" className={styles.iconLink} aria-label="홈으로 이동">
-            <Home size={17} aria-hidden="true" />
-          </Link>
-        </div>
-      </header>
+    <div className={styles.container} data-mg-theme="portal">
+      <CustomerIntakeTopNav brandId="btn-as-home" />
 
       <main className={styles.shell}>
         <aside className={styles.rail}>
