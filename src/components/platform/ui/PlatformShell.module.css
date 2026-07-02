@@ -1,0 +1,37 @@
+.shell {
+  min-height: 100dvh;
+  color: var(--mg-current-text);
+  background: linear-gradient(180deg, var(--mg-current-bg) 0%, var(--mg-surface-page-soft) 48%, var(--mg-surface-card) 100%);
+  font-family: var(--mg-font-body);
+}
+
+.topBar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: color-mix(in srgb, var(--mg-surface-card) 90%, transparent);
+  border-bottom: 1px solid var(--mg-border-subtle);
+  backdrop-filter: blur(14px);
+}
+
+.hero {
+  width: min(1080px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.main {
+  width: min(1080px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 72px;
+}
+
+@media (max-width: 640px) {
+  .hero,
+  .main {
+    width: min(100% - 28px, 1080px);
+  }
+
+  .main {
+    padding: 20px 0 64px;
+  }
+}

@@ -7,14 +7,18 @@ import {
   ArrowRight,
   ClipboardList,
   FileText,
-  Home,
-  LogOut,
   Ruler,
   ShieldCheck,
   Wrench,
   X,
 } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
+import {
+  CustomerCollectionPanel,
+  type CustomerBlogActivityPost,
+  type CustomerBlogActivityQuestion,
+} from '@/components/platform/customer/CustomerCollectionPanel'
+import { CustomerTopNav } from '@/components/platform/customer/CustomerTopNav'
 import { CustomerRequestStatus, QueueSourceType } from '@/types/database'
 import { logError } from '@/lib/logger'
 import styles from './portal.module.css'
@@ -101,6 +105,9 @@ export default function PortalPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [recentMeasurements, setRecentMeasurements] = useState<RecentMeasurementRequest[]>([])
   const [recentAsRequests, setRecentAsRequests] = useState<RecentAsRequest[]>([])
+  const [savedPosts, setSavedPosts] = useState<CustomerBlogActivityPost[]>([])
+  const [helpfulPosts, setHelpfulPosts] = useState<CustomerBlogActivityPost[]>([])
+  const [blogQuestions, setBlogQuestions] = useState<CustomerBlogActivityQuestion[]>([])
   const [loading, setLoading] = useState(true)
   const [actionTarget, setActionTarget] = useState<ActionTarget | null>(null)
   const [actionMemo, setActionMemo] = useState('')
@@ -156,7 +163,7 @@ export default function PortalPage() {
         role: dbProfile?.role || 'customer',
       })
 
-      const [measureResult, asResult] = await Promise.all([
+      const [measureResult, asResult, savedResult, helpfulResult, questionsResult] = await Promise.all([
         supabase
           .from('measurement_requests')
           .select('id, customer_status, queue_status, customer_action_note, address, created_at, interest_category, interest_categories')
@@ -169,6 +176,24 @@ export default function PortalPage() {
           .eq('customer_id', user.id)
           .order('created_at', { ascending: false })
           .limit(6),
+        supabase
+          .from('blog_article_saves')
+          .select('id, post_slug, post_title_snapshot, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3),
+        supabase
+          .from('blog_article_helpful_votes')
+          .select('id, post_slug, post_title_snapshot, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3),
+        supabase
+          .from('blog_article_questions')
+          .select('id, post_slug, post_title_snapshot, status, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3),
       ])
 
       if (measureResult.error) {
@@ -181,6 +206,24 @@ export default function PortalPage() {
         logError('Fetch AS requests error', asResult.error)
       } else {
         setRecentAsRequests((asResult.data ?? []) as RecentAsRequest[])
+      }
+
+      if (savedResult.error) {
+        logError('Fetch saved blog posts error', savedResult.error)
+      } else {
+        setSavedPosts((savedResult.data ?? []) as CustomerBlogActivityPost[])
+      }
+
+      if (helpfulResult.error) {
+        logError('Fetch helpful blog posts error', helpfulResult.error)
+      } else {
+        setHelpfulPosts((helpfulResult.data ?? []) as CustomerBlogActivityPost[])
+      }
+
+      if (questionsResult.error) {
+        logError('Fetch blog questions error', questionsResult.error)
+      } else {
+        setBlogQuestions((questionsResult.data ?? []) as CustomerBlogActivityQuestion[])
       }
     } catch (err) {
       logError('Fetch user unexpected error', err)
@@ -255,7 +298,7 @@ export default function PortalPage() {
 
   if (loading) {
     return (
-      <div className={`${styles.container} ${styles.loading}`}>
+      <div className={`${styles.container} ${styles.loading}`} data-mg-theme="portal">
         <div className={styles.spinner} aria-label="마이페이지를 불러오는 중" />
       </div>
     )
@@ -301,23 +344,17 @@ export default function PortalPage() {
   ]
 
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <Link href="/" className={styles.logo} aria-label="문장군 홈으로 이동">MUNJANGGUN</Link>
-        <div className={styles.userMenu}>
-          <Link href="/" className={styles.homeButton}>
-            <Home size={15} aria-hidden="true" />
-            <span>홈</span>
-          </Link>
-          <span className={styles.userInfo}>
-            <strong>{profile?.displayName}</strong>님
-          </span>
-          <button onClick={handleLogout} className={styles.logoutButton} id="btn-logout" aria-label="로그아웃">
-            <LogOut size={15} aria-hidden="true" />
-            <span>로그아웃</span>
-          </button>
-        </div>
-      </header>
+    <div className={styles.container} data-mg-theme="portal">
+      <div className={styles.header}>
+        <CustomerTopNav
+          account={{
+            displayName: profile?.displayName,
+            email: profile?.email,
+            isAuthenticated: Boolean(profile),
+            onLogout: handleLogout,
+          }}
+        />
+      </div>
 
       <main className={styles.main}>
         <section className={styles.hero}>
@@ -351,6 +388,8 @@ export default function PortalPage() {
             )
           })}
         </section>
+
+        <CustomerCollectionPanel savedPosts={savedPosts} helpfulPosts={helpfulPosts} questions={blogQuestions} />
 
         <div className={styles.historyGrid}>
           <section className={styles.requestSection}>

@@ -41,9 +41,85 @@
 .controls {
   min-width: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-2);
   margin-top: var(--space-4);
+}
+
+.questionPanel {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding: clamp(14px, 3vw, 20px);
+  background: var(--blog-paper);
+  border: 1px solid var(--blog-line);
+  border-radius: 8px;
+}
+
+.questionCopy {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.questionCopy span,
+.questionField span {
+  color: var(--blog-terracotta);
+  font-size: var(--text-sm);
+  font-weight: 900;
+}
+
+.questionCopy strong {
+  color: var(--blog-cocoa);
+  font-size: clamp(16px, 2vw, 19px);
+  line-height: 1.4;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.questionCopy p {
+  color: var(--blog-muted);
+  font-size: var(--text-sm);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.questionField {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.questionField textarea {
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
+  padding: 12px 13px;
+  color: var(--blog-cocoa);
+  background: var(--blog-cream);
+  border: 1px solid var(--blog-line);
+  border-radius: 8px;
+  font: inherit;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.questionField textarea::placeholder {
+  color: var(--blog-muted);
+}
+
+.questionField textarea:focus-visible {
+  border-color: var(--blog-terracotta);
+  outline: 2px solid var(--blog-terracotta);
+  outline-offset: 2px;
+}
+
+.questionActions {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
 }
 
 .secondaryButton,
@@ -126,8 +202,170 @@
   overflow-wrap: anywhere;
 }
 
+.mobileBar,
+.mobileMoreMenu {
+  display: none;
+}
+
 @media (max-width: 620px) {
   .controls {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .actions {
+    margin-bottom: clamp(28px, 5vw, 48px);
+  }
+
+  .controls {
+    display: none;
+  }
+
+  .questionActions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mobileBar {
+    position: fixed;
+    right: 10px;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0));
+    left: 10px;
+    z-index: 94;
+    min-width: 0;
+    min-height: 64px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    padding: 6px;
+    background: color-mix(in srgb, var(--blog-paper) 94%, transparent);
+    border: 1px solid color-mix(in srgb, var(--blog-line-strong) 72%, transparent);
+    border-radius: 8px;
+    box-shadow: 0 18px 42px rgba(44, 34, 30, 0.18);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .mobileAction {
+    min-width: 0;
+    min-height: 52px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 4px 3px;
+    color: var(--blog-cocoa);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 850;
+    line-height: 1.15;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background var(--transition-fast),
+      border-color var(--transition-fast),
+      color var(--transition-fast),
+      transform var(--transition-fast);
+  }
+
+  .mobileAction span {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobileAction:hover,
+  .mobileAction:focus-visible,
+  .mobileActionActive {
+    color: var(--blog-cocoa);
+    background: var(--blog-almond);
+    border-color: var(--blog-line-strong);
+  }
+
+  .mobilePrimaryAction {
+    color: #ffffff;
+    background: var(--blog-terracotta);
+    border-color: var(--blog-terracotta);
+  }
+
+  .mobilePrimaryAction:hover,
+  .mobilePrimaryAction:focus-visible {
+    color: #ffffff;
+    background: var(--blog-terracotta-dark);
+    border-color: var(--blog-terracotta-dark);
+  }
+
+  .mobileAction:active {
+    transform: translateY(1px);
+  }
+
+  .mobileAction:focus-visible {
+    outline: 2px solid var(--blog-terracotta);
+    outline-offset: 2px;
+  }
+
+  .mobileMoreMenu {
+    position: fixed;
+    right: 10px;
+    bottom: calc(84px + env(safe-area-inset-bottom, 0));
+    z-index: 96;
+    width: min(220px, calc(100vw - 20px));
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    background: var(--blog-paper);
+    border: 1px solid var(--blog-line);
+    border-radius: 8px;
+    box-shadow: 0 18px 42px rgba(44, 34, 30, 0.18);
+  }
+
+  .mobileMoreMenu button {
+    width: 100%;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 0 12px;
+    color: var(--blog-cocoa);
+    background: transparent;
+    border: 0;
+    border-radius: 7px;
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 850;
+    cursor: pointer;
+  }
+
+  .mobileMoreMenu button:hover,
+  .mobileMoreMenu button:focus-visible {
+    background: var(--blog-almond);
+  }
+
+  .mobileMoreMenu button:focus-visible {
+    outline: 2px solid var(--blog-terracotta);
+    outline-offset: 2px;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobileBar,
+  .mobileMoreMenu {
+    display: none;
+  }
+}
+
+@media print {
+  .mobileBar,
+  .mobileMoreMenu {
+    display: none;
   }
 }

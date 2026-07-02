@@ -1,0 +1,82 @@
+.header {
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: minmax(96px, 1fr) auto minmax(180px, 1fr);
+  align-items: center;
+  gap: var(--mg-space-md);
+  padding: 0 clamp(18px, 4vw, 44px);
+}
+
+.homeLink {
+  width: fit-content;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mg-space-xs);
+  padding: 0 12px;
+  color: var(--mg-text-body);
+  background: var(--mg-surface-card);
+  border: 1px solid var(--mg-border-subtle);
+  border-radius: var(--mg-radius-md);
+  font-size: var(--mg-current-label);
+  font-weight: var(--mg-font-weight-label);
+  text-decoration: none;
+}
+
+.homeLink:hover {
+  color: var(--mg-text-primary);
+  border-color: var(--mg-border-strong);
+}
+
+.homeLink:focus-visible,
+.brand:focus-visible {
+  outline: 2px solid var(--mg-focus-ring);
+  outline-offset: 3px;
+}
+
+.brand {
+  color: var(--mg-text-primary);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  text-decoration: none;
+}
+
+.brandKo {
+  font-family: var(--mg-font-brand-ko);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: 0;
+}
+
+.brandEn {
+  color: var(--mg-text-muted);
+  font-family: var(--mg-font-latin);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+@media (max-width: 640px) {
+  .header {
+    min-height: auto;
+    grid-template-columns: 1fr auto;
+    padding: 12px 18px;
+  }
+
+  .brand {
+    justify-self: end;
+  }
+
+  .brandKo {
+    font-size: 18px;
+  }
+
+  .header > :last-child {
+    grid-column: 1 / -1;
+  }
+}

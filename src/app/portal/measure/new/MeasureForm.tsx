@@ -10,8 +10,6 @@ import {
   Camera,
   Check,
   CheckCircle2,
-  ChevronLeft,
-  Home,
   MapPin,
   Paperclip,
   Plus,
@@ -22,11 +20,18 @@ import {
 import { createBrowserClient } from '@supabase/ssr'
 import { logError } from '@/lib/logger'
 import DaumAddressSearch from '@/components/platform/DaumAddressSearch'
+import { CustomerIntakeTopNav } from '@/components/platform/customer/CustomerIntakeTopNav'
 import VisitDatePicker, { type VisitRegionMode } from '@/components/platform/VisitDatePicker'
 import styles from './measure-form.module.css'
 
+interface BlogQuestionContext {
+  source: 'blog-question'
+  postSlug: string
+}
+
 interface Props {
   userId: string
+  blogQuestionContext?: BlogQuestionContext | null
 }
 
 interface CategoryOption {
@@ -63,6 +68,37 @@ interface ServiceRegion {
 const MAX_FILE_COUNT = 10
 const MAX_FILE_SIZE_MB = 50
 const MAX_TOTAL_SIZE_MB = 200
+const BLOG_QUESTION_DRAFT_STORAGE_PREFIX = 'munjanggun:blog-question-draft:'
+
+function buildBlogQuestionMessage(blogQuestionContext: BlogQuestionContext | null, draft: string) {
+  if (!blogQuestionContext?.postSlug.trim()) return ''
+
+  return [
+    '블로그 글 질문에서 이어진 상담입니다.',
+    `글: ${blogQuestionContext.postSlug.trim()}`,
+    draft.trim() ? `질문 메모: ${draft.trim()}` : null,
+  ].filter(Boolean).join('\n')
+}
+
+function consumeBlogQuestionDraft(postSlug: string) {
+  const key = `${BLOG_QUESTION_DRAFT_STORAGE_PREFIX}${postSlug}`
+  let draft = ''
+
+  try {
+    draft = window.sessionStorage.getItem(key)?.trim() ?? ''
+    window.sessionStorage.removeItem(key)
+  } catch {
+    draft = ''
+  }
+
+  try {
+    const legacyDraft = window.localStorage.getItem(key)?.trim() ?? ''
+    window.localStorage.removeItem(key)
+    return draft || legacyDraft
+  } catch {
+    return draft
+  }
+}
 
 const FLOW_STEPS = [
   { key: 'start', title: '안내', helper: '무료 상담 범위' },
@@ -145,7 +181,7 @@ function classifyServiceRegion(addressText: string): ServiceRegion {
   }
 }
 
-export default function MeasureForm({ userId }: Props) {
+export default function MeasureForm({ userId, blogQuestionContext = null }: Props) {
   const [currentStep, setCurrentStep] = useState(0)
   const [isDone, setIsDone] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -172,7 +208,7 @@ export default function MeasureForm({ userId }: Props) {
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [visitDate, setVisitDate] = useState('')
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState(() => buildBlogQuestionMessage(blogQuestionContext, ''))
   const [referrerName, setReferrerName] = useState('')
   const [privacy, setPrivacy] = useState(false)
   const [files, setFiles] = useState<FilePreview[]>([])
@@ -185,6 +221,28 @@ export default function MeasureForm({ userId }: Props) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     { db: { schema: 'platform' } }
   ), [])
+
+  useEffect(() => {
+    if (!blogQuestionContext) return
+
+    const postSlug = blogQuestionContext.postSlug.trim()
+    if (!postSlug) return
+
+    const timer = window.setTimeout(() => {
+      const draft = consumeBlogQuestionDraft(postSlug)
+
+      if (!draft) return
+
+      const blogQuestionMessage = buildBlogQuestionMessage(blogQuestionContext, draft)
+      setMessage(prev => {
+        if (!prev.trim()) return blogQuestionMessage
+        if (prev.includes('질문 메모:') || !prev.startsWith('블로그 글 질문에서 이어진 상담입니다.')) return prev
+        return blogQuestionMessage
+      })
+    }, 0)
+
+    return () => window.clearTimeout(timer)
+  }, [blogQuestionContext])
 
   useEffect(() => {
     async function loadCategories() {
@@ -461,19 +519,8 @@ export default function MeasureForm({ userId }: Props) {
 
   if (isDone) {
     return (
-      <div className={styles.container}>
-        <header className={styles.topbar}>
-          <Link href="/" className={styles.brand} id="btn-done-home">MUNJANGGUN</Link>
-          <div className={styles.topActions}>
-            <Link href="/portal" className={styles.topLink}>
-              <ChevronLeft size={16} strokeWidth={2} aria-hidden="true" />
-              마이페이지
-            </Link>
-            <Link href="/" className={styles.iconLink} aria-label="홈으로 이동">
-              <Home size={17} strokeWidth={1.9} aria-hidden="true" />
-            </Link>
-          </div>
-        </header>
+      <div className={styles.container} data-mg-theme="portal">
+        <CustomerIntakeTopNav brandId="btn-done-home" />
         <main className={styles.doneShell}>
           <div className={styles.doneCard}>
             <CheckCircle2 size={46} strokeWidth={1.7} className={styles.doneIcon} aria-hidden="true" />
@@ -496,19 +543,8 @@ export default function MeasureForm({ userId }: Props) {
   }
 
   return (
-    <div className={styles.container}>
-      <header className={styles.topbar}>
-        <Link href="/" className={styles.brand} id="btn-measure-home">MUNJANGGUN</Link>
-        <div className={styles.topActions}>
-          <Link href="/portal" className={styles.topLink} id="btn-back">
-            <ChevronLeft size={16} strokeWidth={2} aria-hidden="true" />
-            마이페이지
-          </Link>
-          <Link href="/" className={styles.iconLink} aria-label="홈으로 이동">
-            <Home size={17} strokeWidth={1.9} aria-hidden="true" />
-          </Link>
-        </div>
-      </header>
+    <div className={styles.container} data-mg-theme="portal">
+      <CustomerIntakeTopNav brandId="btn-measure-home" />
 
       <main className={styles.shell}>
         <aside className={styles.rail} aria-label="접수 진행 단계">
@@ -540,6 +576,13 @@ export default function MeasureForm({ userId }: Props) {
         </aside>
 
         <section className={styles.panel}>
+          {blogQuestionContext && (
+            <div className={styles.blogContextBanner} data-testid="measure-blog-question-context">
+              <strong>블로그 글 질문에서 이어졌어요.</strong>
+              <span>글 맥락을 상담 희망 내용에 넣어두었습니다. 질문 메모가 있으면 함께 이어집니다. 이름, 연락처, 주소는 아래 보안 접수 흐름에서 동의 후 입력해 주세요.</span>
+            </div>
+          )}
+
           {currentStep === 0 && (
             <div className={styles.stepScreen}>
               <div className={styles.screenHeader}>
@@ -773,7 +816,7 @@ export default function MeasureForm({ userId }: Props) {
 
               <label className={styles.field}>
                 <span>상담 희망 내용</span>
-                <textarea value={message} onChange={event => setMessage(event.target.value)} placeholder="원하는 제품, 현재 상황, 궁금한 점을 편하게 적어주세요." rows={4} />
+                <textarea value={message} onChange={event => setMessage(event.target.value)} placeholder="원하는 제품, 현재 상황, 궁금한 점을 편하게 적어주세요." rows={4} data-testid="measure-message" />
               </label>
 
               <label className={styles.field}>
@@ -837,7 +880,7 @@ export default function MeasureForm({ userId }: Props) {
 
               <label className={styles.privacyLabel}>
                 <input type="checkbox" checked={privacy} onChange={event => setPrivacy(event.target.checked)} className={styles.checkbox} />
-                <span><strong>[필수]</strong> 개인정보 수집 및 이용에 동의합니다. 이름, 연락처, 주소는 무료방문 실측견적 상담 제공 목적으로만 사용합니다.</span>
+                <span><strong>[필수]</strong> 개인정보 수집 및 이용에 동의합니다. 이름, 연락처, 주소, 상담 메모, 추천인 정보, 추가 연락처, 첨부한 사진·영상은 무료방문 실측견적 상담 제공 목적으로만 사용합니다.</span>
               </label>
             </div>
           )}

@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
-import { createPlatformClient } from '@/lib/supabase/platform-server'
+import { createPlatformAdminClient, createPlatformClient } from '@/lib/supabase/platform-server'
 import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
 import type { BlogBlockType, BlogMediaUsageStatus, Database, Json } from '@/types/database'
 import BlogEditorClient, {
@@ -24,6 +24,7 @@ type BlogPost = Database['showroom']['Tables']['blog_posts']['Row']
 type BlogBlock = Database['showroom']['Tables']['blog_blocks']['Row']
 type BlogMedia = Database['showroom']['Tables']['blog_media']['Row']
 type BlogEvent = Database['showroom']['Tables']['blog_post_events']['Row']
+type BlogArticleQuestion = Database['platform']['Tables']['blog_article_questions']['Row']
 type ContentAsset = Database['showroom']['Tables']['content_assets']['Row']
 type ContentAssetFile = Pick<
   Database['showroom']['Tables']['content_asset_files']['Row'],
@@ -205,6 +206,25 @@ function toEditorEvent(event: BlogEvent): BlogEditorEvent {
   }
 }
 
+function toEditorQuestion(question: BlogArticleQuestion) {
+  return {
+    id: question.id,
+    postId: question.post_id,
+    postSlug: question.post_slug,
+    postTitleSnapshot: question.post_title_snapshot,
+    questionBody: question.question_body,
+    status: question.status,
+    adminNote: question.admin_note,
+    approvedQuestion: question.approved_question,
+    approvedAnswer: question.approved_answer,
+    publishedBlockId: question.published_block_id,
+    publishedAt: question.published_at,
+    reviewedAt: question.reviewed_at,
+    createdAt: question.created_at,
+    updatedAt: question.updated_at,
+  }
+}
+
 function contentAssetFileSummary(files: ContentAssetFile[], role: 'web' | 'thumbnail') {
   const file = files.find(item => item.file_role === role)
   if (!file) return null
@@ -237,6 +257,7 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
   }
 
   const showroomAdmin = createShowroomAdminClient()
+  const platformAdmin = createPlatformAdminClient()
 
   const [
     postResult,
@@ -245,6 +266,7 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
     eventsResult,
     assetResult,
     assetTagResult,
+    questionsResult,
   ] = await Promise.all([
     showroomAdmin
       .from('blog_posts')
@@ -277,6 +299,12 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
       .from('content_asset_tags')
       .select('id, name, slug, tag_group, created_at')
       .order('name', { ascending: true }),
+    platformAdmin
+      .from('blog_article_questions')
+      .select('id, user_id, post_id, post_slug, post_title_snapshot, question_body, approved_question, approved_answer, status, admin_note, reviewed_by, reviewed_at, published_block_id, published_at, created_at, updated_at')
+      .eq('post_id', id)
+      .order('created_at', { ascending: false })
+      .limit(24),
   ])
 
   const typedPostResult = postResult as { data: BlogPost | null; error: unknown }
@@ -285,6 +313,7 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
   const typedEventsResult = eventsResult as { data: BlogEvent[] | null }
   const typedAssetResult = assetResult as { data: ContentAsset[] | null }
   const typedAssetTagResult = assetTagResult as { data: ContentAssetTag[] | null }
+  const typedQuestionsResult = questionsResult as { data: BlogArticleQuestion[] | null }
 
   if (typedPostResult.error || !typedPostResult.data) {
     notFound()
@@ -296,6 +325,7 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
   const events = typedEventsResult.data ?? []
   const contentAssets = typedAssetResult.data ?? []
   const contentAssetTags = typedAssetTagResult.data ?? []
+  const articleQuestions = typedQuestionsResult.data ?? []
   const contentAssetIds = contentAssets.map(asset => asset.id)
   const [assetFileResult, assetTagLinkResult] = contentAssetIds.length > 0
     ? await Promise.all([
@@ -351,6 +381,7 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
       initialBlocks={blocks.map(toEditorBlock)}
       media={media.map((item, index) => toEditorMedia(item, mediaPreviewUrls[index] ?? null))}
       events={events.map(toEditorEvent)}
+      initialQuestions={articleQuestions.map(toEditorQuestion)}
       contentAssets={contentAssetPickerItems}
     />
   )

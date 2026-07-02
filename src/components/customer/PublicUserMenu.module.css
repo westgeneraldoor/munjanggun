@@ -121,6 +121,12 @@
   }
 }
 
+@media (max-width: 767px) {
+  .blogArticleContainer {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .chevronOpen {
     transition: none;

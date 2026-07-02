@@ -1,0 +1,45 @@
+.badge {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mg-space-xs);
+  padding: 0 10px;
+  border-radius: var(--mg-radius-sm);
+  font-family: var(--mg-font-latin);
+  font-size: var(--mg-current-label);
+  font-weight: var(--mg-font-weight-label);
+  line-height: var(--mg-line-height-label);
+  letter-spacing: var(--mg-letter-spacing);
+  white-space: nowrap;
+}
+
+.neutral {
+  color: var(--mg-text-muted);
+  background: var(--mg-surface-page-soft);
+  border: 1px solid var(--mg-border-subtle);
+}
+
+.action {
+  color: var(--mg-action-primary);
+  background: color-mix(in srgb, var(--mg-action-primary) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mg-action-primary) 24%, transparent);
+}
+
+.success {
+  color: var(--mg-state-success);
+  background: color-mix(in srgb, var(--mg-state-success) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mg-state-success) 28%, transparent);
+}
+
+.danger {
+  color: var(--mg-state-danger);
+  background: color-mix(in srgb, var(--mg-state-danger) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mg-state-danger) 26%, transparent);
+}
+
+.proof {
+  color: var(--mg-state-proof);
+  background: var(--mg-navy-soft);
+  border: 1px solid color-mix(in srgb, var(--mg-state-proof) 18%, transparent);
+}
