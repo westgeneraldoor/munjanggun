@@ -90,8 +90,9 @@ test('customer portal uses the platform theme without mobile overflow', async ({
 
   await expect(page.locator('[data-mg-theme="portal"]').first()).toBeVisible()
   await expect(page.getByRole('link', { name: '문장군 홈으로 이동' }).first()).toBeVisible()
+  await expect(page.getByRole('link', { name: '문장군 홈으로 이동' }).first()).toHaveAttribute('href', '/blog')
   await expect(page.getByRole('button', { name: '로그아웃' })).toBeVisible()
-  await expect(page.locator('#card-measure')).toHaveAttribute('href', '/portal/measure/new')
+  await expect(page.locator('#card-measure')).toHaveAttribute('href', '/measure')
   await expect(page.locator('#card-as')).toHaveAttribute('href', '/portal/as/new')
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
@@ -133,6 +134,18 @@ test('login screen uses the Munjanggun platform theme', async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(1)
 })
 
+test('blog launch home has image-led hero without mobile overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.goto('/blog')
+
+  await expect(page.getByRole('heading', { name: '중문과 도어를 고르기 전, 집에서 먼저 확인할 이야기.' })).toBeVisible()
+  await expect(page.getByRole('link', { name: '무료방문 실측견적 안내' })).toHaveAttribute('href', '/measure')
+  await expect(page.locator('img[src="/images/blog-launch/blog-hero-entryway.png"]')).toBeVisible()
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  expect(overflow).toBeLessThanOrEqual(1)
+})
+
 test('customer intake routes use the platform theme without mobile overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 })
 
@@ -150,7 +163,7 @@ test('customer intake routes use the platform theme without mobile overflow', as
     await expect(page).toHaveURL(new RegExp(`${route.replace(/\//g, '\\/')}$`))
     await expect(page.locator('[data-mg-theme="portal"]').first()).toBeVisible()
     await expect(page.locator('header a[href="/portal"]').first()).toBeVisible()
-    await expect(page.locator('header a[href="/"]').filter({ hasText: 'MUNJANGGUN' }).first()).toBeVisible()
+    await expect(page.locator('header a[href="/blog"]').filter({ hasText: 'MUNJANGGUN' }).first()).toBeVisible()
     await expect(page.locator('main').first()).toBeVisible()
 
     await page.keyboard.press('Tab')
@@ -172,6 +185,18 @@ test('customer intake routes use the platform theme without mobile overflow', as
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
     expect(overflow).toBeLessThanOrEqual(1)
   }
+})
+
+test('free measurement landing is public and leads into the protected intake form', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.goto('/measure')
+
+  await expect(page.getByRole('heading', { name: /집에 맞는지 먼저 보고/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /문장군 블로그로 돌아가기/ })).toHaveAttribute('href', '/blog')
+  await expect(page.getByRole('link', { name: /무료방문 실측견적 신청/ })).toHaveAttribute('href', '/portal/measure/new')
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  expect(overflow).toBeLessThanOrEqual(1)
 })
 
 test('measurement intake preserves private blog question context after login', async ({ page }) => {

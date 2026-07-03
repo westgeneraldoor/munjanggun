@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { ArrowRight, Search, X } from 'lucide-react'
-import { useId, useMemo, useRef, useState } from 'react'
+import { type CSSProperties, useId, useMemo, useRef, useState } from 'react'
 import {
   BLOG_INITIAL_VISIBLE_POSTS,
   BLOG_TOPICS,
@@ -29,6 +29,15 @@ const dateFormatter = new Intl.DateTimeFormat('ko-KR', {
   day: '2-digit',
   timeZone: 'Asia/Seoul',
 })
+
+const TOPIC_IMAGE = '/images/blog-launch/blog-topic-details.png'
+
+function topicCardStyle(index: number) {
+  return {
+    '--topic-image': `url(${TOPIC_IMAGE})`,
+    '--topic-position': `${Math.min(index * 18, 78)}% center`,
+  } as CSSProperties
+}
 
 function formatDate(value: string | null) {
   if (!value) return null
@@ -218,23 +227,27 @@ export default function BlogExplorerClient({ posts, categories, homeModel }: Blo
           <button
             type="button"
             className={`${styles.topicCard} ${selectedTopic === 'all' ? styles.topicCardActive : ''}`}
+            style={topicCardStyle(0)}
             onClick={resetTopic}
             aria-pressed={selectedTopic === 'all'}
           >
+            <span className={styles.topicVisual} aria-hidden="true" />
             <span>전체 글</span>
             <strong>{posts.length}개</strong>
             <p>문장군 블로그에 공개된 모든 글을 최신순으로 봅니다.</p>
           </button>
-          {BLOG_TOPICS.map(topic => {
+          {BLOG_TOPICS.map((topic, index) => {
             const count = homeModel.topicCounts[topic.id] ?? 0
             return (
               <button
                 key={topic.id}
                 type="button"
                 className={`${styles.topicCard} ${selectedTopic === topic.id ? styles.topicCardActive : ''}`}
+                style={topicCardStyle(index + 1)}
                 onClick={() => selectTopic(topic.id)}
                 aria-pressed={selectedTopic === topic.id}
               >
+                <span className={styles.topicVisual} aria-hidden="true" />
                 <span>{topic.title}</span>
                 <strong>{count > 0 ? `${count}개` : '준비 중'}</strong>
                 <p>{topic.description}</p>

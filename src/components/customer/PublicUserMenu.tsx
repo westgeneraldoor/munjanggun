@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ChevronDown, ClipboardList, LogIn, LogOut, ShieldCheck, UserRound } from 'lucide-react'
+import { BookOpenText, ChevronDown, ClipboardList, LogIn, LogOut, ShieldCheck, UserRound } from 'lucide-react'
 import { createPlatformClient } from '@/lib/supabase/platform-client'
 import { logError } from '@/lib/logger'
 import styles from './PublicUserMenu.module.css'
@@ -27,6 +27,14 @@ const HIDDEN_PATH_PREFIXES = [
 
 const hasSupabasePublicEnv = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
+function normalizeDisplayName(value: string | null | undefined, role: ProfileRole) {
+  const trimmed = value?.trim()
+  if (!trimmed || /^[?\s]+$/.test(trimmed) || trimmed.includes('�')) {
+    return role === 'administrator' ? '문장군 관리자' : '문장군 고객'
+  }
+  return trimmed
+}
+
 export default function PublicUserMenu() {
   const pathname = usePathname()
   const router = useRouter()
@@ -37,8 +45,9 @@ export default function PublicUserMenu() {
 
   const isHidden = HIDDEN_PATH_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
   const isBlogArticle = /^\/blog\/[^/]+$/.test(pathname || '')
+  const isLaunchSurface = pathname === '/measure' || pathname === '/blog' || (pathname?.startsWith('/blog/') ?? false)
   const loginHref = `/login?next=${encodeURIComponent(pathname || '/')}`
-  const containerClassName = `${styles.container} ${isBlogArticle ? styles.blogArticleContainer : ''}`
+  const containerClassName = `${styles.container} ${isLaunchSurface ? styles.launchContainer : ''} ${isBlogArticle ? styles.blogArticleContainer : ''}`
 
   useEffect(() => {
     if (isHidden) {
@@ -78,10 +87,14 @@ export default function PublicUserMenu() {
         } | null
 
         if (mounted) {
+          const role = dbProfile?.role || 'customer'
           setProfile({
             email: dbProfile?.email || user.email || null,
-            displayName: dbProfile?.display_name || user.user_metadata?.full_name || user.user_metadata?.name || '마이페이지',
-            role: dbProfile?.role || 'customer',
+            displayName: normalizeDisplayName(
+              dbProfile?.display_name || user.user_metadata?.full_name || user.user_metadata?.name,
+              role
+            ),
+            role,
           })
         }
       } catch (err) {
@@ -173,13 +186,17 @@ export default function PublicUserMenu() {
             <span className={styles.identityName}>{profile.displayName}</span>
             {profile.email && <span className={styles.identityEmail}>{profile.email}</span>}
           </div>
+          <Link href="/blog" className={styles.menuItem} role="menuitem" onClick={() => setOpen(false)}>
+            <BookOpenText size={16} aria-hidden="true" />
+            <span>블로그 홈</span>
+          </Link>
           <Link href="/portal" className={styles.menuItem} role="menuitem" onClick={() => setOpen(false)}>
             <UserRound size={16} aria-hidden="true" />
             <span>마이페이지</span>
           </Link>
-          <Link href="/portal/measure/new" className={styles.menuItem} role="menuitem" onClick={() => setOpen(false)}>
+          <Link href="/measure" className={styles.menuItem} role="menuitem" onClick={() => setOpen(false)}>
             <ClipboardList size={16} aria-hidden="true" />
-            <span>무료방문견적 신청</span>
+            <span>무료방문견적 안내</span>
           </Link>
           {isAdministrator && (
             <Link href="/admin/platform" className={styles.menuItem} role="menuitem" onClick={() => setOpen(false)}>

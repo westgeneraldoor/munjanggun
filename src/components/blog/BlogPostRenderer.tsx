@@ -80,7 +80,7 @@ function CtaBlock({ text, final = false }: { text: string | null; final?: boolea
         <span>무료 방문실측으로 확인</span>
         <strong>{text?.trim() || '문 종류를 정하기 전에, 우리 집 구조와 시공 조건부터 같이 확인해드립니다.'}</strong>
       </div>
-      <Link href="/portal/measure/new" aria-label="무료 방문실측으로 우리 집 조건 확인하기">
+      <Link href="/measure" aria-label="무료 방문실측으로 우리 집 조건 확인하기">
         우리 집 조건 확인하기
         <ArrowRight size={16} aria-hidden="true" />
       </Link>
@@ -91,6 +91,7 @@ function CtaBlock({ text, final = false }: { text: string | null; final?: boolea
 function LinkButtonBlock({ block }: { block: BlogRenderBlock }) {
   const link = normalizeLinkButtonBlock(block)
   if (!link) return null
+  const href = link.href === '/portal/measure/new' ? '/measure' : link.href
 
   return (
     <aside className={styles.linkButtonBlock}>
@@ -98,7 +99,7 @@ function LinkButtonBlock({ block }: { block: BlogRenderBlock }) {
         <span>이어 확인하기</span>
         {link.description && <p>{link.description}</p>}
       </div>
-      <Link href={link.href}>
+      <Link href={href}>
         {link.label}
         <ArrowRight size={16} aria-hidden="true" />
       </Link>

@@ -34,7 +34,7 @@ export async function proxy(request: NextRequest) {
   const isAdminLoginRoute = pathname === '/admin/login'
   const isManagerRoute = pathname.startsWith('/manager')
   const isPortalRoute = pathname.startsWith('/portal')
-  const isMeasureRoute = pathname.startsWith('/measure')
+  const isMeasureRoute = pathname.startsWith('/measure') && pathname !== '/measure'
   const isCustomerLoginRoute = pathname === '/login'
 
   if (!hasSupabasePublicEnv()) {

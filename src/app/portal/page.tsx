@@ -6,9 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   ArrowRight,
   ClipboardList,
-  FileText,
   Ruler,
-  ShieldCheck,
   Wrench,
   X,
 } from 'lucide-react'
@@ -100,6 +98,14 @@ function canRequestCancel(status: CustomerRequestStatus) {
   return status !== 'cancel_pending' && status !== 'cancel_confirmed'
 }
 
+function normalizeDisplayName(value: string | null | undefined, role: string | undefined) {
+  const trimmed = value?.trim()
+  if (!trimmed || /^[?\s]+$/.test(trimmed) || trimmed.includes('�')) {
+    return role === 'administrator' ? '문장군 관리자' : '문장군 고객'
+  }
+  return trimmed
+}
+
 export default function PortalPage() {
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -159,7 +165,10 @@ export default function PortalPage() {
 
       setProfile({
         email: dbProfile?.email || user.email,
-        displayName: dbProfile?.display_name || user.user_metadata?.full_name || user.user_metadata?.name || '고객',
+        displayName: normalizeDisplayName(
+          dbProfile?.display_name || user.user_metadata?.full_name || user.user_metadata?.name,
+          dbProfile?.role || 'customer'
+        ),
         role: dbProfile?.role || 'customer',
       })
 
@@ -243,7 +252,7 @@ export default function PortalPage() {
     try {
       const { error } = await supabase.auth.signOut()
       if (error) logError('Signout error', error)
-      router.push('/')
+      router.push('/blog')
       router.refresh()
     } catch (err) {
       logError('Signout unexpected error', err)
@@ -310,7 +319,7 @@ export default function PortalPage() {
       Icon: Ruler,
       title: '무료방문 실측견적 상담',
       desc: '견적상담을 받고 진행하지 않아도 비용이 들지 않아요. 우리 집 시공 가능 여부와 방향을 먼저 확인해요.',
-      href: '/portal/measure/new',
+      href: '/measure',
       active: true,
       cta: '신청하기',
     },
@@ -323,30 +332,13 @@ export default function PortalPage() {
       active: true,
       cta: '접수하기',
     },
-    {
-      id: 'card-estimate',
-      Icon: FileText,
-      title: '견적서 확인',
-      desc: '담당자가 안내한 견적서를 마이페이지에서 확인할 수 있도록 준비 중입니다.',
-      href: null,
-      active: false,
-      cta: '준비중',
-    },
-    {
-      id: 'card-history',
-      Icon: ShieldCheck,
-      title: '시공/A/S 이력',
-      desc: '상담, 시공, 사후관리 기록을 한곳에서 볼 수 있도록 이어서 만들겠습니다.',
-      href: null,
-      active: false,
-      cta: '준비중',
-    },
   ]
 
   return (
     <div className={styles.container} data-mg-theme="portal">
       <div className={styles.header}>
         <CustomerTopNav
+          homeHref="/blog"
           account={{
             displayName: profile?.displayName,
             email: profile?.email,
@@ -359,10 +351,24 @@ export default function PortalPage() {
       <main className={styles.main}>
         <section className={styles.hero}>
           <p className={styles.kicker}>문장군 마이페이지</p>
-          <h1>남겨주신 상담과 요청을 한곳에서 확인해요.</h1>
+          <h1>읽어둔 글과 남겨주신 요청을 이어서 확인해요.</h1>
           <p>
-            무료방문 실측견적 상담, A/S 접수, 이후 견적서와 진행 이력까지 고객님의 흐름이 끊기지 않도록 정리해둘게요.
+            블로그에서 저장한 글, 도움된 글, 남긴 질문을 먼저 모아두고 무료방문 실측견적 흐름으로 자연스럽게 이어드릴게요.
           </p>
+        </section>
+
+        <CustomerCollectionPanel savedPosts={savedPosts} helpfulPosts={helpfulPosts} questions={blogQuestions} />
+
+        <section className={styles.menuIntro} aria-labelledby="portal-actions-title">
+          <div>
+            <span>다음 행동</span>
+            <h2 id="portal-actions-title">글로 판단이 어려우면 집 조건을 확인해요.</h2>
+            <p>읽어둔 내용에서 이어서 상담하거나, 필요한 요청을 간단히 남길 수 있어요.</p>
+          </div>
+          <Link href="/blog">
+            블로그로 돌아가기
+            <ArrowRight size={15} aria-hidden="true" />
+          </Link>
         </section>
 
         <section className={styles.menuGrid} aria-label="고객 서비스">
@@ -389,13 +395,11 @@ export default function PortalPage() {
           })}
         </section>
 
-        <CustomerCollectionPanel savedPosts={savedPosts} helpfulPosts={helpfulPosts} questions={blogQuestions} />
-
         <div className={styles.historyGrid}>
           <section className={styles.requestSection}>
             <div className={styles.sectionHeader}>
               <h2>최근 견적상담</h2>
-              <Link href="/portal/measure/new">새 상담 신청</Link>
+              <Link href="/measure">새 상담 신청</Link>
             </div>
             {recentMeasurements.length === 0 ? (
               <div className={styles.emptyState}>
