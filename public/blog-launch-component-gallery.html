@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>문장군 블로그 홈 컴포넌트 선택 보드</title>
+  <style>
+    :root {
+      --paper: #fffaf2;
+      --cream: #f5efe5;
+      --ink: #211815;
+      --body: #5d514a;
+      --terracotta: #b76145;
+      --cocoa: #2c221e;
+      --line: #dfd2c2;
+      --shadow: 0 22px 60px rgba(44, 34, 30, .13);
+      font-family: Pretendard, "Noto Sans KR", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: linear-gradient(180deg, var(--cream), #fff);
+    }
+
+    main {
+      width: min(1160px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 44px 0 80px;
+    }
+
+    .hero {
+      min-height: 520px;
+      display: grid;
+      grid-template-columns: minmax(0, .88fr) minmax(360px, 1.12fr);
+      gap: 42px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      color: var(--terracotta);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-family: "Noto Serif KR", Georgia, serif;
+      letter-spacing: 0;
+      word-break: keep-all;
+    }
+
+    h1 {
+      margin-top: 14px;
+      font-size: clamp(42px, 6vw, 72px);
+      line-height: 1.08;
+    }
+
+    .hero p, .section p, .card p {
+      color: var(--body);
+      line-height: 1.72;
+      word-break: keep-all;
+    }
+
+    .hero p {
+      max-width: 620px;
+      font-size: 18px;
+    }
+
+    .heroImage {
+      position: relative;
+      aspect-ratio: 16 / 10;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      animation: floatIn .8s ease both;
+    }
+
+    .heroImage img, .imageBand img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .pillRow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .pill {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 12px;
+      color: var(--paper);
+      background: var(--cocoa);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .section {
+      margin-top: 58px;
+      animation: floatIn .7s ease both;
+    }
+
+    .sectionHeader {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 18px;
+    }
+
+    .section h2 {
+      margin-top: 6px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.2;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      min-width: 0;
+      background: rgba(255, 250, 242, .82);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 14px 38px rgba(44, 34, 30, .06);
+      transition: transform .22s ease, box-shadow .22s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow);
+    }
+
+    .imageBand {
+      height: 138px;
+      background: #dccdb9;
+    }
+
+    .cardBody {
+      padding: 18px;
+    }
+
+    .card h3 {
+      font-size: 22px;
+      line-height: 1.32;
+    }
+
+    .tag {
+      display: inline-flex;
+      margin-bottom: 10px;
+      color: var(--terracotta);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .wide {
+      grid-column: span 2;
+    }
+
+    .layoutDemo {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
+      gap: 16px;
+    }
+
+    .featured {
+      min-height: 360px;
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+    }
+
+    .featured .imageBand {
+      height: 100%;
+    }
+
+    .cta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 24px;
+      color: var(--paper);
+      background:
+        linear-gradient(90deg, rgba(44, 34, 30, .94), rgba(44, 34, 30, .65)),
+        url("/images/blog-launch/measure-consultation-detail.png") center / cover;
+      border-radius: 8px;
+    }
+
+    .cta strong {
+      font-family: "Noto Serif KR", Georgia, serif;
+      font-size: 30px;
+      line-height: 1.25;
+    }
+
+    .button {
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 16px;
+      color: #fff;
+      background: var(--terracotta);
+      border-radius: 8px;
+      font-weight: 900;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .sourceList {
+      display: grid;
+      gap: 8px;
+      padding: 20px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .sourceList a {
+      color: var(--terracotta);
+      font-weight: 800;
+    }
+
+    @keyframes floatIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      .hero, .layoutDemo, .featured {
+        grid-template-columns: 1fr;
+      }
+
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .wide {
+        grid-column: span 1;
+      }
+    }
+
+    @media (max-width: 620px) {
+      main {
+        width: min(100% - 28px, 1160px);
+        padding-top: 26px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sectionHeader, .cta {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .button {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div>
+        <span class="eyebrow">문장군 블로그 홈 선택 보드</span>
+        <h1>지식은 정확하게, 첫인상은 이미지로.</h1>
+        <p>블로그 홈에 넣을 수 있는 컴포넌트 후보를 모았습니다. 당장 적용한 것은 hero, topic cards, starter article, latest articles, thread links, measure CTA입니다.</p>
+        <div class="pillRow">
+          <span class="pill">이미지 hero</span>
+          <span class="pill">질문형 주제 입구</span>
+          <span class="pill">무료실측 전환</span>
+        </div>
+      </div>
+      <div class="heroImage">
+        <img src="/images/blog-launch/blog-hero-entryway.png" alt="">
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="sectionHeader">
+        <div>
+          <span class="eyebrow">Component Types</span>
+          <h2>블로그 홈에 어울리는 구성</h2>
+        </div>
+      </div>
+      <div class="grid">
+        <article class="card wide">
+          <div class="imageBand"><img src="/images/blog-launch/blog-topic-details.png" alt=""></div>
+          <div class="cardBody">
+            <span class="tag">01 Editorial Hero</span>
+            <h3>블로그의 약속을 한 장면으로 보여주는 첫 화면</h3>
+            <p>문장군은 상품 진열보다 집 조건 판단을 먼저 말해야 하므로, 밝은 주거 이미지와 큰 명조 제목이 맞습니다.</p>
+          </div>
+        </article>
+        <article class="card">
+          <div class="imageBand"><img src="/images/blog-launch/blog-topic-details.png" alt=""></div>
+          <div class="cardBody">
+            <span class="tag">02 Topic Gateway</span>
+            <h3>질문으로 들어가는 카테고리</h3>
+            <p>중문, 현장 조건, 가격, 고객 질문처럼 AEO 글 묶음의 입구가 됩니다.</p>
+          </div>
+        </article>
+        <article class="card">
+          <div class="cardBody">
+            <span class="tag">03 Search First</span>
+            <h3>검색이 있는 지식 허브</h3>
+            <p>Vercel/Supabase식 피드에서 가져온 실무형 탐색 패턴입니다.</p>
+          </div>
+        </article>
+        <article class="card">
+          <div class="cardBody">
+            <span class="tag">04 Starter Reading</span>
+            <h3>처음 온 사람이 먼저 읽는 글</h3>
+            <p>고객 질문과 견적 전 확인 글을 우선 노출합니다.</p>
+          </div>
+        </article>
+        <article class="card">
+          <div class="cardBody">
+            <span class="tag">05 Related Threads</span>
+            <h3>비슷한 조건으로 이어 읽기</h3>
+            <p>상품명보다 “스위치”, “단차”, “가격” 같은 말로 연결합니다.</p>
+          </div>
+        </article>
+        <article class="card wide">
+          <div class="imageBand"><img src="/images/blog-launch/measure-consultation-detail.png" alt=""></div>
+          <div class="cardBody">
+            <span class="tag">06 Measure Bridge CTA</span>
+            <h3>바로 폼이 아니라 무료실측 설명 랜딩으로</h3>
+            <p>블로그 독자가 “읽었지만 우리 집은 모르겠다”는 순간에 `/measure`로 이어집니다.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="sectionHeader">
+        <div>
+          <span class="eyebrow">Layout Sample</span>
+          <h2>추천 조합</h2>
+        </div>
+      </div>
+      <div class="layoutDemo">
+        <article class="card featured">
+          <div class="imageBand"><img src="/images/blog-launch/blog-hero-entryway.png" alt=""></div>
+          <div class="cardBody">
+            <span class="tag">Featured Article</span>
+            <h3>처음 오셨다면 여기부터</h3>
+            <p>target question과 summary answer가 있는 글을 크게 보여주면 AEO 글의 목적이 화면에서도 바로 읽힙니다.</p>
+          </div>
+        </article>
+        <div class="sourceList">
+          <strong>참고한 레퍼런스</strong>
+          <a href="https://vercel.com/blog">Vercel Blog</a>
+          <a href="https://github.blog/">GitHub Blog</a>
+          <a href="https://supabase.com/blog">Supabase Blog</a>
+          <a href="https://vercel.com/templates/blog">Vercel Blog Templates</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section cta">
+      <div>
+        <span class="eyebrow">Final CTA</span>
+        <strong>글을 읽고도 애매하면, 우리 집 조건을 먼저 확인합니다.</strong>
+      </div>
+      <a class="button" href="/measure">무료방문 실측견적 안내</a>
+    </section>
+  </main>
+</body>
+</html>

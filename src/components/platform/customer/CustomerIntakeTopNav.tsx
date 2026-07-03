@@ -12,7 +12,7 @@ export interface CustomerIntakeTopNavProps {
 
 export function CustomerIntakeTopNav({
   brandId,
-  homeHref = '/',
+  homeHref = '/blog',
   portalHref = '/portal',
 }: CustomerIntakeTopNavProps) {
   return (

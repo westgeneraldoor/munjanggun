@@ -10,9 +10,10 @@ interface CTABarProps {
   reservationUrl: string | null
   storeUrl: string | null
   hideUntilScroll?: boolean
+  measureHref?: string
 }
 
-export default function CTABar({ storeUrl, hideUntilScroll = false }: CTABarProps) {
+export default function CTABar({ storeUrl, hideUntilScroll = false, measureHref = '/portal/measure/new' }: CTABarProps) {
   const [isVisible, setIsVisible] = useState(!hideUntilScroll)
   const [shared, setShared] = useState(false)
 
@@ -69,7 +70,7 @@ export default function CTABar({ storeUrl, hideUntilScroll = false }: CTABarProp
         <Home size={20} />
       </Link>
       <Link
-        href="/portal/measure/new"
+        href={measureHref}
         className={`${styles.button} ${styles.primary}`}
       >
         무료방문견적
