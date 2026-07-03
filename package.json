@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:e2e": "playwright test",
+    "test:e2e": "node scripts/run-playwright-e2e.mjs",
     "verify:blog-ai-draft-schema": "node scripts/verify-blog-ai-draft-schema.mjs",
     "verify:blog-body-blocks": "node scripts/verify-blog-body-blocks.mjs",
     "verify:blog-claim-safety": "node scripts/verify-blog-claim-safety.mjs",
