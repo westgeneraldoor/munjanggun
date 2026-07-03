@@ -561,6 +561,13 @@
   border-color: var(--admin-accent);
 }
 
+.previewButton:disabled {
+  color: #64748b;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  cursor: not-allowed;
+}
+
 .disabledButton {
   min-width: 108px;
   padding: 0 var(--space-4);
