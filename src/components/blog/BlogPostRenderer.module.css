@@ -1,26 +1,26 @@
 .page {
-  --blog-cocoa: #2c221e;
-  --blog-terracotta: #b35d43;
-  --blog-terracotta-dark: #9e4f39;
-  --blog-cream: #f5efe6;
-  --blog-paper: #fffcf7;
-  --blog-soft: #faf7f0;
-  --blog-almond: #efe6da;
-  --blog-line: #e2d7c8;
-  --blog-line-strong: #c5b9a5;
-  --blog-ink: #171512;
-  --blog-body: #443b34;
-  --blog-muted: #6b6259;
-  --blog-green: #5c8a62;
-  --blog-navy: #1d3858;
-  --blog-caution: #c74332;
+  --blog-cocoa: var(--mg-cocoa-oak);
+  --blog-terracotta: var(--mg-action-primary);
+  --blog-terracotta-dark: var(--mg-action-primary-hover);
+  --blog-cream: var(--mg-cashmere-cream);
+  --blog-paper: var(--mg-paper-white);
+  --blog-soft: var(--mg-cream-soft);
+  --blog-almond: var(--mg-almond-soft);
+  --blog-line: var(--mg-border-subtle);
+  --blog-line-strong: var(--mg-border-strong);
+  --blog-ink: var(--mg-text-primary);
+  --blog-body: var(--mg-text-body);
+  --blog-muted: var(--mg-text-muted);
+  --blog-green: var(--mg-state-success);
+  --blog-navy: var(--mg-state-proof);
+  --blog-caution: var(--mg-state-danger);
   min-width: 0;
   min-height: 100vh;
   color: var(--blog-ink);
   background:
     radial-gradient(circle at top left, rgba(179, 93, 67, 0.08), transparent 34vw),
-    linear-gradient(180deg, var(--blog-cream), var(--blog-soft) 55%, #f8f2e9);
-  font-family: var(--font-sans);
+    linear-gradient(180deg, var(--blog-cream), var(--blog-soft) 55%, color-mix(in srgb, var(--blog-cream) 74%, var(--blog-almond)));
+  font-family: var(--mg-font-body);
 }
 
 .previewPage {
@@ -126,11 +126,11 @@
 .hero h1 {
   max-width: 880px;
   color: var(--blog-cocoa);
-  font-family: "Noto Serif KR", var(--font-sans);
+  font-family: var(--mg-font-brand-ko);
   font-size: clamp(34px, 5.6vw, 68px);
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: 0;
+  font-weight: var(--mg-font-weight-display);
+  line-height: var(--mg-line-height-display-hero);
+  letter-spacing: var(--mg-letter-spacing);
   word-break: keep-all;
   overflow-wrap: break-word;
 }
@@ -222,10 +222,10 @@
 .headingBlock {
   margin: clamp(30px, 4vw, 42px) 0 var(--space-3);
   color: var(--blog-cocoa);
-  font-family: "Noto Serif KR", var(--font-sans);
+  font-family: var(--mg-font-brand-ko);
   font-size: clamp(24px, 3vw, 34px);
-  font-weight: 700;
-  line-height: 1.22;
+  font-weight: var(--mg-font-weight-display);
+  line-height: var(--mg-line-height-display-section);
   word-break: keep-all;
   overflow-wrap: break-word;
 }

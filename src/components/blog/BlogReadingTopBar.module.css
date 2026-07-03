@@ -11,9 +11,9 @@
   align-items: center;
   gap: 6px;
   padding: 3px;
-  color: #2c221e;
-  background: rgba(255, 252, 247, 0.94);
-  border: 1px solid rgba(197, 185, 165, 0.72);
+  color: var(--mg-cocoa-oak);
+  background: color-mix(in srgb, var(--mg-paper-white) 94%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mg-border-strong) 72%, transparent);
   border-radius: 8px;
   box-shadow: 0 16px 38px rgba(44, 34, 30, 0.16);
   backdrop-filter: blur(18px);
@@ -39,7 +39,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #2c221e;
+  color: var(--mg-cocoa-oak);
   text-decoration: none;
   border-radius: 6px;
   line-height: 1;
@@ -48,7 +48,7 @@
 .homeLink {
   gap: 7px;
   padding: 0 10px;
-  color: #443b34;
+  color: var(--mg-text-body);
   font-size: 14px;
   font-weight: 850;
   line-height: 1.2;
@@ -65,13 +65,13 @@
 .homeLink:hover,
 .iconLink:focus-visible,
 .homeLink:focus-visible {
-  color: #9e4f39;
-  background: #efe6da;
+  color: var(--mg-action-primary-hover);
+  background: var(--mg-almond-soft);
 }
 
 .iconLink:focus-visible,
 .homeLink:focus-visible {
-  outline: 2px solid #b35d43;
+  outline: 2px solid var(--mg-focus-ring);
   outline-offset: 2px;
 }
 

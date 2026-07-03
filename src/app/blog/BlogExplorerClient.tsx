@@ -42,7 +42,7 @@ function BlogCard({ post, compact = false }: { post: BlogExplorerPost; compact?:
 
   return (
     <Link href={`/blog/${post.slug}`} className={`${styles.card} ${compact ? styles.cardCompact : ''}`}>
-      <div className={styles.thumb}>
+      <div className={styles.thumb} data-brand-asset-slot="blogThumbnail">
         {post.coverMedia?.url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={post.coverMedia.url} alt={post.coverMedia.altText || post.title} />
@@ -77,7 +77,7 @@ function FeaturedCard({ post }: { post: BlogExplorerPost }) {
 
   return (
     <Link href={`/blog/${post.slug}`} className={styles.featuredCard}>
-      <div className={styles.featuredImage}>
+      <div className={styles.featuredImage} data-brand-asset-slot="blogThumbnail">
         {post.coverMedia?.url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={post.coverMedia.url} alt={post.coverMedia.altText || post.title} />
