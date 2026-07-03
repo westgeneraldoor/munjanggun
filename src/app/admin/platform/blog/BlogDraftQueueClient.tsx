@@ -1,10 +1,11 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { FormEvent, useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, FilePenLine, Search, ShieldAlert } from 'lucide-react'
 import type { BlogContentCategory, BlogMediaUsageStatus, BlogPostStatus } from '@/types/database'
+import { createBlogAiDraft, type BlogAiDraftConfigView, type CreateBlogAiDraftPayload } from './actions'
 import styles from './blog-draft-queue.module.css'
 
 export type BlogDraftQueueRow = {
@@ -68,6 +69,19 @@ const CATEGORY_TABS: Array<{ key: CategoryFilter; label: string }> = [
   { key: 'price_guide', label: '가격/견적' },
   { key: 'area_guide', label: '지역안내' },
 ]
+
+const CATEGORY_OPTIONS: Array<{ value: BlogContentCategory; label: string }> = CATEGORY_TABS
+  .filter((tab): tab is { key: BlogContentCategory; label: string } => tab.key !== 'all')
+  .map(tab => ({ value: tab.key, label: tab.label }))
+
+const DEFAULT_EVIDENCE_JSON = JSON.stringify([
+  {
+    ref: 'verified-source-id',
+    status: 'candidate',
+    type: 'field_guidance',
+    note: '운영자가 확인한 근거 ID와 상태를 입력하세요. 이 화면이 중앙 문서를 자동 조회하지는 않습니다.',
+  },
+], null, 2)
 
 const STATUS_LABEL: Record<BlogPostStatus, string> = {
   ai_draft: 'AI 초안',
@@ -216,15 +230,30 @@ function SummaryPanel({
 export default function BlogDraftQueueClient({
   initialRows,
   loadError,
+  aiDraftConfig,
 }: {
   initialRows: BlogDraftQueueRow[]
   loadError: string | null
+  aiDraftConfig: BlogAiDraftConfigView
 }) {
   const router = useRouter()
+  const [isDraftPending, startDraftTransition] = useTransition()
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [draftForm, setDraftForm] = useState<CreateBlogAiDraftPayload>({
+    category: 'customer_qa',
+    topic: '',
+    targetQuestion: '',
+    primaryKeyword: '',
+    serviceArea: '',
+    productType: '',
+    writingIntent: '',
+    evidenceJson: DEFAULT_EVIDENCE_JSON,
+    needsImageSlots: true,
+  })
+  const [draftMessage, setDraftMessage] = useState<{ ok: boolean; text: string; issues?: string[] } | null>(null)
 
   const filteredRows = useMemo(() => {
     const keyword = search.trim().toLowerCase()
@@ -255,6 +284,26 @@ export default function BlogDraftQueueClient({
     resetSelection()
   }
 
+  const updateDraftForm = <Key extends keyof CreateBlogAiDraftPayload>(
+    key: Key,
+    value: CreateBlogAiDraftPayload[Key],
+  ) => {
+    setDraftForm(prev => ({ ...prev, [key]: value }))
+  }
+
+  const handleCreateAiDraft = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setDraftMessage(null)
+
+    startDraftTransition(async () => {
+      const result = await createBlogAiDraft(draftForm)
+      setDraftMessage({ ok: result.ok, text: result.message, issues: result.issues })
+      if (result.ok && result.postId) {
+        router.push(`/admin/platform/blog/${result.postId}`)
+      }
+    })
+  }
+
   return (
     <div className={styles.page}>
       <header className={styles.pageHeader}>
@@ -265,6 +314,126 @@ export default function BlogDraftQueueClient({
           </p>
         </div>
       </header>
+
+      <section className={styles.aiDraftPanel} aria-label="AI 초안 생성">
+        <div className={styles.aiDraftHeader}>
+          <div>
+            <h2>AI 초안 생성</h2>
+            <p>운영자가 직접 확인한 근거/출처 ID로 검수용 초안을 만듭니다. 생성 결과는 항상 AI 초안 상태로 저장되며, 발행 전 사람 검수가 필요합니다.</p>
+          </div>
+          <span className={aiDraftConfig.enabled ? styles.aiReadyBadge : styles.aiDisabledBadge}>
+            {aiDraftConfig.enabled ? '사용 가능' : '비활성'}
+          </span>
+        </div>
+        {!aiDraftConfig.enabled && (
+          <div className={styles.aiDraftNotice} role="status">
+            {aiDraftConfig.reason ?? 'AI 초안 생성 설정이 필요합니다.'}
+          </div>
+        )}
+        <form className={styles.aiDraftForm} onSubmit={handleCreateAiDraft}>
+          <label>
+            <span>글 유형</span>
+            <select
+              value={draftForm.category}
+              onChange={event => updateDraftForm('category', event.target.value as BlogContentCategory)}
+              disabled={!aiDraftConfig.enabled || isDraftPending}
+            >
+              {CATEGORY_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>주제</span>
+            <input
+              value={draftForm.topic}
+              onChange={event => updateDraftForm('topic', event.target.value)}
+              disabled={!aiDraftConfig.enabled || isDraftPending}
+              placeholder="예: 중문 가격이 집마다 다른 이유"
+              required
+            />
+          </label>
+          <label>
+            <span>대표 질문</span>
+            <input
+              value={draftForm.targetQuestion}
+              onChange={event => updateDraftForm('targetQuestion', event.target.value)}
+              disabled={!aiDraftConfig.enabled || isDraftPending}
+              placeholder="예: 중문 가격은 왜 현장마다 달라지나요?"
+              required
+            />
+          </label>
+          <label>
+            <span>키워드</span>
+            <input
+              value={draftForm.primaryKeyword}
+              onChange={event => updateDraftForm('primaryKeyword', event.target.value)}
+              disabled={!aiDraftConfig.enabled || isDraftPending}
+              placeholder="예: 중문 가격"
+            />
+          </label>
+          <label>
+            <span>지역/현장 변수</span>
+            <input
+              value={draftForm.serviceArea}
+              onChange={event => updateDraftForm('serviceArea', event.target.value)}
+              disabled={!aiDraftConfig.enabled || isDraftPending}
+              placeholder="예: 화성 동탄, 아파트 현관"
+            />
+          </label>
+          <label>
+            <span>상품군</span>
+            <input
+              value={draftForm.productType}
+              onChange={event => updateDraftForm('productType', event.target.value)}
+              disabled={!aiDraftConfig.enabled || isDraftPending}
+              placeholder="예: 3연동 중문"
+            />
+          </label>
+          <label className={styles.aiDraftWide}>
+            <span>작성 의도</span>
+            <input
+              value={draftForm.writingIntent}
+              onChange={event => updateDraftForm('writingIntent', event.target.value)}
+              disabled={!aiDraftConfig.enabled || isDraftPending}
+              placeholder="예: 가격 단정 없이 견적 변동 기준을 설명"
+            />
+          </label>
+          <label className={styles.aiDraftWide}>
+            <span>출처 근거 JSON</span>
+            <textarea
+              value={draftForm.evidenceJson}
+              onChange={event => updateDraftForm('evidenceJson', event.target.value)}
+              disabled={!aiDraftConfig.enabled || isDraftPending}
+              rows={7}
+              spellCheck={false}
+              required
+            />
+          </label>
+          <label className={styles.aiDraftCheckbox}>
+            <input
+              type="checkbox"
+              checked={draftForm.needsImageSlots}
+              onChange={event => updateDraftForm('needsImageSlots', event.target.checked)}
+              disabled={!aiDraftConfig.enabled || isDraftPending}
+            />
+            <span>본문 사진 슬롯이 필요함</span>
+          </label>
+          <button type="submit" className={styles.aiDraftButton} disabled={!aiDraftConfig.enabled || isDraftPending}>
+            {isDraftPending ? '생성 중' : 'AI 초안 만들기'}
+          </button>
+        </form>
+        {draftMessage && (
+          <div className={`${styles.aiDraftMessage} ${draftMessage.ok ? styles.aiDraftMessageOk : styles.aiDraftMessageError}`} role="status">
+            <p>{draftMessage.text}</p>
+            {draftMessage.issues && draftMessage.issues.length > 0 && (
+              <ul>
+                {draftMessage.issues.map(issue => <li key={issue}>{issue}</li>)}
+              </ul>
+            )}
+          </div>
+        )}
+      </section>
 
       <section className={styles.filterStack} aria-label="블로그 초안 필터">
         <div className={styles.searchBox}>

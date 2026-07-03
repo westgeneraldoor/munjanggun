@@ -38,6 +38,7 @@ import {
   publishBlogPost,
   saveBlogEditor,
   updateBlogMedia,
+  updateBlogPostStatus,
   type ContentAssetBlogMedia,
   type SaveBlogEditorPayload,
 } from './actions'
@@ -182,6 +183,9 @@ type PickerUploadItem = {
 }
 
 const MAX_UPLOAD_TOTAL_BYTES = 120 * 1024 * 1024
+const BLOG_BODY_BLOCK_EXPANSION_ENABLED =
+  process.env.NEXT_PUBLIC_BLOG_BODY_BLOCK_EXPANSION === 'enabled' &&
+  process.env.NEXT_PUBLIC_BLOG_BODY_BLOCK_EXPANSION_DB_CONFIRMED === 'enabled'
 
 const CATEGORY_OPTIONS: Array<{ value: BlogContentCategory; label: string }> = [
   { value: 'case_study', label: '시공사례' },
@@ -199,6 +203,15 @@ const STATUS_LABEL: Record<BlogPostStatus, string> = {
   ready: '발행대기',
   published: '발행완료',
   archived: '보관',
+}
+
+const STATUS_ACTION_LABEL: Record<BlogPostStatus, string> = {
+  ai_draft: 'AI 초안',
+  reviewing: '검토중으로',
+  needs_media: '사진필요로',
+  ready: '발행대기로',
+  published: '발행완료',
+  archived: '보관으로',
 }
 
 const QUESTION_STATUS_LABEL: Record<BlogQuestionStatus, string> = {
@@ -1276,6 +1289,7 @@ export default function BlogEditorClient({
     clientId: block.id,
   })))
   const [saveMessage, setSaveMessage] = useState<{ ok: boolean; text: string } | null>(null)
+  const [statusMessage, setStatusMessage] = useState<{ ok: boolean; text: string; issues?: string[] } | null>(null)
   const [publishMessage, setPublishMessage] = useState<{ ok: boolean; text: string; issues?: string[] } | null>(null)
   const [editorMedia, setEditorMedia] = useState<BlogEditorMedia[]>(media)
   const [readerQuestions, setReaderQuestions] = useState<BlogEditorQuestion[]>(initialQuestions)
@@ -1293,6 +1307,33 @@ export default function BlogEditorClient({
   const blockListRef = useRef<HTMLDivElement>(null)
 
   const isPublished = post.status === 'published'
+  const statusActions = useMemo<Array<{ status: BlogPostStatus; label: string; icon: 'review' | 'media' | 'ready' }>>(() => {
+    if (post.status === 'ai_draft') {
+      return [{ status: 'reviewing', label: '검토 시작', icon: 'review' }]
+    }
+    if (post.status === 'reviewing') {
+      return [
+        { status: 'needs_media', label: '사진 필요', icon: 'media' },
+        { status: 'ready', label: '발행대기', icon: 'ready' },
+      ]
+    }
+    if (post.status === 'needs_media') {
+      return [
+        { status: 'reviewing', label: '검토중', icon: 'review' },
+        { status: 'ready', label: '발행대기', icon: 'ready' },
+      ]
+    }
+    if (post.status === 'ready') {
+      return [
+        { status: 'reviewing', label: '검토중', icon: 'review' },
+        { status: 'needs_media', label: '사진 필요', icon: 'media' },
+      ]
+    }
+    if (post.status === 'archived') {
+      return [{ status: 'reviewing', label: '검토 재개', icon: 'review' }]
+    }
+    return []
+  }, [post.status])
   const selectableMedia = useMemo(() => editorMedia.filter(item => item.usageStatus !== 'rejected'), [editorMedia])
   const relatedQuestionsForPreview = useMemo(
     () => relatedText.split('\n').map(item => item.trim()).filter(Boolean),
@@ -1408,9 +1449,9 @@ export default function BlogEditorClient({
     },
     {
       key: 'fact',
-      ok: Boolean(factCheckedLocal),
+      ok: Boolean(factCheckedLocal && initialPost.gateSummary.sourceEvidenceCount > 0),
       label: '근거',
-      detail: `${initialPost.gateSummary.sourceEvidenceCount}개`,
+      detail: !factCheckedLocal ? '사실 확인일' : `${initialPost.gateSummary.sourceEvidenceCount}개`,
     },
   ]
 
@@ -1496,6 +1537,10 @@ export default function BlogEditorClient({
   }
 
   const openAssetPicker = (target: AssetPickerTarget) => {
+    if (isPublished) {
+      setAssetPickerMessage({ ok: false, text: '발행된 글의 사진은 재검수 상태에서만 변경할 수 있습니다.' })
+      return
+    }
     setAssetPickerTarget(target)
     setAssetPickerMessage(null)
   }
@@ -1549,8 +1594,39 @@ export default function BlogEditorClient({
     })),
   })
 
+  const savedEditorFingerprint = JSON.stringify({
+    postId: initialPost.id,
+    post: {
+      title: initialPost.title,
+      slug: initialPost.slug,
+      excerpt: emptyToNull(initialPost.excerpt ?? ''),
+      category: initialPost.category,
+      seoTitle: emptyToNull(initialPost.seoTitle ?? ''),
+      metaDescription: emptyToNull(initialPost.metaDescription ?? ''),
+      canonicalUrl: emptyToNull(initialPost.canonicalUrl ?? ''),
+      primaryKeyword: emptyToNull(initialPost.primaryKeyword ?? ''),
+      targetQuestion: emptyToNull(initialPost.targetQuestion ?? ''),
+      summaryAnswer: emptyToNull(initialPost.summaryAnswer ?? ''),
+      relatedQuestions: initialPost.relatedQuestions,
+      serviceArea: emptyToNull(initialPost.serviceArea ?? ''),
+      productType: emptyToNull(initialPost.productType ?? ''),
+      aiCitationReady: initialPost.aiCitationReady,
+      lastFactCheckedAt: fromDateTimeLocal(toDateTimeLocal(initialPost.lastFactCheckedAt)),
+    },
+    blocks: initialBlocks.map(block => ({
+      id: block.id || null,
+      type: block.type,
+      headingLevel: block.type === 'heading' ? block.headingLevel : null,
+      text: emptyToNull(block.text ?? ''),
+      mediaId: block.type === 'image' ? block.mediaId : null,
+      metadata: block.metadata,
+    })),
+  })
+  const hasUnsavedEditorChanges = JSON.stringify(buildPayload()) !== savedEditorFingerprint
+
   const handleSave = () => {
     setSaveMessage(null)
+    setStatusMessage(null)
     startTransition(async () => {
       const result = await saveBlogEditor(buildPayload())
       setSaveMessage({ ok: result.ok, text: result.message })
@@ -1562,10 +1638,32 @@ export default function BlogEditorClient({
 
   const handlePublish = () => {
     setPublishMessage(null)
+    setStatusMessage(null)
+    if (hasUnsavedEditorChanges) {
+      setPublishMessage({ ok: false, text: '먼저 저장한 뒤 발행해주세요.', issues: ['발행 검수는 저장된 글을 기준으로 실행됩니다.'] })
+      return
+    }
     startTransition(async () => {
       const result = await publishBlogPost(post.id)
       setPublishMessage({ ok: result.ok, text: result.message, issues: result.issues })
       if (result.ok) {
+        router.refresh()
+      }
+    })
+  }
+
+  const handleStatusChange = (nextStatus: BlogPostStatus) => {
+    setStatusMessage(null)
+    setPublishMessage(null)
+    if (hasUnsavedEditorChanges) {
+      setStatusMessage({ ok: false, text: '먼저 저장한 뒤 상태를 변경해주세요.', issues: ['상태 검수는 저장된 글을 기준으로 실행됩니다.'] })
+      return
+    }
+    startTransition(async () => {
+      const result = await updateBlogPostStatus(post.id, nextStatus)
+      setStatusMessage({ ok: result.ok, text: result.message, issues: result.issues })
+      if (result.ok && result.status) {
+        setPost(prev => ({ ...prev, status: result.status as BlogPostStatus }))
         router.refresh()
       }
     })
@@ -1752,19 +1850,32 @@ export default function BlogEditorClient({
               <Eye size={16} aria-hidden="true" />
               미리보기
             </Link>
-            <button type="button" onClick={handleSave} disabled={isPending} className={styles.primaryButton}>
+            {statusActions.map(action => (
+              <button
+                key={action.status}
+                type="button"
+                onClick={() => handleStatusChange(action.status)}
+                disabled={isPending || hasUnsavedEditorChanges}
+                className={styles.previewButton}
+                title={hasUnsavedEditorChanges ? '먼저 저장한 뒤 상태를 변경할 수 있습니다.' : `저장된 내용 기준으로 ${STATUS_ACTION_LABEL[action.status]} 변경합니다.`}
+              >
+                {action.icon === 'ready' ? <CheckCircle2 size={16} aria-hidden="true" /> : action.icon === 'media' ? <ImageIcon size={16} aria-hidden="true" /> : <ArrowRight size={16} aria-hidden="true" />}
+                {action.label}
+              </button>
+            ))}
+            <button type="button" onClick={handleSave} disabled={isPending || isPublished} className={styles.primaryButton}>
               <Save size={16} aria-hidden="true" />
               {isPending ? '저장 중' : '저장'}
             </button>
             <button
               type="button"
               onClick={handlePublish}
-              disabled={isPending || isPublished}
+              disabled={isPending || isPublished || post.status !== 'ready' || hasUnsavedEditorChanges}
               className={styles.publishButton}
               data-testid="publish-blog-post"
             >
               <Rocket size={16} aria-hidden="true" />
-              {isPublished ? '발행완료' : isPending ? '발행 중' : '발행'}
+              {isPublished ? '발행완료' : hasUnsavedEditorChanges ? '저장 필요' : post.status !== 'ready' ? '발행대기 필요' : isPending ? '발행 중' : '발행'}
             </button>
           </div>
         </div>
@@ -1801,6 +1912,16 @@ export default function BlogEditorClient({
             {saveMessage.text}
           </div>
         )}
+        {statusMessage && (
+          <div className={`${styles.saveMessage} ${statusMessage.ok ? styles.saveOk : styles.saveError}`} role="status">
+            <p>{statusMessage.text}</p>
+            {statusMessage.issues && statusMessage.issues.length > 0 && (
+              <ul className={styles.publishIssues}>
+                {statusMessage.issues.map(issue => <li key={issue}>{issue}</li>)}
+              </ul>
+            )}
+          </div>
+        )}
         {publishMessage && (
           <div className={`${styles.saveMessage} ${publishMessage.ok ? styles.saveOk : styles.saveError}`} role="status">
             <p>{publishMessage.text}</p>
@@ -1813,7 +1934,7 @@ export default function BlogEditorClient({
         )}
         {isPublished && (
           <div className={styles.lockNotice} role="status">
-            발행된 글입니다. 저장하면 공개 블로그 화면에도 반영됩니다.
+            발행된 글은 바로 저장할 수 없습니다. 수정 정책을 설계한 뒤 재검수 상태에서 편집해야 합니다.
           </div>
         )}
       </header>
@@ -1879,18 +2000,18 @@ export default function BlogEditorClient({
                     <span>{coverMedia.caption || coverMedia.altText || '대표사진으로 사용 중'}</span>
                   </div>
                   <div className={styles.coverPickerActions}>
-                    <button type="button" onClick={() => openAssetPicker({ type: 'cover' })} disabled={isAssetPending}>
+                    <button type="button" onClick={() => openAssetPicker({ type: 'cover' })} disabled={isAssetPending || isPublished}>
                       <Images size={15} aria-hidden="true" />
                       교체
                     </button>
-                    <button type="button" onClick={handleRemoveCover} disabled={isAssetPending}>
+                    <button type="button" onClick={handleRemoveCover} disabled={isAssetPending || isPublished}>
                       <XCircle size={15} aria-hidden="true" />
                       제거
                     </button>
                   </div>
                 </div>
               ) : (
-                <button type="button" className={styles.coverEmptyButton} onClick={() => openAssetPicker({ type: 'cover' })} disabled={isAssetPending}>
+                <button type="button" className={styles.coverEmptyButton} onClick={() => openAssetPicker({ type: 'cover' })} disabled={isAssetPending || isPublished}>
                   <ImageIcon size={18} aria-hidden="true" />
                   대표사진 선택
                 </button>
@@ -1915,8 +2036,12 @@ export default function BlogEditorClient({
               <button type="button" onClick={() => addBlock('heading')}><Plus size={15} aria-hidden="true" /> 제목</button>
               <button type="button" onClick={() => addBlock('paragraph')}><Plus size={15} aria-hidden="true" /> 문단</button>
               <button type="button" onClick={() => openAssetPicker({ type: 'new' })}><Plus size={15} aria-hidden="true" /> 사진</button>
-              <button type="button" onClick={() => addBlock('link_button')}><Link2 size={15} aria-hidden="true" /> 링크 버튼</button>
-              <button type="button" onClick={() => addBlock('guide_box')}><Info size={15} aria-hidden="true" /> 안내 박스</button>
+              {BLOG_BODY_BLOCK_EXPANSION_ENABLED && (
+                <>
+                  <button type="button" onClick={() => addBlock('link_button')}><Link2 size={15} aria-hidden="true" /> 링크 버튼</button>
+                  <button type="button" onClick={() => addBlock('guide_box')}><Info size={15} aria-hidden="true" /> 안내 박스</button>
+                </>
+              )}
               <button type="button" onClick={() => addBlock('qa')}><Plus size={15} aria-hidden="true" /> Q&A</button>
               <button type="button" onClick={() => addBlock('cta')}><Plus size={15} aria-hidden="true" /> 상담 CTA</button>
             </div>
@@ -1932,7 +2057,7 @@ export default function BlogEditorClient({
                     media={selectableMedia}
                     index={index}
                     total={blocks.length}
-                    disabled={false}
+                    disabled={isPublished}
                     onChange={(next) => updateBlock(block.clientId, next)}
                     onInsertImageBefore={() => openAssetPicker({ type: 'insertBefore', clientId: block.clientId })}
                     onPickImage={() => openAssetPicker({ type: 'replace', clientId: block.clientId })}
