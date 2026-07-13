@@ -3,7 +3,9 @@ import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, HelpCircle, Info, M
 import { normalizeGuideBoxBlock, normalizeLinkButtonBlock } from '@/lib/content-os/blog-body-blocks'
 import type { BlogRelatedPost, BlogRenderBlock, BlogRenderData, BlogRenderMedia, BlogRenderMode } from '@/lib/content-os/blog-rendering'
 import BlogArticleActions from './BlogArticleActions'
+import BlogConditionChecklist from './BlogConditionChecklist'
 import BlogReadingTopBar from './BlogReadingTopBar'
+import type { BlogNavigationSearchPost } from './BlogNavigation'
 import styles from './BlogPostRenderer.module.css'
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -17,18 +19,28 @@ const CATEGORY_LABEL: Record<string, string> = {
 
 const HERO_PROOFS = [
   '무료 방문실측',
-  '집 구조 확인',
-  '직접 제작·전속 시공',
+  '현장 조건 확인',
+  '구조와 옵션 체크',
 ]
 
 function formatDate(value: string | null) {
   if (!value) return null
+  const calendarMatch = /^(\d{4})-(\d{2})-(\d{2})(?:T|\s|$)/.exec(value)
+  if (calendarMatch) {
+    const year = Number(calendarMatch[1])
+    const month = Number(calendarMatch[2])
+    const day = Number(calendarMatch[3])
+    const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate()
+    if (month < 1 || month > 12 || day < 1 || day > daysInMonth) return null
+  }
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
   return new Intl.DateTimeFormat('ko-KR', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     timeZone: 'Asia/Seoul',
-  }).format(new Date(value))
+  }).format(date)
 }
 
 function splitParagraphs(text: string) {
@@ -73,14 +85,14 @@ function BlogImage({
   )
 }
 
-function CtaBlock({ text, final = false }: { text: string | null; final?: boolean }) {
+function CtaBlock({ text, final = false, id }: { text: string | null; final?: boolean; id?: string }) {
   return (
-    <aside className={`${styles.ctaBlock} ${final ? styles.finalCtaBlock : ''}`}>
+    <aside id={id} className={`${styles.ctaBlock} ${final ? styles.finalCtaBlock : ''}`}>
       <div>
         <span>무료 방문실측으로 확인</span>
         <strong>{text?.trim() || '문 종류를 정하기 전에, 우리 집 구조와 시공 조건부터 같이 확인해드립니다.'}</strong>
       </div>
-      <Link href="/measure" aria-label="무료 방문실측으로 우리 집 조건 확인하기">
+      <Link href="/portal/measure/new" aria-label="무료 방문실측으로 우리 집 조건 확인하기">
         우리 집 조건 확인하기
         <ArrowRight size={16} aria-hidden="true" />
       </Link>
@@ -88,10 +100,35 @@ function CtaBlock({ text, final = false }: { text: string | null; final?: boolea
   )
 }
 
+function ArticleJumpNav({
+  hasRelatedQuestions,
+  hasReadingPath,
+}: {
+  hasRelatedQuestions: boolean
+  hasReadingPath: boolean
+}) {
+  const navItems = [
+    { href: '#article-checklist', label: '우리 집 조건 체크', show: true },
+    { href: '#article-body', label: '본문 읽기', show: true },
+    { href: '#article-related-questions', label: '자주 묻는 질문', show: hasRelatedQuestions },
+    { href: '#article-reading-path', label: '함께 볼 글', show: hasReadingPath },
+    { href: '#blog-question-panel', label: '질문 남기기', show: true },
+  ].filter(item => item.show)
+
+  return (
+    <nav className={styles.articleJumpNav} aria-label="글 안에서 바로 이동">
+      {navItems.map(item => (
+        <a key={item.href} href={item.href}>
+          {item.label}
+        </a>
+      ))}
+    </nav>
+  )
+}
+
 function LinkButtonBlock({ block }: { block: BlogRenderBlock }) {
   const link = normalizeLinkButtonBlock(block)
   if (!link) return null
-  const href = link.href === '/portal/measure/new' ? '/measure' : link.href
 
   return (
     <aside className={styles.linkButtonBlock}>
@@ -99,7 +136,7 @@ function LinkButtonBlock({ block }: { block: BlogRenderBlock }) {
         <span>이어 확인하기</span>
         {link.description && <p>{link.description}</p>}
       </div>
-      <Link href={href}>
+      <Link href={link.href}>
         {link.label}
         <ArrowRight size={16} aria-hidden="true" />
       </Link>
@@ -230,9 +267,11 @@ function RenderBlock({
 export default function BlogPostRenderer({
   data,
   mode,
+  searchPosts = [],
 }: {
   data: BlogRenderData
   mode: BlogRenderMode
+  searchPosts?: BlogNavigationSearchPost[]
 }) {
   const { post, blocks, media, contentGraphSections, relatedPosts, nextPost } = data
   const publishedDate = formatDate(post.publishedAt)
@@ -245,16 +284,16 @@ export default function BlogPostRenderer({
   const hasReadingPath = visibleContentGraphSections.length > 0 || fallbackRelatedPosts.length > 0 || Boolean(nextPost)
 
   return (
-    <main className={`${styles.page} ${mode === 'preview' ? styles.previewPage : ''}`}>
+    <main className={`${styles.page} ${mode === 'preview' ? styles.previewPage : ''}`} data-mg-theme="blog">
       {mode === 'preview' && (
         <div className={styles.previewBanner}>
           <strong>미리보기 모드</strong>
           <span>검색에 노출되지 않는 관리자 확인용 화면입니다.</span>
         </div>
       )}
-      {mode === 'public' && <BlogReadingTopBar />}
+      {mode === 'public' && <BlogReadingTopBar searchPosts={searchPosts} />}
 
-      <article className={styles.article}>
+      <article id="blog-article" className={styles.article}>
         {mode === 'public' && (
           <Link href="/blog" className={styles.backLink}>
             <ArrowLeft size={16} aria-hidden="true" />
@@ -299,24 +338,37 @@ export default function BlogPostRenderer({
           )}
         </header>
 
+        {mode === 'public' && (
+          <ArticleJumpNav
+            hasRelatedQuestions={post.relatedQuestions.length > 0}
+            hasReadingPath={hasReadingPath}
+          />
+        )}
+
         <div className={styles.content}>
-          {post.excerpt && (
-            <section className={styles.excerpt} aria-label="먼저 확인할 핵심">
-              <span>먼저 확인할 핵심</span>
-              <p>{post.excerpt}</p>
-            </section>
+          {mode === 'public' && (
+            <BlogConditionChecklist question={post.targetQuestion} />
           )}
 
-          {blocks.length === 0 ? (
-            <div className={styles.emptyBody}>아직 공개할 본문이 준비되지 않았습니다. 다른 글을 먼저 살펴보세요.</div>
-          ) : (
-            blocks.map(block => (
-              <RenderBlock key={block.id} block={block} mediaMap={mediaMap} mode={mode} />
-            ))
-          )}
+          <div id="article-body" className={styles.bodyFlow}>
+            {post.excerpt && (
+              <section className={styles.excerpt} aria-label="먼저 확인할 핵심">
+                <span>먼저 확인할 핵심</span>
+                <p>{post.excerpt}</p>
+              </section>
+            )}
+
+            {blocks.length === 0 ? (
+              <div className={styles.emptyBody}>아직 공개할 본문이 준비되지 않았습니다. 다른 글을 먼저 살펴보세요.</div>
+            ) : (
+              blocks.map(block => (
+                <RenderBlock key={block.id} block={block} mediaMap={mediaMap} mode={mode} />
+              ))
+            )}
+          </div>
 
           {post.relatedQuestions.length > 0 && (
-            <section className={styles.relatedQuestions}>
+            <section id="article-related-questions" className={styles.relatedQuestions}>
               <h2>다음으로 많이 묻는 질문</h2>
               <p>가격과 시공 가능 여부는 집 구조, 사이즈, 옵션에 따라 달라질 수 있습니다.</p>
               <ul>
@@ -331,7 +383,7 @@ export default function BlogPostRenderer({
           )}
 
           {hasReadingPath && (
-            <section className={styles.readingPath} aria-labelledby="reading-path-title">
+            <section id="article-reading-path" className={styles.readingPath} aria-labelledby="reading-path-title">
               <div className={styles.readingPathHeader}>
                 <span>이어 읽기</span>
                 <h2 id="reading-path-title">이 글 다음에 보면 좋은 길</h2>
@@ -375,7 +427,7 @@ export default function BlogPostRenderer({
           )}
 
           {(!hasCtaBlock || hasReadingPath) && (
-            <CtaBlock text={null} final />
+            <CtaBlock id="article-final-cta" text={null} final />
           )}
         </div>
       </article>

@@ -1,17 +1,18 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Search, X } from 'lucide-react'
-import { type CSSProperties, useId, useMemo, useRef, useState } from 'react'
+import { ArrowRight } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
 import {
   BLOG_INITIAL_VISIBLE_POSTS,
-  BLOG_TOPICS,
   searchBlogPosts,
-  selectTopicPosts,
   type BlogHomeCategory,
   type BlogHomeModel,
   type BlogHomePost,
 } from './blog-home-model'
+import BlogConditionComposer from './BlogConditionComposer'
+import BlogStoryStage from './BlogStoryStage'
+import BlogTopicRail from './BlogTopicRail'
 import styles from './blog.module.css'
 
 export type BlogExplorerPost = BlogHomePost
@@ -29,15 +30,6 @@ const dateFormatter = new Intl.DateTimeFormat('ko-KR', {
   day: '2-digit',
   timeZone: 'Asia/Seoul',
 })
-
-const TOPIC_IMAGE = '/images/blog-launch/blog-topic-details.png'
-
-function topicCardStyle(index: number) {
-  return {
-    '--topic-image': `url(${TOPIC_IMAGE})`,
-    '--topic-position': `${Math.min(index * 18, 78)}% center`,
-  } as CSSProperties
-}
 
 function formatDate(value: string | null) {
   if (!value) return null
@@ -113,18 +105,10 @@ function FeaturedCard({ post }: { post: BlogExplorerPost }) {
 }
 
 export default function BlogExplorerClient({ posts, categories, homeModel }: BlogExplorerClientProps) {
-  const searchInputId = useId()
   const resultSectionRef = useRef<HTMLElement | null>(null)
   const [query, setQuery] = useState('')
-  const [selectedTopic, setSelectedTopic] = useState('all')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [visibleCount, setVisibleCount] = useState(BLOG_INITIAL_VISIBLE_POSTS)
-
-  const selectedTopicConfig = BLOG_TOPICS.find(topic => topic.id === selectedTopic) ?? null
-
-  const visibleTopicPosts = useMemo(() => {
-    return selectTopicPosts(posts, selectedTopic)
-  }, [posts, selectedTopic])
 
   const searchResults = useMemo(() => {
     return searchBlogPosts(posts, query)
@@ -137,17 +121,15 @@ export default function BlogExplorerClient({ posts, categories, homeModel }: Blo
   }, [homeModel.allPosts, selectedCategoryConfig])
 
   const hasSearch = Boolean(query.trim())
-  const hasTopicFilter = selectedTopic !== 'all'
   const hasCategoryFilter = Boolean(selectedCategoryConfig)
-  const selectedTopicTitle = selectedTopicConfig?.title ?? '전체 이야기'
-  const focusedResultsTitle = selectedCategoryConfig?.label ?? selectedTopicTitle
-  const selectedResultPosts = hasCategoryFilter ? selectedCategoryPosts : visibleTopicPosts
+  const focusedResultsTitle = selectedCategoryConfig?.label ?? '전체 이야기'
+  const selectedResultPosts = selectedCategoryPosts
   const visibleSearchResults = searchResults.slice(0, visibleCount)
   const visibleSelectedResults = selectedResultPosts.slice(0, visibleCount)
   const visibleAllPosts = homeModel.allPosts.slice(0, visibleCount)
   const firstStarterPost = homeModel.starterPosts[0] ?? null
   const secondaryStarterPosts = homeModel.starterPosts.slice(1)
-  const showHomeSections = !hasSearch && !hasTopicFilter && !hasCategoryFilter
+  const showHomeSections = true
 
   function showMore() {
     setVisibleCount(count => count + BLOG_INITIAL_VISIBLE_POSTS)
@@ -155,9 +137,13 @@ export default function BlogExplorerClient({ posts, categories, homeModel }: Blo
 
   function startSearch(value: string) {
     setQuery(value)
-    setSelectedTopic('all')
     setSelectedCategory(null)
     setVisibleCount(BLOG_INITIAL_VISIBLE_POSTS)
+  }
+
+  function startQuickSearch(value: string) {
+    startSearch(value)
+    moveToResults()
   }
 
   function resetSearch() {
@@ -171,94 +157,29 @@ export default function BlogExplorerClient({ posts, categories, homeModel }: Blo
     })
   }
 
-  function selectTopic(topicId: string) {
-    setQuery('')
-    setSelectedCategory(null)
-    setSelectedTopic(topicId)
-    setVisibleCount(BLOG_INITIAL_VISIBLE_POSTS)
-    if (topicId !== 'all') moveToResults()
-  }
-
   function selectCategory(categoryValue: string) {
     setQuery('')
-    setSelectedTopic('all')
     setSelectedCategory(categoryValue)
     setVisibleCount(BLOG_INITIAL_VISIBLE_POSTS)
     moveToResults()
   }
 
-  function resetTopic() {
+  function resetCategory() {
     setQuery('')
-    setSelectedTopic('all')
     setSelectedCategory(null)
     setVisibleCount(BLOG_INITIAL_VISIBLE_POSTS)
   }
 
   return (
     <>
-      <section id="blog-topics" className={styles.topicMap} aria-labelledby="blog-topics-title">
-        <div className={styles.topicIntro}>
-          <div>
-            <span>카테고리</span>
-            <h2 id="blog-topics-title">궁금한 이야기부터 골라보세요</h2>
-            <p>제품, 현장, 견적, 고객 질문, 시공 사례를 서로 이어서 읽을 수 있게 소개합니다.</p>
-          </div>
-          <div className={styles.searchBox}>
-            <Search size={18} aria-hidden="true" />
-            <label htmlFor={searchInputId} className={styles.srOnly}>
-              블로그 글 검색
-            </label>
-            <input
-              id={searchInputId}
-              type="search"
-              value={query}
-              onChange={event => startSearch(event.target.value)}
-              placeholder="블로그 글 검색"
-            />
-            {query.trim() && (
-              <button type="button" onClick={resetSearch} aria-label="검색어 지우기">
-                <X size={16} aria-hidden="true" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className={styles.topicGrid} aria-label="블로그 주제별 입구">
-          <button
-            type="button"
-            className={`${styles.topicCard} ${selectedTopic === 'all' ? styles.topicCardActive : ''}`}
-            style={topicCardStyle(0)}
-            onClick={resetTopic}
-            aria-pressed={selectedTopic === 'all'}
-          >
-            <span className={styles.topicVisual} aria-hidden="true" />
-            <span>전체 글</span>
-            <strong>{posts.length}개</strong>
-            <p>문장군 블로그에 공개된 모든 글을 최신순으로 봅니다.</p>
-          </button>
-          {BLOG_TOPICS.map((topic, index) => {
-            const count = homeModel.topicCounts[topic.id] ?? 0
-            return (
-              <button
-                key={topic.id}
-                type="button"
-                className={`${styles.topicCard} ${selectedTopic === topic.id ? styles.topicCardActive : ''}`}
-                style={topicCardStyle(index + 1)}
-                onClick={() => selectTopic(topic.id)}
-                aria-pressed={selectedTopic === topic.id}
-              >
-                <span className={styles.topicVisual} aria-hidden="true" />
-                <span>{topic.title}</span>
-                <strong>{count > 0 ? `${count}개` : '준비 중'}</strong>
-                <p>{topic.description}</p>
-              </button>
-            )
-          })}
-        </div>
-      </section>
-
       {hasSearch && (
-        <section className={styles.searchResultStrip} aria-labelledby="search-result-title">
+        <section
+          ref={resultSectionRef}
+          className={styles.searchResultStrip}
+          aria-labelledby="search-result-title"
+          data-testid="blog-search-results"
+          data-result-count={searchResults.length}
+        >
           <div>
             <span>검색 결과</span>
             <h2 id="search-result-title">{query.trim()} 검색 결과</h2>
@@ -290,9 +211,9 @@ export default function BlogExplorerClient({ posts, categories, homeModel }: Blo
       )}
 
       {firstStarterPost && showHomeSections && (
-        <section className={styles.featured} aria-labelledby="featured-blog-title">
+        <section id="blog-starter" className={styles.featured} aria-labelledby="featured-blog-title">
           <div className={styles.sectionHeader}>
-            <span>먼저 읽기 좋은 글</span>
+            <span>오늘 가장 많이 찾는 이야기</span>
             <h2 id="featured-blog-title">처음 오셨다면 여기부터</h2>
             <p>가격, 가능 여부, 현장 조건처럼 상담 전에 많이 헷갈리는 글을 먼저 골랐습니다.</p>
           </div>
@@ -309,8 +230,14 @@ export default function BlogExplorerClient({ posts, categories, homeModel }: Blo
         </section>
       )}
 
+      {showHomeSections && <BlogTopicRail posts={posts} onExplore={startQuickSearch} />}
+
+      {showHomeSections && <BlogStoryStage />}
+
+      {showHomeSections && <BlogConditionComposer posts={homeModel.allPosts} />}
+
       {homeModel.latestPosts.length > 0 && showHomeSections && (
-        <section className={styles.postSection} aria-labelledby="latest-posts-title">
+        <section id="blog-latest" className={styles.postSection} aria-labelledby="latest-posts-title">
           <div className={styles.sectionHeader}>
             <span>최근 올라온 글</span>
             <h2 id="latest-posts-title">새로 발행된 이야기</h2>
@@ -324,25 +251,7 @@ export default function BlogExplorerClient({ posts, categories, homeModel }: Blo
         </section>
       )}
 
-      {homeModel.threadItems.length > 0 && showHomeSections && (
-        <section className={styles.threadPanel} aria-labelledby="thread-title">
-          <div>
-            <span>궁금한 단어로 이어보기</span>
-            <h2 id="thread-title">비슷한 조건을 찾아보기</h2>
-            <p>단어를 누르면 관련 글만 모아볼 수 있습니다.</p>
-          </div>
-          <div className={styles.threadList}>
-            {homeModel.threadItems.map(item => (
-              <button key={item} type="button" onClick={() => startSearch(item)}>
-                <span>{item}</span>
-                <ArrowRight size={15} aria-hidden="true" />
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {(hasTopicFilter || hasCategoryFilter) && (
+      {hasCategoryFilter && (
             <section ref={resultSectionRef} className={styles.postSection} aria-labelledby="topic-result-title">
               <div className={styles.sectionHeader}>
                 <span>선택한 이야기</span>
@@ -350,7 +259,7 @@ export default function BlogExplorerClient({ posts, categories, homeModel }: Blo
               </div>
               <div className={styles.resultHeader}>
                 <span>{selectedResultPosts.length}개 글</span>
-                <button type="button" onClick={resetTopic}>
+                <button type="button" onClick={resetCategory}>
                   전체 보기
                 </button>
               </div>
