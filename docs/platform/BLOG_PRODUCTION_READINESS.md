@@ -15,8 +15,8 @@
 | 근거·금지표현·필수 사진 슬롯 | Ready (정적 검증) | ready/publish gate가 claim safety, forbidden expression, 필수 사진 슬롯, 대표 사진 또는 기록된 예외를 검사한다. |
 | private 원본·public 파생본·alt·동의 경계 | Ready (정적 검증) | 업로드는 private original과 public derivatives를 분리하고, 개인정보·홍보 사용 확인을 서버와 두 관리자 업로드 화면에서 모두 요구한다. |
 | public media inventory | Ready | `INV-BLOG-MEDIA-20260625-01`의 미추적 후보 1건을 삭제했고, 미추적 수가 0인지 재집계했다. |
-| Preview AI 환경 | Blocked | Preview에서만 세 환경변수의 존재·유효 모델을 비밀값 없이 확인해야 한다. Production은 수정하지 않는다. |
-| 테스트 administrator 계정 | Needs operator action | Preview에서 로그인 가능한 최소 권한 administrator 계정을 준비·확인해야 한다. |
+| Preview AI 환경 | Blocked | feature Preview에는 enable flag만 설정됐다. API key와 승인된 model identifier가 없어 enabled를 증명할 수 없다. Production은 수정하지 않았다. |
+| 테스트 administrator 계정 | Needs operator action | read-only 집계상 administrator profile은 존재하지만, Preview에서 실제 로그인 가능한 테스트 계정·세션은 아직 확인하지 않았다. |
 | 무발행 리허설 | Blocked | Preview AI enabled와 administrator 확인 뒤에만 실행한다. |
 | 첫 3개 실제 AI 초안 | Blocked | 리허설 cleanup이 0 잔여로 확인되고 재승인된 뒤에만 시작한다. |
 
@@ -47,6 +47,14 @@
 | `npm run build` | 통과 |
 | `git diff --check` | 통과 |
 
+## 배포·환경 확인 증적
+
+- Draft PR: `#28`, base `v2-cms`, head `codex/content-os-production-readiness`.
+- 해당 head의 Preview deployment는 Ready다. public `/blog`는 200, 인증 없는 `/admin/platform/blog`는 로그인 redirect(307)로 응답했다.
+- Preview branch에 `CONTENT_OS_AI_DRAFTS_ENABLED=enabled`만 비밀값 없이 설정했다.
+- Preview 환경 목록에는 `OPENAI_API_KEY`, `OPENAI_BLOG_DRAFT_MODEL`이 없어 AI config view가 enabled가 될 수 없다. 값은 조회하거나 출력하지 않았다.
+- Supabase에는 read-only count 질의만 수행했고 administrator profile 수만 집계했다. 계정 식별자, 로그인 수단, 운영 데이터는 읽거나 변경하지 않았다.
+
 ## Preview AI 설정: 운영자 단일 조치
 
 Preview 환경에만 다음을 비밀 관리 화면에서 설정하거나 존재를 확인한다. 값, 키, 설정 화면의 비밀값은 채팅·문서·git diff·로그에 복사하지 않는다.
@@ -57,7 +65,7 @@ Preview 환경에만 다음을 비밀 관리 화면에서 설정하거나 존재
 | `OPENAI_API_KEY` | 현재 OpenAI project의 유효한 서버 전용 key |
 | `OPENAI_BLOG_DRAFT_MODEL` | 해당 key로 호출 가능한 승인된 model identifier |
 
-확인 기준은 Preview admin에서 AI 초안 생성 기능이 enabled로 표시되고, 실제 생성 직전 안전한 config view가 세 변수를 충족한다고 판단하는 것이다. Production 환경은 열람·수정하지 않는다.
+현재 남은 운영자 단일 설정 작업은 `#28`의 Preview branch에 encrypted `OPENAI_API_KEY`와 호출 가능한 `OPENAI_BLOG_DRAFT_MODEL`을 함께 추가하는 일이다. enable flag는 이미 해당 Preview branch에만 설정되어 있다. 그 다음 기존 테스트 administrator로 로그인해 config view의 `사용 가능` 표시만 확인한다. Production 환경은 열람·수정하지 않는다.
 
 ## 무발행 리허설 절차
 
