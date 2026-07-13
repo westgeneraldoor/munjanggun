@@ -25,7 +25,7 @@ The Content OS implementation is not treated as ready for real operation until t
 The goal is to confirm the full loop:
 
 ```text
-admin draft queue
+admin content queue
 -> block editor
 -> private media candidate
 -> media approval
@@ -52,7 +52,7 @@ Excluded:
 - New feature development.
 - DB schema changes.
 - Publish logic changes.
-- AI draft generation automation.
+- Admin AI draft generation is not a product feature; the CMS starts from an approved external manuscript.
 - Search Console API automation.
 
 ## 2. Current Verification Status
@@ -454,7 +454,7 @@ Checklist:
 - [ ] `/` is present.
 - [ ] `/blog` is present.
 - [ ] Published `/blog/[slug]` is present.
-- [ ] Draft/reviewing/ready/archived posts are absent.
+- [ ] Legacy ai_draft/reviewing/ready/archived posts are absent.
 - [ ] Admin URLs are absent.
 - [ ] Preview URLs are absent.
 - [ ] Private URLs are absent.

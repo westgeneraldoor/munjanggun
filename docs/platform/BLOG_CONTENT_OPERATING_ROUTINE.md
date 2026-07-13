@@ -12,6 +12,9 @@ source_content_os:
   - "docs/platform/CONTENT_OS_SEO_AEO_SPEC.md"
   - "docs/platform/CONTENT_OS_OPERATION_CHECKLIST.md"
   - "docs/platform/BLOG_CONTENT_GRAPH_SPEC.md"
+external_research_sources:
+  - "C:\\Users\\hjh\\안티그래비티\\문장군_브랜드"
+  - "C:\\Users\\hjh\\안티그래비티\\문장군블로그"
 related:
   - "docs/platform/BLOG_FIRST_10_TOPICS.md"
 ---
@@ -28,6 +31,10 @@ related:
 
 ## 1. 운영 원칙
 
+- 콘텐츠 초안은 Codex가 문장군_브랜드와 문장군블로그를 근거로 외부 작성한다.
+- 관리자 화면은 승인된 원고의 CMS 관리 표면이다.
+- Codex는 글을 작성하기 전에 문장군_브랜드에서 브랜드 사실, 금지표현, 현장 판단 기준을 확인하고, 문장군블로그에서 네이버 글, 카테고리, 중복 주제, 검색 성과, 발행 운영 기록을 확인한다.
+- `/admin/platform/blog`에서는 AI 초안 생성이나 비밀값 설정을 제공하지 않는다. 큐, 편집, 사진 연결, 미리보기, 발행 이력 관리만 수행한다.
 - 글은 제품명보다 고객 질문에서 시작한다.
 - 가격, 가능 여부, 추가금, 먼지와 소음, 일정, 현장 변수처럼 상담 전 불안이 큰 주제를 우선한다.
 - 발행 전에는 사람이 사실관계, 사진, 금지표현, 개인정보 노출 여부를 확인한다.

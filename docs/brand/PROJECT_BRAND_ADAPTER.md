@@ -25,7 +25,7 @@ central_brand_root: "C:\\Users\\hjh\\안티그래비티\\문장군_브랜드"
 - 플랫폼 어드민 접수 큐
 - 문장군 SEO/AEO Content OS
 - 공개 `/blog`, `/blog/[slug]`
-- 관리자 블로그 초안 큐와 블록형 에디터
+- 관리자 블로그 콘텐츠 큐와 블록형 에디터
 - Supabase 기반 Auth/RBAC/RLS/Storage
 
 따라서 브랜드 출력은 예쁜 소개 페이지보다 운영 가능한 고객 여정과 검수 가능한 콘텐츠 발행을 우선한다.
@@ -89,8 +89,8 @@ central_brand_root: "C:\\Users\\hjh\\안티그래비티\\문장군_브랜드"
 Content OS는 중앙 브랜드 원본을 글감으로 바로 발행하지 않는다. 반드시 이 프로젝트의 발행 구조를 통과한다.
 
 ```text
-AI 초안
--> 관리자 초안 큐
+Codex 외부 원고 작성
+-> 관리자 콘텐츠 큐
 -> 블록형 편집
 -> private 사진 후보 업로드
 -> 사진 승인
@@ -145,7 +145,7 @@ AI 초안
 
 프로젝트 전용 금지:
 
-- AI 초안을 자동 공개 발행하지 않는다.
+- 관리자 UI와 server action에서 AI 초안을 생성하거나 AI 전용 비밀값을 요구하지 않는다.
 - 고객 현장 사진을 자동으로 공개하지 않는다.
 - 미승인 사진을 public bucket으로 승격하지 않는다.
 - `source_prompt`, `source_evidence`, `brand_check_result` 원문을 공개 렌더러에 노출하지 않는다.

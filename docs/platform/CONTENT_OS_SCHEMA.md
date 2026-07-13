@@ -16,11 +16,11 @@ source_strategy: "docs/platform/CONTENT_OS_STRATEGY.md"
 
 목표:
 
-- AI 초안과 공개 발행 글을 명확히 분리한다.
+- 검토 대상 원고와 공개 발행 글을 명확히 분리한다.
 - 본문을 블록 단위로 관리한다.
 - 문단별 사진 슬롯, alt, caption, 개인정보/홍보동의 확인을 관리한다.
 - 공개 조회는 `published` 글과 승인된 미디어로 제한한다.
-- 관리자만 초안, AI 원문, 검수 결과, 비공개 사진 후보에 접근한다.
+- 관리자만 검토 대상, 내부 검수 결과, 비공개 사진 후보에 접근한다.
 
 ## 1. Schema 위치
 
@@ -46,6 +46,8 @@ ready
 published
 archived
 ```
+
+`ai_draft`는 기존 DB enum과 과거 운영 기록을 보존하기 위한 레거시 값이다. 현재 제품은 이 값을 새 원고 생성에 쓰지 않으며, UI에서는 `검토 필요`로 표시해 `reviewing`으로만 전환한다. enum과 기존 데이터는 이 변경에서 수정하지 않는다.
 
 ### `showroom.blog_block_type`
 
@@ -114,8 +116,8 @@ MVP에서는 enum보다 text/check 또는 lookup 테이블을 우선 검토한�
 | `product_type` | text | no | 중문/ABS도어/현관문/몰딩 등 |
 | `source_evidence` | jsonb | no | 근거 자료 목록 |
 | `brand_check_result` | jsonb | no | 금지표현/사실관계 체크 결과 |
-| `ai_model` | text | no | 초안 생성 모델 |
-| `source_prompt` | text | no | 초안 생성 입력 요약 |
+| `ai_model` | text | no | 레거시 생성 메타데이터. 현재 CMS는 기록하거나 사용하지 않음 |
+| `source_prompt` | text | no | 레거시 생성 입력 요약. 현재 CMS는 기록하거나 사용하지 않음 |
 | `ai_citation_ready` | boolean | yes | AI 답변 친화 필드 충족 여부 |
 | `last_fact_checked_at` | timestamptz | no | 사실 확인일 |
 | `created_by` | uuid | no | 생성자 |
@@ -300,7 +302,7 @@ MVP에서도 감사 이력을 남긴다.
 
 차단:
 
-- `ai_draft`, `reviewing`, `needs_media`, `ready`, `archived`
+- 레거시 `ai_draft`, `reviewing`, `needs_media`, `ready`, `archived`
 - `source_prompt`, 내부 검수 JSON 등 민감 필드 직접 노출
 - private bucket 접근
 
@@ -332,6 +334,8 @@ ready -> published
 published -> archived
 archived -> reviewing
 ```
+
+새 원고의 운영 흐름은 `reviewing`에서 시작한다. `ai_draft -> reviewing`은 이미 존재하는 레거시 레코드를 정리하기 위한 호환 전환이며, AI 생성 server action이나 환경변수와 연결되지 않는다.
 
 차단:
 

@@ -4,7 +4,6 @@ import { readFile } from 'node:fs/promises'
 const rendering = await readFile(new URL('../src/lib/content-os/blog-rendering.ts', import.meta.url), 'utf8')
 const sitemap = await readFile(new URL('../src/app/sitemap.ts', import.meta.url), 'utf8')
 const robots = await readFile(new URL('../src/app/robots.ts', import.meta.url), 'utf8')
-const aiDraftAction = await readFile(new URL('../src/app/admin/platform/blog/actions.ts', import.meta.url), 'utf8')
 const editorActions = await readFile(new URL('../src/app/admin/platform/blog/[id]/actions.ts', import.meta.url), 'utf8')
 
 assert.ok(
@@ -33,21 +32,6 @@ assert.ok(
 for (const path of ['/admin/', '/api/', '/preview/', '/drafts/', '/private/']) {
   assert.ok(robots.includes(`'${path}'`), `robots must disallow ${path}`)
 }
-
-assert.ok(
-  aiDraftAction.includes("status: 'ai_draft'"),
-  'AI draft action must force status ai_draft',
-)
-
-assert.ok(
-  aiDraftAction.includes('published_at: null'),
-  'AI draft action must not set published_at',
-)
-
-assert.ok(
-  !aiDraftAction.includes("from('blog_media')"),
-  'AI draft action must not create or mutate blog_media',
-)
 
 const attachContentAssetFunction = editorActions.match(/export async function attachContentAssetToBlogMedia[\s\S]*?\nexport async function updateBlogMedia/)?.[0] ?? ''
 assert.ok(attachContentAssetFunction, 'attachContentAssetToBlogMedia should be inspected')
