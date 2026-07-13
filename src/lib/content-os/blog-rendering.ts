@@ -4,6 +4,7 @@ import { createPublicShowroomClient, hasPublicShowroomEnv } from '@/lib/supabase
 import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
 import type { BlogBlockType, BlogContentCategory, BlogMediaUsageStatus, BlogPostStatus, Database, Json } from '@/types/database'
 import { buildBlogContentGraph, type BlogContentGraphRelatedPost, type BlogContentGraphSection } from './blog-content-graph'
+import { absoluteUrl } from './site-url'
 
 type BlogPostRow = Database['showroom']['Tables']['blog_posts']['Row']
 type BlogPostRenderProjection = Pick<
@@ -85,6 +86,48 @@ export type BlogRenderData = {
 
 export type BlogListItem = BlogRenderPost & {
   coverMedia: BlogRenderMedia | null
+}
+
+export type BlogPublicBreadcrumb = {
+  name: string
+  href: string
+  url: string
+}
+
+export type BlogPublicPresentation = {
+  title: string
+  description: string
+  canonicalUrl: string
+  primaryImage: BlogRenderMedia | null
+  publishedAt: string | null
+  modifiedAt: string
+  breadcrumbs: BlogPublicBreadcrumb[]
+}
+
+/**
+ * The public page, metadata, and JSON-LD must all render from this one
+ * projection. The selected SEO description is deliberately visible in the
+ * article hero, so metadata does not claim a different summary than readers see.
+ */
+export function resolvePublicBlogPresentation(data: BlogRenderData): BlogPublicPresentation {
+  const canonicalUrl = data.post.canonicalUrl || absoluteUrl(`/blog/${data.post.slug}`)
+  const title = data.post.seoTitle || data.post.title
+  const description = data.post.metaDescription || data.post.excerpt || data.post.summaryAnswer || data.post.title
+  const primaryImage = data.media.find(media => media.usedAsCover && media.url) ?? null
+
+  return {
+    title,
+    description,
+    canonicalUrl,
+    primaryImage,
+    publishedAt: data.post.publishedAt,
+    modifiedAt: data.post.updatedAt,
+    breadcrumbs: [
+      { name: '홈', href: '/', url: absoluteUrl('/') },
+      { name: '블로그', href: '/blog', url: absoluteUrl('/blog') },
+      { name: title, href: `/blog/${data.post.slug}`, url: canonicalUrl },
+    ],
+  }
 }
 
 const PUBLIC_POST_SELECT = [

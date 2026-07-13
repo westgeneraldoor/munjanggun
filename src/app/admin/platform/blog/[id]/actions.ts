@@ -175,6 +175,31 @@ function blockTextSegments(blocks: BlogBlock[]) {
   })
 }
 
+function requiredMediaSlotIssues(blocks: BlogBlock[], media: BlogMedia[]) {
+  const mediaById = new Map(media.map(item => [item.id, item]))
+
+  return blocks.flatMap((block, index) => {
+    if (!isJsonObject(block.metadata)) return []
+
+    const requiredMedia = cleanText(jsonString(block.metadata.required_media))
+    if (!requiredMedia) return []
+
+    const previousBlock = blocks[index - 1]
+    const precedingMedia = previousBlock?.type === 'image' && previousBlock.media_id
+      ? mediaById.get(previousBlock.media_id)
+      : null
+
+    if (precedingMedia?.post_id === block.post_id) return []
+
+    const label = cleanText(jsonString(block.metadata.photo_slot_label)) ?? requiredMedia
+    return [`${label} 사진 슬롯은 문단 바로 위 사진과 연결해야 합니다.`]
+  })
+}
+
+function hasCoverOrRecordedMediaException(post: BlogPost, media: BlogMedia[]) {
+  return media.some(item => item.used_as_cover) || Boolean(cleanText(post.media_missing_reason))
+}
+
 function claimSafetyBlockers(post: BlogPost, blocks: BlogBlock[], mode: 'ready' | 'publish') {
   const result = validateBlogClaimSafety({
     mode,
@@ -1111,6 +1136,7 @@ function validatePublishGate(post: BlogPost, blocks: BlogBlock[], media: BlogMed
   const mediaById = new Map(media.map(item => [item.id, item]))
   const mediaToValidate = new Map<string, BlogMedia>()
   issues.push(...claimSafetyBlockers(post, blocks, 'publish'))
+  issues.push(...requiredMediaSlotIssues(blocks, media))
 
   if (post.status !== 'ready') issues.push('발행 준비 상태인 글만 공개할 수 있습니다.')
   if (!cleanText(post.title)) issues.push('제목이 필요합니다.')
@@ -1127,6 +1153,9 @@ function validatePublishGate(post: BlogPost, blocks: BlogBlock[], media: BlogMed
   if (blocks.length === 0) issues.push('본문 블록이 필요합니다.')
   if (ctaBlocks.length === 0) issues.push('CTA 블록이 필요합니다.')
   if (hasForbiddenExpression(post.brand_check_result)) issues.push('금지표현/브랜드 검수 blocker가 남아 있습니다.')
+  if (!hasCoverOrRecordedMediaException(post, media)) {
+    issues.push('대표 사진 또는 사진 부족 사유가 필요합니다.')
+  }
 
   for (const block of blocks) {
     if (block.type !== 'image') continue
@@ -1202,6 +1231,10 @@ function validateReadyGate(post: BlogPost, blocks: BlogBlock[], media: BlogMedia
   if (hasForbiddenExpression(post.brand_check_result)) issues.push('금지표현/브랜드 검수 blocker가 남아 있습니다.')
 
   issues.push(...claimSafetyBlockers(post, blocks, 'ready'))
+  issues.push(...requiredMediaSlotIssues(blocks, media))
+  if (!hasCoverOrRecordedMediaException(post, media)) {
+    issues.push('대표 사진 또는 사진 부족 사유가 필요합니다.')
+  }
 
   for (const block of blocks) {
     if (block.type !== 'image') continue

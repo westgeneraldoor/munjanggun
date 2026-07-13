@@ -536,6 +536,8 @@ function ContentAssetPicker({
   const uploadItemsRef = useRef<PickerUploadItem[]>([])
   const [uploadResult, setUploadResult] = useState<UploadContentAssetsResult | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [privacyChecked, setPrivacyChecked] = useState(false)
+  const [promotionConsentChecked, setPromotionConsentChecked] = useState(false)
   const [isUploadPending, startUploadTransition] = useTransition()
   const totalUploadBytes = uploadItems.reduce((sum, item) => sum + item.file.size, 0)
   const isUploadOverLimit = totalUploadBytes > MAX_UPLOAD_TOTAL_BYTES
@@ -626,6 +628,8 @@ function ContentAssetPicker({
       if (result.ok) {
         uploadItems.forEach(item => URL.revokeObjectURL(item.previewUrl))
         setUploadItems([])
+        setPrivacyChecked(false)
+        setPromotionConsentChecked(false)
         form.reset()
         onUploaded()
         setUploadOpen(false)
@@ -693,6 +697,29 @@ function ContentAssetPicker({
                 </ul>
               </>
             ) : null}
+            <fieldset className={styles.assetUploadReview}>
+              <legend>사진 공개 전 확인</legend>
+              <label>
+                <input
+                  type="checkbox"
+                  name="privacyChecked"
+                  checked={privacyChecked}
+                  onChange={event => setPrivacyChecked(event.target.checked)}
+                  disabled={isUploadPending}
+                />
+                고객 정보·주소·연락처 등 민감정보가 보이지 않는지 확인했습니다.
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  name="promotionConsentChecked"
+                  checked={promotionConsentChecked}
+                  onChange={event => setPromotionConsentChecked(event.target.checked)}
+                  disabled={isUploadPending}
+                />
+                블로그·홍보용 사용 가능 여부를 확인했습니다.
+              </label>
+            </fieldset>
             {isUploadPending || uploadProgress > 0 ? (
               <div className={styles.assetUploadProgress} role="status" aria-live="polite">
                 <div>
@@ -707,7 +734,7 @@ function ContentAssetPicker({
                 {uploadResult.message}
               </div>
             ) : null}
-            <button type="submit" className={styles.primaryButton} disabled={isUploadPending || uploadItems.length === 0 || isUploadOverLimit}>
+            <button type="submit" className={styles.primaryButton} disabled={isUploadPending || uploadItems.length === 0 || isUploadOverLimit || !privacyChecked || !promotionConsentChecked}>
               {isUploadPending ? '사진 보관 중' : '사진 보관'}
             </button>
           </form>

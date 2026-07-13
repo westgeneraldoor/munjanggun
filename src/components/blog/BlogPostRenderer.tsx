@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, HelpCircle, Info, MapPin } from 'lucide-react'
 import { normalizeGuideBoxBlock, normalizeLinkButtonBlock } from '@/lib/content-os/blog-body-blocks'
-import type { BlogRelatedPost, BlogRenderBlock, BlogRenderData, BlogRenderMedia, BlogRenderMode } from '@/lib/content-os/blog-rendering'
+import { resolvePublicBlogPresentation, type BlogRelatedPost, type BlogRenderBlock, type BlogRenderData, type BlogRenderMedia, type BlogRenderMode } from '@/lib/content-os/blog-rendering'
 import BlogArticleActions from './BlogArticleActions'
 import BlogConditionChecklist from './BlogConditionChecklist'
 import BlogReadingTopBar from './BlogReadingTopBar'
@@ -274,9 +274,11 @@ export default function BlogPostRenderer({
   searchPosts?: BlogNavigationSearchPost[]
 }) {
   const { post, blocks, media, contentGraphSections, relatedPosts, nextPost } = data
-  const publishedDate = formatDate(post.publishedAt)
-  const updatedDate = formatDate(post.updatedAt)
-  const cover = media.find(item => item.usedAsCover && item.url) ?? null
+  const presentation = resolvePublicBlogPresentation(data)
+  const publishedDate = formatDate(presentation.publishedAt)
+  const updatedDate = formatDate(presentation.modifiedAt)
+  const showUpdatedDate = Boolean(updatedDate)
+  const cover = presentation.primaryImage
   const mediaMap = mediaById(media.filter(item => item.usageStatus !== 'rejected'))
   const hasCtaBlock = blocks.some(block => block.type === 'cta')
   const visibleContentGraphSections = contentGraphSections.filter(section => section.posts.length > 0)
@@ -301,6 +303,21 @@ export default function BlogPostRenderer({
           </Link>
         )}
 
+        {mode === 'public' && (
+          <nav className={styles.breadcrumbs} aria-label="breadcrumb">
+            {presentation.breadcrumbs.map((breadcrumb, index) => (
+              <span key={breadcrumb.url}>
+                {index === presentation.breadcrumbs.length - 1 ? (
+                  <span aria-current="page">{breadcrumb.name}</span>
+                ) : (
+                  <Link href={breadcrumb.href}>{breadcrumb.name}</Link>
+                )}
+                {index < presentation.breadcrumbs.length - 1 ? <span aria-hidden="true">/</span> : null}
+              </span>
+            ))}
+          </nav>
+        )}
+
         <header className={styles.hero}>
           <div className={styles.heroText}>
             <div className={styles.metaRow}>
@@ -311,12 +328,15 @@ export default function BlogPostRenderer({
                   {post.serviceArea}
                 </span>
               )}
-              {publishedDate && <time dateTime={post.publishedAt ?? undefined}>{publishedDate}</time>}
-              {!publishedDate && updatedDate && <time dateTime={post.updatedAt}>업데이트 {updatedDate}</time>}
+              {publishedDate && <time dateTime={presentation.publishedAt ?? undefined}>발행 {publishedDate}</time>}
+              {showUpdatedDate && <time dateTime={presentation.modifiedAt}>업데이트 {updatedDate}</time>}
             </div>
-            <h1>{post.title}</h1>
+            <h1>{presentation.title}</h1>
             {post.targetQuestion && <p className={styles.question}>{post.targetQuestion}</p>}
-            {post.summaryAnswer && <p className={styles.summary}>{post.summaryAnswer}</p>}
+            <p className={styles.summary}>{presentation.description}</p>
+            {post.summaryAnswer && post.summaryAnswer !== presentation.description && (
+              <p className={styles.summaryAnswer}>{post.summaryAnswer}</p>
+            )}
             <div className={styles.keywordRow}>
               {post.primaryKeyword && <span>{post.primaryKeyword}</span>}
               {post.productType && <span>{post.productType}</span>}

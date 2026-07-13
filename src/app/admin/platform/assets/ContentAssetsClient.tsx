@@ -171,6 +171,8 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
   const [result, setResult] = useState<UploadContentAssetsResult | null>(null)
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [privacyChecked, setPrivacyChecked] = useState(false)
+  const [promotionConsentChecked, setPromotionConsentChecked] = useState(false)
   const totalBytes = selectedUploads.reduce((sum, item) => sum + item.file.size, 0)
   const isOverLimit = totalBytes > MAX_UPLOAD_TOTAL_BYTES
 
@@ -234,6 +236,8 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
       if (nextResult.ok) {
         selectedUploads.forEach(item => URL.revokeObjectURL(item.previewUrl))
         setSelectedUploads([])
+        setPrivacyChecked(false)
+        setPromotionConsentChecked(false)
         form.reset()
         router.refresh()
         onUploaded()
@@ -330,6 +334,30 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
         </div>
       </details>
 
+      <fieldset className={styles.uploadReview}>
+        <legend>사진 공개 전 확인</legend>
+        <label>
+          <input
+            type="checkbox"
+            name="privacyChecked"
+            checked={privacyChecked}
+            onChange={event => setPrivacyChecked(event.target.checked)}
+            disabled={isPending}
+          />
+          고객 정보·주소·연락처 등 민감정보가 보이지 않는지 확인했습니다.
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            name="promotionConsentChecked"
+            checked={promotionConsentChecked}
+            onChange={event => setPromotionConsentChecked(event.target.checked)}
+            disabled={isPending}
+          />
+          블로그·홍보용 사용 가능 여부를 확인했습니다.
+        </label>
+      </fieldset>
+
       {isPending || uploadProgress > 0 ? (
         <div className={styles.uploadProgress} role="status" aria-live="polite">
           <div className={styles.uploadProgressTop}>
@@ -344,7 +372,7 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
       ) : null}
 
       <div className={styles.uploadActions}>
-        <button type="submit" className={styles.primaryButton} disabled={isPending || selectedUploads.length === 0 || isOverLimit}>
+        <button type="submit" className={styles.primaryButton} disabled={isPending || selectedUploads.length === 0 || isOverLimit || !privacyChecked || !promotionConsentChecked}>
           {isPending ? <Loader2 aria-hidden="true" size={16} className={styles.spin} /> : <UploadCloud aria-hidden="true" size={16} />}
           사진 보관
         </button>

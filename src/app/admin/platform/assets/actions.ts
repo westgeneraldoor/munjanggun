@@ -27,6 +27,11 @@ type UploadFileMeta = {
   description?: string
 }
 
+type UploadReviewChecks = {
+  privacyChecked: true
+  promotionConsentChecked: true
+}
+
 export type UploadAssetItemResult = {
   fileName: string
   ok: boolean
@@ -91,6 +96,18 @@ function parseUploadFileMeta(value: FormDataEntryValue | null): Map<string, Uplo
     return new Map(rows.map(item => [fileMetaKey(item), item]))
   } catch {
     return new Map()
+  }
+}
+
+function validateUploadReviewChecks(formData: FormData): UploadReviewChecks | null {
+  const privacyChecked = formData.get('privacyChecked') === 'on'
+  const promotionConsentChecked = formData.get('promotionConsentChecked') === 'on'
+
+  if (!privacyChecked || !promotionConsentChecked) return null
+
+  return {
+    privacyChecked: true,
+    promotionConsentChecked: true,
   }
 }
 
@@ -215,9 +232,10 @@ async function uploadOneAsset(params: {
   actorId: string
   file: File
   formData: FormData
+  reviewChecks: UploadReviewChecks
   fileMeta?: UploadFileMeta
 }): Promise<UploadAssetItemResult> {
-  const { actorId, file, formData, fileMeta } = params
+  const { actorId, file, formData, reviewChecks, fileMeta } = params
   const showroomAdmin = createShowroomAdminClient()
   let assetId: string | null = null
   const uploaded: Array<{ bucket: string; path: string }> = []
@@ -245,8 +263,8 @@ async function uploadOneAsset(params: {
       space_type: cleanText(formData.get('spaceType')),
       region: cleanText(formData.get('region')),
       usage_purpose: cleanText(formData.get('usagePurpose')),
-      privacy_checked: true,
-      promotion_consent_checked: true,
+      privacy_checked: reviewChecks.privacyChecked,
+      promotion_consent_checked: reviewChecks.promotionConsentChecked,
       created_by: actorId,
       updated_by: actorId,
       created_at: now,
@@ -421,6 +439,15 @@ export async function uploadContentAssets(formData: FormData): Promise<UploadCon
       }
     }
 
+    const reviewChecks = validateUploadReviewChecks(formData)
+    if (!reviewChecks) {
+      return {
+        ok: false,
+        message: '사진의 민감정보 확인과 블로그 사용 가능 여부 확인이 모두 필요합니다.',
+        items: [],
+      }
+    }
+
     const items: UploadAssetItemResult[] = []
     const fileMetaByKey = parseUploadFileMeta(formData.get('fileMeta'))
     for (const file of files) {
@@ -428,6 +455,7 @@ export async function uploadContentAssets(formData: FormData): Promise<UploadCon
         actorId,
         file,
         formData,
+        reviewChecks,
         fileMeta: fileMetaByKey.get(fileMetaKey(file)),
       }))
     }
