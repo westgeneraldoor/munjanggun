@@ -43,7 +43,7 @@ test('blog main uses one shared navigation with search and account access', asyn
 
 test('authenticated search and account menus stay mutually exclusive and keyboard friendly', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
-  const response = await page.goto('http://localhost:3000/api/dev/playwright-login?role=customer&next=/blog')
+  const response = await page.goto('/api/dev/playwright-login?role=customer&next=/blog')
 
   if (response && response.status() >= 500) {
     test.skip(true, 'Dev Supabase login is not configured in this environment.')

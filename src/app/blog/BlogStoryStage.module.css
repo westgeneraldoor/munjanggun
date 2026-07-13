@@ -1,0 +1,324 @@
+.section {
+  min-width: 0;
+  padding-top: 132px;
+  color: var(--mg-blog-ink);
+  background: var(--mg-blog-canvas);
+}
+
+.intro {
+  width: min(1180px, calc(100% - var(--mg-blog-layout-gutter)));
+  margin: 0 auto 72px;
+}
+
+.intro span {
+  color: var(--mg-blog-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.intro h2 {
+  max-width: 850px;
+  margin-top: 12px;
+  font-family: var(--font-blog-display);
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1.14;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+
+.intro p {
+  max-width: 680px;
+  margin-top: 20px;
+  color: var(--mg-blog-muted);
+  font-size: 16px;
+  line-height: 1.7;
+  word-break: keep-all;
+  text-wrap: pretty;
+}
+
+.desktopTrack {
+  position: relative;
+  min-height: 360svh;
+}
+
+.stickyStage {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  height: 100svh;
+  margin: 0 10px;
+  overflow: hidden;
+  border-radius: var(--mg-blog-radius-media);
+  background: var(--mg-blog-cta-surface);
+}
+
+.stageMedia,
+.stageMedia img,
+.stageMedia video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.stageMedia {
+  animation: mediaReveal 420ms ease both;
+}
+
+.stageMedia img,
+.stageMedia video {
+  display: block;
+  object-fit: cover;
+}
+
+.stageVeil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(14, 14, 14, 0.74) 0%, rgba(14, 14, 14, 0.26) 38%, rgba(14, 14, 14, 0.04) 62%),
+    linear-gradient(270deg, rgba(14, 14, 14, 0.5) 0%, transparent 30%),
+    linear-gradient(0deg, rgba(14, 14, 14, 0.34), transparent 40%);
+}
+
+.stageCopy {
+  position: absolute;
+  z-index: 2;
+  left: clamp(34px, 6vw, 92px);
+  top: 50%;
+  width: min(450px, 34vw);
+  color: var(--mg-blog-inverse);
+  transform: translateY(-50%);
+  animation: copyReveal 360ms ease both;
+}
+
+.stageCopy > span {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.stageCopy h3 {
+  margin-top: 14px;
+  font-family: var(--font-blog-display);
+  font-size: clamp(38px, 4vw, 62px);
+  font-weight: 800;
+  line-height: 1.08;
+  word-break: keep-all;
+}
+
+.stageCopy p {
+  margin-top: 22px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 16px;
+  line-height: 1.72;
+  word-break: keep-all;
+}
+
+.stageCopy a,
+.mobileCopy a {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 28px;
+  padding: 0 16px;
+  color: var(--mg-blog-ink);
+  background: var(--mg-blog-surface);
+  border-radius: var(--mg-blog-radius-compact);
+  font-size: 14px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.chapterList {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  right: clamp(28px, 5vw, 76px);
+  width: 150px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transform: translateY(-50%);
+}
+
+.chapterList li + li {
+  border-top: 1px solid rgba(255, 255, 255, 0.24);
+}
+
+.chapterList button {
+  width: 100%;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.58);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: color 180ms ease;
+}
+
+.chapterList button span {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.chapterList button strong {
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.chapterList .chapterActive {
+  color: #ffffff;
+}
+
+.progress {
+  position: absolute;
+  z-index: 2;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.progress span {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #ffffff;
+  transform-origin: left center;
+  transition: transform 320ms ease;
+}
+
+.scrollSteps {
+  position: relative;
+  z-index: 0;
+}
+
+.scrollSteps div {
+  height: 65svh;
+}
+
+.stageCopy a:focus-visible,
+.chapterList button:focus-visible,
+.mobileCopy a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+@keyframes mediaReveal {
+  from { opacity: 0.72; transform: scale(1.018); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes copyReveal {
+  from { opacity: 0; transform: translateY(calc(-50% + 14px)); }
+  to { opacity: 1; transform: translateY(-50%); }
+}
+
+@media (max-width: 900px) {
+  .stageCopy {
+    width: min(420px, 50vw);
+  }
+
+  .chapterList {
+    width: 120px;
+  }
+}
+@media (max-width: 760px) {
+  .section {
+    padding-top: 92px;
+  }
+
+  .intro {
+    width: calc(100% - 32px);
+    margin-bottom: 36px;
+  }
+
+  .intro h2 {
+    font-size: 34px;
+  }
+
+  .desktopTrack {
+    min-height: 400dvh;
+  }
+
+  .stickyStage {
+    height: 100dvh;
+    margin: 0 6px;
+    border-radius: 10px;
+  }
+
+  .stageVeil {
+    background:
+      linear-gradient(0deg, rgba(14, 14, 14, 0.82) 0%, rgba(14, 14, 14, 0.34) 54%, rgba(14, 14, 14, 0.04) 78%),
+      linear-gradient(90deg, rgba(14, 14, 14, 0.22), transparent 72%);
+  }
+
+  .stageCopy {
+    top: auto;
+    bottom: 64px;
+    left: 24px;
+    width: calc(100% - 48px);
+    transform: none;
+    animation: mobileCopyReveal 420ms cubic-bezier(0.2, 0.72, 0.2, 1) both;
+  }
+
+  .stageCopy h3 {
+    max-width: 12ch;
+    margin-top: 10px;
+    font-size: 38px;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+
+  .stageCopy p {
+    max-width: 34ch;
+    margin-top: 16px;
+    font-size: 15px;
+    line-height: 1.65;
+    text-wrap: pretty;
+  }
+
+  .stageCopy > span {
+    font-size: 12px;
+  }
+
+  .stageCopy a {
+    min-height: 48px;
+    margin-top: 22px;
+    padding: 0 18px;
+    border-radius: 24px;
+  }
+
+  .chapterList {
+    display: none;
+  }
+
+  .scrollSteps div {
+    height: 75dvh;
+  }
+}
+
+@keyframes mobileCopyReveal {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stageMedia,
+  .stageCopy,
+  .progress span,
+  .chapterList button {
+    animation: none;
+    transition: none;
+  }
+}
