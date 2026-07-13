@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BookOpenText, ChevronDown, ClipboardList, LogIn, LogOut, ShieldCheck, UserRound } from 'lucide-react'
+import { ChevronDown, ClipboardList, LogIn, LogOut, ShieldCheck, UserRound } from 'lucide-react'
 import { createPlatformClient } from '@/lib/supabase/platform-client'
 import { logError } from '@/lib/logger'
 import styles from './PublicUserMenu.module.css'
@@ -14,6 +14,13 @@ interface MenuProfile {
   email: string | null
   displayName: string
   role: ProfileRole
+}
+
+type PublicUserMenuProps = {
+  variant?: 'floating' | 'blog'
+  tone?: 'dark' | 'light' | 'hero'
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const HIDDEN_PATH_PREFIXES = [
@@ -27,27 +34,37 @@ const HIDDEN_PATH_PREFIXES = [
 
 const hasSupabasePublicEnv = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
-function normalizeDisplayName(value: string | null | undefined, role: ProfileRole) {
-  const trimmed = value?.trim()
-  if (!trimmed || /^[?\s]+$/.test(trimmed) || trimmed.includes('�')) {
-    return role === 'administrator' ? '문장군 관리자' : '문장군 고객'
-  }
-  return trimmed
-}
-
-export default function PublicUserMenu() {
+export default function PublicUserMenu({
+  variant = 'floating',
+  tone = 'dark',
+  open: controlledOpen,
+  onOpenChange,
+}: PublicUserMenuProps) {
   const pathname = usePathname()
   const router = useRouter()
   const menuRef = useRef<HTMLDivElement>(null)
+  const menuToggleRef = useRef<HTMLButtonElement>(null)
   const [profile, setProfile] = useState<MenuProfile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [open, setOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
+  const open = controlledOpen ?? internalOpen
+  const isOpenControlled = controlledOpen !== undefined
 
+  const setMenuOpen = useCallback((nextOpen: boolean) => {
+    if (!isOpenControlled) setInternalOpen(nextOpen)
+    onOpenChange?.(nextOpen)
+  }, [isOpenControlled, onOpenChange])
+
+  const isBlogPath = pathname === '/blog' || pathname.startsWith('/blog/')
+  const isEmbedded = variant === 'blog'
   const isHidden = HIDDEN_PATH_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
-  const isBlogArticle = /^\/blog\/[^/]+$/.test(pathname || '')
-  const isLaunchSurface = pathname === '/measure' || pathname === '/blog' || (pathname?.startsWith('/blog/') ?? false)
+    || (isBlogPath && !isEmbedded)
   const loginHref = `/login?next=${encodeURIComponent(pathname || '/')}`
-  const containerClassName = `${styles.container} ${isLaunchSurface ? styles.launchContainer : ''} ${isBlogArticle ? styles.blogArticleContainer : ''}`
+  const containerClassName = [
+    styles.container,
+    isEmbedded ? styles.blogEmbedded : '',
+    tone === 'hero' ? styles.blogHero : tone === 'light' ? styles.blogLight : styles.blogDark,
+  ].filter(Boolean).join(' ')
 
   useEffect(() => {
     if (isHidden) {
@@ -87,14 +104,10 @@ export default function PublicUserMenu() {
         } | null
 
         if (mounted) {
-          const role = dbProfile?.role || 'customer'
           setProfile({
             email: dbProfile?.email || user.email || null,
-            displayName: normalizeDisplayName(
-              dbProfile?.display_name || user.user_metadata?.full_name || user.user_metadata?.name,
-              role
-            ),
-            role,
+            displayName: dbProfile?.display_name || user.user_metadata?.full_name || user.user_metadata?.name || '마이페이지',
+            role: dbProfile?.role || 'customer',
           })
         }
       } catch (err) {
@@ -120,15 +133,30 @@ export default function PublicUserMenu() {
   useEffect(() => {
     if (!open) return
 
+    const focusFrame = window.requestAnimationFrame(() => {
+      menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus()
+    })
+
     const handlePointerDown = (event: PointerEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setOpen(false)
+        setMenuOpen(false)
+      }
+    }
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false)
+        window.requestAnimationFrame(() => menuToggleRef.current?.focus())
       }
     }
 
     window.addEventListener('pointerdown', handlePointerDown)
-    return () => window.removeEventListener('pointerdown', handlePointerDown)
-  }, [open])
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.cancelAnimationFrame(focusFrame)
+      window.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open, setMenuOpen])
 
   if (isHidden || loading || !hasSupabasePublicEnv) {
     return null
@@ -142,7 +170,7 @@ export default function PublicUserMenu() {
       const { error } = await supabase.auth.signOut()
       if (error) logError('Public user menu signout error', error)
       setProfile(null)
-      setOpen(false)
+      setMenuOpen(false)
       router.refresh()
     } catch (err) {
       logError('Public user menu signout unexpected error', err)
@@ -165,12 +193,84 @@ export default function PublicUserMenu() {
     ? `${profile.displayName.slice(0, 12)}...`
     : profile.displayName
 
+  const handleMenuKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
+
+    const items = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]'))
+    if (items.length === 0) return
+
+    event.preventDefault()
+    const currentIndex = items.indexOf(document.activeElement as HTMLElement)
+    const nextIndex = event.key === 'Home'
+      ? 0
+      : event.key === 'End'
+        ? items.length - 1
+        : event.key === 'ArrowUp'
+          ? (currentIndex <= 0 ? items.length - 1 : currentIndex - 1)
+          : (currentIndex + 1) % items.length
+    items[nextIndex]?.focus()
+  }
+
+  const handleContainerBlur = (event: FocusEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+      setMenuOpen(false)
+    }
+  }
+
+  if (isEmbedded) {
+    return (
+      <div className={containerClassName} ref={menuRef} onBlur={handleContainerBlur}>
+        <button
+          ref={menuToggleRef}
+          type="button"
+          className={styles.embeddedTrigger}
+          onClick={() => setMenuOpen(!open)}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label="계정 메뉴 열기"
+          id="public-user-menu-toggle"
+        >
+          <UserRound size={18} aria-hidden="true" />
+          <span>{name}</span>
+          <ChevronDown size={15} aria-hidden="true" className={open ? styles.chevronOpen : ''} />
+        </button>
+        {open && (
+          <div className={styles.menu} role="menu" id="public-user-menu" onKeyDown={handleMenuKeyDown}>
+            <div className={styles.identity}>
+              <span className={styles.identityName}>{profile.displayName}</span>
+              {profile.email && <span className={styles.identityEmail}>{profile.email}</span>}
+            </div>
+            <Link href="/portal" className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
+              <UserRound size={16} aria-hidden="true" />
+              <span>마이페이지</span>
+            </Link>
+            <Link href="/portal/measure/new" className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
+              <ClipboardList size={16} aria-hidden="true" />
+              <span>무료방문견적 신청</span>
+            </Link>
+            {isAdministrator && (
+              <Link href="/admin/platform" className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
+                <ShieldCheck size={16} aria-hidden="true" />
+                <span>플랫폼 어드민</span>
+              </Link>
+            )}
+            <button type="button" className={styles.menuItem} role="menuitem" onClick={handleLogout}>
+              <LogOut size={16} aria-hidden="true" />
+              <span>로그아웃</span>
+            </button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
-    <div className={containerClassName} ref={menuRef}>
+    <div className={containerClassName} ref={menuRef} onBlur={handleContainerBlur}>
       <button
+        ref={menuToggleRef}
         type="button"
         className={styles.trigger}
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => setMenuOpen(!open)}
         aria-haspopup="menu"
         aria-expanded={open}
         id="public-user-menu-trigger"
@@ -181,25 +281,21 @@ export default function PublicUserMenu() {
       </button>
 
       {open && (
-        <div className={styles.menu} role="menu" id="public-user-menu">
+        <div className={styles.menu} role="menu" id="public-user-menu" onKeyDown={handleMenuKeyDown}>
           <div className={styles.identity}>
             <span className={styles.identityName}>{profile.displayName}</span>
             {profile.email && <span className={styles.identityEmail}>{profile.email}</span>}
           </div>
-          <Link href="/blog" className={styles.menuItem} role="menuitem" onClick={() => setOpen(false)}>
-            <BookOpenText size={16} aria-hidden="true" />
-            <span>블로그 홈</span>
-          </Link>
-          <Link href="/portal" className={styles.menuItem} role="menuitem" onClick={() => setOpen(false)}>
+          <Link href="/portal" className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
             <UserRound size={16} aria-hidden="true" />
             <span>마이페이지</span>
           </Link>
-          <Link href="/measure" className={styles.menuItem} role="menuitem" onClick={() => setOpen(false)}>
+          <Link href="/portal/measure/new" className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
             <ClipboardList size={16} aria-hidden="true" />
-            <span>무료방문견적 안내</span>
+            <span>무료방문견적 신청</span>
           </Link>
           {isAdministrator && (
-            <Link href="/admin/platform" className={styles.menuItem} role="menuitem" onClick={() => setOpen(false)}>
+            <Link href="/admin/platform" className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
               <ShieldCheck size={16} aria-hidden="true" />
               <span>플랫폼 어드민</span>
             </Link>

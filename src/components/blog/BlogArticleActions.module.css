@@ -22,7 +22,8 @@
 
 .copy h2 {
   color: var(--blog-cocoa);
-  font-size: clamp(20px, 2.4vw, 26px);
+  font-family: var(--font-blog-display);
+  font-size: 26px;
   font-weight: 850;
   line-height: 1.35;
   letter-spacing: 0;
@@ -72,7 +73,7 @@
 
 .questionCopy strong {
   color: var(--blog-cocoa);
-  font-size: clamp(16px, 2vw, 19px);
+  font-size: 19px;
   line-height: 1.4;
   word-break: keep-all;
   overflow-wrap: break-word;
@@ -208,6 +209,14 @@
 }
 
 @media (max-width: 620px) {
+  .copy h2 {
+    font-size: 22px;
+  }
+
+  .questionCopy strong {
+    font-size: 17px;
+  }
+
   .controls {
     grid-template-columns: minmax(0, 1fr);
   }

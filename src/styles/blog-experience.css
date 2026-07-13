@@ -1,0 +1,95 @@
+/*
+ * Blog Image Showroom semantic theme.
+ *
+ * This scope intentionally leaves central --mg-* compatibility tokens
+ * untouched. Components under [data-mg-theme="blog"] consume these aliases;
+ * composition-specific image veils and staged interactions stay local.
+ */
+
+[data-mg-theme="blog"] {
+  color-scheme: light;
+
+  --mg-blog-canvas: #fbf7f1;
+  --mg-blog-canvas-subtle: #f7f1e9;
+  --mg-blog-surface: #ffffff;
+  --mg-blog-surface-muted: #f3e9dc;
+  --mg-blog-ink: #2e241c;
+  --mg-blog-body: #2e241c;
+  --mg-blog-muted: #78685a;
+  --mg-blog-inverse: #ffffff;
+  --mg-blog-border: #ede0d3;
+  --mg-blog-border-strong: #d9c4a8;
+  --mg-blog-accent: #9c4e2c;
+  --mg-blog-accent-strong: #86401f;
+  --mg-blog-status-success: #2c6b3f;
+  --mg-blog-status-danger: #a3392a;
+
+  --mg-blog-glass-hero: transparent;
+  --mg-blog-glass-light: rgba(255, 255, 255, 0.86);
+  --mg-blog-glass-dark: rgba(18, 18, 17, 0.3);
+  --mg-blog-glass-panel: rgba(255, 255, 255, 0.96);
+  --mg-blog-glass-border-light: rgba(23, 23, 23, 0.1);
+  --mg-blog-glass-border-dark: rgba(255, 255, 255, 0.22);
+  --mg-blog-cta-surface: #2e241c;
+
+  --mg-blog-font-display: 'Tmoney RoundWind', 'Pretendard Variable', 'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --mg-blog-font-body: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mg-blog-font-wordmark: 'Nunito', 'Inter', 'Pretendard', sans-serif;
+  --font-blog-display: var(--mg-blog-font-display);
+  --font-sans: var(--mg-blog-font-body);
+
+  --mg-blog-control-size: 44px;
+  --mg-blog-radius-compact: 8px;
+  --mg-blog-radius-media: 12px;
+  --mg-blog-radius-card: 24px;
+  --mg-blog-radius-floating: 24px;
+  --mg-blog-radius-search: 28px;
+  --mg-blog-radius-cta: 30px;
+  --mg-blog-radius-footer: 32px;
+  --mg-blog-shadow-floating: 0 16px 48px rgba(17, 17, 17, 0.14);
+  --mg-blog-shadow-overlay: 0 26px 70px rgba(17, 17, 17, 0.2);
+  --mg-blog-shadow-card: 0 16px 38px rgba(20, 20, 18, 0.08);
+
+  --mg-blog-motion-fast: 180ms;
+  --mg-blog-motion-standard: 220ms;
+  --mg-blog-motion-navigation: 360ms;
+  --mg-blog-ease-expressive: cubic-bezier(0.2, 0.72, 0.2, 1);
+  --mg-blog-layout-gutter: 64px;
+  --mg-blog-layout-section: 128px;
+}
+
+[data-mg-theme="blog"][data-mg-blog-experience="showroom"] {
+  --mg-blog-canvas: #ffffff;
+  --mg-blog-canvas-subtle: #f4f4f1;
+  --mg-blog-surface-muted: #eeeeea;
+  --mg-blog-ink: #171717;
+  --mg-blog-body: #30302d;
+  --mg-blog-muted: #6b6b65;
+  --mg-blog-border: #e5e5e0;
+  --mg-blog-border-strong: #c9c9c2;
+  --mg-blog-accent: #3d5b4b;
+  --mg-blog-accent-strong: #274237;
+  --mg-blog-cta-surface: #171717;
+}
+
+@media (max-width: 960px) {
+  [data-mg-theme="blog"] {
+    --mg-blog-layout-gutter: 48px;
+    --mg-blog-layout-section: 104px;
+  }
+}
+
+@media (max-width: 620px) {
+  [data-mg-theme="blog"] {
+    --mg-blog-layout-gutter: 32px;
+    --mg-blog-layout-section: 84px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-mg-theme="blog"] {
+    --mg-blog-motion-fast: 0ms;
+    --mg-blog-motion-standard: 0ms;
+    --mg-blog-motion-navigation: 0ms;
+  }
+}

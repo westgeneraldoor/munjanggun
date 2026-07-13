@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import BlogPostRenderer from '@/components/blog/BlogPostRenderer'
-import { getPublishedBlogPostBySlug, type BlogRenderData } from '@/lib/content-os/blog-rendering'
+import { getPublishedBlogPostBySlug, getPublishedBlogPosts, type BlogRenderData } from '@/lib/content-os/blog-rendering'
 import { absoluteUrl } from '@/lib/content-os/site-url'
 
 export const revalidate = 60
@@ -125,7 +125,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params
-  const data = await getPublishedBlogPostBySlug(slug)
+  const [data, searchPosts] = await Promise.all([
+    getPublishedBlogPostBySlug(slug),
+    getPublishedBlogPosts(),
+  ])
 
   if (!data) {
     notFound()
@@ -137,7 +140,7 @@ export default async function BlogPostPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildJsonLd(data)) }}
       />
-      <BlogPostRenderer data={data} mode="public" />
+      <BlogPostRenderer data={data} mode="public" searchPosts={searchPosts} />
     </>
   )
 }
