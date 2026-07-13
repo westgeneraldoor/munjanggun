@@ -1841,7 +1841,7 @@ export default function BlogEditorClient({
       <header className={styles.header}>
         <Link href="/admin/platform/blog" className={styles.backLink}>
           <ArrowLeft size={16} aria-hidden="true" />
-          초안 큐
+          콘텐츠 큐
         </Link>
         <div className={styles.titleRow}>
           <div>
