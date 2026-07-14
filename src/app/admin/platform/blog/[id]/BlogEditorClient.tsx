@@ -540,6 +540,8 @@ function ContentAssetPicker({
   const uploadItemsRef = useRef<PickerUploadItem[]>([])
   const [uploadResult, setUploadResult] = useState<UploadContentAssetsResult | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [privacyChecked, setPrivacyChecked] = useState(false)
+  const [promotionConsentChecked, setPromotionConsentChecked] = useState(false)
   const [isUploadPending, startUploadTransition] = useTransition()
   const totalUploadBytes = uploadItems.reduce((sum, item) => sum + item.file.size, 0)
   const isUploadOverLimit = totalUploadBytes > MAX_UPLOAD_TOTAL_BYTES
@@ -630,6 +632,8 @@ function ContentAssetPicker({
       if (result.ok) {
         uploadItems.forEach(item => URL.revokeObjectURL(item.previewUrl))
         setUploadItems([])
+        setPrivacyChecked(false)
+        setPromotionConsentChecked(false)
         form.reset()
         onUploaded()
         setUploadOpen(false)
@@ -697,6 +701,29 @@ function ContentAssetPicker({
                 </ul>
               </>
             ) : null}
+            <fieldset className={styles.assetUploadReview}>
+              <legend>사진 사용 전 확인</legend>
+              <label>
+                <input
+                  type="checkbox"
+                  name="privacyChecked"
+                  checked={privacyChecked}
+                  onChange={event => setPrivacyChecked(event.target.checked)}
+                  disabled={isUploadPending}
+                />
+                고객 정보·주소·연락처 등 민감정보가 보이지 않는지 확인했습니다.
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  name="promotionConsentChecked"
+                  checked={promotionConsentChecked}
+                  onChange={event => setPromotionConsentChecked(event.target.checked)}
+                  disabled={isUploadPending}
+                />
+                블로그·홍보용으로 사용할 수 있는 사진인지 확인했습니다.
+              </label>
+            </fieldset>
             {isUploadPending || uploadProgress > 0 ? (
               <div className={styles.assetUploadProgress} role="status" aria-live="polite">
                 <div>
@@ -711,7 +738,7 @@ function ContentAssetPicker({
                 {uploadResult.message}
               </div>
             ) : null}
-            <button type="submit" className={styles.primaryButton} disabled={isUploadPending || uploadItems.length === 0 || isUploadOverLimit}>
+            <button type="submit" className={styles.primaryButton} disabled={isUploadPending || uploadItems.length === 0 || isUploadOverLimit || !privacyChecked || !promotionConsentChecked}>
               {isUploadPending ? '사진 보관 중' : '사진 보관'}
             </button>
           </form>
@@ -1435,9 +1462,9 @@ export default function BlogEditorClient({
     },
     {
       key: 'cover',
-      ok: Boolean(coverMedia),
-      label: '대표사진',
-      detail: coverMedia ? undefined : '선택 필요',
+      ok: Boolean(coverMedia || post.mediaMissingReason?.trim()),
+      label: '대표사진/사유',
+      detail: coverMedia || post.mediaMissingReason?.trim() ? undefined : '대표사진 또는 사유 필요',
     },
     {
       key: 'cta',
@@ -1587,6 +1614,7 @@ export default function BlogEditorClient({
       productType: emptyToNull(post.productType ?? ''),
       aiCitationReady: post.aiCitationReady,
       lastFactCheckedAt: fromDateTimeLocal(factCheckedLocal),
+      mediaMissingReason: emptyToNull(post.mediaMissingReason ?? ''),
     },
     blocks: blocks.map(block => ({
       id: block.id || null,
@@ -1616,6 +1644,7 @@ export default function BlogEditorClient({
       productType: emptyToNull(initialPost.productType ?? ''),
       aiCitationReady: initialPost.aiCitationReady,
       lastFactCheckedAt: fromDateTimeLocal(toDateTimeLocal(initialPost.lastFactCheckedAt)),
+      mediaMissingReason: emptyToNull(initialPost.mediaMissingReason ?? ''),
     },
     blocks: initialBlocks.map(block => ({
       id: block.id || null,
@@ -2020,6 +2049,18 @@ export default function BlogEditorClient({
                   대표사진 선택
                 </button>
               )}
+              <Field
+                label="대표사진이 없을 때 사유"
+                hint="대표사진을 준비할 수 없는 정당한 예외가 있을 때만 구체적으로 기록해 주세요."
+              >
+                <textarea
+                  value={post.mediaMissingReason ?? ''}
+                  onChange={event => updatePost('mediaMissingReason', event.target.value)}
+                  rows={3}
+                  maxLength={500}
+                  disabled={isPublished}
+                />
+              </Field>
             </div>
           </section>
 

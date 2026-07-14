@@ -9,6 +9,7 @@ import {
   extensionForContentAssetMimeType,
   transformContentAssetImage,
 } from '@/lib/content-assets/image-transforms'
+import { readUploadReviewChecks, type UploadReviewChecks } from '@/lib/content-assets/upload-review-checks'
 import { createPlatformClient } from '@/lib/supabase/platform-server'
 import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
 import type { Database, Json } from '@/types/database'
@@ -215,9 +216,10 @@ async function uploadOneAsset(params: {
   actorId: string
   file: File
   formData: FormData
+  reviewChecks: UploadReviewChecks
   fileMeta?: UploadFileMeta
 }): Promise<UploadAssetItemResult> {
-  const { actorId, file, formData, fileMeta } = params
+  const { actorId, file, formData, reviewChecks, fileMeta } = params
   const showroomAdmin = createShowroomAdminClient()
   let assetId: string | null = null
   const uploaded: Array<{ bucket: string; path: string }> = []
@@ -245,8 +247,8 @@ async function uploadOneAsset(params: {
       space_type: cleanText(formData.get('spaceType')),
       region: cleanText(formData.get('region')),
       usage_purpose: cleanText(formData.get('usagePurpose')),
-      privacy_checked: true,
-      promotion_consent_checked: true,
+      privacy_checked: reviewChecks.privacyChecked,
+      promotion_consent_checked: reviewChecks.promotionConsentChecked,
       created_by: actorId,
       updated_by: actorId,
       created_at: now,
@@ -421,6 +423,15 @@ export async function uploadContentAssets(formData: FormData): Promise<UploadCon
       }
     }
 
+    const reviewChecks = readUploadReviewChecks(formData)
+    if (!reviewChecks) {
+      return {
+        ok: false,
+        message: '사진의 민감정보 확인과 블로그 사용 가능 여부 확인이 모두 필요합니다.',
+        items: [],
+      }
+    }
+
     const items: UploadAssetItemResult[] = []
     const fileMetaByKey = parseUploadFileMeta(formData.get('fileMeta'))
     for (const file of files) {
@@ -428,6 +439,7 @@ export async function uploadContentAssets(formData: FormData): Promise<UploadCon
         actorId,
         file,
         formData,
+        reviewChecks,
         fileMeta: fileMetaByKey.get(fileMetaKey(file)),
       }))
     }

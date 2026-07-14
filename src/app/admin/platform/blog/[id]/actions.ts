@@ -3,6 +3,7 @@
 import { randomUUID } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { validateBlogClaimSafety } from '@/lib/content-os/blog-claim-safety'
+import { hasCoverOrRecordedMediaException } from '@/lib/content-os/blog-media-policy'
 import { createPlatformAdminClient, createPlatformClient } from '@/lib/supabase/platform-server'
 import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
 import type { BlogBlockType, BlogContentCategory, BlogMediaUsageStatus, BlogPostStatus, Database, Json } from '@/types/database'
@@ -34,6 +35,7 @@ export type SaveBlogEditorPayload = {
     productType: string | null
     aiCitationReady: boolean
     lastFactCheckedAt: string | null
+    mediaMissingReason: string | null
   }
   blocks: SaveableBlock[]
 }
@@ -240,6 +242,9 @@ function validatePayload(payload: SaveBlogEditorPayload) {
   if (!title) return '제목을 입력해야 합니다.'
   if (!slug || !SLUG_PATTERN.test(slug)) {
     return '주소는 영문 소문자, 숫자, 하이픈만 사용할 수 있습니다.'
+  }
+  if ((payload.post.mediaMissingReason?.trim().length ?? 0) > 500) {
+    return '대표사진이 없을 때 사유는 500자 이내로 입력해 주세요.'
   }
 
   for (const block of payload.blocks) {
@@ -514,6 +519,7 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
       product_type: cleanText(payload.post.productType),
       ai_citation_ready: payload.post.aiCitationReady,
       last_fact_checked_at: cleanText(payload.post.lastFactCheckedAt),
+      media_missing_reason: cleanText(payload.post.mediaMissingReason),
       updated_at: new Date().toISOString(),
     }
 
@@ -1111,6 +1117,9 @@ function validatePublishGate(post: BlogPost, blocks: BlogBlock[], media: BlogMed
   const mediaById = new Map(media.map(item => [item.id, item]))
   const mediaToValidate = new Map<string, BlogMedia>()
   issues.push(...claimSafetyBlockers(post, blocks, 'publish'))
+  if (!hasCoverOrRecordedMediaException(post, media)) {
+    issues.push('대표 사진 또는 사진 부족 사유가 필요합니다.')
+  }
 
   if (post.status !== 'ready') issues.push('발행 준비 상태인 글만 공개할 수 있습니다.')
   if (!cleanText(post.title)) issues.push('제목이 필요합니다.')
@@ -1185,6 +1194,9 @@ function validateReadyGate(post: BlogPost, blocks: BlogBlock[], media: BlogMedia
   const ctaBlocks = blocks.filter(block => block.type === 'cta')
   const mediaById = new Map(media.map(item => [item.id, item]))
   const mediaToValidate = new Map<string, BlogMedia>()
+  if (!hasCoverOrRecordedMediaException(post, media)) {
+    issues.push('대표 사진 또는 사진 부족 사유가 필요합니다.')
+  }
 
   if (!cleanText(post.title)) issues.push('제목이 필요합니다.')
   if (!cleanText(post.slug) || !SLUG_PATTERN.test(post.slug)) issues.push('글 주소 형식이 올바르지 않습니다.')

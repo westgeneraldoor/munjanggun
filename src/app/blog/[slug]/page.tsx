@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import BlogPostRenderer from '@/components/blog/BlogPostRenderer'
-import { getPublishedBlogPostBySlug, getPublishedBlogPosts, type BlogRenderData } from '@/lib/content-os/blog-rendering'
+import { resolvePublicBlogPresentation, type BlogPublicPresentation } from '@/lib/content-os/blog-public-presentation'
+import { getPublishedBlogPostBySlug, getPublishedBlogPosts } from '@/lib/content-os/blog-rendering'
 import { absoluteUrl } from '@/lib/content-os/site-url'
 
 export const revalidate = 60
@@ -14,40 +15,18 @@ function serializeJsonLd(value: unknown) {
   return JSON.stringify(value).replace(/</g, '\\u003c')
 }
 
-function getDescription(data: BlogRenderData) {
-  return data.post.metaDescription || data.post.excerpt || data.post.summaryAnswer || data.post.title
-}
-
-function getCanonicalUrl(data: BlogRenderData) {
-  return data.post.canonicalUrl || absoluteUrl(`/blog/${data.post.slug}`)
-}
-
-function getCoverImages(data: BlogRenderData) {
-  const coverImages = data.media
-    .filter(media => media.usedAsCover && media.url)
-    .map(media => media.url as string)
-
-  if (coverImages.length > 0) return coverImages
-
-  return data.media
-    .filter(media => media.url)
-    .map(media => media.url as string)
-}
-
-function buildJsonLd(data: BlogRenderData) {
-  const canonicalUrl = getCanonicalUrl(data)
-  const description = getDescription(data)
-  const images = getCoverImages(data)
+function buildJsonLd(presentation: BlogPublicPresentation) {
+  const primaryImage = presentation.primaryImage?.url
 
   return [
     {
       '@context': 'https://schema.org',
       '@type': 'BlogPosting',
-      headline: data.post.title,
-      description,
-      image: images,
-      datePublished: data.post.publishedAt,
-      dateModified: data.post.updatedAt,
+      headline: presentation.headline,
+      description: presentation.description,
+      ...(primaryImage ? { image: [primaryImage] } : {}),
+      ...(presentation.publishedAt ? { datePublished: presentation.publishedAt } : {}),
+      dateModified: presentation.modifiedAt,
       author: {
         '@type': 'Organization',
         name: '문장군',
@@ -58,32 +37,18 @@ function buildJsonLd(data: BlogRenderData) {
       },
       mainEntityOfPage: {
         '@type': 'WebPage',
-        '@id': canonicalUrl,
+        '@id': presentation.canonicalUrl,
       },
     },
     {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
-      itemListElement: [
-        {
-          '@type': 'ListItem',
-          position: 1,
-          name: 'Home',
-          item: absoluteUrl('/'),
-        },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: 'Blog',
-          item: absoluteUrl('/blog'),
-        },
-        {
-          '@type': 'ListItem',
-          position: 3,
-          name: data.post.title,
-          item: canonicalUrl,
-        },
-      ],
+      itemListElement: presentation.breadcrumbs.map((breadcrumb, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: breadcrumb.name,
+        item: breadcrumb.url,
+      })),
     },
   ]
 }
@@ -96,25 +61,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     notFound()
   }
 
-  const title = data.post.seoTitle || data.post.title
-  const description = getDescription(data)
-  const canonicalUrl = getCanonicalUrl(data)
-  const images = getCoverImages(data)
+  const presentation = resolvePublicBlogPresentation(data, absoluteUrl)
+  const primaryImage = presentation.primaryImage?.url
 
   return {
-    title,
-    description,
+    title: presentation.metadataTitle,
+    description: presentation.description,
     alternates: {
-      canonical: canonicalUrl,
+      canonical: presentation.canonicalUrl,
     },
     openGraph: {
-      title,
-      description,
-      url: canonicalUrl,
+      title: presentation.metadataTitle,
+      description: presentation.description,
+      url: presentation.canonicalUrl,
       type: 'article',
-      publishedTime: data.post.publishedAt ?? undefined,
-      modifiedTime: data.post.updatedAt,
-      images,
+      publishedTime: presentation.publishedAt ?? undefined,
+      modifiedTime: presentation.modifiedAt,
+      ...(primaryImage ? { images: [primaryImage] } : {}),
     },
     robots: {
       index: true,
@@ -134,11 +97,13 @@ export default async function BlogPostPage({ params }: Props) {
     notFound()
   }
 
+  const presentation = resolvePublicBlogPresentation(data, absoluteUrl)
+
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildJsonLd(data)) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildJsonLd(presentation)) }}
       />
       <BlogPostRenderer data={data} mode="public" searchPosts={searchPosts} />
     </>
