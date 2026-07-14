@@ -14,10 +14,10 @@
 - `docs/platform/PLATFORM_STRATEGY.md` — 왜 이 플랫폼을 만드는지
 - `docs/platform/DEVELOPMENT_STRATEGY.md` — Codex/Gemini/Claude/GPT 역할 분담과 개발 운영 방식
 - `docs/platform/TEAM_AGENT_OPERATING_MODEL.md` — Codex 총괄 아래 서브에이전트 팀 편성, 역할, 검수/에스컬레이션 기준
-- `docs/platform/CONTENT_OS_STRATEGY.md` — 문장군 SEO/AEO 콘텐츠 OS, AI 초안 큐, 사진 승인형 블로그 운영 전략
+- `docs/platform/CONTENT_OS_STRATEGY.md` — 문장군 SEO/AEO 콘텐츠 OS, Codex 외부 원고와 사진 승인형 CMS 운영 전략
 - `docs/platform/CONTENT_OS_PRD.md` — MVP-CONTENTOS-01 제품 요구사항과 범위
 - `docs/platform/CONTENT_OS_SCHEMA.md` — 콘텐츠 OS Supabase DB/RLS/Storage 설계
-- `docs/platform/CONTENT_OS_ADMIN_UX.md` — 블로그 초안 큐와 블록형 에디터 UX
+- `docs/platform/CONTENT_OS_ADMIN_UX.md` — 블로그 콘텐츠 큐와 블록형 에디터 CMS UX
 - `docs/platform/CONTENT_OS_SEO_AEO_SPEC.md` — sitemap/robots/metadata/JSON-LD SEO·AEO 기술 사양
 - `docs/platform/CONTENT_ASSET_LIBRARY_STRATEGY.md` — 문장군 공용 사진보관함 전략
 - `docs/platform/CONTENT_ASSET_LIBRARY_PRD.md` — 사진보관함 제품 요구사항과 MVP 범위

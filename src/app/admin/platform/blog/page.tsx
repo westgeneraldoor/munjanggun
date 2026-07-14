@@ -8,11 +8,10 @@ import type {
   Database,
   Json,
 } from '@/types/database'
-import { getBlogAiDraftConfigView } from './actions'
 import BlogDraftQueueClient, { type BlogDraftQueueRow } from './BlogDraftQueueClient'
 
 export const metadata = {
-  title: '블로그 초안 큐 | 문장군 관리자',
+  title: '블로그 콘텐츠 큐 | 문장군 관리자',
 }
 
 export const dynamic = 'force-dynamic'
@@ -115,7 +114,6 @@ function latestEvent(rows: EventSummaryRow[]) {
 }
 
 export default async function AdminPlatformBlogPage() {
-  const aiDraftConfig = await getBlogAiDraftConfigView()
   const platformClient = await createPlatformClient()
   const { data: { user } } = await platformClient.auth.getUser()
   if (!user) redirect('/admin/login')
@@ -141,7 +139,7 @@ export default async function AdminPlatformBlogPage() {
     .limit(200)
 
   if (postsError) {
-    return <BlogDraftQueueClient initialRows={[]} loadError="블로그 초안 목록을 불러오지 못했습니다." aiDraftConfig={aiDraftConfig} />
+    return <BlogDraftQueueClient initialRows={[]} loadError="블로그 콘텐츠 목록을 불러오지 못했습니다." />
   }
 
   const posts = (postsData ?? []) as BlogPostRow[]
@@ -228,5 +226,5 @@ export default async function AdminPlatformBlogPage() {
     }
   })
 
-  return <BlogDraftQueueClient initialRows={rows} loadError={null} aiDraftConfig={aiDraftConfig} />
+  return <BlogDraftQueueClient initialRows={rows} loadError={null} />
 }

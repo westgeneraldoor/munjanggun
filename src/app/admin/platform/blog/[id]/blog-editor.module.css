@@ -671,7 +671,6 @@
   white-space: nowrap;
 }
 
-.status_ai_draft { color: #33516d; background: #eaf3fb; }
 .status_reviewing { color: #7a5b22; background: #fff4d9; }
 .status_needs_media { color: #9f2f2f; background: #fae9e9; }
 .status_ready { color: #17643d; background: #e7f6ec; }

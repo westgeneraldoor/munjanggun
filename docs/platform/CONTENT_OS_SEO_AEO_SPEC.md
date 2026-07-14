@@ -116,7 +116,7 @@ Next.js App Router의 `app/sitemap.ts` file convention을 사용한다.
 - `/drafts/*`
 - `/private/*`
 - preview URL
-- `ai_draft`, `reviewing`, `needs_media`, `ready`, `archived` 글
+- 레거시 `ai_draft`, `reviewing`, `needs_media`, `ready`, `archived` 글
 
 ## 4. Robots
 
@@ -238,7 +238,7 @@ FAQ는 MVP에서 다음처럼 관리한다.
 - `blog_blocks.type = link_button` / `guide_box`는 본문 안에서 보이는 고객 안내와 내부 이동을 보강한다.
 - `related_questions`
 - 글 내부 Q&A 섹션
-- AI 초안 생성과 내부 링크 추천의 입력 데이터
+- Codex 외부 원고 작성과 내부 링크 추천의 입력 데이터
 
 명시 원칙:
 

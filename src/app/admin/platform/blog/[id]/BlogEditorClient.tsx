@@ -197,7 +197,7 @@ const CATEGORY_OPTIONS: Array<{ value: BlogContentCategory; label: string }> = [
 ]
 
 const STATUS_LABEL: Record<BlogPostStatus, string> = {
-  ai_draft: 'AI 초안',
+  ai_draft: '검토 필요',
   reviewing: '검토중',
   needs_media: '사진필요',
   ready: '발행대기',
@@ -206,12 +206,16 @@ const STATUS_LABEL: Record<BlogPostStatus, string> = {
 }
 
 const STATUS_ACTION_LABEL: Record<BlogPostStatus, string> = {
-  ai_draft: 'AI 초안',
+  ai_draft: '검토 필요',
   reviewing: '검토중으로',
   needs_media: '사진필요로',
   ready: '발행대기로',
   published: '발행완료',
   archived: '보관으로',
+}
+
+function getStatusBadgeClass(status: BlogPostStatus) {
+  return status === 'ai_draft' ? styles.status_reviewing : styles[`status_${status}`]
 }
 
 const QUESTION_STATUS_LABEL: Record<BlogQuestionStatus, string> = {
@@ -950,7 +954,7 @@ function EditorMobilePreview({
           <span>{CATEGORY_OPTIONS.find(option => option.value === post.category)?.label ?? '블로그'}</span>
           {post.primaryKeyword && <span>{post.primaryKeyword}</span>}
         </div>
-        <h2>{post.title || '제목 없는 초안'}</h2>
+        <h2>{post.title || '제목 없는 원고'}</h2>
         {coverUrl && (
           <figure className={styles.mobilePreviewCover}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1837,12 +1841,12 @@ export default function BlogEditorClient({
       <header className={styles.header}>
         <Link href="/admin/platform/blog" className={styles.backLink}>
           <ArrowLeft size={16} aria-hidden="true" />
-          초안 큐
+          콘텐츠 큐
         </Link>
         <div className={styles.titleRow}>
           <div>
-            <span className={`${styles.statusBadge} ${styles[`status_${post.status}`]}`}>{STATUS_LABEL[post.status]}</span>
-            <h1>{post.title || '제목 없는 초안'}</h1>
+            <span className={`${styles.statusBadge} ${getStatusBadgeClass(post.status)}`}>{STATUS_LABEL[post.status]}</span>
+            <h1>{post.title || '제목 없는 원고'}</h1>
             <p>{post.slug}</p>
           </div>
           <div className={styles.headerActions}>

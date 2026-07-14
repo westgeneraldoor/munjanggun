@@ -11,7 +11,7 @@ import BlogEditorClient, {
 } from './BlogEditorClient'
 
 export const metadata = {
-  title: '블로그 초안 편집 | 문장군 관리자',
+  title: '블로그 콘텐츠 편집 | 문장군 관리자',
 }
 
 export const dynamic = 'force-dynamic'

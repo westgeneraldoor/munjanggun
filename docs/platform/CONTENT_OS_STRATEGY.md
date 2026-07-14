@@ -54,16 +54,16 @@ ABS도어 교체 비용
 
 ## 2. 핵심 원칙
 
-### 원칙 1. AI는 초안을 만들고, 사람은 발행을 승인한다
+### 원칙 1. Codex가 외부에서 작성하고, 사람은 발행을 승인한다
 
-AI가 바로 공개 글을 발행하지 않는다.
+Codex는 글을 작성하기 전에 문장군_브랜드에서 브랜드 사실, 금지표현, 현장 판단 기준을 조사하고, 문장군블로그에서 네이버 글, 카테고리, 중복 주제, 검색 성과, 발행 운영을 조사한다. 이 조사는 관리자 화면이나 AI 생성 server action이 아니라 외부 작성 업무에서 수행한다.
 
 기본 흐름:
 
 ```text
-AI 초안 생성
--> SEO/AEO 필드 생성
--> 어드민 초안 큐 적재
+Codex 외부 원고 작성
+-> SEO/AEO 필드 작성
+-> 어드민 콘텐츠 큐
 -> 사람이 사실관계와 금지표현 검수
 -> 사람이 문단별 사진 삽입
 -> 미리보기
@@ -109,7 +109,7 @@ Google은 FAQ rich result 기능이 더 이상 Google 검색 결과에 표시되
 - AI 답변 친화형 Q&A 구조 만들기
 - 내부 콘텐츠 재사용
 - 검색 의도 정리
-- 에디터와 AI 초안 생성의 기준 자료 제공
+- Codex 외부 작성과 에디터 검수의 기준 자료 제공
 
 FAQ JSON-LD는 MVP 필수 게이트가 아니다. 필요 시 보조 구조로만 검토한다.
 
@@ -154,7 +154,7 @@ Sitemap: https://munjanggun.vercel.app/sitemap.xml
 | 영역 | 역할 |
 |---|---|
 | 공개 콘텐츠 | `/blog`, `/blog/[slug]`, 카테고리, 지역, 서비스, 가이드 페이지 |
-| 초안 큐 | AI가 만든 글 초안을 관리자 검수 대상으로 쌓는 큐 |
+| 콘텐츠 큐 | 승인된 외부 원고와 레거시 검토 대상을 관리자 검수 대상으로 관리하는 큐 |
 | 블록형 에디터 | 문단별 텍스트, 사진 슬롯, CTA, FAQ, SEO/AEO 필드를 편집 |
 | 콘텐츠 운영 데이터 | 검색 의도, 질문, 키워드, 근거, 색인 상태, 업데이트 필요 여부 관리 |
 
@@ -232,7 +232,7 @@ MVP에서는 단일 HTML 본문보다 블록 구조를 우선한다. 사진을 �
 - `seo_title`
 - `meta_description`
 - `canonical_url`
-- `status`: `ai_draft`, `reviewing`, `needs_media`, `ready`, `published`, `archived`
+- `status`: `ai_draft`, `reviewing`, `needs_media`, `ready`, `published`, `archived` (`ai_draft`는 레거시 호환 전용)
 - `category`
 - `primary_keyword`
 - `target_question`
@@ -272,23 +272,24 @@ MVP에서는 단일 HTML 본문보다 블록 구조를 우선한다. 사진을 �
 - `privacy_checked`
 - `promotion_consent_checked`
 
-공개 조회는 `published` 글과 `published` 미디어만 허용한다. 초안, AI 원문, 검수 전 사진, 내부 근거 자료는 관리자만 접근한다.
+공개 조회는 `published` 글과 `published` 미디어만 허용한다. 검토 대상, 레거시 생성 메타데이터, 검수 전 사진, 내부 근거 자료는 관리자만 접근한다.
 
 ## 6. 상태 흐름
 
 ```text
-ai_draft
--> reviewing
+새 원고: reviewing
 -> needs_media
 -> ready
 -> published
+
+레거시: ai_draft -> reviewing
 ```
 
 상태 의미:
 
 | 상태 | 의미 |
 |---|---|
-| `ai_draft` | AI가 초안을 만든 상태 |
+| `ai_draft` | 레거시 검토 대기 상태. UI에는 `검토 필요`로 표시하며 새 원고에는 쓰지 않음 |
 | `reviewing` | 관리자가 내용 검수 중 |
 | `needs_media` | 글은 쓸 수 있으나 사진 삽입/승인이 부족 |
 | `ready` | 내용, 사진, SEO/AEO 필드, 검수 항목이 발행 가능 |
@@ -297,7 +298,7 @@ ai_draft
 
 ## 7. 어드민 UX
 
-### 초안 큐
+### 콘텐츠 큐
 
 경로:
 
@@ -413,8 +414,8 @@ MVP-CONTENTOS-01 문장군 SEO/AEO 콘텐츠 OS
 
 포함:
 
-- AI 초안 저장 구조
-- `/admin/platform/blog` 초안 큐
+- 레거시 `ai_draft` 상태 및 생성 메타데이터의 읽기 호환
+- `/admin/platform/blog` 콘텐츠 큐
 - 블록형 에디터
 - 문단별 사진 삽입
 - 브랜드/사실 검수 체크

@@ -1,11 +1,10 @@
 'use client'
 
-import { FormEvent, useMemo, useState, useTransition } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, FilePenLine, Search, ShieldAlert } from 'lucide-react'
 import type { BlogContentCategory, BlogMediaUsageStatus, BlogPostStatus } from '@/types/database'
-import { createBlogAiDraft, type BlogAiDraftConfigView, type CreateBlogAiDraftPayload } from './actions'
 import styles from './blog-draft-queue.module.css'
 
 export type BlogDraftQueueRow = {
@@ -47,12 +46,12 @@ export type BlogDraftQueueRow = {
   }
 }
 
-type StatusFilter = 'all' | BlogPostStatus
+type StatusFilter = 'all' | 'needs_review' | Exclude<BlogPostStatus, 'ai_draft'>
 type CategoryFilter = 'all' | BlogContentCategory
 
 const STATUS_TABS: Array<{ key: StatusFilter; label: string }> = [
   { key: 'all', label: '전체' },
-  { key: 'ai_draft', label: 'AI 초안' },
+  { key: 'needs_review', label: '검토 필요' },
   { key: 'reviewing', label: '검토중' },
   { key: 'needs_media', label: '사진필요' },
   { key: 'ready', label: '발행대기' },
@@ -70,21 +69,8 @@ const CATEGORY_TABS: Array<{ key: CategoryFilter; label: string }> = [
   { key: 'area_guide', label: '지역안내' },
 ]
 
-const CATEGORY_OPTIONS: Array<{ value: BlogContentCategory; label: string }> = CATEGORY_TABS
-  .filter((tab): tab is { key: BlogContentCategory; label: string } => tab.key !== 'all')
-  .map(tab => ({ value: tab.key, label: tab.label }))
-
-const DEFAULT_EVIDENCE_JSON = JSON.stringify([
-  {
-    ref: 'verified-source-id',
-    status: 'candidate',
-    type: 'field_guidance',
-    note: '운영자가 확인한 근거 ID와 상태를 입력하세요. 이 화면이 중앙 문서를 자동 조회하지는 않습니다.',
-  },
-], null, 2)
-
 const STATUS_LABEL: Record<BlogPostStatus, string> = {
-  ai_draft: 'AI 초안',
+  ai_draft: '검토 필요',
   reviewing: '검토중',
   needs_media: '사진필요',
   ready: '발행대기',
@@ -144,6 +130,16 @@ function getRiskCount(row: BlogDraftQueueRow) {
   return RISK_LABELS.filter(risk => row.risks[risk.key]).length
 }
 
+function matchesStatusFilter(row: BlogDraftQueueRow, filter: StatusFilter) {
+  if (filter === 'all') return true
+  if (filter === 'needs_review') return row.status === 'ai_draft' || row.status === 'reviewing'
+  return row.status === filter
+}
+
+function getStatusBadgeClass(status: BlogPostStatus) {
+  return status === 'ai_draft' ? styles.status_reviewing : styles[`status_${status}`]
+}
+
 function RiskBadges({ row }: { row: BlogDraftQueueRow }) {
   const activeRisks = RISK_LABELS.filter(risk => row.risks[risk.key])
 
@@ -193,7 +189,7 @@ function SummaryPanel({
           <h2>{row.title}</h2>
           <p>{row.slug}</p>
         </div>
-        <span className={`${styles.statusBadge} ${styles[`status_${row.status}`]}`}>
+        <span className={`${styles.statusBadge} ${getStatusBadgeClass(row.status)}`}>
           {STATUS_LABEL[row.status]}
         </span>
       </div>
@@ -230,35 +226,19 @@ function SummaryPanel({
 export default function BlogDraftQueueClient({
   initialRows,
   loadError,
-  aiDraftConfig,
 }: {
   initialRows: BlogDraftQueueRow[]
   loadError: string | null
-  aiDraftConfig: BlogAiDraftConfigView
 }) {
   const router = useRouter()
-  const [isDraftPending, startDraftTransition] = useTransition()
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [draftForm, setDraftForm] = useState<CreateBlogAiDraftPayload>({
-    category: 'customer_qa',
-    topic: '',
-    targetQuestion: '',
-    primaryKeyword: '',
-    serviceArea: '',
-    productType: '',
-    writingIntent: '',
-    evidenceJson: DEFAULT_EVIDENCE_JSON,
-    needsImageSlots: true,
-  })
-  const [draftMessage, setDraftMessage] = useState<{ ok: boolean; text: string; issues?: string[] } | null>(null)
-
   const filteredRows = useMemo(() => {
     const keyword = search.trim().toLowerCase()
     return initialRows
-      .filter(row => statusFilter === 'all' || row.status === statusFilter)
+      .filter(row => matchesStatusFilter(row, statusFilter))
       .filter(row => categoryFilter === 'all' || row.category === categoryFilter)
       .filter(row => !keyword || getSearchHaystack(row).includes(keyword))
       .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)))
@@ -284,158 +264,17 @@ export default function BlogDraftQueueClient({
     resetSelection()
   }
 
-  const updateDraftForm = <Key extends keyof CreateBlogAiDraftPayload>(
-    key: Key,
-    value: CreateBlogAiDraftPayload[Key],
-  ) => {
-    setDraftForm(prev => ({ ...prev, [key]: value }))
-  }
-
-  const handleCreateAiDraft = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setDraftMessage(null)
-
-    startDraftTransition(async () => {
-      const result = await createBlogAiDraft(draftForm)
-      setDraftMessage({ ok: result.ok, text: result.message, issues: result.issues })
-      if (result.ok && result.postId) {
-        router.push(`/admin/platform/blog/${result.postId}`)
-      }
-    })
-  }
-
   return (
     <div className={styles.page}>
       <header className={styles.pageHeader}>
         <div>
-          <h1 className={styles.pageTitle}>블로그 초안 큐</h1>
+          <h1 className={styles.pageTitle}>블로그 콘텐츠 큐</h1>
           <p className={styles.pageDesc}>
-            검수 대상 {needsReviewCount}건과 위험 신호 {riskCount}개를 확인합니다.
+            승인된 원고의 검수, 사진 연결, 미리보기, 발행 상태를 관리합니다. 검수 대상 {needsReviewCount}건과 위험 신호 {riskCount}개를 확인합니다.
           </p>
         </div>
       </header>
-
-      <section className={styles.aiDraftPanel} aria-label="AI 초안 생성">
-        <div className={styles.aiDraftHeader}>
-          <div>
-            <h2>AI 초안 생성</h2>
-            <p>운영자가 직접 확인한 근거/출처 ID로 검수용 초안을 만듭니다. 생성 결과는 항상 AI 초안 상태로 저장되며, 발행 전 사람 검수가 필요합니다.</p>
-          </div>
-          <span className={aiDraftConfig.enabled ? styles.aiReadyBadge : styles.aiDisabledBadge}>
-            {aiDraftConfig.enabled ? '사용 가능' : '비활성'}
-          </span>
-        </div>
-        {!aiDraftConfig.enabled && (
-          <div className={styles.aiDraftNotice} role="status">
-            {aiDraftConfig.reason ?? 'AI 초안 생성 설정이 필요합니다.'}
-          </div>
-        )}
-        <form className={styles.aiDraftForm} onSubmit={handleCreateAiDraft}>
-          <label>
-            <span>글 유형</span>
-            <select
-              value={draftForm.category}
-              onChange={event => updateDraftForm('category', event.target.value as BlogContentCategory)}
-              disabled={!aiDraftConfig.enabled || isDraftPending}
-            >
-              {CATEGORY_OPTIONS.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            <span>주제</span>
-            <input
-              value={draftForm.topic}
-              onChange={event => updateDraftForm('topic', event.target.value)}
-              disabled={!aiDraftConfig.enabled || isDraftPending}
-              placeholder="예: 중문 가격이 집마다 다른 이유"
-              required
-            />
-          </label>
-          <label>
-            <span>대표 질문</span>
-            <input
-              value={draftForm.targetQuestion}
-              onChange={event => updateDraftForm('targetQuestion', event.target.value)}
-              disabled={!aiDraftConfig.enabled || isDraftPending}
-              placeholder="예: 중문 가격은 왜 현장마다 달라지나요?"
-              required
-            />
-          </label>
-          <label>
-            <span>키워드</span>
-            <input
-              value={draftForm.primaryKeyword}
-              onChange={event => updateDraftForm('primaryKeyword', event.target.value)}
-              disabled={!aiDraftConfig.enabled || isDraftPending}
-              placeholder="예: 중문 가격"
-            />
-          </label>
-          <label>
-            <span>지역/현장 변수</span>
-            <input
-              value={draftForm.serviceArea}
-              onChange={event => updateDraftForm('serviceArea', event.target.value)}
-              disabled={!aiDraftConfig.enabled || isDraftPending}
-              placeholder="예: 화성 동탄, 아파트 현관"
-            />
-          </label>
-          <label>
-            <span>상품군</span>
-            <input
-              value={draftForm.productType}
-              onChange={event => updateDraftForm('productType', event.target.value)}
-              disabled={!aiDraftConfig.enabled || isDraftPending}
-              placeholder="예: 3연동 중문"
-            />
-          </label>
-          <label className={styles.aiDraftWide}>
-            <span>작성 의도</span>
-            <input
-              value={draftForm.writingIntent}
-              onChange={event => updateDraftForm('writingIntent', event.target.value)}
-              disabled={!aiDraftConfig.enabled || isDraftPending}
-              placeholder="예: 가격 단정 없이 견적 변동 기준을 설명"
-            />
-          </label>
-          <label className={styles.aiDraftWide}>
-            <span>출처 근거 JSON</span>
-            <textarea
-              value={draftForm.evidenceJson}
-              onChange={event => updateDraftForm('evidenceJson', event.target.value)}
-              disabled={!aiDraftConfig.enabled || isDraftPending}
-              rows={7}
-              spellCheck={false}
-              required
-            />
-          </label>
-          <label className={styles.aiDraftCheckbox}>
-            <input
-              type="checkbox"
-              checked={draftForm.needsImageSlots}
-              onChange={event => updateDraftForm('needsImageSlots', event.target.checked)}
-              disabled={!aiDraftConfig.enabled || isDraftPending}
-            />
-            <span>본문 사진 슬롯이 필요함</span>
-          </label>
-          <button type="submit" className={styles.aiDraftButton} disabled={!aiDraftConfig.enabled || isDraftPending}>
-            {isDraftPending ? '생성 중' : 'AI 초안 만들기'}
-          </button>
-        </form>
-        {draftMessage && (
-          <div className={`${styles.aiDraftMessage} ${draftMessage.ok ? styles.aiDraftMessageOk : styles.aiDraftMessageError}`} role="status">
-            <p>{draftMessage.text}</p>
-            {draftMessage.issues && draftMessage.issues.length > 0 && (
-              <ul>
-                {draftMessage.issues.map(issue => <li key={issue}>{issue}</li>)}
-              </ul>
-            )}
-          </div>
-        )}
-      </section>
-
-      <section className={styles.filterStack} aria-label="블로그 초안 필터">
+      <section className={styles.filterStack} aria-label="블로그 콘텐츠 필터">
         <div className={styles.searchBox}>
           <Search size={16} aria-hidden="true" />
           <input
@@ -446,7 +285,7 @@ export default function BlogDraftQueueClient({
               resetSelection()
             }}
             placeholder="제목, slug, 질문, 키워드, 지역, 제품군 검색"
-            aria-label="초안 검색"
+            aria-label="콘텐츠 검색"
           />
         </div>
 
@@ -487,7 +326,7 @@ export default function BlogDraftQueueClient({
         <section className={styles.queueListPanel}>
           <div className={styles.queueSummary}>
             <strong>{filteredRows.length}건</strong>
-            <span>초안을 클릭하면 바로 에디터로 이동합니다.</span>
+            <span>원고를 클릭하면 바로 에디터로 이동합니다.</span>
           </div>
 
           {loadError ? (
@@ -497,7 +336,7 @@ export default function BlogDraftQueueClient({
             </div>
           ) : filteredRows.length === 0 ? (
             <div className={styles.empty}>
-              <p>조건에 맞는 초안이 없습니다.</p>
+              <p>조건에 맞는 원고가 없습니다.</p>
             </div>
           ) : (
             <>
@@ -537,7 +376,7 @@ export default function BlogDraftQueueClient({
                           </span>
                         </td>
                         <td>
-                          <span className={`${styles.statusBadge} ${styles[`status_${row.status}`]}`}>
+                          <span className={`${styles.statusBadge} ${getStatusBadgeClass(row.status)}`}>
                             {STATUS_LABEL[row.status]}
                           </span>
                         </td>
@@ -576,7 +415,7 @@ export default function BlogDraftQueueClient({
                       aria-label={`${row.title} 에디터 열기`}
                     >
                       <div className={styles.mobileCardTop}>
-                        <span className={`${styles.statusBadge} ${styles[`status_${row.status}`]}`}>
+                        <span className={`${styles.statusBadge} ${getStatusBadgeClass(row.status)}`}>
                           {STATUS_LABEL[row.status]}
                         </span>
                         <span className={styles.mobileDate}>{formatDateTime(row.updatedAt)}</span>
