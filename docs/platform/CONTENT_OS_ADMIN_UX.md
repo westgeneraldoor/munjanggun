@@ -31,16 +31,26 @@ source_ui_constitution: "docs/platform/PLATFORM_UI_CONSTITUTION.md"
 
 ```text
 /admin/platform/blog
+/admin/platform/blog/new
 /admin/platform/blog/[id]
 ```
 
 메뉴명:
 
 ```text
-블로그 콘텐츠 큐
+블로그 콘텐츠
 ```
 
-MVP에서는 `/admin/platform` 하위에 둔다. 콘텐츠 OS는 공개 콘텐츠를 다루지만, 승인된 원고의 검수와 발행은 플랫폼 운영 업무이기 때문이다. 관리자 UI에는 AI 초안 생성 폼, 모델 설정, AI 전용 비밀값 설정을 두지 않는다.
+MVP에서는 `/admin/platform` 하위에 둔다. 콘텐츠 OS는 공개 콘텐츠를 다루지만, 승인된 원고의 검수와 발행은 플랫폼 운영 업무이기 때문이다. 메뉴 진입 후의 페이지 제목은 `블로그 콘텐츠 큐`를 유지하고, 주요 액션은 `승인 원고 등록`이다. 관리자 UI에는 AI 초안 생성 폼, 모델 설정, AI 전용 비밀값 설정을 두지 않는다.
+
+### 승인 원고 등록
+
+Codex가 외부에서 완성한 원고는 `/admin/platform/blog/new`에서 관리자가 구조화해 등록한다.
+
+- 필수 입력: 제목, slug, 카테고리, SEO/AEO 필드, 본문 블록, 근거
+- 등록 결과: 새 post는 명시적으로 `reviewing` 상태이며 감사 이벤트가 남는다.
+- 다음 행동: 등록 후 콘텐츠 큐와 기존 에디터에서 사진 연결, 브랜드·사실 검수, 미리보기, 발행을 진행한다.
+- 입력 화면은 AI 생성, 모델 선택, 키·환경변수 설정을 제공하지 않는다.
 
 ## 2. 콘텐츠 큐
 

@@ -195,3 +195,9 @@ docs/platform/BRAND_CONTEXT.md
 프로젝트 어댑터: 이 앱의 적용/검수 기준
 기존 platform BRAND_CONTEXT: 레거시 참고 및 중앙 업데이트 후보 발굴 자료
 ```
+
+## 10. 2026-07-14 현재 정책 (current)
+
+이 감사는 2026-06-25의 동기화 판단을 보존하는 문서다. 이후 Content OS의 현행 원고 인계 정책은 Codex가 외부에서 완성한 원고를 인증된 관리자가 구조화해 등록하고, `reviewing` 콘텐츠 큐에서 사진·검수·미리보기·발행을 진행하는 모델이다.
+
+이 감사의 과거 AI 초안 언급은 historical evidence이며 current policy가 아니다. 제거된 AI 초안 생성, 키·모델·환경변수 설정은 현재 CMS 정책이나 운영 선행조건으로 복구하지 않는다.
