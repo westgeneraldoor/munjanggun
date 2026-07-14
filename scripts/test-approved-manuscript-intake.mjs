@@ -42,11 +42,11 @@ function validPayload(overrides = {}) {
     sourceEvidence: [{
       claim_id: 'claim-entry-1',
       status: 'vetted',
-      note: 'The final installation direction is checked during the site visit.',
+      claim_type: 'scope',
     }],
     blocks: [
       { type: 'heading', headingLevel: 2, text: 'Before the visit', metadata: {} },
-      { type: 'paragraph', text: 'Check the opening first.\n\nThen review the floor level.', metadata: { detail: 'Site conditions can vary.' } },
+      { type: 'paragraph', text: 'Check the opening first.\n\nThen review the floor level.', metadata: {} },
       { type: 'qa', text: 'What should be checked?', metadata: { answer: 'Check the opening and floor level.' } },
     ],
     ...overrides,
@@ -122,6 +122,7 @@ function createRepository({ legacyPostFailureCode = null, atomicFailureCode = nu
   assert.equal(calls.atomicRegistrations[0].event.event_type, 'manuscript_registered')
   assert.equal(calls.atomicRegistrations[0].event.actor_id, 'admin-1')
   assert.equal(calls.atomicRegistrations[0].blocks[1].text, 'Check the opening first.\n\nThen review the floor level.')
+  assert.equal(calls.atomicRegistrations[0].post.source_evidence[0].claim_type, 'scope')
   assert.equal(calls.insertPostCalls, 0)
   assert.equal(calls.insertBlocksCalls, 0)
   assert.equal(calls.insertEventCalls, 0)
@@ -166,6 +167,14 @@ for (const [label, payload] of [
   ['untraceable evidence', validPayload({ sourceEvidence: [{ status: 'vetted', note: 'evidence' }] })],
   ['candidate evidence cannot enter the approved intake', validPayload({ sourceEvidence: [{ claim_id: 'claim-1', status: 'candidate' }] })],
   ['restricted evidence cannot enter the approved intake', validPayload({ sourceEvidence: [{ claim_id: 'claim-1', status: 'restricted' }] })],
+  ['unexpected block metadata is rejected', validPayload({ blocks: [{ type: 'paragraph', text: 'Body copy', metadata: { detail: 'unexpected' } }] })],
+  ['volatile evidence requires checked_at', validPayload({ sourceEvidence: [{ claim_id: 'claim-price', status: 'vetted', claim_type: 'price' }] })],
+  ['unknown evidence claim type is rejected', validPayload({ sourceEvidence: [{ claim_id: 'claim-unknown', status: 'vetted', claim_type: 'price_typo' }] })],
+  ['malformed evidence checked_at is rejected', validPayload({ sourceEvidence: [{ claim_id: 'claim-price', status: 'vetted', claim_type: 'price', checked_at: 'not-a-date' }] })],
+  ['impossible evidence checked_at is rejected', validPayload({ sourceEvidence: [{ claim_id: 'claim-price', status: 'vetted', claim_type: 'price', checked_at: '2026-02-30' }] })],
+  ['numeric evidence scalar is rejected', validPayload({ sourceEvidence: [{ claim_id: 'claim-1', status: 'vetted', claim_type: 123 }] })],
+  ['unexpected evidence field is rejected', validPayload({ sourceEvidence: [{ claim_id: 'claim-1', status: 'vetted', claim_type: 'scope', note: 'unexpected' }] })],
+  ['numeric block metadata is rejected', validPayload({ blocks: [{ type: 'paragraph', text: 'Body copy', metadata: { answer: 123 } }] })],
   ['forbidden claim-safety metadata', validPayload({ metaDescription: 'Call 010-1234-5678 for a fixed price.' })],
   ['forbidden claim-safety canonical URL', validPayload({ canonicalUrl: 'https://example.com/010-1234-5678' })],
 ]) {
@@ -211,9 +220,18 @@ for (const [label, atomicFailureCode] of [
 for (const status of ['vetted', 'publishable']) {
   const { repository } = createRepository()
   const result = await registerApprovedManuscript(validPayload({
-    sourceEvidence: [{ claim_id: 'claim-entry-1', status }],
+    sourceEvidence: [{ claim_id: 'claim-entry-1', status, claim_type: 'scope' }],
   }), 'admin-1', repository, now)
   assert.equal(result.ok, true, `${status} evidence should be accepted`)
+}
+
+{
+  const { calls, repository } = createRepository()
+  const result = await registerApprovedManuscript(validPayload({
+    sourceEvidence: [{ claim_id: 'claim-price-checked', status: 'vetted', claim_type: 'price', checked_at: '2026-07-14' }],
+  }), 'admin-1', repository, now)
+  assert.equal(result.ok, true, 'volatile evidence with checked_at should be accepted')
+  assert.equal(calls.atomicRegistrations[0].post.source_evidence[0].checked_at, '2026-07-14')
 }
 
 {

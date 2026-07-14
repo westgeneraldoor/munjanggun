@@ -138,6 +138,35 @@ const BLOCK_TYPES = new Set<ApprovedManuscriptBlockType>([
   'qa',
 ])
 const TRACEABLE_EVIDENCE_STATUSES = new Set(['publishable', 'vetted'])
+const APPROVED_EVIDENCE_KEYS = new Set(['claim_id', 'status', 'claim_type', 'checked_at'])
+const VOLATILE_CLAIM_TYPES = new Set([
+  'price',
+  'discount',
+  'installment',
+  'review_count',
+  'review',
+  'schedule',
+  'as',
+  'warranty',
+  'travel_fee',
+  'service_area',
+  'event',
+])
+const APPROVED_CLAIM_TYPES = new Set(['scope', ...VOLATILE_CLAIM_TYPES])
+
+function isIsoDate(value: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) return false
+
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  const date = new Date(Date.UTC(year, month - 1, day))
+
+  return date.getUTCFullYear() === year
+    && date.getUTCMonth() === month - 1
+    && date.getUTCDate() === day
+}
 
 function cleanText(value: unknown) {
   if (typeof value !== 'string') return ''
@@ -158,24 +187,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 }
 
-function normalizeJson(value: unknown): JsonValue | undefined {
-  if (value === null || typeof value === 'boolean' || typeof value === 'number') return value
-  if (typeof value === 'string') return cleanText(value)
-  if (Array.isArray(value)) {
-    const items = value.map(normalizeJson)
-    return items.every((item): item is JsonValue => item !== undefined) ? items : undefined
-  }
-  if (!isRecord(value)) return undefined
-
-  const normalized: Record<string, JsonValue> = {}
-  for (const [key, item] of Object.entries(value)) {
-    const normalizedItem = normalizeJson(item)
-    if (normalizedItem === undefined) return undefined
-    normalized[key] = normalizedItem
-  }
-  return normalized
-}
-
 function normalizeStringArray(value: unknown) {
   if (!Array.isArray(value)) return []
   return value.map(cleanText).filter(Boolean)
@@ -188,23 +199,26 @@ function nestedText(value: JsonValue): string[] {
   return []
 }
 
-function valueFromKeys(value: Record<string, JsonValue>, keys: string[]) {
-  for (const key of keys) {
-    const candidate = cleanText(value[key])
-    if (candidate) return candidate
-  }
-  return ''
-}
-
 function normalizeEvidence(value: unknown) {
-  const normalized = normalizeJson(value)
-  if (!normalized || Array.isArray(normalized) || typeof normalized !== 'object') return null
+  if (!isRecord(value)) return null
 
-  const reference = valueFromKeys(normalized, ['claim_id', 'claimId', 'proof_id', 'proofId', 'asset_id', 'assetId', 'source_id', 'sourceId', 'ref'])
-  const status = valueFromKeys(normalized, ['status', 'claim_status', 'claimStatus', 'usage_status', 'usageStatus'])
-  if (!reference || !TRACEABLE_EVIDENCE_STATUSES.has(status)) return null
+  const entries = Object.entries(value)
+  if (entries.some(([key, item]) => !APPROVED_EVIDENCE_KEYS.has(key) || typeof item !== 'string')) return null
 
-  return normalized
+  const reference = cleanText(value.claim_id)
+  const status = cleanText(value.status)
+  const claimType = cleanText(value.claim_type).toLocaleLowerCase('ko-KR').replace(/^claim[_-]?type:/, '')
+  const checkedAt = cleanText(value.checked_at)
+  if (!reference || !TRACEABLE_EVIDENCE_STATUSES.has(status) || !APPROVED_CLAIM_TYPES.has(claimType)) return null
+  if (checkedAt && !isIsoDate(checkedAt)) return null
+  if (VOLATILE_CLAIM_TYPES.has(claimType) && !checkedAt) return null
+
+  return {
+    claim_id: reference,
+    status,
+    claim_type: claimType,
+    ...(checkedAt ? { checked_at: checkedAt } : {}),
+  }
 }
 
 function normalizeBlock(value: ApprovedManuscriptBlock) {
@@ -213,15 +227,26 @@ function normalizeBlock(value: ApprovedManuscriptBlock) {
   const type = value.type as ApprovedManuscriptBlockType
   const text = (type === 'paragraph' ? cleanParagraphText(value.text) : cleanText(value.text)) || null
   const mediaId = cleanText(value.mediaId) || null
-  const metadata = normalizeJson(value.metadata ?? {})
-  if (!metadata || Array.isArray(metadata) || typeof metadata !== 'object') return null
+  const rawMetadata = value.metadata ?? {}
+  if (!isRecord(rawMetadata)) return null
+
+  const metadataEntries = Object.entries(rawMetadata)
+  if (metadataEntries.some(([, item]) => typeof item !== 'string')) return null
+  if (type === 'qa') {
+    if (metadataEntries.some(([key]) => key !== 'answer')) return null
+  } else if (metadataEntries.length > 0) {
+    return null
+  }
+
+  const answer = type === 'qa' ? cleanText(rawMetadata.answer) : ''
+  const metadata: Record<string, JsonValue> = answer ? { answer } : {}
 
   const headingLevel = value.headingLevel ?? null
   if (headingLevel !== null && (!Number.isInteger(headingLevel) || headingLevel < 2 || headingLevel > 4)) {
     return null
   }
   if (mediaId) return null
-  if (type === 'qa' && !cleanText(metadata.answer)) return null
+  if (type === 'qa' && !answer) return null
   const hasMeaningfulMetadataText = nestedText(metadata).length > 0
   if (!text && !hasMeaningfulMetadataText) return null
 
