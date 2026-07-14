@@ -147,6 +147,37 @@
   cursor: pointer;
 }
 
+.uploadReview {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  color: var(--admin-text-sub);
+  background: var(--admin-surface-elevated);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-md);
+}
+
+.uploadReview legend {
+  padding: 0 var(--space-1);
+  color: var(--admin-text);
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+}
+
+.uploadReview label {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.uploadReview input {
+  flex: 0 0 auto;
+  margin-top: 3px;
+}
+
 .limitInfo,
 .limitWarning {
   min-height: 34px;
