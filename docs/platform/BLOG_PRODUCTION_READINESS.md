@@ -14,7 +14,7 @@ Codex 완성 원고 → 승인 원고 등록 → reviewing 콘텐츠 큐 → 사
 - 인증된 관리자만 CMS의 `승인 원고 등록`에서 제목, slug, SEO/AEO 필드, 본문 블록, 근거를 구조화해 등록한다.
 - 새 승인 원고는 명시적으로 `reviewing`으로 등록되며, 사진 연결, 사실·브랜드 검수, 미리보기, 발행은 기존 CMS 게이트를 계속 통과한다.
 - AI/OpenAI 키, 모델 식별자, 환경 변수, 설정은 이 수동 인계와 발행에 필요 없다. 제거된 AI 초안 기능이나 설정을 다시 도입하지 않는다.
-- DB schema, RLS 정책, 공개 `/blog` 렌더링 범위는 이 등록 경로 때문에 변경하지 않는다.
+- 기존 테이블·enum·RLS 정책과 공개 `/blog` 렌더링 범위는 변경하지 않는다. 글·본문 블록·등록 이력을 한 트랜잭션으로 저장하는 승인 원고 등록 전용 RPC만 비파괴 migration으로 추가한다.
 
 ## 2. 과거 Preview 증거 (historical)
 
@@ -41,8 +41,10 @@ Codex 완성 원고 → 승인 원고 등록 → reviewing 콘텐츠 큐 → 사
 | 승인 원고 등록 | Ready when verified | 관리자 권한, 필수 메타데이터·본문 블록 검증, `reviewing` INSERT와 감사 이벤트를 확인 |
 | 콘텐츠 큐·편집·사진 | Ready when verified | 등록 후 `reviewing` 큐에서 기존 에디터로 이동하고 사진·브랜드·사실 검수를 진행 |
 | 공개 범위 | Unchanged | `published` 글과 발행된 미디어만 공개 경로와 sitemap에 포함되는 기존 계약 유지 |
-| DB/RLS | Unchanged | 기존 enum과 관리자 정책을 재사용하며 migration 또는 RLS 변경 없음 |
+| DB/RLS | RPC migration required | 기존 테이블·enum·RLS는 유지하고, `service_role`만 실행할 수 있는 원자 등록 RPC를 비파괴 migration으로 추가 |
 | 외부 접근 리허설 | Not run by this change | 원격 데이터, 계정, 배포 상태를 변경하거나 테스트하지 않음 |
+
+배포 순서는 `RPC migration 적용·권한 확인 → 웹 배포 → Preview 등록 검증`을 지킨다. RPC가 없는 DB에 새 웹 코드를 먼저 배포하면 승인 원고 등록이 실패하므로 순서를 바꾸지 않는다.
 
 릴리스 전에는 다음 로컬 검증을 모두 통과한다.
 

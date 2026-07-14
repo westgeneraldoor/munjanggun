@@ -227,7 +227,12 @@ assert.match(registerApprovedManuscriptStatement, /SET\s+search_path\s*=\s*''/i,
 assert.match(registerApprovedManuscriptBody, /INSERT\s+INTO\s+showroom\.blog_posts\b/i, 'register_approved_manuscript must insert into showroom.blog_posts')
 assert.match(registerApprovedManuscriptBody, /INSERT\s+INTO\s+showroom\.blog_blocks\b/i, 'register_approved_manuscript must insert into showroom.blog_blocks')
 assert.match(registerApprovedManuscriptBody, /INSERT\s+INTO\s+showroom\.blog_post_events\b/i, 'register_approved_manuscript must insert into showroom.blog_post_events')
-assert.doesNotMatch(registerApprovedManuscriptBody, /\bEXCEPTION\b/i, 'register_approved_manuscript must not include an EXCEPTION block')
+assert.doesNotMatch(registerApprovedManuscriptBody, /\bEXCEPTION\s+WHEN\b/i, 'register_approved_manuscript must not include an exception handler that could swallow rollback errors')
+assert.match(registerApprovedManuscriptBody, /jsonb_typeof\s*\(\s*p_post\s*\)\s+IS\s+DISTINCT\s+FROM\s+'object'/i, 'register_approved_manuscript must require an object post payload')
+assert.match(registerApprovedManuscriptBody, /jsonb_typeof\s*\(\s*p_event\s*\)\s+IS\s+DISTINCT\s+FROM\s+'object'/i, 'register_approved_manuscript must require an object event payload')
+assert.match(registerApprovedManuscriptBody, /jsonb_typeof\s*\(\s*p_blocks\s*\)\s+IS\s+DISTINCT\s+FROM\s+'array'/i, 'register_approved_manuscript must require an array block payload')
+assert.match(registerApprovedManuscriptBody, /jsonb_array_length\s*\(\s*p_blocks\s*\)\s*=\s*0/i, 'register_approved_manuscript must reject an empty block array')
+assert.match(registerApprovedManuscriptBody, /v_actor_id\s+IS\s+NULL/i, 'register_approved_manuscript must reject a missing actor')
 
 const blogBlocksInsert = registerApprovedManuscriptBody.match(/INSERT\s+INTO\s+showroom\.blog_blocks\b[\s\S]*?;/i)?.[0] ?? ''
 assert.ok(blogBlocksInsert, 'register_approved_manuscript must contain a showroom.blog_blocks INSERT statement')
@@ -262,6 +267,7 @@ assert.match(databaseTypes, /\bregister_approved_manuscript\b/, 'database types 
 
 const createApprovedManuscriptBody = extractNamedFunctionBody(manuscriptActions, 'createApprovedManuscript')
 const requireAdministratorIndex = createApprovedManuscriptBody.indexOf('requireAdministrator()')
+const createShowroomAdminClientIndex = createApprovedManuscriptBody.indexOf('createShowroomAdminClient()')
 const registerApprovedManuscriptRpcCalls = [...createApprovedManuscriptBody.matchAll(/\.rpc\s*\(\s*['"]register_approved_manuscript['"]\s*,/g)]
 const registerApprovedManuscriptRpcIndex = registerApprovedManuscriptRpcCalls[0]?.index ?? -1
 assert.ok(
@@ -269,6 +275,10 @@ assert.ok(
     && registerApprovedManuscriptRpcIndex >= 0
     && requireAdministratorIndex < registerApprovedManuscriptRpcIndex,
   'registerApprovedManuscript must require an administrator before calling register_approved_manuscript',
+)
+assert.ok(
+  createShowroomAdminClientIndex >= 0 && requireAdministratorIndex < createShowroomAdminClientIndex,
+  'registerApprovedManuscript must require an administrator before creating the service-role client',
 )
 assert.equal(registerApprovedManuscriptRpcCalls.length, 1, 'createApprovedManuscript must call register_approved_manuscript exactly once')
 for (const tableName of ['blog_posts', 'blog_blocks', 'blog_post_events']) {
@@ -380,7 +390,10 @@ assert.ok(contentOsPrd.includes(REQUIRED_MANUAL_INTAKE_FLOW), `Content OS PRD mu
 assert.ok(routine.includes(REQUIRED_MANUAL_INTAKE_FLOW), `operating routine must include: ${REQUIRED_MANUAL_INTAKE_FLOW}`)
 assert.match(contentOsPrd, /새 승인 원고는 `?reviewing`?에서 시작한다/)
 assert.match(contentOsSchema, /`?ai_draft`?는 legacy-only 상태다/)
-assert.match(contentOsSchema, /DB migration 없이 `?status = reviewing`?을 명시해 INSERT한다/)
+assert.match(contentOsSchema, /비파괴 migration으로 승인 원고 등록 전용 RPC를 추가한다/)
+assert.match(contentOsSchema, /`?status = reviewing`?을 강제한다/)
+assert.match(currentReadinessText, /RPC migration 적용·권한 확인 → 웹 배포 → Preview 등록 검증/)
+assert.equal(currentReadinessText.includes('migration 또는 RLS 변경 없음'), false, 'readiness must not deny the required RPC migration')
 assert.match(contentOsAdminUx, /메뉴명:\s*```text\s*블로그 콘텐츠\s*```/s)
 assert.match(contentOsAdminUx, /승인 원고 등록/)
 assert.match(brandSyncAudit, /2026-07-14 현재 정책/)

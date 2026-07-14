@@ -6,8 +6,29 @@ SET search_path = ''
 AS $$
 DECLARE
   v_post_id uuid;
-  v_actor_id uuid := (p_event ->> 'actor_id')::uuid;
+  v_actor_id uuid;
 BEGIN
+  IF pg_catalog.jsonb_typeof(p_post) IS DISTINCT FROM 'object' THEN
+    RAISE EXCEPTION 'p_post must be a JSON object' USING ERRCODE = '22023';
+  END IF;
+
+  IF pg_catalog.jsonb_typeof(p_event) IS DISTINCT FROM 'object' THEN
+    RAISE EXCEPTION 'p_event must be a JSON object' USING ERRCODE = '22023';
+  END IF;
+
+  IF pg_catalog.jsonb_typeof(p_blocks) IS DISTINCT FROM 'array' THEN
+    RAISE EXCEPTION 'p_blocks must be a JSON array' USING ERRCODE = '22023';
+  END IF;
+
+  IF pg_catalog.jsonb_array_length(p_blocks) = 0 THEN
+    RAISE EXCEPTION 'p_blocks must contain at least one block' USING ERRCODE = '22023';
+  END IF;
+
+  v_actor_id := NULLIF(p_event ->> 'actor_id', '')::uuid;
+  IF v_actor_id IS NULL THEN
+    RAISE EXCEPTION 'p_event.actor_id is required' USING ERRCODE = '22023';
+  END IF;
+
   INSERT INTO showroom.blog_posts (
     title,
     slug,
