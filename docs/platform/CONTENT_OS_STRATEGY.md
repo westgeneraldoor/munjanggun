@@ -1,10 +1,11 @@
 ---
 document_type: "Content OS Strategy"
-version: "1.0.0"
+version: "1.1.0"
 status: "active"
 created: "2026-06-24"
+last_updated: "2026-07-14"
 owner: "Codex PM"
-source_brand_context: "docs/platform/BRAND_CONTEXT.md"
+source_brand_context: "docs/brand/BRAND_SOURCE.md"
 source_platform_strategy: "docs/platform/PLATFORM_STRATEGY.md"
 source_team_operating_model: "docs/platform/TEAM_AGENT_OPERATING_MODEL.md"
 ---
@@ -63,7 +64,8 @@ Codex는 글을 작성하기 전에 문장군_브랜드에서 브랜드 사실, 
 ```text
 Codex 외부 원고 작성
 -> SEO/AEO 필드 작성
--> 어드민 콘텐츠 큐
+-> 관리자 승인 원고 등록
+-> reviewing 콘텐츠 큐
 -> 사람이 사실관계와 금지표현 검수
 -> 사람이 문단별 사진 삽입
 -> 미리보기
@@ -154,7 +156,7 @@ Sitemap: https://munjanggun.vercel.app/sitemap.xml
 | 영역 | 역할 |
 |---|---|
 | 공개 콘텐츠 | `/blog`, `/blog/[slug]`, 카테고리, 지역, 서비스, 가이드 페이지 |
-| 콘텐츠 큐 | 승인된 외부 원고와 레거시 검토 대상을 관리자 검수 대상으로 관리하는 큐 |
+| 콘텐츠 큐 | 승인된 외부 원고를 `reviewing`으로 등록하고 레거시 검토 대상과 함께 관리하는 관리자 큐 |
 | 블록형 에디터 | 문단별 텍스트, 사진 슬롯, CTA, FAQ, SEO/AEO 필드를 편집 |
 | 콘텐츠 운영 데이터 | 검색 의도, 질문, 키워드, 근거, 색인 상태, 업데이트 필요 여부 관리 |
 
@@ -274,6 +276,16 @@ MVP에서는 단일 HTML 본문보다 블록 구조를 우선한다. 사진을 �
 
 공개 조회는 `published` 글과 `published` 미디어만 허용한다. 검토 대상, 레거시 생성 메타데이터, 검수 전 사진, 내부 근거 자료는 관리자만 접근한다.
 
+### 승인 원고 등록 계약
+
+- 경로: `/admin/platform/blog/new`
+- 권한: 인증된 관리자만 사용
+- 입력: 제목, slug, SEO/AEO 필드, 본문 블록, 추적 가능한 근거
+- 저장: 글, 순서가 있는 블록, `manuscript_registered` 감사 이벤트를 단일 RPC 트랜잭션으로 저장
+- 시작 상태: 항상 `reviewing`
+- 권한 경계: RPC 실행은 `service_role`만 허용하고 `PUBLIC`, `anon`, `authenticated`에는 허용하지 않음
+- 금지: AI 호출, 모델 설정, OpenAI 키, 관리자 AI 초안 생성
+
 ## 6. 상태 흐름
 
 ```text
@@ -305,6 +317,8 @@ MVP에서는 단일 HTML 본문보다 블록 구조를 우선한다. 사진을 �
 ```text
 /admin/platform/blog
 ```
+
+관리자 왼쪽 메뉴 명칭은 `블로그 콘텐츠`로 통일한다. 새 외부 완성 원고는 이 화면의 `승인 원고 등록` 진입점에서 추가한다.
 
 목록 필터:
 
@@ -415,6 +429,7 @@ MVP-CONTENTOS-01 문장군 SEO/AEO 콘텐츠 OS
 포함:
 
 - 레거시 `ai_draft` 상태 및 생성 메타데이터의 읽기 호환
+- 관리자 전용 승인 원고 등록과 `reviewing` 시작
 - `/admin/platform/blog` 콘텐츠 큐
 - 블록형 에디터
 - 문단별 사진 삽입
