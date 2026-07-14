@@ -49,7 +49,7 @@ function validPayload(overrides = {}) {
   }
 }
 
-function createRepository({ failBlocks = false, failEvent = false } = {}) {
+function createRepository({ failPostCode = null, failBlocks = false, failEvent = false } = {}) {
   const calls = {
     posts: [],
     blocks: [],
@@ -77,6 +77,9 @@ function createRepository({ failBlocks = false, failEvent = false } = {}) {
       },
       async insertPost(post) {
         calls.posts.push(post)
+        if (failPostCode) {
+          throw Object.assign(new Error('post insert failed'), { code: failPostCode })
+        }
         return { id: 'post-1' }
       },
       async insertBlocks(blocks) {
@@ -121,6 +124,20 @@ function createRepository({ failBlocks = false, failEvent = false } = {}) {
   assert.match(calls.safetyInputs[0].textSegments.join('\n'), /현장 구조에 따라 검토가 필요합니다/)
 }
 
+{
+  const { calls, repository } = createRepository()
+  const result = await registerApprovedManuscript(validPayload({
+    blocks: [{
+      type: 'paragraph',
+      text: '첫 번째 문단입니다.\n\n두 번째 문단입니다.',
+      metadata: {},
+    }],
+  }), 'admin-1', repository, now)
+
+  assert.equal(result.ok, true)
+  assert.equal(calls.blocks[0].text, '첫 번째 문단입니다.\n\n두 번째 문단입니다.', 'paragraph breaks should survive intake')
+}
+
 for (const role of ['customer', 'sales_manager', null, undefined]) {
   assert.throws(
     () => requireApprovedManuscriptAdministrator(role),
@@ -143,8 +160,10 @@ for (const [label, payload] of [
   ['link button block is outside manuscript intake scope', validPayload({ blocks: [{ type: 'link_button', text: 'Open guide', metadata: {} }] })],
   ['guide box block is outside manuscript intake scope', validPayload({ blocks: [{ type: 'guide_box', text: 'Installation notes', metadata: {} }] })],
   ['body block requires meaningful text rather than whitespace or boolean metadata', validPayload({ blocks: [{ type: 'paragraph', text: '   ', metadata: { caption: '  ', enabled: true } }] })],
+  ['qa block requires an answer on the server', validPayload({ blocks: [{ type: 'qa', text: '무엇을 확인해야 하나요?', metadata: {} }] })],
   ['image missing media ID', validPayload({ blocks: [{ type: 'image', text: null, metadata: {} }] })],
   ['untraceable evidence', validPayload({ sourceEvidence: [{ status: 'vetted', note: '근거' }] })],
+  ['candidate evidence cannot enter the approved intake', validPayload({ sourceEvidence: [{ claim_id: 'claim-1', status: 'candidate' }] })],
   ['invalid evidence status', validPayload({ sourceEvidence: [{ claim_id: 'claim-1', status: 'restricted' }] })],
   ['forbidden meta description', validPayload({ metaDescription: '010-1234-5678로 최저가를 바로 확인하세요.' })],
   ['forbidden canonical URL', validPayload({ canonicalUrl: 'https://example.com/010-1234-5678' })],
@@ -153,6 +172,15 @@ for (const [label, payload] of [
   const result = await registerApprovedManuscript(payload, 'admin-1', repository, now)
   assert.equal(result.ok, false, `${label} should be rejected`)
   assert.equal(calls.posts.length, 0, `${label} must not insert a post before validation passes`)
+}
+
+{
+  const { calls, repository } = createRepository({ failPostCode: 'duplicate_slug' })
+  const result = await registerApprovedManuscript(validPayload(), 'admin-1', repository, now)
+
+  assert.equal(result.ok, false)
+  assert.match(result.message, /이미 사용 중인 주소/)
+  assert.deepEqual(calls.deletedPostIds, [], 'failed post inserts should not attempt compensation')
 }
 
 for (const [label, options] of [

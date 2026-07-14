@@ -51,6 +51,9 @@ export async function createApprovedManuscript(payload: ApprovedManuscriptPayloa
           .select('id')
           .single()
 
+        if (error?.code === '23505') {
+          throw Object.assign(new Error('blog post slug already exists'), { code: 'duplicate_slug' })
+        }
         if (error || !data) throw new Error('blog post insert failed')
         return { id: (data as { id: string }).id }
       },

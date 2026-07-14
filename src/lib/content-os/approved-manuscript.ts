@@ -138,11 +138,21 @@ const BLOCK_TYPES = new Set<ApprovedManuscriptBlockType>([
   'cta',
   'qa',
 ])
-const TRACEABLE_EVIDENCE_STATUSES = new Set(['publishable', 'vetted', 'candidate'])
+const TRACEABLE_EVIDENCE_STATUSES = new Set(['publishable', 'vetted'])
 
 function cleanText(value: unknown) {
   if (typeof value !== 'string') return ''
   return value.replace(/\s+/g, ' ').trim()
+}
+
+function cleanParagraphText(value: unknown) {
+  if (typeof value !== 'string') return ''
+  return value
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map(line => line.replace(/[ \t]+/g, ' ').trim())
+    .join('\n')
+    .trim()
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -202,7 +212,7 @@ function normalizeBlock(value: ApprovedManuscriptBlock) {
   if (!value || !BLOCK_TYPES.has(value.type as ApprovedManuscriptBlockType)) return null
 
   const type = value.type as ApprovedManuscriptBlockType
-  const text = cleanText(value.text) || null
+  const text = (type === 'paragraph' ? cleanParagraphText(value.text) : cleanText(value.text)) || null
   const mediaId = cleanText(value.mediaId) || null
   const metadata = normalizeJson(value.metadata ?? {})
   if (!metadata || Array.isArray(metadata) || typeof metadata !== 'object') return null
@@ -212,6 +222,7 @@ function normalizeBlock(value: ApprovedManuscriptBlock) {
     return null
   }
   if (mediaId) return null
+  if (type === 'qa' && !cleanText(metadata.answer)) return null
   const hasMeaningfulMetadataText = nestedText(metadata).length > 0
   if (!text && !hasMeaningfulMetadataText) return null
 
@@ -360,7 +371,12 @@ export async function registerApprovedManuscript(
       memo: '승인된 외부 원고가 콘텐츠 큐에 등록되었습니다.',
       metadata: { intake: 'approved_manuscript' },
     })
-  } catch {
+  } catch (error) {
+    const persistenceCode = isRecord(error) ? cleanText(error.code) : ''
+    if (!postId && persistenceCode === 'duplicate_slug') {
+      return failure('이미 사용 중인 주소입니다. slug를 바꾼 뒤 다시 등록해 주세요.')
+    }
+
     if (postId) {
       try {
         await repository.deletePost(postId)

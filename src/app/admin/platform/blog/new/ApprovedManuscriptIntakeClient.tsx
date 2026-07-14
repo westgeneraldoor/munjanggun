@@ -19,6 +19,13 @@ type EditableBlock = {
   answer: string
 }
 
+type EditableEvidence = {
+  id: number
+  reference: string
+  status: 'vetted' | 'publishable'
+  checkedAt: string
+}
+
 const CATEGORY_OPTIONS: Array<{ value: ApprovedManuscriptCategory; label: string }> = [
   { value: 'case_study', label: '시공사례' },
   { value: 'product_guide', label: '제품가이드' },
@@ -43,6 +50,10 @@ function makeBlock(id: number, type: ApprovedManuscriptBlockType): EditableBlock
     text: '',
     answer: '',
   }
+}
+
+function makeEvidence(id: number): EditableEvidence {
+  return { id, reference: '', status: 'vetted', checkedAt: '' }
 }
 
 function splitLines(value: string) {
@@ -74,13 +85,25 @@ export default function ApprovedManuscriptIntakeClient() {
   const [relatedQuestions, setRelatedQuestions] = useState('')
   const [serviceArea, setServiceArea] = useState('')
   const [productType, setProductType] = useState('')
-  const [evidenceRef, setEvidenceRef] = useState('')
-  const [evidenceStatus, setEvidenceStatus] = useState('candidate')
-  const [evidenceCheckedAt, setEvidenceCheckedAt] = useState('')
+  const [nextEvidenceId, setNextEvidenceId] = useState(2)
+  const [evidenceRows, setEvidenceRows] = useState<EditableEvidence[]>([makeEvidence(1)])
   const [nextBlockId, setNextBlockId] = useState(2)
   const [blockTypeToAdd, setBlockTypeToAdd] = useState<ApprovedManuscriptBlockType>('paragraph')
   const [blocks, setBlocks] = useState<EditableBlock[]>([makeBlock(1, 'paragraph')])
   const [feedback, setFeedback] = useState('')
+
+  const updateEvidence = (id: number, update: Partial<EditableEvidence>) => {
+    setEvidenceRows(current => current.map(row => (row.id === id ? { ...row, ...update } : row)))
+  }
+
+  const addEvidence = () => {
+    setEvidenceRows(current => [...current, makeEvidence(nextEvidenceId)])
+    setNextEvidenceId(current => current + 1)
+  }
+
+  const removeEvidence = (id: number) => {
+    setEvidenceRows(current => (current.length > 1 ? current.filter(row => row.id !== id) : current))
+  }
 
   const updateBlock = (id: number, update: Partial<EditableBlock>) => {
     setBlocks(current => current.map(block => (block.id === id ? { ...block, ...update } : block)))
@@ -127,11 +150,11 @@ export default function ApprovedManuscriptIntakeClient() {
           relatedQuestions: splitLines(relatedQuestions),
           serviceArea,
           productType,
-          sourceEvidence: [{
-            claim_id: evidenceRef,
-            status: evidenceStatus,
-            checked_at: evidenceCheckedAt,
-          }],
+          sourceEvidence: evidenceRows.map(row => ({
+            claim_id: row.reference,
+            status: row.status,
+            checked_at: row.checkedAt,
+          })),
           blocks: blocks.map(block => ({
             type: block.type,
             headingLevel: block.type === 'heading' ? block.headingLevel : null,
@@ -245,25 +268,40 @@ export default function ApprovedManuscriptIntakeClient() {
 
         <fieldset className={styles.section} disabled={isPending}>
           <legend>근거</legend>
-          <p className={styles.sectionHint}>추적 가능한 근거 한 건을 연결합니다. 세부 근거는 등록 뒤 에디터에서 이어서 보완할 수 있습니다.</p>
-          <div className={styles.fieldGrid}>
-            <label className={styles.field}>
-              <span>근거 ID</span>
-              <input value={evidenceRef} onChange={event => setEvidenceRef(event.target.value)} required />
-            </label>
-            <label className={styles.field}>
-              <span>근거 상태</span>
-              <select value={evidenceStatus} onChange={event => setEvidenceStatus(event.target.value)}>
-                <option value="candidate">candidate</option>
-                <option value="vetted">vetted</option>
-                <option value="publishable">publishable</option>
-              </select>
-            </label>
-            <label className={styles.field}>
-              <span>확인일</span>
-              <input type="date" value={evidenceCheckedAt} onChange={event => setEvidenceCheckedAt(event.target.value)} />
-            </label>
-          </div>
+          <p className={styles.sectionHint}>원고에 사용한 근거를 모두 입력합니다. 확인이 끝난 vetted 또는 publishable 근거만 승인 원고로 등록할 수 있습니다.</p>
+          {evidenceRows.map((row, index) => (
+            <div className={styles.fieldGrid} key={row.id}>
+              <label className={styles.field}>
+                <span>근거 ID {index + 1}</span>
+                <input value={row.reference} onChange={event => updateEvidence(row.id, { reference: event.target.value })} required />
+              </label>
+              <label className={styles.field}>
+                <span>근거 상태</span>
+                <select value={row.status} onChange={event => updateEvidence(row.id, { status: event.target.value as EditableEvidence['status'] })}>
+                  <option value="vetted">vetted</option>
+                  <option value="publishable">publishable</option>
+                </select>
+              </label>
+              <label className={styles.field}>
+                <span>확인일</span>
+                <input type="date" value={row.checkedAt} onChange={event => updateEvidence(row.id, { checkedAt: event.target.value })} />
+              </label>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => removeEvidence(row.id)}
+                disabled={evidenceRows.length === 1}
+                aria-label={`${index + 1}번 근거 삭제`}
+              >
+                <Trash2 size={16} aria-hidden="true" />
+                근거 삭제
+              </button>
+            </div>
+          ))}
+          <button type="button" className={styles.secondaryButton} onClick={addEvidence}>
+            <Plus size={16} aria-hidden="true" />
+            근거 추가
+          </button>
         </fieldset>
 
         <fieldset className={styles.section} disabled={isPending}>
