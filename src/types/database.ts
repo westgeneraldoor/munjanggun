@@ -793,6 +793,16 @@ export interface Database {
         }
       }
     }
+    Functions: {
+      register_approved_manuscript: {
+        Args: {
+          p_post: Json
+          p_blocks: Json
+          p_event: Json
+        }
+        Returns: string
+      }
+    }
     Enums: {
       blog_post_status: BlogPostStatus
       blog_content_category: BlogContentCategory

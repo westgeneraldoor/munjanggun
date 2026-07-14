@@ -87,7 +87,6 @@ export type ApprovedManuscriptPostInsert = {
 }
 
 export type ApprovedManuscriptBlockInsert = {
-  post_id: string
   display_order: number
   type: ApprovedManuscriptBlockType
   heading_level: number | null
@@ -97,7 +96,6 @@ export type ApprovedManuscriptBlockInsert = {
 }
 
 export type ApprovedManuscriptEventInsert = {
-  post_id: string
   actor_id: string
   event_type: 'manuscript_registered'
   from_status: null
@@ -110,10 +108,11 @@ export type ApprovedManuscriptRepository = {
   validateClaimSafety: (
     input: ApprovedManuscriptClaimSafetyInput,
   ) => ApprovedManuscriptClaimSafetyResult | Promise<ApprovedManuscriptClaimSafetyResult>
-  insertPost: (post: ApprovedManuscriptPostInsert) => Promise<{ id: string }>
-  insertBlocks: (blocks: ApprovedManuscriptBlockInsert[]) => Promise<void>
-  insertEvent: (event: ApprovedManuscriptEventInsert) => Promise<void>
-  deletePost: (postId: string) => Promise<void>
+  registerManuscript: (registration: {
+    post: ApprovedManuscriptPostInsert
+    blocks: ApprovedManuscriptBlockInsert[]
+    event: ApprovedManuscriptEventInsert
+  }) => Promise<{ id: string }>
 }
 
 export type ApprovedManuscriptResult = {
@@ -347,50 +346,38 @@ export async function registerApprovedManuscript(
     published_at: null,
   }
 
-  let postId: string | null = null
   try {
-    const createdPost = await repository.insertPost(post)
-    postId = createdPost.id
-
-    await repository.insertBlocks(blocks.map((block, index) => ({
-      post_id: postId as string,
-      display_order: index + 1,
-      type: block.type,
-      heading_level: block.headingLevel,
-      text: block.text,
-      media_id: block.mediaId,
-      metadata: block.metadata,
-    })))
-
-    await repository.insertEvent({
-      post_id: postId,
-      actor_id: actorId,
-      event_type: 'manuscript_registered',
-      from_status: null,
-      to_status: 'reviewing',
-      memo: '승인된 외부 원고가 콘텐츠 큐에 등록되었습니다.',
-      metadata: { intake: 'approved_manuscript' },
+    const createdPost = await repository.registerManuscript({
+      post,
+      blocks: blocks.map((block, index) => ({
+        display_order: index + 1,
+        type: block.type,
+        heading_level: block.headingLevel,
+        text: block.text,
+        media_id: block.mediaId,
+        metadata: block.metadata,
+      })),
+      event: {
+        actor_id: actorId,
+        event_type: 'manuscript_registered',
+        from_status: null,
+        to_status: 'reviewing',
+        memo: '승인된 외부 원고가 콘텐츠 큐에 등록되었습니다.',
+        metadata: { intake: 'approved_manuscript' },
+      },
     })
+
+    return {
+      ok: true,
+      message: '승인 원고를 콘텐츠 큐에 등록했습니다.',
+      postId: createdPost.id,
+      issues: claimSafety.warnings,
+    }
   } catch (error) {
     const persistenceCode = isRecord(error) ? cleanText(error.code) : ''
-    if (!postId && persistenceCode === 'duplicate_slug') {
+    if (persistenceCode === '23505') {
       return failure('이미 사용 중인 주소입니다. slug를 바꾼 뒤 다시 등록해 주세요.')
     }
-
-    if (postId) {
-      try {
-        await repository.deletePost(postId)
-      } catch {
-        // The original persistence error is the actionable result; cascade delete is best-effort.
-      }
-    }
     return failure('승인 원고를 콘텐츠 큐에 등록하지 못했습니다.')
-  }
-
-  return {
-    ok: true,
-    message: '승인 원고를 콘텐츠 큐에 등록했습니다.',
-    postId,
-    issues: claimSafety.warnings,
   }
 }

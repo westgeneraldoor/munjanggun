@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { access, readFile } from 'node:fs/promises'
+import { access, readFile, readdir } from 'node:fs/promises'
 import { constants } from 'node:fs'
 
 const root = new URL('../', import.meta.url)
@@ -85,6 +85,70 @@ function assertNoAffirmativeAiPrerequisites(markdown, label) {
   )
 }
 
+function extractSqlFunctionBody(statement) {
+  return statement.match(/\bAS\s+\$\$([\s\S]*?)\$\$\s*;\s*$/i)?.[1] ?? ''
+}
+
+function extractNamedFunctionBody(source, functionName) {
+  const functionMatch = new RegExp(`\\b(?:export\\s+)?(?:async\\s+)?function\\s+${functionName}\\b`).exec(source)
+  assert.ok(functionMatch, `${functionName} must be declared`)
+
+  const openingBraceIndex = source.indexOf('{', functionMatch.index)
+  assert.ok(openingBraceIndex >= 0, `${functionName} must have a function body`)
+
+  let depth = 0
+  let quote = null
+  let lineComment = false
+  let blockComment = false
+
+  for (let index = openingBraceIndex; index < source.length; index += 1) {
+    const character = source[index]
+    const nextCharacter = source[index + 1]
+
+    if (lineComment) {
+      if (character === '\n') lineComment = false
+      continue
+    }
+    if (blockComment) {
+      if (character === '*' && nextCharacter === '/') {
+        blockComment = false
+        index += 1
+      }
+      continue
+    }
+    if (quote) {
+      if (character === '\\') {
+        index += 1
+      } else if (character === quote) {
+        quote = null
+      }
+      continue
+    }
+    if (character === '/' && nextCharacter === '/') {
+      lineComment = true
+      index += 1
+      continue
+    }
+    if (character === '/' && nextCharacter === '*') {
+      blockComment = true
+      index += 1
+      continue
+    }
+    if (character === '\'' || character === '"' || character === '`') {
+      quote = character
+      continue
+    }
+    if (character === '{') {
+      depth += 1
+    } else if (character === '}') {
+      depth -= 1
+      if (depth === 0) return source.slice(openingBraceIndex + 1, index)
+    }
+  }
+
+  assert.fail(`${functionName} must close its function body`)
+}
+
 const syntheticReadiness = [
   '## Current intake policy',
   'An OpenAI API key is not necessary for manual manuscript intake.',
@@ -139,6 +203,81 @@ const editorActions = await readWorkspaceFile('src/app/admin/platform/blog/[id]/
 const editorPage = await readWorkspaceFile('src/app/admin/platform/blog/[id]/page.tsx')
 const editorLoading = await readWorkspaceFile('src/app/admin/platform/blog/[id]/loading.tsx')
 const publicSafety = await readWorkspaceFile('scripts/verify-blog-public-safety.mjs')
+const migrationEntries = await Promise.all(
+  (await readdir(workspaceFile('supabase/migrations')))
+    .filter((fileName) => fileName.endsWith('.sql'))
+    .sort()
+    .map(async (fileName) => ({
+      fileName,
+      contents: await readWorkspaceFile(`supabase/migrations/${fileName}`),
+    })),
+)
+const migration = migrationEntries.find(({ contents }) => contents.includes('register_approved_manuscript'))?.contents ?? ''
+const databaseTypes = await readWorkspaceFile('src/types/database.ts')
+
+assert.ok(migration, 'approved manuscript intake requires a register_approved_manuscript migration')
+const registerApprovedManuscriptStatement = migration.match(
+  /CREATE\s+OR\s+REPLACE\s+FUNCTION\s+showroom\.register_approved_manuscript\s*\([\s\S]*?\)\s*RETURNS[\s\S]*?\bAS\s+\$\$[\s\S]*?\$\$\s*;/i,
+ )?.[0] ?? ''
+const registerApprovedManuscriptBody = extractSqlFunctionBody(registerApprovedManuscriptStatement)
+assert.ok(registerApprovedManuscriptStatement, 'migration must define CREATE OR REPLACE FUNCTION showroom.register_approved_manuscript(...)')
+assert.ok(registerApprovedManuscriptBody, 'register_approved_manuscript must have a dollar-quoted body')
+assert.match(registerApprovedManuscriptStatement, /SECURITY\s+INVOKER/i, 'register_approved_manuscript must use SECURITY INVOKER')
+assert.match(registerApprovedManuscriptStatement, /SET\s+search_path\s*=\s*''/i, 'register_approved_manuscript must set an empty search_path')
+assert.match(registerApprovedManuscriptBody, /INSERT\s+INTO\s+showroom\.blog_posts\b/i, 'register_approved_manuscript must insert into showroom.blog_posts')
+assert.match(registerApprovedManuscriptBody, /INSERT\s+INTO\s+showroom\.blog_blocks\b/i, 'register_approved_manuscript must insert into showroom.blog_blocks')
+assert.match(registerApprovedManuscriptBody, /INSERT\s+INTO\s+showroom\.blog_post_events\b/i, 'register_approved_manuscript must insert into showroom.blog_post_events')
+assert.doesNotMatch(registerApprovedManuscriptBody, /\bEXCEPTION\b/i, 'register_approved_manuscript must not include an EXCEPTION block')
+
+const blogBlocksInsert = registerApprovedManuscriptBody.match(/INSERT\s+INTO\s+showroom\.blog_blocks\b[\s\S]*?;/i)?.[0] ?? ''
+assert.ok(blogBlocksInsert, 'register_approved_manuscript must contain a showroom.blog_blocks INSERT statement')
+assert.match(blogBlocksInsert, /\bdisplay_order\b/i, 'showroom.blog_blocks INSERT must set display_order')
+const ordinalityMatch = /WITH\s+ORDINALITY\s+AS\s+([A-Za-z_]\w*)\s*\(([^)]*)\)/i.exec(blogBlocksInsert)
+assert.ok(ordinalityMatch, 'showroom.blog_blocks INSERT must define a WITH ORDINALITY alias')
+const ordinalityTableAlias = ordinalityMatch[1]
+const ordinalityColumnAlias = ordinalityMatch[2].split(',').at(-1)?.trim()
+assert.ok(ordinalityColumnAlias, 'WITH ORDINALITY must name its ordinality column')
+const ordinalityIsBoundToDisplayOrder = ordinalityColumnAlias.toLowerCase() === 'display_order'
+  ? new RegExp(`\\b${ordinalityTableAlias}\\.${ordinalityColumnAlias}\\b`, 'i').test(blogBlocksInsert)
+  : new RegExp(`\\b${ordinalityTableAlias}\\.${ordinalityColumnAlias}\\s+AS\\s+display_order\\b`, 'i').test(blogBlocksInsert)
+assert.ok(ordinalityIsBoundToDisplayOrder, 'showroom.blog_blocks INSERT must bind its WITH ORDINALITY alias to display_order')
+
+const normalizeFunctionSignature = (signature) => signature.replace(/\s+/g, ' ').trim()
+const declaredFunctionSignature = normalizeFunctionSignature(
+  /CREATE\s+OR\s+REPLACE\s+FUNCTION\s+(showroom\.register_approved_manuscript\s*\([^)]*\))/i.exec(registerApprovedManuscriptStatement)?.[1] ?? '',
+)
+assert.ok(declaredFunctionSignature, 'register_approved_manuscript must expose a declared function signature')
+const publicRevoke = /REVOKE\s+ALL\s+ON\s+FUNCTION\s+(showroom\.register_approved_manuscript\s*\([^;]*?\))\s+FROM\s+PUBLIC\s*;/i.exec(migration)
+const clientRevoke = /REVOKE\s+ALL\s+ON\s+FUNCTION\s+(showroom\.register_approved_manuscript\s*\([^;]*?\))\s+FROM\s+anon\s*,\s*authenticated\s*;/i.exec(migration)
+const serviceRoleGrant = /GRANT\s+EXECUTE\s+ON\s+FUNCTION\s+(showroom\.register_approved_manuscript\s*\([^;]*?\))\s+TO\s+service_role\s*;/i.exec(migration)
+assert.ok(publicRevoke, 'register_approved_manuscript must revoke PUBLIC access')
+assert.ok(clientRevoke, 'register_approved_manuscript must revoke anon and authenticated access')
+assert.ok(serviceRoleGrant, 'register_approved_manuscript must grant execution to service_role')
+assert.equal(normalizeFunctionSignature(publicRevoke[1]), declaredFunctionSignature, 'PUBLIC revoke must use the declared register_approved_manuscript function signature')
+assert.equal(normalizeFunctionSignature(clientRevoke[1]), declaredFunctionSignature, 'anon and authenticated revoke must use the declared register_approved_manuscript function signature')
+assert.equal(normalizeFunctionSignature(serviceRoleGrant[1]), declaredFunctionSignature, 'service_role grant must use the declared register_approved_manuscript function signature')
+assert.equal(normalizeFunctionSignature(clientRevoke[1]), normalizeFunctionSignature(publicRevoke[1]), 'anon and authenticated revoke must use the exact PUBLIC revoke function signature')
+assert.equal(normalizeFunctionSignature(serviceRoleGrant[1]), normalizeFunctionSignature(publicRevoke[1]), 'service_role grant must use the exact PUBLIC revoke function signature')
+assert.match(databaseTypes, /\bregister_approved_manuscript\b/, 'database types must declare register_approved_manuscript')
+
+const createApprovedManuscriptBody = extractNamedFunctionBody(manuscriptActions, 'createApprovedManuscript')
+const requireAdministratorIndex = createApprovedManuscriptBody.indexOf('requireAdministrator()')
+const registerApprovedManuscriptRpcCalls = [...createApprovedManuscriptBody.matchAll(/\.rpc\s*\(\s*['"]register_approved_manuscript['"]\s*,/g)]
+const registerApprovedManuscriptRpcIndex = registerApprovedManuscriptRpcCalls[0]?.index ?? -1
+assert.ok(
+  requireAdministratorIndex >= 0
+    && registerApprovedManuscriptRpcIndex >= 0
+    && requireAdministratorIndex < registerApprovedManuscriptRpcIndex,
+  'registerApprovedManuscript must require an administrator before calling register_approved_manuscript',
+)
+assert.equal(registerApprovedManuscriptRpcCalls.length, 1, 'createApprovedManuscript must call register_approved_manuscript exactly once')
+for (const tableName of ['blog_posts', 'blog_blocks', 'blog_post_events']) {
+  assert.doesNotMatch(
+    createApprovedManuscriptBody,
+    new RegExp(`\\.from\\s*\\(\\s*['\"](?:showroom\\.)?${tableName}['\"]\\s*\\)[\\s\\S]*?\\.(?:insert|update|delete)\\s*\\(`, 'i'),
+    `createApprovedManuscript must not write directly to showroom.${tableName}`,
+  )
+}
 const packageJson = JSON.parse(await readWorkspaceFile('package.json'))
 const readinessPath = 'docs/platform/BLOG_PRODUCTION_READINESS.md'
 assert.equal(await exists(readinessPath), true, 'manual manuscript intake requires BLOG_PRODUCTION_READINESS.md')

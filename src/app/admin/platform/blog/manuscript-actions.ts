@@ -10,6 +10,7 @@ import {
 import { validateBlogClaimSafety } from '@/lib/content-os/blog-claim-safety'
 import { createPlatformClient } from '@/lib/supabase/platform-server'
 import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
+import type { Database } from '@/types/database'
 
 async function requireAdministrator() {
   const platformClient = await createPlatformClient()
@@ -44,40 +45,21 @@ export async function createApprovedManuscript(payload: ApprovedManuscriptPayloa
           sourceEvidence: input.sourceEvidence,
         })
       },
-      async insertPost(post) {
-        const { data, error } = await showroomAdmin
-          .from('blog_posts')
-          .insert(post as never)
-          .select('id')
-          .single()
+      async registerManuscript({ post, blocks, event }) {
+        const rpcArgs = {
+          p_post: post,
+          p_blocks: blocks,
+          p_event: event,
+        } satisfies Database['showroom']['Functions']['register_approved_manuscript']['Args']
+        const { data, error } = await showroomAdmin.rpc('register_approved_manuscript', {
+          ...rpcArgs,
+        } as never)
 
-        if (error?.code === '23505') {
-          throw Object.assign(new Error('blog post slug already exists'), { code: 'duplicate_slug' })
+        if (error) {
+          throw Object.assign(new Error('approved manuscript registration failed'), { code: error.code })
         }
-        if (error || !data) throw new Error('blog post insert failed')
-        return { id: (data as { id: string }).id }
-      },
-      async insertBlocks(blocks) {
-        const { error } = await showroomAdmin
-          .from('blog_blocks')
-          .insert(blocks as never)
-
-        if (error) throw new Error('blog blocks insert failed')
-      },
-      async insertEvent(event) {
-        const { error } = await showroomAdmin
-          .from('blog_post_events')
-          .insert(event as never)
-
-        if (error) throw new Error('blog event insert failed')
-      },
-      async deletePost(postId) {
-        const { error } = await showroomAdmin
-          .from('blog_posts')
-          .delete()
-          .eq('id', postId)
-
-        if (error) throw new Error('blog post compensation delete failed')
+        if (!data) throw new Error('approved manuscript registration returned no post id')
+        return { id: data }
       },
     }, new Date().toISOString())
 
