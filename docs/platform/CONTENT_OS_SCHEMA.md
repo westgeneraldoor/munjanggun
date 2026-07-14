@@ -47,7 +47,7 @@ published
 archived
 ```
 
-`ai_draft`는 기존 DB enum과 과거 운영 기록을 보존하기 위한 레거시 값이다. 현재 제품은 이 값을 새 원고 생성에 쓰지 않으며, UI에서는 `검토 필요`로 표시해 `reviewing`으로만 전환한다. enum과 기존 데이터는 이 변경에서 수정하지 않는다.
+`ai_draft`는 legacy-only 상태다. 기존 DB enum과 과거 운영 기록을 보존하기 위한 레거시 값이며, 현재 제품은 이 값을 새 원고 생성에 쓰지 않는다. UI에서는 `검토 필요`로 표시해 `reviewing`으로만 전환한다. 기존 테이블·enum·데이터·RLS는 유지하고, 비파괴 migration으로 승인 원고 등록 전용 RPC를 추가한다. 이 RPC는 새 글의 `status = reviewing`을 강제한다.
 
 ### `showroom.blog_block_type`
 

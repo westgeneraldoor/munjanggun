@@ -22,12 +22,7 @@ MVP-CONTENTOS-01은 문장군 자체 도메인에 검색 자산을 축적하기 
 이 시스템은 아래 흐름을 구현한다.
 
 ```text
-Codex 외부 원고 작성
--> 어드민 콘텐츠 큐
--> 사람이 글/SEO/AEO/사실관계 검수
--> 사람이 문단별 사진 삽입
--> 미리보기
--> 발행
+Codex 완성 원고 → 승인 원고 등록 → reviewing 콘텐츠 큐 → 사진·검수 → 미리보기 → 발행
 -> 공개 블로그와 sitemap 반영
 ```
 
@@ -48,6 +43,7 @@ Codex 외부 원고 작성
 - 공개 블로그 목록 `/blog`
 - 공개 블로그 상세 `/blog/[slug]`
 - 어드민 콘텐츠 큐 `/admin/platform/blog`
+- 승인 원고 등록 `/admin/platform/blog/new`
 - 어드민 글 편집 `/admin/platform/blog/[id]`
 - 레거시 `ai_draft` 상태 호환: 기존 레코드는 UI에서 `검토 필요`로 표시하고 `reviewing`으로만 전환한다. 새 원고 생성 경로로 사용하지 않는다.
 - 블록형 본문 구조
@@ -92,9 +88,11 @@ Codex 외부 원고 작성
 ### 외부 원고 작성과 CMS 인계
 
 1. Codex는 문장군_브랜드와 문장군블로그를 조사한 뒤, 본문 블록과 `summary_answer`, `target_question`, `primary_keyword`, `related_questions`, `source_evidence`를 포함한 원고를 외부에서 작성한다.
-2. 관리자는 승인된 원고를 콘텐츠 큐에서 검수 대상으로 관리한다.
-3. `/admin/platform/blog`와 그 server action에는 AI 생성 요청, 모델 선택, AI 전용 환경변수나 비밀값 설정이 없다.
-4. 기존 `ai_draft` 레코드는 `검토 필요`로만 표시되며, `reviewing`으로 옮겨 검수를 계속할 수 있다.
+2. 인증된 관리자는 `/admin/platform/blog/new`의 승인 원고 등록 화면에서 원고의 메타데이터, 본문 블록, 근거를 구조화해 등록한다. 새 승인 원고는 `reviewing`에서 시작한다.
+3. 등록 직후 원고는 `reviewing` 콘텐츠 큐에서 사진 연결, 에디터 수정, 브랜드·사실 검수를 진행한다.
+4. 사진·검수 게이트를 통과한 원고만 관리자 미리보기와 발행 단계로 이동한다.
+5. `/admin/platform/blog`와 그 server action에는 AI 생성 요청, 모델 선택, AI 전용 환경변수나 비밀값 설정이 없다.
+6. 기존 `ai_draft` 레코드는 `검토 필요`로만 표시되며, `reviewing`으로 옮겨 검수를 계속할 수 있다.
 
 ### 원고 검수
 

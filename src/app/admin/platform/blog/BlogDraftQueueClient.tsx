@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, FilePenLine, Search, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, FilePenLine, FilePlus2, Search, ShieldAlert } from 'lucide-react'
 import type { BlogContentCategory, BlogMediaUsageStatus, BlogPostStatus } from '@/types/database'
 import styles from './blog-draft-queue.module.css'
 
@@ -273,6 +273,10 @@ export default function BlogDraftQueueClient({
             승인된 원고의 검수, 사진 연결, 미리보기, 발행 상태를 관리합니다. 검수 대상 {needsReviewCount}건과 위험 신호 {riskCount}개를 확인합니다.
           </p>
         </div>
+        <Link href="/admin/platform/blog/new" className={styles.intakeLink}>
+          <FilePlus2 size={16} aria-hidden="true" />
+          승인 원고 등록
+        </Link>
       </header>
       <section className={styles.filterStack} aria-label="블로그 콘텐츠 필터">
         <div className={styles.searchBox}>

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:e2e": "node scripts/run-playwright-e2e.mjs",
+    "test:approved-manuscript-intake": "node scripts/test-approved-manuscript-intake.mjs",
     "verify:blog-admin-cms": "node scripts/verify-blog-admin-cms.mjs",
     "verify:blog-body-blocks": "node scripts/verify-blog-body-blocks.mjs",
     "verify:blog-claim-safety": "node scripts/verify-blog-claim-safety.mjs",
