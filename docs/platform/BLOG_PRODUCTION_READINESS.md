@@ -38,13 +38,23 @@ Codex 완성 원고 → 승인 원고 등록 → reviewing 콘텐츠 큐 → 사
 
 | 구분 | 현재 판정 | 확인 방법 |
 | --- | --- | --- |
-| 승인 원고 등록 | Ready when verified | 관리자 권한, 필수 메타데이터·본문 블록 검증, `reviewing` INSERT와 감사 이벤트를 확인 |
-| 콘텐츠 큐·편집·사진 | Ready when verified | 등록 후 `reviewing` 큐에서 기존 에디터로 이동하고 사진·브랜드·사실 검수를 진행 |
+| 승인 원고 등록 | Ready | 관리자 권한, 필수 메타데이터·본문 블록·근거 검증, 원자 RPC, `reviewing` INSERT와 감사 이벤트 회귀 검증 통과 |
+| 콘텐츠 큐·편집·사진 | Ready; 사진 연결 수동 확인 대기 | Preview에서 관리자 로그인과 `블로그 콘텐츠` 큐 진입을 확인. 운영 원고 1건을 `reviewing`으로 등록했으며 기존 에디터에서 사진·브랜드·사실 검수를 이어감 |
 | 공개 범위 | Unchanged | `published` 글과 발행된 미디어만 공개 경로와 sitemap에 포함되는 기존 계약 유지 |
-| DB/RLS | RPC migration required | 기존 테이블·enum·RLS는 유지하고, `service_role`만 실행할 수 있는 원자 등록 RPC를 비파괴 migration으로 추가 |
-| 외부 접근 리허설 | Not run by this change | 원격 데이터, 계정, 배포 상태를 변경하거나 테스트하지 않음 |
+| DB/RLS | Ready | 원격 RPC migration 적용과 권한 확인 완료. 기존 테이블·enum·RLS는 유지하고 RPC는 `service_role`만 실행 가능 |
+| 외부 접근 리허설 | Partial | `v2-cms` Preview의 관리자 큐와 공개 `/blog` 응답 확인 완료. 실제 원고 1건의 `reviewing` DB 등록·블록·감사 이벤트를 확인했으며 관리자 화면의 편집·사진 연결은 수동 확인 대기 |
 
-배포 순서는 `RPC migration 적용·권한 확인 → 웹 배포 → Preview 등록 검증`을 지킨다. RPC가 없는 DB에 새 웹 코드를 먼저 배포하면 승인 원고 등록이 실패하므로 순서를 바꾸지 않는다.
+도입 순서 기준은 `RPC migration 적용·권한 확인 → 웹 배포 → Preview 등록 검증`이다. 현재는 migration·웹 배포·관리자 큐 진입 확인과 실제 원고의 `reviewing` DB 등록까지 완료했고, 관리자 화면의 편집·사진 연결은 수동 확인 대기다. 실제 등록 행은 발행하지 않고 검수 큐에 유지한다. 새 환경에 배포할 때도 RPC가 없는 DB에 웹 코드를 먼저 배포하지 않는다.
+
+### Preview 환경변수 사전 점검
+
+승인 원고 등록을 검증할 Preview 브랜치에는 아래 세 값이 필요하다.
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` — sensitive로 관리하며 서버에서만 사용
+
+브랜치 전용 값은 필요한 Preview 범위에만 설정하고 작업 종료 후 제거한다. AI/OpenAI 키·모델·AI 초안용 환경변수는 현재 흐름에 필요 없다. 비밀값의 실제 내용은 문서, Git, PR 본문, 로그에 기록하지 않는다.
 
 릴리스 전에는 다음 로컬 검증을 모두 통과한다.
 

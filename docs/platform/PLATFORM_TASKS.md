@@ -1,8 +1,8 @@
 ---
 document_type: "Platform Task Board"
-version: "1.1.0"
+version: "1.2.0"
 status: "active"
-last_updated: "2026-06-10"
+last_updated: "2026-07-14"
 owner: "Codex PM"
 source_strategy: "docs/platform/PLATFORM_STRATEGY.md"
 source_prd: "docs/platform/PRD_PLATFORM_v1.0.md"
@@ -28,26 +28,20 @@ source_development_strategy: "docs/platform/DEVELOPMENT_STRATEGY.md"
 
 ## 현재 판단
 
-MVP-02는 무료방문 실측견적 상담 신청을 중심으로, 고객 마이페이지, 수정/취소 요청, A/S 접수, 무료실측+A/S 통합 접수 큐까지 확장된 상태로 개발과 로컬 검수를 완료했다.
+기존 고객 여정 크리티컬 패스는 유지한다. 다만 2026-07-14 현재 블로그/Content OS 작업선에서 아래 기반이 `origin/v2-cms`에 완료됐다.
 
-- [x] `npm run lint` 통과
-- [x] `npm run build` 통과
-- [x] Playwright 모바일/데스크탑 주요 화면 확인
-- [x] 커밋
-- [x] 푸시
-- [x] Vercel Preview 배포 READY
-- [x] 플랫폼 UI 헌법 문서화
-- [ ] Preview 실제 계정 최종 검수
-- [ ] GitHub draft PR 생성
+- [x] `/blog` 이미지 쇼룸 경험과 블로그 전용 scoped 디자인 시스템 병합 — PR #27, `8280546`
+- [x] 관리자 AI 초안 생성 흐름 제거, 메뉴 명칭 `블로그 콘텐츠` 통일 — PR #29, `ca6e5aa`
+- [x] 관리자 승인 원고 등록, `reviewing` 시작, 감사 이력, 원자 RPC 병합 — PR #30, `e291f91`
+- [x] 원격 RPC migration과 `service_role` 전용 실행 권한 확인
+- [x] `v2-cms` Preview에서 관리자 로그인·콘텐츠 큐와 공개 `/blog` 응답 확인
+- [x] 실제 승인 원고 1건을 `reviewing`으로 등록하고 글·블록·감사 이벤트 확인
+- [ ] 관리자 화면에서 해당 원고의 편집·사진 연결을 수동 확인
+- [ ] 공개 이미지·렌더링 안전장치를 현재 운영 모델에 맞춰 깨끗한 후속 PR로 재구성
 
-따라서 현재 상태는 `MVP-02 closeout` 이후 `견적·결제 흐름 지도화` 진입 전이다. 결제 구현이나 플랫폼 견적서 작성으로 바로 가지 않고, 기존 AppSheet+n8n+솔라피 알림톡+HTML 견적서 흐름을 먼저 정리한다.
+블로그 운영 모델은 확정됐다. Codex가 중앙 브랜드와 블로그 운영 본진을 근거로 완성 원고를 외부에서 작성하고, CMS는 등록·편집·사진 연결·미리보기·발행·이력을 담당한다. 관리자 AI 초안 생성, OpenAI 키, 모델 설정은 다시 도입하지 않는다.
 
-최신 배포:
-
-- 최신 커밋: `4eda6cf docs: MVP-02 closeout 상태 정리`
-- Preview URL: `https://munjanggun-by4o5srwi-westgeneraldoors-projects.vercel.app`
-- Branch alias: `https://munjanggun-git-platform-v1-westgeneraldoors-projects.vercel.app`
-- Production `https://munjanggun.vercel.app`은 아직 최신 플랫폼 작업이 아니다.
+현재 구현 기준점은 `origin/v2-cms`의 `e291f91`이다. Production 배포와 공개 글 발행은 별도 승인·검수 단계이며 이번 완료 사실에 포함하지 않는다.
 
 ## 크리티컬 패스
 
@@ -63,6 +57,17 @@ MVP-01 카카오 로그인
 -> MVP-08 시공완료 후기/사진/홍보동의 큐
 -> MVP-09 n8n 운영 자동화
 -> MVP-10 AppSheet 연동/흡수 전략
+```
+
+블로그/Content OS 병렬 작업선:
+
+```text
+외부 완성 원고
+-> 관리자 승인 원고 등록(reviewing)
+-> 사실·브랜드·사진 검수
+-> 관리자 미리보기
+-> 발행 승인
+-> published 글/미디어만 공개
 ```
 
 ## Phase 0 - 기준선 정리

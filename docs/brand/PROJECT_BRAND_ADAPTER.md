@@ -1,8 +1,9 @@
 ---
 document_type: "Project Brand Adapter"
-version: "1.0.0"
+version: "1.1.0"
 status: "active"
 created: "2026-06-25"
+last_updated: "2026-07-14"
 owner: "Codex PM"
 source_brand_reference: "docs/brand/BRAND_SOURCE.md"
 central_brand_root: "C:\\Users\\hjh\\안티그래비티\\문장군_브랜드"
@@ -68,19 +69,18 @@ central_brand_root: "C:\\Users\\hjh\\안티그래비티\\문장군_브랜드"
 
 ### 디자인
 
-중앙 `DESIGN.md`를 기본 디자인 기준으로 삼는다.
+중앙 `DESIGN.md` v4.0의 `동네 온기 (Neighborhood Warmth)`를 기본 디자인 기준으로 삼는다. 기본 브랜드 화면은 클레이·세이지·오커·아이보리 토큰과 Pretendard 단일 서체를 사용하고, 폐기된 v3 네이비/세리프 체계를 새 화면에 되살리지 않는다.
 
-새 공개 블로그, 브랜드형 페이지, 콘텐츠 썸네일, 랜딩 성격 화면은 중앙 DESIGN의 방향을 따른다.
+현재 공개 `/blog`에는 별도로 승인된 이미지 쇼룸 어댑터가 있다. 이 예외는 `docs/design/BLOG_EXPERIENCE_SYSTEM.md`와 아래 범위로 제한한다.
 
-- Warm Home
-- Guided Choice
-- Verified Work
-- 밝은 주거 공간 이미지
-- 한글 우선의 단단한 타이포그래피
-- 네이비는 CTA와 신뢰 포인트에 제한 사용
-- 빨간 가격 강조와 할인 전단지식 UI 금지
+- 블로그 전용 시각 토큰은 `[data-mg-theme="blog"]` 안에서만 사용한다.
+- `/blog` 홈은 `data-mg-blog-experience="showroom"`으로 이미지 쇼룸 override를 명시한다.
+- `/blog/[slug]`는 같은 semantic vocabulary의 reader 기본값을 사용한다.
+- Tmoney RoundWind는 블로그의 큰 한글 display에만, Pretendard는 본문과 UI에 사용한다.
+- 블로그 어댑터를 포털·무료방문실측·마이페이지·A/S·플랫폼 어드민의 자동 재설계 기준으로 확장하지 않는다.
+- `src/styles/munjanggun-brand.css`의 중앙 호환 토큰을 블로그 작업이 무심코 바꾸지 않는다.
 
-기존 `docs/showroom/DESIGN_SYSTEM.md`의 다크 미니멀 갤러리 규칙은 쇼룸/컬러북 경험에만 적용한다. 새 블로그와 플랫폼 고객 여정의 기본 브랜드 톤으로 확장하지 않는다.
+기존 `docs/showroom/DESIGN_SYSTEM.md`의 다크 미니멀 갤러리 규칙도 쇼룸/컬러북 경험에만 적용한다. 빨간 가격 강조와 할인 전단지식 UI는 모든 범위에서 금지한다.
 
 ## 3. 프로젝트 전용 출력 방식
 
@@ -90,7 +90,8 @@ Content OS는 중앙 브랜드 원본을 글감으로 바로 발행하지 않는
 
 ```text
 Codex 외부 원고 작성
--> 관리자 콘텐츠 큐
+-> 관리자 승인 원고 등록
+-> reviewing 콘텐츠 큐
 -> 블록형 편집
 -> private 사진 후보 업로드
 -> 사진 승인
@@ -100,6 +101,8 @@ Codex 외부 원고 작성
 -> 공개 /blog, /blog/[slug]
 -> sitemap / robots / metadata / JSON-LD
 ```
+
+승인 원고 등록은 인증된 관리자만 사용할 수 있다. 제목, slug, SEO/AEO 필드, 본문 블록, 검증된 근거를 받아 글·블록·등록 이력을 원자적으로 저장하고 새 글 상태를 반드시 `reviewing`으로 명시한다. 이 경계에는 AI 호출, 모델 설정, OpenAI 키가 없다. 왼쪽 메뉴의 고정 명칭은 `블로그 콘텐츠`다.
 
 블로그 글은 다음 구조를 권장한다.
 
