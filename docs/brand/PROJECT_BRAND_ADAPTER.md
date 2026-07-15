@@ -69,13 +69,13 @@ central_brand_root: "C:\\Users\\hjh\\안티그래비티\\문장군_브랜드"
 
 ### 디자인
 
-중앙 `DESIGN.md` v4.0의 `동네 온기 (Neighborhood Warmth)`를 기본 디자인 기준으로 삼는다. 기본 브랜드 화면은 클레이·세이지·오커·아이보리 토큰과 Pretendard 단일 서체를 사용하고, 폐기된 v3 네이비/세리프 체계를 새 화면에 되살리지 않는다.
+> Historical / superseded: 아래 v4 `동네 온기` 설명은 이전 프로젝트 기록이다. 현재 중앙 정본은 Editorial Showroom v5.0이며 Ink를 주 정보 구조와 주 액션에, Forest를 상담·도움·선택·포커스의 보조 역할에 쓴다.
 
 현재 공개 `/blog`에는 별도로 승인된 이미지 쇼룸 어댑터가 있다. 이 예외는 `docs/design/BLOG_EXPERIENCE_SYSTEM.md`와 아래 범위로 제한한다.
 
 - 블로그 전용 시각 토큰은 `[data-mg-theme="blog"]` 안에서만 사용한다.
 - `/blog` 홈은 `data-mg-blog-experience="showroom"`으로 이미지 쇼룸 override를 명시한다.
-- `/blog/[slug]`는 같은 semantic vocabulary의 reader 기본값을 사용한다.
+- `/blog/[slug]`도 `data-mg-blog-experience="showroom"`으로 같은 v5 reader vocabulary를 사용한다.
 - Tmoney RoundWind는 블로그의 큰 한글 display에만, Pretendard는 본문과 UI에 사용한다.
 - 블로그 어댑터를 포털·무료방문실측·마이페이지·A/S·플랫폼 어드민의 자동 재설계 기준으로 확장하지 않는다.
 - `src/styles/munjanggun-brand.css`의 중앙 호환 토큰을 블로그 작업이 무심코 바꾸지 않는다.
@@ -112,7 +112,7 @@ Codex 외부 원고 작성
 4. 사진이 필요한 문단은 이미지 슬롯으로 분리
 5. 가격/추가금은 조건과 함께 설명
 6. Q&A 블록은 리치결과 보장용이 아니라 고객 질문 자산으로 관리
-7. CTA는 기본적으로 무료방문 실측견적 상담으로 연결
+7. 일반 CTA는 공개 상담 안내 랜딩 `/measure`로 연결하고, 독자 질문 CTA만 `/portal/measure/new?source=blog-question&post=<slug>` 계약으로 연결
 
 ### 고객 포털과 플랫폼 화면
 

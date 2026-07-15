@@ -37,7 +37,8 @@ source_development_strategy: "docs/platform/DEVELOPMENT_STRATEGY.md"
 - [x] `v2-cms` Preview에서 관리자 로그인·콘텐츠 큐와 공개 `/blog` 응답 확인
 - [x] 실제 승인 원고 1건을 `reviewing`으로 등록하고 글·블록·감사 이벤트 확인
 - [ ] 관리자 화면에서 해당 원고의 편집·사진 연결을 수동 확인
-- [ ] 공개 이미지·렌더링 안전장치를 현재 운영 모델에 맞춰 깨끗한 후속 PR로 재구성
+- [x] 공개 이미지·렌더링 안전장치를 현재 운영 모델에 맞춰 정합화 — PR #32, `d1eef38`; 공개 렌더러는 published 글·미디어만 사용
+- [ ] Editorial Showroom v5.0 블로그 상세·저장 전 모바일 미리보기 렌더링 계약 통일 — `origin/v2-cms` `d1eef38` 기준 후속 PR
 
 블로그 운영 모델은 확정됐다. Codex가 중앙 브랜드와 블로그 운영 본진을 근거로 완성 원고를 외부에서 작성하고, CMS는 등록·편집·사진 연결·미리보기·발행·이력을 담당한다. 관리자 AI 초안 생성, OpenAI 키, 모델 설정은 다시 도입하지 않는다.
 

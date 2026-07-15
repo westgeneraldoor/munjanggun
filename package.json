@@ -12,7 +12,8 @@
     "verify:blog-admin-cms": "node scripts/verify-blog-admin-cms.mjs",
     "verify:blog-body-blocks": "node scripts/verify-blog-body-blocks.mjs",
     "verify:blog-claim-safety": "node scripts/verify-blog-claim-safety.mjs",
-    "verify:blog-public-safety": "node scripts/verify-blog-public-safety.mjs"
+    "verify:blog-public-safety": "node scripts/verify-blog-public-safety.mjs",
+    "verify:blog-renderer-parity": "node scripts/verify-blog-renderer-parity.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",

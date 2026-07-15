@@ -225,6 +225,8 @@ CTA 블록:
 
 MVP 기본 CTA는 무료방문 실측견적 상담이다.
 
+일반 블로그 CTA는 공개 `/measure` 안내 랜딩으로 연결한다. 독자 질문에서 이어지는 CTA만 `source=blog-question&post=<slug>`를 유지해 `/portal/measure/new`으로 직행한다. 에디터의 저장 전 모바일 미리보기는 공개 상세와 같은 presentation renderer와 블록 표현을 사용하되, `미리보기 모드`와 사진 누락 경고만 관리자용 차이로 남긴다. private media는 관리자 인증 media route를 통해 표시하며 storage path와 검수 필드를 브라우저에 전달하지 않는다.
+
 PR-19 확장:
 
 - Link Button은 공개 블로그, 관련 글, 무료방문 실측견적 같은 내부 공개 경로로만 연결한다.

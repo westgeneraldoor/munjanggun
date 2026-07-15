@@ -87,17 +87,24 @@ function BlogImage({
   )
 }
 
-function CtaBlock({ text, final = false, id }: { text: string | null; final?: boolean; id?: string }) {
+function CtaBlock({ text, final = false, id, preview = false }: { text: string | null; final?: boolean; id?: string; preview?: boolean }) {
   return (
     <aside id={id} className={`${styles.ctaBlock} ${final ? styles.finalCtaBlock : ''}`}>
       <div>
         <span>무료 방문실측으로 확인</span>
         <strong>{text?.trim() || '문 종류를 정하기 전에, 우리 집 구조와 시공 조건부터 같이 확인해드립니다.'}</strong>
       </div>
-      <Link href="/portal/measure/new" aria-label="무료 방문실측으로 우리 집 조건 확인하기">
-        우리 집 조건 확인하기
-        <ArrowRight size={16} aria-hidden="true" />
-      </Link>
+      {preview ? (
+        <span className={styles.previewCtaAction} aria-hidden="true">
+          우리 집 조건 확인하기
+          <ArrowRight size={16} aria-hidden="true" />
+        </span>
+      ) : (
+        <Link href="/measure" aria-label="무료 방문실측으로 우리 집 조건 확인하기">
+          우리 집 조건 확인하기
+          <ArrowRight size={16} aria-hidden="true" />
+        </Link>
+      )}
     </aside>
   )
 }
@@ -260,7 +267,7 @@ function RenderBlock({
   }
 
   if (block.type === 'cta') {
-    return <CtaBlock text={block.text} />
+    return <CtaBlock text={block.text} preview={mode === 'preview'} />
   }
 
   return null
@@ -287,7 +294,7 @@ export default function BlogPostRenderer({
   const hasReadingPath = visibleContentGraphSections.length > 0 || fallbackRelatedPosts.length > 0 || Boolean(nextPost)
 
   return (
-    <main className={`${styles.page} ${mode === 'preview' ? styles.previewPage : ''}`} data-mg-theme="blog">
+    <main className={`${styles.page} ${mode === 'preview' ? styles.previewPage : ''}`} data-mg-theme="blog" data-mg-blog-experience="showroom">
       {mode === 'preview' && (
         <div className={styles.previewBanner}>
           <strong>미리보기 모드</strong>
@@ -445,7 +452,7 @@ export default function BlogPostRenderer({
           )}
 
           {(!hasCtaBlock || hasReadingPath) && (
-            <CtaBlock id="article-final-cta" text={null} final />
+            <CtaBlock id="article-final-cta" text={null} final preview={mode === 'preview'} />
           )}
         </div>
       </article>

@@ -24,6 +24,7 @@ import {
   UploadCloud,
   XCircle,
 } from 'lucide-react'
+import BlogPostRenderer from '@/components/blog/BlogPostRenderer'
 import type {
   BlogBlockType,
   BlogContentCategory,
@@ -32,7 +33,7 @@ import type {
   BlogPostStatus,
   BlogQuestionStatus,
 } from '@/types/database'
-import { normalizeGuideBoxBlock, normalizeLinkButtonBlock } from '@/lib/content-os/blog-body-blocks'
+import { toBlogEditorPreviewData } from '@/lib/content-os/blog-editor-preview'
 import {
   attachContentAssetToBlogMedia,
   publishBlogPost,
@@ -339,17 +340,6 @@ function createBlock(type: BlogBlockType, options: { mediaId?: string | null; ph
   }
 
   return base
-}
-
-function cleanQaQuestion(value: string | null | undefined) {
-  return (value ?? '')
-    .replace(/^(\s*(?:Q|질문)\s*[.:：)]\s*)+/i, '')
-    .split(/\s+(?:A|답변)\s*[.:：)]\s*/i)[0]
-    ?.trim() ?? ''
-}
-
-function cleanQaAnswer(value: string | null | undefined) {
-  return (value ?? '').replace(/^(\s*(?:A|답변)\s*[.:：)]\s*)+/i, '').trim()
 }
 
 function Field({
@@ -956,133 +946,6 @@ function ImageBlockDetails({
   )
 }
 
-function EditorMobilePreview({
-  post,
-  blocks,
-  media,
-  relatedQuestions,
-}: {
-  post: EditablePost
-  blocks: EditableBlock[]
-  media: BlogEditorMedia[]
-  relatedQuestions: string[]
-}) {
-  const mediaById = new Map(media.map(item => [item.id, item]))
-  const cover = media.find(item => item.usedAsCover && (item.signedPreviewUrl || item.publicUrl)) ?? null
-  const coverUrl = cover?.signedPreviewUrl ?? cover?.publicUrl ?? null
-
-  return (
-    <div className={styles.mobilePreviewShell} aria-label="모바일 미리보기">
-      <div className={styles.mobilePreviewChrome}>
-        <span />
-      </div>
-      <article className={styles.mobilePreviewArticle}>
-        <div className={styles.mobilePreviewMeta}>
-          <span>{CATEGORY_OPTIONS.find(option => option.value === post.category)?.label ?? '블로그'}</span>
-          {post.primaryKeyword && <span>{post.primaryKeyword}</span>}
-        </div>
-        <h2>{post.title || '제목 없는 원고'}</h2>
-        {coverUrl && (
-          <figure className={styles.mobilePreviewCover}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={coverUrl} alt={cover?.altText || cover?.sourceLabel || '대표사진'} />
-          </figure>
-        )}
-        {post.summaryAnswer && <p className={styles.mobilePreviewLead}>{post.summaryAnswer}</p>}
-        {post.excerpt && <p className={styles.mobilePreviewExcerpt}>{post.excerpt}</p>}
-        <div className={styles.mobilePreviewBlocks}>
-          {blocks.length === 0 ? (
-            <p className={styles.mobilePreviewEmpty}>본문을 작성하면 여기에 바로 보입니다.</p>
-          ) : blocks.map(block => {
-            if (block.type === 'heading') {
-              return <h3 key={block.clientId}>{block.text || '소제목'}</h3>
-            }
-            if (block.type === 'paragraph') {
-              return <p key={block.clientId}>{block.text || '문단 내용'}</p>
-            }
-            if (block.type === 'image') {
-              const item = block.mediaId ? mediaById.get(block.mediaId) : null
-              const imageUrl = item?.signedPreviewUrl ?? item?.publicUrl ?? null
-              return (
-                <figure key={block.clientId}>
-                  {imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={imageUrl} alt={item?.altText || item?.sourceLabel || '본문 사진'} />
-                  ) : (
-                    <div className={styles.mobilePreviewImageEmpty}>사진 없음</div>
-                  )}
-                  {item?.caption && <figcaption>{item.caption}</figcaption>}
-                </figure>
-              )
-            }
-            if (block.type === 'link_button') {
-              const link = normalizeLinkButtonBlock(block)
-              if (!link) return null
-
-              return (
-                <div key={block.clientId} className={styles.mobilePreviewLinkButton}>
-                  <span>이어 확인하기</span>
-                  {link.description && <p>{link.description}</p>}
-                  <em>
-                    {link.label}
-                    <ArrowRight size={14} aria-hidden="true" />
-                  </em>
-                </div>
-              )
-            }
-            if (block.type === 'guide_box') {
-              const guide = normalizeGuideBoxBlock(block)
-              if (!guide) return null
-
-              return (
-                <div key={block.clientId} className={`${styles.mobilePreviewGuideBox} ${styles[`mobilePreviewGuide_${guide.tone}`]}`}>
-                  <span>{guide.label}</span>
-                  {guide.title && <strong>{guide.title}</strong>}
-                  <p>{guide.body}</p>
-                </div>
-              )
-            }
-            if (block.type === 'qa') {
-              const question = cleanQaQuestion(block.text)
-              const answer = cleanQaAnswer(block.metadata.answer)
-
-              return (
-                <div key={block.clientId} className={styles.mobilePreviewQa}>
-                  <strong>Q. {question || '질문'}</strong>
-                  <p>{answer || '답변'}</p>
-                </div>
-              )
-            }
-            if (block.type === 'cta') {
-              return (
-                <div key={block.clientId} className={styles.mobilePreviewCta}>
-                  <div>
-                    <span>무료 방문 실측견적 상담</span>
-                    <strong>{block.text || '우리 집에 맞는 문과 시공 조건을 먼저 확인해보세요.'}</strong>
-                  </div>
-                  <em>
-                    상담 신청
-                    <ArrowRight size={14} aria-hidden="true" />
-                  </em>
-                </div>
-              )
-            }
-            return null
-          })}
-        </div>
-        {relatedQuestions.length > 0 && (
-          <section className={styles.mobilePreviewRelated}>
-            <strong>함께 확인할 질문</strong>
-            <ul>
-              {relatedQuestions.map(question => <li key={question}>{question}</li>)}
-            </ul>
-          </section>
-        )}
-      </article>
-    </div>
-  )
-}
-
 function BlockEditor({
   block,
   postId,
@@ -1370,6 +1233,14 @@ export default function BlogEditorClient({
     () => relatedText.split('\n').map(item => item.trim()).filter(Boolean),
     [relatedText],
   )
+  const previewData = useMemo(() => toBlogEditorPreviewData({
+    post,
+    blocks,
+    media: selectableMedia,
+    relatedQuestions: relatedQuestionsForPreview,
+    publishedAt: initialPost.publishedAt,
+    updatedAt: initialPost.updatedAt,
+  }), [blocks, initialPost.publishedAt, initialPost.updatedAt, post, relatedQuestionsForPreview, selectableMedia])
   const coverMedia = selectableMedia.find(item => item.usedAsCover) ?? null
   const coverMediaUrl = coverMedia?.signedPreviewUrl ?? coverMedia?.publicUrl ?? null
 
@@ -2177,7 +2048,12 @@ export default function BlogEditorClient({
 
         <aside className={styles.sidePanel} aria-label="모바일 미리보기">
           <div className={styles.mobilePreviewDock}>
-            <EditorMobilePreview post={post} blocks={blocks} media={selectableMedia} relatedQuestions={relatedQuestionsForPreview} />
+            <div className={styles.mobilePreviewShell}>
+              <div className={styles.mobilePreviewChrome} aria-hidden="true"><span /></div>
+              <div className={styles.mobilePreviewArticle}>
+                <BlogPostRenderer data={previewData} mode="preview" />
+              </div>
+            </div>
           </div>
         </aside>
       </div>

@@ -833,7 +833,8 @@
   overflow-wrap: anywhere;
 }
 
-.ctaBlock a {
+.ctaBlock a,
+.previewCtaAction {
   flex: 0 0 auto;
   min-height: 44px;
   display: inline-flex;
@@ -854,6 +855,10 @@
   color: #ffffff;
   background: var(--blog-terracotta-dark);
   border-color: var(--blog-terracotta-dark);
+}
+
+.previewCtaAction {
+  cursor: default;
 }
 
 .ctaBlock a:focus-visible {
@@ -907,7 +912,8 @@
   }
 
   .linkButtonBlock a,
-  .ctaBlock a {
+  .ctaBlock a,
+  .previewCtaAction {
     width: 100%;
   }
 }
