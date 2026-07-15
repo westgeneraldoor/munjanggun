@@ -523,7 +523,8 @@
   overflow-wrap: anywhere;
 }
 
-.linkButtonBlock a {
+.linkButtonBlock a,
+.previewLinkAction {
   flex: 0 0 auto;
   min-height: 44px;
   display: inline-flex;
@@ -857,6 +858,10 @@
   border-color: var(--blog-terracotta-dark);
 }
 
+.previewLinkAction {
+  cursor: default;
+}
+
 .previewCtaAction {
   cursor: default;
 }
@@ -912,6 +917,7 @@
   }
 
   .linkButtonBlock a,
+  .previewLinkAction,
   .ctaBlock a,
   .previewCtaAction {
     width: 100%;

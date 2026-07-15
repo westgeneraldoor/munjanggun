@@ -135,7 +135,7 @@ function ArticleJumpNav({
   )
 }
 
-function LinkButtonBlock({ block }: { block: BlogRenderBlock }) {
+function LinkButtonBlock({ block, preview = false }: { block: BlogRenderBlock; preview?: boolean }) {
   const link = normalizeLinkButtonBlock(block)
   if (!link) return null
 
@@ -145,10 +145,17 @@ function LinkButtonBlock({ block }: { block: BlogRenderBlock }) {
         <span>이어 확인하기</span>
         {link.description && <p>{link.description}</p>}
       </div>
-      <Link href={link.href}>
-        {link.label}
-        <ArrowRight size={16} aria-hidden="true" />
-      </Link>
+      {preview ? (
+        <span className={styles.previewLinkAction} aria-hidden="true">
+          {link.label}
+          <ArrowRight size={16} aria-hidden="true" />
+        </span>
+      ) : (
+        <Link href={link.href}>
+          {link.label}
+          <ArrowRight size={16} aria-hidden="true" />
+        </Link>
+      )}
     </aside>
   )
 }
@@ -243,7 +250,7 @@ function RenderBlock({
   }
 
   if (block.type === 'link_button') {
-    return <LinkButtonBlock block={block} />
+    return <LinkButtonBlock block={block} preview={mode === 'preview'} />
   }
 
   if (block.type === 'guide_box') {
