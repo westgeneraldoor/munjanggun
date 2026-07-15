@@ -158,22 +158,7 @@ function toEditorBlock(block: BlogBlock): BlogEditorBlock {
   }
 }
 
-async function createPrivatePreviewUrl(
-  showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
-  item: BlogMedia,
-) {
-  if (!item.private_bucket || !item.private_object_path) return null
-
-  const { data, error } = await showroomAdmin.storage
-    .from(item.private_bucket)
-    .createSignedUrl(item.private_object_path, 300)
-
-  if (error || !data?.signedUrl) return null
-
-  return data.signedUrl
-}
-
-function toEditorMedia(item: BlogMedia, signedPreviewUrl: string | null): BlogEditorMedia {
+function toEditorMedia(item: BlogMedia): BlogEditorMedia {
   return {
     id: item.id,
     sourceType: item.source_type,
@@ -184,8 +169,8 @@ function toEditorMedia(item: BlogMedia, signedPreviewUrl: string | null): BlogEd
     privacyChecked: item.privacy_checked,
     promotionConsentChecked: item.promotion_consent_checked,
     usedAsCover: item.used_as_cover,
-    publicUrl: item.public_url,
-    signedPreviewUrl,
+    publicUrl: null,
+    signedPreviewUrl: `/admin/platform/blog/media/${item.id}`,
     hasPrivateObject: Boolean(item.private_bucket && item.private_object_path),
     hasPublicObject: Boolean(item.public_bucket && item.public_object_path),
     approvedAt: item.approved_at,
@@ -342,7 +327,6 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
     : [{ data: [] }, { data: [] }]
   const contentAssetFiles = (assetFileResult.data ?? []) as ContentAssetFile[]
   const contentAssetTagLinks = (assetTagLinkResult.data ?? []) as ContentAssetTagLink[]
-  const mediaPreviewUrls = await Promise.all(media.map(item => createPrivatePreviewUrl(showroomAdmin, item)))
   const filesByAsset = contentAssetFiles.reduce<Record<string, ContentAssetFile[]>>((acc, file) => {
     acc[file.asset_id] = [...(acc[file.asset_id] ?? []), file]
     return acc
@@ -379,7 +363,7 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
     <BlogEditorClient
       initialPost={toEditorPost(post, media, blocks)}
       initialBlocks={blocks.map(toEditorBlock)}
-      media={media.map((item, index) => toEditorMedia(item, mediaPreviewUrls[index] ?? null))}
+      media={media.map(toEditorMedia)}
       events={events.map(toEditorEvent)}
       initialQuestions={articleQuestions.map(toEditorQuestion)}
       contentAssets={contentAssetPickerItems}

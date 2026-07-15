@@ -136,9 +136,6 @@ const PREVIEW_MEDIA_SELECT = [
   'id',
   'post_id',
   'usage_status',
-  'private_bucket',
-  'private_object_path',
-  'public_url',
   'alt_text',
   'caption',
   'source_label',
@@ -215,19 +212,8 @@ function toPublicRenderMedia(media: BlogMediaRow): BlogRenderMedia {
   }
 }
 
-async function toPreviewRenderMedia(
-  showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
-  media: BlogMediaRow,
-): Promise<BlogRenderMedia> {
-  let url = media.public_url
-
-  if (!url && media.private_bucket && media.private_object_path) {
-    const { data } = await showroomAdmin.storage
-      .from(media.private_bucket)
-      .createSignedUrl(media.private_object_path, 300)
-
-    url = data?.signedUrl ?? null
-  }
+function toPreviewRenderMedia(media: BlogMediaRow): BlogRenderMedia {
+  const url = `/admin/platform/blog/media/${media.id}`
 
   return {
     id: media.id,
@@ -346,7 +332,7 @@ export async function getAdminPreviewBlogPost(postId: string): Promise<BlogRende
       .in('usage_status', ['approved', 'published']),
   ])
 
-  const media = await Promise.all(((mediaResult.data ?? []) as unknown as BlogMediaRow[]).map(item => toPreviewRenderMedia(showroomAdmin, item)))
+  const media = ((mediaResult.data ?? []) as unknown as BlogMediaRow[]).map(toPreviewRenderMedia)
 
   return {
     post: toRenderPost(post),
