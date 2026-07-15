@@ -1,0 +1,26 @@
+{
+  "designVersion": "v5.0",
+  "generated": {
+    "css": {
+      "path": "src/styles/generated/brand.css",
+      "sha256": "c21af4766c6e3c707f92ff8736281d48b264efca564c16e708c2ff09dfdf0103"
+    },
+    "json": {
+      "path": "src/styles/generated/brand.tokens.json",
+      "sha256": "ed985f552b11ed005788fa7c4cd84cbc8c70c6b640246e6e31822d6e015b1b28"
+    }
+  },
+  "schemaVersion": 1,
+  "source": {
+    "css": {
+      "path": "tokens/brand.css",
+      "sha256": "d1a803fa3592c66121d6637ddb2fc52014ae07f4c9e2e708a61005e923fdb87c"
+    },
+    "json": {
+      "path": "tokens/brand.tokens.json",
+      "sha256": "17a330d8a26761bcd64ca69ddb860d123afd25d967b1dbbea4715ce0693f9cab"
+    }
+  },
+  "sourceCommit": "e6b6eb618e08b907307497d87f58995bd945531c",
+  "tokenCount": 114
+}

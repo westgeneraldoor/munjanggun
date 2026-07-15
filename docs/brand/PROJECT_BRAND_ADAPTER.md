@@ -1,9 +1,9 @@
 ---
 document_type: "Project Brand Adapter"
-version: "1.1.0"
+version: "1.2.0"
 status: "active"
 created: "2026-06-25"
-last_updated: "2026-07-14"
+last_updated: "2026-07-15"
 owner: "Codex PM"
 source_brand_reference: "docs/brand/BRAND_SOURCE.md"
 central_brand_root: "C:\\Users\\hjh\\안티그래비티\\문장군_브랜드"
@@ -69,16 +69,21 @@ central_brand_root: "C:\\Users\\hjh\\안티그래비티\\문장군_브랜드"
 
 ### 디자인
 
-중앙 `DESIGN.md` v4.0의 `동네 온기 (Neighborhood Warmth)`를 기본 디자인 기준으로 삼는다. 기본 브랜드 화면은 클레이·세이지·오커·아이보리 토큰과 Pretendard 단일 서체를 사용하고, 폐기된 v3 네이비/세리프 체계를 새 화면에 되살리지 않는다.
+중앙 `DESIGN.md` v5.0의 `Editorial Showroom`을 기본 디자인 기준으로 삼는다. Ink를 주요 정보 위계와 CTA에, Forest를 상담·도움·선택 상태와 포커스에 사용한다. 큰 한글 display는 Tmoney RoundWind ExtraBold, 본문과 UI는 Pretendard를 사용한다. 과거 v3/v4 팔레트 이름을 새 canonical 토큰처럼 늘리지 않는다.
+
+프로젝트는 중앙 저장소의 토큰 파일을 런타임에 직접 참조하지 않는다. 중앙 커밋 `e6b6eb618e08b907307497d87f58995bd945531c`의 `tokens/brand.css`와 `tokens/brand.tokens.json`을 `src/styles/generated/`에 생성하고 `brand.manifest.json`의 SHA-256/114개 고유 토큰 계약으로 검증한다. `src/app/globals.css`의 import 순서는 생성 CSS → 얇은 프로젝트 어댑터 → 블로그 scoped experience다.
+
+`src/styles/munjanggun-brand.css`는 중앙 canonical 토큰을 재선언하는 두 번째 정본이 아니다. 기존 화면이 아직 소비하는 별칭과 `portal`, `showroom-dark`, `admin`의 명시적 route scope만 둔다. 새 raw token은 `scripts/ui-token-policy.config.mjs`의 좁은 allowlist와 이름 있는 예외 없이 추가하지 않는다.
 
 현재 공개 `/blog`에는 별도로 승인된 이미지 쇼룸 어댑터가 있다. 이 예외는 `docs/design/BLOG_EXPERIENCE_SYSTEM.md`와 아래 범위로 제한한다.
 
-- 블로그 전용 시각 토큰은 `[data-mg-theme="blog"]` 안에서만 사용한다.
+- 블로그 전용 시각 토큰은 `[data-mg-theme="blog"]` 안에서만 사용하고 중앙 v5 primitive/semantic 토큰에 연결한다.
 - `/blog` 홈은 `data-mg-blog-experience="showroom"`으로 이미지 쇼룸 override를 명시한다.
 - `/blog/[slug]`는 같은 semantic vocabulary의 reader 기본값을 사용한다.
 - Tmoney RoundWind는 블로그의 큰 한글 display에만, Pretendard는 본문과 UI에 사용한다.
 - 블로그 어댑터를 포털·무료방문실측·마이페이지·A/S·플랫폼 어드민의 자동 재설계 기준으로 확장하지 않는다.
-- `src/styles/munjanggun-brand.css`의 중앙 호환 토큰을 블로그 작업이 무심코 바꾸지 않는다.
+- `src/styles/generated/brand.css`는 생성물로만 갱신하고, 블로그 작업이 직접 수정하지 않는다.
+- `/blog` 홈의 승인된 DOM, 섹션 순서, gutter, section spacing, radius와 breakpoint geometry는 토큰 연결 작업에서 바꾸지 않는다.
 
 기존 `docs/showroom/DESIGN_SYSTEM.md`의 다크 미니멀 갤러리 규칙도 쇼룸/컬러북 경험에만 적용한다. 빨간 가격 강조와 할인 전단지식 UI는 모든 범위에서 금지한다.
 

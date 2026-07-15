@@ -1,8 +1,9 @@
 ---
 document_type: "Brand Source Reference"
-version: "1.0.0"
+version: "1.1.0"
 status: "active"
 created: "2026-06-25"
+last_updated: "2026-07-15"
 owner: "Codex PM"
 central_brand_root: "C:\\Users\\hjh\\안티그래비티\\문장군_브랜드"
 ---
@@ -124,3 +125,27 @@ evidence_ref: appsheet_case_2026_06_redacted_001
 - 가격·이벤트·스펙·운영 조건이 들어갈 수 있는 자산은 `claimRisk`와 `externalPublish`에 따라 최신성 검수를 별도로 통과해야 한다.
 
 금지되는 것은 서버측 등록 자체가 아니라 검증·권한·감사·발행 승격 경계를 우회한 등록이다.
+
+## 8. v5 토큰 스냅샷
+
+이 프로젝트는 중앙 토큰을 런타임 로컬 경로에서 직접 읽지 않는다. 중앙 디자인 v5의 아래 커밋을 결정론적 생성물로 고정한다.
+
+```text
+source commit: e6b6eb618e08b907307497d87f58995bd945531c
+source CSS: tokens/brand.css
+source JSON: tokens/brand.tokens.json
+generated CSS: src/styles/generated/brand.css
+generated JSON: src/styles/generated/brand.tokens.json
+manifest: src/styles/generated/brand.manifest.json
+```
+
+`brand.manifest.json`은 소스/생성 파일의 SHA-256과 고유 토큰 수를 기록한다. 절대 경로, 작업자, 생성 시각은 넣지 않는다. 중앙 저장소는 읽기 전용이며 동기화는 프로젝트 쪽 생성물만 갱신한다.
+
+```text
+npm run sync:brand-tokens
+npm run verify:brand-tokens
+npm run check:brand-token-drift
+npm run verify:ui-token-policy
+```
+
+기본 중앙 경로 탐색은 Git common directory를 기준으로 하므로 linked worktree에서도 동작한다. 다른 중앙 체크아웃을 확인해야 할 때만 `MUNJANGGUN_BRAND_ROOT`를 명시한다. 명시한 경로가 잘못됐거나 없으면 실패하며, 기본 경로가 없는 환경의 drift 확인만 명확한 skip으로 처리한다.
