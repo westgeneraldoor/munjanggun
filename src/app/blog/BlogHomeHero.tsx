@@ -90,7 +90,7 @@ export default function BlogHomeHero({ media, hasPosts, searchPosts }: BlogHomeH
                 <ArrowDown size={16} aria-hidden="true" />
               </a>
             )}
-            <Link href="/portal/measure/new" className={styles.secondaryAction}>
+            <Link href="/measure" className={styles.secondaryAction}>
               무료 방문실측 상담
               <ArrowRight size={16} aria-hidden="true" />
             </Link>

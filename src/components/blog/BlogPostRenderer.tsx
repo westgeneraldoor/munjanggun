@@ -114,7 +114,7 @@ function CtaBlock({
         <strong>{text?.trim() || '문 종류를 정하기 전에, 우리 집 구조와 시공 조건부터 같이 확인해드립니다.'}</strong>
       </div>
       {surface === 'public-page' ? (
-        <Link href="/portal/measure/new" aria-label="무료 방문실측으로 우리 집 조건 확인하기">
+        <Link href="/measure" aria-label="무료 방문실측으로 우리 집 조건 확인하기">
           {actionContent}
         </Link>
       ) : (
