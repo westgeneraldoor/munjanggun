@@ -10,6 +10,9 @@ async function readWorkspaceFile(relativePath) {
 const renderer = await readWorkspaceFile('src/components/blog/BlogPostRenderer.tsx')
 const editor = await readWorkspaceFile('src/app/admin/platform/blog/[id]/BlogEditorClient.tsx')
 const previewData = await readWorkspaceFile('src/lib/content-os/blog-editor-preview.ts')
+const editorPage = await readWorkspaceFile('src/app/admin/platform/blog/[id]/page.tsx')
+const previewRenderer = await readWorkspaceFile('src/lib/content-os/blog-rendering.ts')
+const privateMediaRoute = await readWorkspaceFile('src/app/admin/platform/blog/media/[mediaId]/route.ts')
 const homeCtaFiles = await Promise.all([
   'src/app/blog/BlogHomeHero.tsx',
   'src/app/blog/BlogStoryStage.tsx',
@@ -23,6 +26,11 @@ assert.doesNotMatch(editor, /<EditorMobilePreview\b/, 'live editor preview must 
 assert.match(editor, /<BlogPostRenderer\s+data=\{previewData\}\s+mode="preview"/, 'live editor preview must render the shared renderer in preview mode')
 assert.match(previewData, /export function toBlogEditorPreviewData\b/, 'unsaved editor state needs an explicit presentation adapter')
 assert.doesNotMatch(previewData, /private_object_path|privateObjectPath/, 'browser preview data must not include private storage paths')
+assert.match(editorPage, /signedPreviewUrl: item\.private_bucket && item\.private_object_path \? `\/admin\/platform\/blog\/media\/\$\{item\.id\}` : null/, 'editor must use an opaque admin media URL for private previews')
+assert.match(previewRenderer, /\? `\/admin\/platform\/blog\/media\/\$\{media\.id\}`/, 'saved admin preview must use the same opaque media URL')
+assert.doesNotMatch(editorPage, /createSignedUrl/, 'editor page must not pass signed storage URLs to the browser')
+assert.match(privateMediaRoute, /platform\.auth\.getUser\(\)/, 'private media route must require an authenticated user')
+assert.match(privateMediaRoute, /profile\?\.role !== 'administrator'/, 'private media route must require the administrator role')
 for (const source of homeCtaFiles) {
   assert.match(source, /['"]\/measure['"]/, 'generic blog home CTA must use the public /measure landing')
   assert.doesNotMatch(source, /['"]\/portal\/measure\/new['"]/, 'generic blog home CTA must not bypass the public consultation landing')
