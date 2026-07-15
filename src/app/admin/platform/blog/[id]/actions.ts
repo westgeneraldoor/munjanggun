@@ -352,7 +352,6 @@ function isAllowedManualStatusTransition(fromStatus: BlogPostStatus, toStatus: B
 
 function toAttachedMedia(
   media: Pick<BlogMedia, 'id' | 'source_label' | 'usage_status' | 'alt_text' | 'caption' | 'privacy_checked' | 'promotion_consent_checked' | 'used_as_cover' | 'approved_at' | 'created_at'>,
-  previewUrl: string | null,
 ): ContentAssetBlogMedia {
   return {
     id: media.id,
@@ -363,7 +362,7 @@ function toAttachedMedia(
     privacyChecked: media.privacy_checked,
     promotionConsentChecked: media.promotion_consent_checked,
     usedAsCover: media.used_as_cover,
-    previewUrl,
+    previewUrl: `/admin/platform/blog/media/${media.id}`,
     approvedAt: media.approved_at,
     createdAt: media.created_at,
   }
@@ -877,9 +876,6 @@ export async function attachContentAssetToBlogMedia(payload: {
 
     const files = (assetFilesData ?? []) as ContentAssetFile[]
     const originalFile = files.find(file => file.file_role === 'original' && file.transform_status === 'ready')
-    const webFile = files.find(file => file.file_role === 'web' && file.transform_status === 'ready')
-    const thumbnailFile = files.find(file => file.file_role === 'thumbnail' && file.transform_status === 'ready')
-    const previewUrl = thumbnailFile?.public_url ?? webFile?.public_url ?? null
 
     if (!originalFile) {
       return { ok: false, message: '선택한 사진의 원본을 확인하지 못했습니다.' }
@@ -924,7 +920,7 @@ export async function attachContentAssetToBlogMedia(payload: {
       return {
         ok: true,
         message: '이미 이 글에 연결된 사진입니다.',
-        media: toAttachedMedia(normalizedMedia, previewUrl),
+        media: toAttachedMedia(normalizedMedia),
       }
     }
 
@@ -985,7 +981,7 @@ export async function attachContentAssetToBlogMedia(payload: {
     return {
       ok: true,
       message: '사진을 본문에 넣었습니다.',
-      media: toAttachedMedia(media, previewUrl),
+      media: toAttachedMedia(media),
     }
   } catch {
     if (insertedMediaId) {

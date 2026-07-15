@@ -2,13 +2,15 @@ import Link from 'next/link'
 import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, HelpCircle, Info, MapPin } from 'lucide-react'
 import { normalizeGuideBoxBlock, normalizeLinkButtonBlock } from '@/lib/content-os/blog-body-blocks'
 import { resolvePublicBlogPresentation } from '@/lib/content-os/blog-public-presentation'
-import type { BlogRelatedPost, BlogRenderBlock, BlogRenderData, BlogRenderMedia, BlogRenderMode } from '@/lib/content-os/blog-rendering'
+import type { BlogRelatedPost, BlogRenderBlock, BlogRenderData, BlogRenderMedia } from '@/lib/content-os/blog-rendering'
 import { absoluteUrl } from '@/lib/content-os/site-url'
 import BlogArticleActions from './BlogArticleActions'
 import BlogConditionChecklist from './BlogConditionChecklist'
 import BlogReadingTopBar from './BlogReadingTopBar'
 import type { BlogNavigationSearchPost } from './BlogNavigation'
 import styles from './BlogPostRenderer.module.css'
+
+export type BlogRenderSurface = 'public-page' | 'saved-preview' | 'embedded-preview'
 
 const CATEGORY_LABEL: Record<string, string> = {
   case_study: '시공 사례',
@@ -87,17 +89,39 @@ function BlogImage({
   )
 }
 
-function CtaBlock({ text, final = false, id }: { text: string | null; final?: boolean; id?: string }) {
+function CtaBlock({
+  text,
+  surface,
+  final = false,
+  id,
+}: {
+  text: string | null
+  surface: BlogRenderSurface
+  final?: boolean
+  id?: string
+}) {
+  const actionContent = (
+    <>
+      우리 집 조건 확인하기
+      <ArrowRight size={16} aria-hidden="true" />
+    </>
+  )
+
   return (
     <aside id={id} className={`${styles.ctaBlock} ${final ? styles.finalCtaBlock : ''}`}>
       <div>
         <span>무료 방문실측으로 확인</span>
         <strong>{text?.trim() || '문 종류를 정하기 전에, 우리 집 구조와 시공 조건부터 같이 확인해드립니다.'}</strong>
       </div>
-      <Link href="/portal/measure/new" aria-label="무료 방문실측으로 우리 집 조건 확인하기">
-        우리 집 조건 확인하기
-        <ArrowRight size={16} aria-hidden="true" />
-      </Link>
+      {surface === 'public-page' ? (
+        <Link href="/portal/measure/new" aria-label="무료 방문실측으로 우리 집 조건 확인하기">
+          {actionContent}
+        </Link>
+      ) : (
+        <span className={styles.inertAction} aria-disabled="true">
+          {actionContent}
+        </span>
+      )}
     </aside>
   )
 }
@@ -128,7 +152,7 @@ function ArticleJumpNav({
   )
 }
 
-function LinkButtonBlock({ block }: { block: BlogRenderBlock }) {
+function LinkButtonBlock({ block, surface }: { block: BlogRenderBlock; surface: BlogRenderSurface }) {
   const link = normalizeLinkButtonBlock(block)
   if (!link) return null
 
@@ -138,10 +162,17 @@ function LinkButtonBlock({ block }: { block: BlogRenderBlock }) {
         <span>이어 확인하기</span>
         {link.description && <p>{link.description}</p>}
       </div>
-      <Link href={link.href}>
-        {link.label}
-        <ArrowRight size={16} aria-hidden="true" />
-      </Link>
+      {surface === 'public-page' ? (
+        <Link href={link.href}>
+          {link.label}
+          <ArrowRight size={16} aria-hidden="true" />
+        </Link>
+      ) : (
+        <span className={styles.inertAction} aria-disabled="true">
+          {link.label}
+          <ArrowRight size={16} aria-hidden="true" />
+        </span>
+      )}
     </aside>
   )
 }
@@ -197,11 +228,11 @@ function RelatedPostCard({ post }: { post: BlogRelatedPost }) {
 function RenderBlock({
   block,
   mediaMap,
-  mode,
+  surface,
 }: {
   block: BlogRenderBlock
   mediaMap: Map<string, BlogRenderMedia>
-  mode: BlogRenderMode
+  surface: BlogRenderSurface
 }) {
   if (block.type === 'heading') {
     if (!block.text?.trim()) return null
@@ -224,7 +255,7 @@ function RenderBlock({
   if (block.type === 'image') {
     const media = block.mediaId ? mediaMap.get(block.mediaId) : null
     if (!media || media.usageStatus === 'rejected') {
-      if (mode !== 'preview') return null
+      if (surface === 'public-page') return null
       return (
         <div className={styles.previewMissing}>
           이 사진 자리는 아직 미리보기로 표시할 사진이 없습니다.
@@ -232,11 +263,11 @@ function RenderBlock({
       )
     }
 
-    return <BlogImage media={media} preview={mode === 'preview'} />
+    return <BlogImage media={media} preview={surface !== 'public-page'} />
   }
 
   if (block.type === 'link_button') {
-    return <LinkButtonBlock block={block} />
+    return <LinkButtonBlock block={block} surface={surface} />
   }
 
   if (block.type === 'guide_box') {
@@ -260,7 +291,7 @@ function RenderBlock({
   }
 
   if (block.type === 'cta') {
-    return <CtaBlock text={block.text} />
+    return <CtaBlock text={block.text} surface={surface} />
   }
 
   return null
@@ -268,11 +299,11 @@ function RenderBlock({
 
 export default function BlogPostRenderer({
   data,
-  mode,
+  surface,
   searchPosts = [],
 }: {
   data: BlogRenderData
-  mode: BlogRenderMode
+  surface: BlogRenderSurface
   searchPosts?: BlogNavigationSearchPost[]
 }) {
   const { post, blocks, media, contentGraphSections, relatedPosts, nextPost } = data
@@ -285,26 +316,30 @@ export default function BlogPostRenderer({
   const visibleContentGraphSections = contentGraphSections.filter(section => section.posts.length > 0)
   const fallbackRelatedPosts = visibleContentGraphSections.length === 0 ? relatedPosts : []
   const hasReadingPath = visibleContentGraphSections.length > 0 || fallbackRelatedPosts.length > 0 || Boolean(nextPost)
+  const isPublicPage = surface === 'public-page'
+  const isSavedPreview = surface === 'saved-preview'
+  const isEmbeddedPreview = surface === 'embedded-preview'
+  const RootElement = isEmbeddedPreview ? 'div' : 'main'
 
   return (
-    <main className={`${styles.page} ${mode === 'preview' ? styles.previewPage : ''}`} data-mg-theme="blog">
-      {mode === 'preview' && (
+    <RootElement className={`${styles.page} ${isSavedPreview ? styles.previewPage : ''} ${isEmbeddedPreview ? styles.embeddedPreview : ''}`} data-mg-theme="blog">
+      {isSavedPreview && (
         <div className={styles.previewBanner}>
           <strong>미리보기 모드</strong>
           <span>검색에 노출되지 않는 관리자 확인용 화면입니다.</span>
         </div>
       )}
-      {mode === 'public' && <BlogReadingTopBar searchPosts={searchPosts} />}
+      {isPublicPage && <BlogReadingTopBar searchPosts={searchPosts} />}
 
-      <article id="blog-article" className={styles.article}>
-        {mode === 'public' && (
+      <article id={isEmbeddedPreview ? undefined : 'blog-article'} className={styles.article}>
+        {isPublicPage && (
           <Link href="/blog" className={styles.backLink}>
             <ArrowLeft size={16} aria-hidden="true" />
             블로그로 돌아가기
           </Link>
         )}
 
-        {mode === 'public' && (
+        {isPublicPage && (
           <nav className={styles.breadcrumbs} aria-label="breadcrumb">
             {presentation.breadcrumbs.map((breadcrumb, index) => (
               <span key={breadcrumb.url}>
@@ -319,7 +354,7 @@ export default function BlogPostRenderer({
           </nav>
         )}
 
-        <header className={styles.hero}>
+        <header className={`${styles.hero} ${cover ? '' : styles.heroNoMedia}`}>
           <div className={styles.heroText}>
             <div className={styles.metaRow}>
               <span>{CATEGORY_LABEL[post.category] ?? post.category}</span>
@@ -351,12 +386,12 @@ export default function BlogPostRenderer({
 
           {cover && (
             <div className={styles.coverWrap}>
-              <BlogImage media={cover} preview={mode === 'preview'} showCaption={false} />
+              <BlogImage media={cover} preview={!isPublicPage} showCaption={false} />
             </div>
           )}
         </header>
 
-        {mode === 'public' && (
+        {isPublicPage && (
           <ArticleJumpNav
             hasRelatedQuestions={post.relatedQuestions.length > 0}
             hasReadingPath={hasReadingPath}
@@ -364,7 +399,7 @@ export default function BlogPostRenderer({
         )}
 
         <div className={styles.content}>
-          {mode === 'public' && (
+          {isPublicPage && (
             <BlogConditionChecklist question={post.targetQuestion} />
           )}
 
@@ -380,7 +415,7 @@ export default function BlogPostRenderer({
               <div className={styles.emptyBody}>아직 공개할 본문이 준비되지 않았습니다. 다른 글을 먼저 살펴보세요.</div>
             ) : (
               blocks.map(block => (
-                <RenderBlock key={block.id} block={block} mediaMap={mediaMap} mode={mode} />
+                <RenderBlock key={block.id} block={block} mediaMap={mediaMap} surface={surface} />
               ))
             )}
           </div>
@@ -440,15 +475,15 @@ export default function BlogPostRenderer({
             </section>
           )}
 
-          {mode === 'public' && (
+          {isPublicPage && (
             <BlogArticleActions postSlug={post.slug} postTitle={post.title} />
           )}
 
           {(!hasCtaBlock || hasReadingPath) && (
-            <CtaBlock id="article-final-cta" text={null} final />
+            <CtaBlock id="article-final-cta" text={null} surface={surface} final />
           )}
         </div>
       </article>
-    </main>
+    </RootElement>
   )
 }

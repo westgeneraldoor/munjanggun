@@ -30,6 +30,18 @@
   padding-top: var(--space-4);
 }
 
+.embeddedPreview {
+  min-height: 0;
+  padding: 0;
+  container-type: inline-size;
+  container-name: blog-embedded-preview;
+}
+
+.embeddedPreview .article {
+  width: 100%;
+  padding: 28px 22px 44px;
+}
+
 .previewBanner {
   width: min(1120px, calc(100% - 32px));
   margin: 0 auto var(--space-4);
@@ -119,6 +131,10 @@
   gap: clamp(24px, 5vw, 56px);
   align-items: center;
   margin-bottom: clamp(32px, 6vw, 72px);
+}
+
+.heroNoMedia {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .heroText {
@@ -523,7 +539,8 @@
   overflow-wrap: anywhere;
 }
 
-.linkButtonBlock a {
+.linkButtonBlock a,
+.linkButtonBlock .inertAction {
   flex: 0 0 auto;
   min-height: 44px;
   display: inline-flex;
@@ -542,6 +559,10 @@
   text-align: center;
   text-decoration: none;
   overflow-wrap: anywhere;
+}
+
+.inertAction {
+  cursor: default;
 }
 
 .linkButtonBlock a:hover,
@@ -833,7 +854,8 @@
   overflow-wrap: anywhere;
 }
 
-.ctaBlock a {
+.ctaBlock a,
+.ctaBlock .inertAction {
   flex: 0 0 auto;
   min-height: 44px;
   display: inline-flex;
@@ -869,6 +891,55 @@
   font-size: var(--text-sm);
   line-height: 1.6;
   overflow-wrap: anywhere;
+}
+
+@container blog-embedded-preview (max-width: 820px) {
+  .embeddedPreview .hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .embeddedPreview .hero h1 {
+    font-size: 30px;
+  }
+
+  .embeddedPreview .question {
+    font-size: 20px;
+  }
+
+  .embeddedPreview .summary,
+  .embeddedPreview .paragraphBlock p,
+  .embeddedPreview .qaBlock p {
+    font-size: 16px;
+  }
+
+  .embeddedPreview .headingBlock,
+  .embeddedPreview .readingPathHeader h2 {
+    font-size: 24px;
+  }
+
+  .embeddedPreview .relatedPostGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .embeddedPreview .previewBanner,
+  .embeddedPreview .linkButtonBlock,
+  .embeddedPreview .ctaBlock {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .embeddedPreview .linkButtonBlock a,
+  .embeddedPreview .linkButtonBlock .inertAction,
+  .embeddedPreview .ctaBlock a,
+  .embeddedPreview .ctaBlock .inertAction {
+    width: 100%;
+  }
+}
+
+@container blog-embedded-preview (max-width: 430px) {
+  .embeddedPreview .article {
+    padding: 22px 14px 38px;
+  }
 }
 
 @media (max-width: 820px) {

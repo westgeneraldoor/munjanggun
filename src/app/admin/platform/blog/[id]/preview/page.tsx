@@ -57,7 +57,7 @@ export default async function BlogPreviewPage({ params }: Props) {
           에디터로 돌아가기
         </Link>
       </div>
-      <BlogPostRenderer data={data} mode="preview" />
+      <BlogPostRenderer data={data} surface="saved-preview" />
     </>
   )
 }

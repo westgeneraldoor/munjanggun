@@ -4,6 +4,7 @@ import { createPublicShowroomClient, hasPublicShowroomEnv } from '@/lib/supabase
 import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
 import type { BlogBlockType, BlogContentCategory, BlogMediaUsageStatus, BlogPostStatus, Database, Json } from '@/types/database'
 import { buildBlogContentGraph, type BlogContentGraphRelatedPost, type BlogContentGraphSection } from './blog-content-graph'
+import { BLOG_ADMIN_PREVIEW_MEDIA_STATUSES } from './blog-editor-preview'
 
 type BlogPostRow = Database['showroom']['Tables']['blog_posts']['Row']
 type BlogPostRenderProjection = Pick<
@@ -325,11 +326,12 @@ export async function getAdminPreviewBlogPost(postId: string): Promise<BlogRende
       .select(BLOCK_SELECT)
       .eq('post_id', post.id)
       .order('display_order', { ascending: true }),
-    showroomAdmin
-      .from('blog_media')
-      .select(PREVIEW_MEDIA_SELECT)
-      .eq('post_id', post.id)
-      .in('usage_status', ['approved', 'published']),
+      // Saved and embedded admin previews intentionally share this visibility policy.
+      showroomAdmin
+        .from('blog_media')
+        .select(PREVIEW_MEDIA_SELECT)
+        .eq('post_id', post.id)
+        .in('usage_status', [...BLOG_ADMIN_PREVIEW_MEDIA_STATUSES]),
   ])
 
   const media = ((mediaResult.data ?? []) as unknown as BlogMediaRow[]).map(toPreviewRenderMedia)

@@ -1,6 +1,17 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, useTransition, type ChangeEvent, type FormEvent, type RefObject } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  type ChangeEvent,
+  type ComponentProps,
+  type FormEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type RefObject,
+} from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -24,6 +35,7 @@ import {
   UploadCloud,
   XCircle,
 } from 'lucide-react'
+import BlogPostRenderer from '@/components/blog/BlogPostRenderer'
 import type {
   BlogBlockType,
   BlogContentCategory,
@@ -32,7 +44,7 @@ import type {
   BlogPostStatus,
   BlogQuestionStatus,
 } from '@/types/database'
-import { normalizeGuideBoxBlock, normalizeLinkButtonBlock } from '@/lib/content-os/blog-body-blocks'
+import { buildBlogEditorPreviewData, createStableEditorSignature } from '@/lib/content-os/blog-editor-preview'
 import {
   attachContentAssetToBlogMedia,
   publishBlogPost,
@@ -339,17 +351,6 @@ function createBlock(type: BlogBlockType, options: { mediaId?: string | null; ph
   }
 
   return base
-}
-
-function cleanQaQuestion(value: string | null | undefined) {
-  return (value ?? '')
-    .replace(/^(\s*(?:Q|질문)\s*[.:：)]\s*)+/i, '')
-    .split(/\s+(?:A|답변)\s*[.:：)]\s*/i)[0]
-    ?.trim() ?? ''
-}
-
-function cleanQaAnswer(value: string | null | undefined) {
-  return (value ?? '').replace(/^(\s*(?:A|답변)\s*[.:：)]\s*)+/i, '').trim()
 }
 
 function Field({
@@ -956,133 +957,6 @@ function ImageBlockDetails({
   )
 }
 
-function EditorMobilePreview({
-  post,
-  blocks,
-  media,
-  relatedQuestions,
-}: {
-  post: EditablePost
-  blocks: EditableBlock[]
-  media: BlogEditorMedia[]
-  relatedQuestions: string[]
-}) {
-  const mediaById = new Map(media.map(item => [item.id, item]))
-  const cover = media.find(item => item.usedAsCover && (item.signedPreviewUrl || item.publicUrl)) ?? null
-  const coverUrl = cover?.signedPreviewUrl ?? cover?.publicUrl ?? null
-
-  return (
-    <div className={styles.mobilePreviewShell} aria-label="모바일 미리보기">
-      <div className={styles.mobilePreviewChrome}>
-        <span />
-      </div>
-      <article className={styles.mobilePreviewArticle}>
-        <div className={styles.mobilePreviewMeta}>
-          <span>{CATEGORY_OPTIONS.find(option => option.value === post.category)?.label ?? '블로그'}</span>
-          {post.primaryKeyword && <span>{post.primaryKeyword}</span>}
-        </div>
-        <h2>{post.title || '제목 없는 원고'}</h2>
-        {coverUrl && (
-          <figure className={styles.mobilePreviewCover}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={coverUrl} alt={cover?.altText || cover?.sourceLabel || '대표사진'} />
-          </figure>
-        )}
-        {post.summaryAnswer && <p className={styles.mobilePreviewLead}>{post.summaryAnswer}</p>}
-        {post.excerpt && <p className={styles.mobilePreviewExcerpt}>{post.excerpt}</p>}
-        <div className={styles.mobilePreviewBlocks}>
-          {blocks.length === 0 ? (
-            <p className={styles.mobilePreviewEmpty}>본문을 작성하면 여기에 바로 보입니다.</p>
-          ) : blocks.map(block => {
-            if (block.type === 'heading') {
-              return <h3 key={block.clientId}>{block.text || '소제목'}</h3>
-            }
-            if (block.type === 'paragraph') {
-              return <p key={block.clientId}>{block.text || '문단 내용'}</p>
-            }
-            if (block.type === 'image') {
-              const item = block.mediaId ? mediaById.get(block.mediaId) : null
-              const imageUrl = item?.signedPreviewUrl ?? item?.publicUrl ?? null
-              return (
-                <figure key={block.clientId}>
-                  {imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={imageUrl} alt={item?.altText || item?.sourceLabel || '본문 사진'} />
-                  ) : (
-                    <div className={styles.mobilePreviewImageEmpty}>사진 없음</div>
-                  )}
-                  {item?.caption && <figcaption>{item.caption}</figcaption>}
-                </figure>
-              )
-            }
-            if (block.type === 'link_button') {
-              const link = normalizeLinkButtonBlock(block)
-              if (!link) return null
-
-              return (
-                <div key={block.clientId} className={styles.mobilePreviewLinkButton}>
-                  <span>이어 확인하기</span>
-                  {link.description && <p>{link.description}</p>}
-                  <em>
-                    {link.label}
-                    <ArrowRight size={14} aria-hidden="true" />
-                  </em>
-                </div>
-              )
-            }
-            if (block.type === 'guide_box') {
-              const guide = normalizeGuideBoxBlock(block)
-              if (!guide) return null
-
-              return (
-                <div key={block.clientId} className={`${styles.mobilePreviewGuideBox} ${styles[`mobilePreviewGuide_${guide.tone}`]}`}>
-                  <span>{guide.label}</span>
-                  {guide.title && <strong>{guide.title}</strong>}
-                  <p>{guide.body}</p>
-                </div>
-              )
-            }
-            if (block.type === 'qa') {
-              const question = cleanQaQuestion(block.text)
-              const answer = cleanQaAnswer(block.metadata.answer)
-
-              return (
-                <div key={block.clientId} className={styles.mobilePreviewQa}>
-                  <strong>Q. {question || '질문'}</strong>
-                  <p>{answer || '답변'}</p>
-                </div>
-              )
-            }
-            if (block.type === 'cta') {
-              return (
-                <div key={block.clientId} className={styles.mobilePreviewCta}>
-                  <div>
-                    <span>무료 방문 실측견적 상담</span>
-                    <strong>{block.text || '우리 집에 맞는 문과 시공 조건을 먼저 확인해보세요.'}</strong>
-                  </div>
-                  <em>
-                    상담 신청
-                    <ArrowRight size={14} aria-hidden="true" />
-                  </em>
-                </div>
-              )
-            }
-            return null
-          })}
-        </div>
-        {relatedQuestions.length > 0 && (
-          <section className={styles.mobilePreviewRelated}>
-            <strong>함께 확인할 질문</strong>
-            <ul>
-              {relatedQuestions.map(question => <li key={question}>{question}</li>)}
-            </ul>
-          </section>
-        )}
-      </article>
-    </div>
-  )
-}
-
 function BlockEditor({
   block,
   postId,
@@ -1327,6 +1201,7 @@ export default function BlogEditorClient({
   const [assetPickerTarget, setAssetPickerTarget] = useState<AssetPickerTarget | null>(null)
   const [assetPickerMessage, setAssetPickerMessage] = useState<{ ok: boolean; text: string } | null>(null)
   const [editorMode, setEditorMode] = useState<EditorMode>('write')
+  const [discardDialogOpen, setDiscardDialogOpen] = useState(false)
   const titleRef = useRef<HTMLInputElement>(null)
   const slugRef = useRef<HTMLInputElement>(null)
   const summaryAnswerRef = useRef<HTMLTextAreaElement>(null)
@@ -1336,6 +1211,9 @@ export default function BlogEditorClient({
   const coverPickerRef = useRef<HTMLDivElement>(null)
   const blockToolbarRef = useRef<HTMLDivElement>(null)
   const blockListRef = useRef<HTMLDivElement>(null)
+  const previewLinkRef = useRef<HTMLAnchorElement>(null)
+  const discardDialogRef = useRef<HTMLDivElement>(null)
+  const discardCancelRef = useRef<HTMLButtonElement>(null)
 
   const isPublished = post.status === 'published'
   const statusActions = useMemo<Array<{ status: BlogPostStatus; label: string; icon: 'review' | 'media' | 'ready' }>>(() => {
@@ -1370,6 +1248,16 @@ export default function BlogEditorClient({
     () => relatedText.split('\n').map(item => item.trim()).filter(Boolean),
     [relatedText],
   )
+  const previewData = useMemo(() => buildBlogEditorPreviewData({
+    post: {
+      ...post,
+      relatedQuestions: relatedQuestionsForPreview,
+      publishedAt: initialPost.publishedAt,
+      updatedAt: initialPost.updatedAt,
+    },
+    blocks,
+    media: selectableMedia,
+  }), [blocks, initialPost.publishedAt, initialPost.updatedAt, post, relatedQuestionsForPreview, selectableMedia])
   const coverMedia = selectableMedia.find(item => item.usedAsCover) ?? null
   const coverMediaUrl = coverMedia?.signedPreviewUrl ?? coverMedia?.publicUrl ?? null
 
@@ -1626,7 +1514,7 @@ export default function BlogEditorClient({
     })),
   })
 
-  const savedEditorFingerprint = JSON.stringify({
+  const initialEditorSignature = createStableEditorSignature({
     postId: initialPost.id,
     post: {
       title: initialPost.title,
@@ -1655,7 +1543,66 @@ export default function BlogEditorClient({
       metadata: block.metadata,
     })),
   })
-  const hasUnsavedEditorChanges = JSON.stringify(buildPayload()) !== savedEditorFingerprint
+  const [savedEditorSignature, setSavedEditorSignature] = useState(initialEditorSignature)
+  const currentEditorSignature = createStableEditorSignature(buildPayload())
+  const hasUnsavedEditorChanges = currentEditorSignature !== savedEditorSignature
+
+  useEffect(() => {
+    if (!hasUnsavedEditorChanges) return
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [hasUnsavedEditorChanges])
+
+  useEffect(() => {
+    if (!discardDialogOpen) return
+    const frame = window.requestAnimationFrame(() => discardCancelRef.current?.focus())
+    return () => window.cancelAnimationFrame(frame)
+  }, [discardDialogOpen])
+
+  const closeDiscardDialog = () => {
+    setDiscardDialogOpen(false)
+    window.requestAnimationFrame(() => previewLinkRef.current?.focus())
+  }
+
+  const handlePreviewNavigate: NonNullable<ComponentProps<typeof Link>['onNavigate']> = (event) => {
+    if (!hasUnsavedEditorChanges) return
+    event.preventDefault()
+    setDiscardDialogOpen(true)
+  }
+
+  const handleDiscardDialogKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      closeDiscardDialog()
+      return
+    }
+    if (event.key !== 'Tab') return
+
+    const focusable = Array.from(discardDialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled])') ?? [])
+    if (focusable.length === 0) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
+
+  const confirmDiscardAndPreview = () => {
+    setSavedEditorSignature(currentEditorSignature)
+    setDiscardDialogOpen(false)
+    router.push(`/admin/platform/blog/${post.id}/preview`)
+  }
 
   const handleSave = () => {
     setSaveMessage(null)
@@ -1664,6 +1611,7 @@ export default function BlogEditorClient({
       const result = await saveBlogEditor(buildPayload())
       setSaveMessage({ ok: result.ok, text: result.message })
       if (result.ok) {
+        setSavedEditorSignature(currentEditorSignature)
         router.refresh()
       }
     })
@@ -1879,7 +1827,12 @@ export default function BlogEditorClient({
             <p>{post.slug}</p>
           </div>
           <div className={styles.headerActions}>
-            <Link href={`/admin/platform/blog/${post.id}/preview`} className={styles.previewButton}>
+            <Link
+              ref={previewLinkRef}
+              href={`/admin/platform/blog/${post.id}/preview`}
+              className={styles.previewButton}
+              onNavigate={handlePreviewNavigate}
+            >
               <Eye size={16} aria-hidden="true" />
               미리보기
             </Link>
@@ -2177,10 +2130,40 @@ export default function BlogEditorClient({
 
         <aside className={styles.sidePanel} aria-label="모바일 미리보기">
           <div className={styles.mobilePreviewDock}>
-            <EditorMobilePreview post={post} blocks={blocks} media={selectableMedia} relatedQuestions={relatedQuestionsForPreview} />
+            <div className={styles.mobilePreviewShell}>
+              <div className={styles.mobilePreviewChrome} aria-hidden="true"><span /></div>
+              <div className={styles.mobilePreviewArticle}>
+                <BlogPostRenderer data={previewData} surface="embedded-preview" />
+              </div>
+            </div>
           </div>
         </aside>
       </div>
+      {discardDialogOpen && (
+        <div className={styles.discardDialogBackdrop}>
+          <div
+            ref={discardDialogRef}
+            className={styles.discardDialog}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="discard-dialog-title"
+            aria-describedby="discard-dialog-description"
+            onKeyDown={handleDiscardDialogKeyDown}
+          >
+            <AlertTriangle size={24} aria-hidden="true" />
+            <div>
+              <h2 id="discard-dialog-title">저장하지 않은 변경 사항</h2>
+              <p id="discard-dialog-description">미리보기는 마지막으로 저장된 내용을 엽니다. 현재 변경 사항을 버리고 계속할까요?</p>
+            </div>
+            <div className={styles.discardDialogActions}>
+              <button ref={discardCancelRef} type="button" onClick={closeDiscardDialog}>계속 편집</button>
+              <button type="button" className={styles.discardConfirmButton} onClick={confirmDiscardAndPreview}>
+                변경 사항 버리고 미리보기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
