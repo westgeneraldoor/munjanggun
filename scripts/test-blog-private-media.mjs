@@ -6,6 +6,7 @@ const helperPath = new URL('../src/lib/content-os/blog-private-media.ts', import
 const routePath = new URL('../src/app/admin/platform/blog/media/[mediaId]/route.ts', import.meta.url)
 const editorPagePath = new URL('../src/app/admin/platform/blog/[id]/page.tsx', import.meta.url)
 const renderingPath = new URL('../src/lib/content-os/blog-rendering.ts', import.meta.url)
+const proxyPath = new URL('../src/proxy.ts', import.meta.url)
 
 async function readRequiredFile(url, label) {
   try {
@@ -90,10 +91,11 @@ assert.deepEqual(blogPrivateMediaHeaders('image/webp'), {
   'X-Content-Type-Options': 'nosniff',
 })
 
-const [routeSource, editorPageSource, renderingSource] = await Promise.all([
+const [routeSource, editorPageSource, renderingSource, proxySource] = await Promise.all([
   readRequiredFile(routePath, 'private media route'),
   readRequiredFile(editorPagePath, 'blog editor page'),
   readRequiredFile(renderingPath, 'blog rendering adapter'),
+  readRequiredFile(proxyPath, 'global proxy'),
 ])
 
 assert.match(routeSource, /RouteContext<'\/admin\/platform\/blog\/media\/\[mediaId\]'>/)
@@ -195,5 +197,43 @@ const previewSelectSource = renderingSource.match(/const PREVIEW_MEDIA_SELECT = 
 assert.doesNotMatch(previewSelectSource, /private_bucket|private_object_path|public_url/)
 assert.doesNotMatch(renderingSource, /privateObjectPath\s*:/, 'render data must not serialize storage paths')
 assert.doesNotMatch(renderingSource, /privateBucket\s*:/, 'render data must not serialize storage buckets')
+
+const adminRouteClassifierSource = proxySource.match(
+  /const isAdminPrivateMediaRoute = pathname\.startsWith\(['"]\/admin\/platform\/blog\/media\/['"]\)\s+const isAdminRoute = pathname\.startsWith\(['"]\/admin['"]\) && !isAdminPrivateMediaRoute/,
+)?.[0]
+assert.ok(
+  adminRouteClassifierSource,
+  'the proxy must classify the exact private-media prefix before the general admin route',
+)
+const classifyAdminPath = Function(
+  'pathname',
+  `"use strict"; ${adminRouteClassifierSource}; return { isAdminPrivateMediaRoute, isAdminRoute }`,
+)
+assert.deepEqual(classifyAdminPath('/admin/platform/blog/media/0f8fad5b-d9cb-469f-a165-70867728950e'), {
+  isAdminPrivateMediaRoute: true,
+  isAdminRoute: false,
+})
+for (const protectedAdminPath of [
+  '/admin',
+  '/admin/login',
+  '/admin/platform',
+  '/admin/platform/blog',
+  '/admin/platform/blog/media',
+  '/admin/platform/blog/media-other/0f8fad5b-d9cb-469f-a165-70867728950e',
+]) {
+  assert.deepEqual(classifyAdminPath(protectedAdminPath), {
+    isAdminPrivateMediaRoute: false,
+    isAdminRoute: true,
+  }, protectedAdminPath)
+}
+assert.deepEqual(classifyAdminPath('/portal'), {
+  isAdminPrivateMediaRoute: false,
+  isAdminRoute: false,
+})
+assert.match(
+  proxySource,
+  /const isAdminPlatformRoute = isAdminRoute && pathname\.startsWith\(['"]\/admin\/platform['"]\)/,
+  'the platform role redirect must also defer private media authorization to the route handler',
+)
 
 console.log('blog private media contract passed')

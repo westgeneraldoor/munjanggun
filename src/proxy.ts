@@ -30,7 +30,8 @@ function hasSupabasePublicEnv() {
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  const isAdminRoute = pathname.startsWith('/admin')
+  const isAdminPrivateMediaRoute = pathname.startsWith('/admin/platform/blog/media/')
+  const isAdminRoute = pathname.startsWith('/admin') && !isAdminPrivateMediaRoute
   const isAdminLoginRoute = pathname === '/admin/login'
   const isManagerRoute = pathname.startsWith('/manager')
   const isPortalRoute = pathname.startsWith('/portal')
@@ -163,7 +164,7 @@ export async function proxy(request: NextRequest) {
     }
 
     // 4.3 역할(Role) 기반 가드 및 레거시 어드민 허용 정책
-    const isAdminPlatformRoute = pathname.startsWith('/admin/platform')
+    const isAdminPlatformRoute = isAdminRoute && pathname.startsWith('/admin/platform')
 
     // A. 신규 플랫폼 어드민 경로 (/admin/platform): administrator만 허용
     if (isAdminPlatformRoute && userRole !== 'administrator') {
