@@ -24,7 +24,7 @@ Recover the contaminated original workspace, replace PR #33 with narrowly-scoped
 
 The original branch `codex/theme-platform-pr1-8@d16e2f7` had no unique commits and was eight commits behind `origin/v2-cms@d1eef38`. Its entire working state is recoverable from `.project-recovery-trash/20260715-152052/` through an all-refs bundle, binary patches, copied tracked files, quarantined untracked files, SHA-256 manifests, and an external archived PR #30 worktree. The original workspace now uses `codex/recovery-baseline@d1eef38`, tracks `origin/v2-cms`, and has zero status entries.
 
-No dirty code is transplanted automatically. Approved behavior already exists in `v2-cms` or PR #33; the remaining local code is obsolete, conflicts with later approved PRs, or uses the old token model.
+No dirty code is transplanted automatically. Approved behavior already exists in `v2-cms` or PR #33; the remaining local code is obsolete, conflicts with later approved PRs, or uses the old token model. The per-file decision evidence is retained locally in `.project-recovery-trash/20260715-152052/recovery-classification.md`, `tracked-working-copy-manifest.json`, and `untracked-moves.json`; bundle, patch, PR, and worktree inventories are checksummed in the same directory.
 
 ## Branch and Draft PR topology
 
@@ -36,9 +36,9 @@ No dirty code is transplanted automatically. Approved behavior already exists in
 | 3 | `codex/blog-generic-cta-routing` | branch 2 | General `/measure` routing only; question CTA unchanged |
 | 4 | `codex/brand-token-snapshot` | branch 3 | Generated v5 snapshot, manifest, sync/verify/drift scripts, import order |
 | 5 | `codex/admin-primitives-contract` | branch 4 | Shared controls, state matrix, sidebar accessibility |
-| 6A | `codex/admin-platform-surfaces` | branch 5 | Platform queue, settings, assets migration |
-| 6B | `codex/admin-legacy-surfaces` | branch 5 | Nodes and legacy site settings migration |
-| 7 | `codex/blog-cms-provenance` | branch 6A | Manual intake/editor/queue simplification and server provenance |
+| 6A | `codex/admin-platform-surfaces` | branch 5 | Login, platform queue/detail, settings, and assets migration |
+| 6B | `codex/admin-legacy-surfaces` | branch 6A | Nodes and legacy site settings migration; converges into the main stack |
+| 7 | `codex/blog-cms-provenance` | branch 6B | Manual intake/editor/queue simplification and server provenance |
 | 8 | `codex/blog-reader-v5-contract` | branch 7 | Reader/saved/embedded presentation parity and strict token policy; `/blog` home preserved |
 
 PR #33 remains open until branches 1, 2, and 3 are pushed as Draft PRs and cross-reference it. It is then closed as superseded, never merged.
@@ -117,4 +117,4 @@ The visual source is central v5 Editorial Showroom: Ink is the primary action an
 
 ## Completion
 
-Completion requires every Draft PR to be pushed and green, every task review to approve specification and quality, actual authenticated Preview evidence for required administrator states, PR #33 closed as superseded, the original workspace still clean at the latest `origin/v2-cms` baseline, and no merge or production deployment.
+Completion requires every Draft PR to be pushed and green, every task review to approve specification and quality, one converged Task 8 Preview containing Tasks 1 through 7, actual authenticated Preview evidence for every administrator route and required state, PR #33 closed as superseded, the original workspace still clean at the latest `origin/v2-cms` baseline, and no merge or production deployment.

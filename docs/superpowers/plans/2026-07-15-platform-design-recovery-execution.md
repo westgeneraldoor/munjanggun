@@ -36,6 +36,8 @@
 
   Run `npm run lint`, all existing `verify:blog-*` scripts, `npm run test:approved-manuscript-intake`, and `npm run build`. Record the existing lint-warning baseline separately from failures.
 
+  Verify `.project-recovery-trash/20260715-152052/recovery-classification.md`, `tracked-working-copy-manifest.json`, and `untracked-moves.json` account for 41 tracked and 109 untracked files; run `git bundle verify` on `all-refs-before.bundle`; require the original workspace HEAD to equal `origin/v2-cms` and `git status --porcelain` to be empty.
+
 - [ ] **Step 2: Self-review the two documents**
 
   Run a case-insensitive placeholder scan over both documents and require no incomplete-marker matches. Confirm every user requirement maps to a branch and verification row.
@@ -142,6 +144,9 @@
 - Create: `scripts/sync-brand-tokens.mjs`
 - Create: `scripts/verify-brand-tokens.mjs`
 - Create: `scripts/check-brand-token-drift.mjs`
+- Create: `scripts/ui-token-policy.config.mjs`
+- Create: `scripts/verify-ui-token-policy.mjs`
+- Create: `scripts/test-ui-token-policy.mjs`
 - Modify: `src/app/globals.css`
 - Modify: `src/styles/munjanggun-brand.css`
 - Modify: `src/styles/blog-experience.css`
@@ -160,6 +165,8 @@
 - [ ] **Step 3: Generate committed v5 artifacts**
 
   Run sync against the read-only central repository at commit `e6b6eb6`. Confirm the central `git status --short` remains empty. Import generated CSS before project and blog adapters. Run snapshot verify, drift verify, lint, all blog verifiers, and build.
+
+  Add the strict token-policy engine with file:line diagnostics, generated/token-declaration allowlists, explicit named layout-constant exceptions, undefined-variable detection, and configurable scope. Its initial tests must fail before implementation and pass against fixtures before any admin migration consumes it.
 
 - [ ] **Step 4: Browser and review gate**
 
@@ -201,22 +208,24 @@
 
 **Files:**
 - Modify: `src/app/admin/platform/AdminQueueClient.tsx` and CSS
+- Modify: `src/app/admin/platform/[id]/DetailClient.tsx` and CSS
 - Modify: platform queue action components
 - Modify: `src/app/admin/platform/settings/SettingsClient.tsx` and CSS
 - Modify: `src/app/admin/platform/assets/ContentAssetsClient.tsx` and CSS
+- Modify: `src/app/admin/login/page.tsx` and its CSS/layout boundary
 - Create: `tests/admin-platform-surfaces.spec.ts`
 
 - [ ] **Step 1: Write RED route-level control inventory tests**
 
-  At `/admin/platform`, `/admin/platform/settings`, and `/admin/platform/assets`, enumerate visible button/link/select/tab/filter controls and assert semantics, 44px targets, state matrix, keyboard operation, reduced motion, and horizontal overflow at 1366/390.
+  At `/admin/login`, `/admin/platform`, `/admin/platform/[id]`, `/admin/platform/settings`, and `/admin/platform/assets`, enumerate visible button/link/select/tab/filter controls and assert semantics, 44px targets, state matrix, keyboard operation, reduced motion, and horizontal overflow at 1366/390. Verify logged-out login has no administrator Sidebar and logged-in access preserves the role gate.
 
 - [ ] **Step 2: Migrate queue, settings, then assets**
 
-  Move one route at a time to shared primitives, removing only the route-local duplicate styles after the route test is GREEN. Preserve actions, copy, and data flow.
+  Move one route at a time to shared primitives, removing only the route-local duplicate styles after the route test is GREEN. Preserve actions, copy, and data flow. Expand the token-policy configuration to each migrated route and require no unapproved raw color, spacing, radius, shadow, or control-size values in that route before moving on.
 
 - [ ] **Step 3: Full verification and Draft PR**
 
-  Run the new E2E, admin verifier, lint, build, review, push `codex/admin-platform-surfaces`, and open a Draft PR against Task 5.
+  Run the new E2E, admin verifier, lint, build, review, push `codex/admin-platform-surfaces`, and open a Draft PR against Task 5. This branch is the required base of Task 6B.
 
 ### Task 6B: Migrate legacy administrator surfaces
 
@@ -226,17 +235,17 @@
 - Modify: `src/components/admin/**` excluding already-migrated Sidebar
 - Create: `tests/admin-legacy-surfaces.spec.ts`
 
-- [ ] **Step 1: Write RED `/admin/nodes` and settings tests**
+- [ ] **Step 1: Write RED `/admin`, `/admin/nodes`, node detail, and settings tests**
 
-  Reproduce the 390px nodes overflow, small icon controls, modal keyboard/focus defects, and missing state styles. Assert no horizontal overflow and the shared control contract.
+  Verify `/admin` redirects to `/admin/nodes`; reproduce the 390px nodes overflow, small icon controls, modal keyboard/focus defects, and missing state styles on `/admin/nodes`, `/admin/nodes/[id]`, and `/admin/settings`. Assert no horizontal overflow and the shared control contract.
 
 - [ ] **Step 2: Migrate route by route**
 
-  Apply primitives to nodes list/form/add/move, site settings, hero, gallery, status, and confirmation dialog while preserving behavior and data calls. Run the focused test after each component group.
+  Apply primitives to nodes list/form/add/move, site settings, hero, gallery, status, and confirmation dialog while preserving behavior and data calls. Run the focused test and the scoped token-policy verifier after each component group; no migrated file may retain an unapproved raw color, spacing, radius, shadow, or control-size value.
 
 - [ ] **Step 3: Verify and publish**
 
-  Run E2E, lint, build, review, push `codex/admin-legacy-surfaces`, and open a Draft PR against Task 5.
+  Run E2E, lint, build, review, push `codex/admin-legacy-surfaces`, and open a Draft PR against Task 6A so all administrator surfaces converge into one stack.
 
 ### Task 7: Automate provenance and simplify CMS
 
@@ -266,7 +275,7 @@
 
 - [ ] **Step 4: Browser, review, and publish**
 
-  Verify queue/new/editor/saved Preview at desktop/390 and keyboard-only. Run all CMS verifiers, lint, build, review, push `codex/blog-cms-provenance`, and open a Draft PR against Task 6A.
+  Verify queue/new/editor/saved Preview at desktop/390 and keyboard-only. Run all CMS verifiers, lint, build, review, push `codex/blog-cms-provenance`, and open a Draft PR against Task 6B.
 
 ### Task 8: Align blog reader and enforce token policy
 
@@ -278,19 +287,19 @@
 - Modify: `src/lib/content-os/blog-rendering.ts`
 - Modify: `src/lib/content-os/blog-public-presentation.ts`
 - Modify: `src/styles/blog-experience.css`
-- Create: `scripts/ui-token-policy.config.mjs`
-- Create: `scripts/verify-ui-token-policy.mjs`
-- Create: `scripts/test-ui-token-policy.mjs`
+- Modify: `scripts/ui-token-policy.config.mjs`
+- Modify: `scripts/verify-ui-token-policy.mjs` only if a verified general-purpose defect is found
+- Modify: `scripts/test-ui-token-policy.mjs`
 - Create: `tests/blog-reader-contract.spec.ts`
 - Modify: existing blog home/navigation/action E2E tests
 
 - [ ] **Step 1: Write RED token-policy tests**
 
-  Fail on raw hex/rgb, unapproved spacing/radius/shadow/control-size, undefined variables, and missing state selectors outside generated/token declaration files. Require file:line diagnostics and exact documented exceptions for layout constants.
+  Across all customer, blog, administrator, and CMS CSS/TSX covered by Tasks 1 through 7, fail on raw hex/rgb, unapproved spacing/radius/shadow/control-size, undefined variables, and missing state selectors outside generated/token declaration files. Require file:line diagnostics and exact documented exceptions for layout constants.
 
 - [ ] **Step 2: Implement verifier and clean reader surfaces**
 
-  Add the strict verifier, then replace one literal category at a time with generated semantic/component aliases. Keep the `/blog` home component DOM and geometry unchanged.
+  Expand the existing strict verifier configuration to all remaining blog and customer surfaces, then replace one literal category at a time with generated semantic/component aliases. Keep the `/blog` home component DOM and geometry unchanged.
 
 - [ ] **Step 3: Write and pass visual contract E2E**
 
@@ -312,7 +321,7 @@
 
 - [ ] **Step 2: Run whole-stack reviews**
 
-  Generate full review packages for each branch range and an integration range. Resolve all Critical/Important findings with covering tests and re-review.
+  Generate full review packages for each branch range and the converged Task 8 range from `origin/v2-cms` to `codex/blog-reader-v5-contract`. Resolve all Critical/Important findings with covering tests and re-review.
 
 - [ ] **Step 3: Run final verification matrix**
 
