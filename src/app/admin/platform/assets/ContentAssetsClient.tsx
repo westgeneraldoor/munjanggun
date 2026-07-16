@@ -256,7 +256,7 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
         <input
           type="file"
           name="files"
-          accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+          accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif"
           multiple
           onChange={handleFileChange}
           disabled={isPending}

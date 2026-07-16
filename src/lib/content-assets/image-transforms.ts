@@ -1,18 +1,16 @@
 import 'server-only'
 
-import { createHash, randomUUID } from 'crypto'
+import { randomUUID } from 'crypto'
+import {
+  CONTENT_ASSET_ALLOWED_IMAGE_TYPES,
+  MAX_CONTENT_ASSET_ORIGINAL_BYTES,
+  inspectContentAssetImage,
+  sha256Hex,
+} from './content-asset-validation.mjs'
 
 export const CONTENT_ASSET_PRIVATE_BUCKET = 'content-assets-private'
 export const CONTENT_ASSET_PUBLIC_BUCKET = 'content-assets-public'
-export const MAX_CONTENT_ASSET_ORIGINAL_BYTES = 100 * 1024 * 1024
-
-export const CONTENT_ASSET_ALLOWED_IMAGE_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/heic',
-  'image/heif',
-])
+export { CONTENT_ASSET_ALLOWED_IMAGE_TYPES, MAX_CONTENT_ASSET_ORIGINAL_BYTES, sha256Hex }
 
 export type ContentAssetFileRole = 'original' | 'web' | 'thumbnail'
 
@@ -53,7 +51,7 @@ const DEFAULT_THUMBNAIL_QUALITY = 78
 
 export function assertAllowedContentAssetImage(mimeType: string, sizeBytes: number) {
   if (!CONTENT_ASSET_ALLOWED_IMAGE_TYPES.has(mimeType)) {
-    throw new Error('Unsupported image format. Please upload JPG, PNG, WebP, HEIC, or HEIF.')
+    throw new Error('Unsupported image format. Please upload JPG, PNG, WebP, GIF, HEIC, or HEIF.')
   }
 
   if (sizeBytes <= 0) {
@@ -65,14 +63,11 @@ export function assertAllowedContentAssetImage(mimeType: string, sizeBytes: numb
   }
 }
 
-export function sha256Hex(buffer: Buffer) {
-  return createHash('sha256').update(buffer).digest('hex')
-}
-
 export function extensionForContentAssetMimeType(mimeType: string) {
   if (mimeType === 'image/jpeg') return 'jpg'
   if (mimeType === 'image/png') return 'png'
   if (mimeType === 'image/webp') return 'webp'
+  if (mimeType === 'image/gif') return 'gif'
   if (mimeType === 'image/heic') return 'heic'
   if (mimeType === 'image/heif') return 'heif'
   return 'bin'
@@ -107,7 +102,9 @@ async function webpDerivative(params: {
   height?: number
 }) {
   const { default: sharp } = await import('sharp')
-  const pipeline = sharp(params.input, { failOn: 'none' }).rotate()
+  // GIF derivatives are intentionally static poster/thumbnail images. The
+  // original animated bytes remain in the private original role.
+  const pipeline = sharp(params.input, { failOn: 'error', page: 0, pages: 1 }).rotate()
 
   if (params.fit === 'cover' && params.height) {
     pipeline.resize(params.maxWidth, params.height, {
@@ -147,9 +144,7 @@ export async function transformContentAssetImage(
 ): Promise<ContentAssetTransformResult> {
   const input = await toBuffer(source)
   assertAllowedContentAssetImage(mimeType, input.byteLength)
-
-  const { default: sharp } = await import('sharp')
-  const metadata = await sharp(input, { failOn: 'none' }).metadata()
+  const inspection = await inspectContentAssetImage(input, mimeType)
 
   const web = await webpDerivative({
     input,
@@ -172,10 +167,10 @@ export async function transformContentAssetImage(
     original: {
       buffer: input,
       mimeType,
-      width: metadata.width ?? null,
-      height: metadata.height ?? null,
+      width: inspection.width,
+      height: inspection.height,
       sizeBytes: input.byteLength,
-      checksumSha256: sha256Hex(input),
+      checksumSha256: inspection.checksumSha256,
     },
     web,
     thumbnail,

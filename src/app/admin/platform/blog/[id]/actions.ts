@@ -2,8 +2,11 @@
 
 import { randomUUID } from 'crypto'
 import { revalidatePath } from 'next/cache'
+import { inspectContentAssetImage } from '@/lib/content-assets/content-asset-validation.mjs'
+import { centralBrandPublicationBlocker } from '@/lib/content-assets/official-brand-publication.mjs'
 import { validateBlogClaimSafety } from '@/lib/content-os/blog-claim-safety'
 import { hasCoverOrRecordedMediaException } from '@/lib/content-os/blog-media-policy'
+import { prepareBlogMediaForPublication } from '@/lib/content-os/blog-media-publication.mjs'
 import { createPlatformAdminClient, createPlatformClient } from '@/lib/supabase/platform-server'
 import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
 import type { BlogBlockType, BlogContentCategory, BlogMediaUsageStatus, BlogPostStatus, Database, Json } from '@/types/database'
@@ -103,7 +106,7 @@ const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const PRIVATE_MEDIA_BUCKET = 'blog-media-private'
 const PUBLIC_MEDIA_BUCKET = 'blog-media'
 const MAX_UPLOAD_SIZE = 50 * 1024 * 1024
-const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'])
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'])
 const BLOG_BODY_BLOCK_EXPANSION_ENABLED =
   process.env.NEXT_PUBLIC_BLOG_BODY_BLOCK_EXPANSION === 'enabled' &&
   (
@@ -302,11 +305,11 @@ async function requireOwnedMedia(
 ) {
   const { data: mediaData, error: mediaError } = await showroomAdmin
     .from('blog_media')
-    .select('id, post_id, usage_status')
+    .select('id, post_id, usage_status, content_asset_id')
     .eq('id', mediaId)
     .single()
 
-  const media = mediaData as Pick<Database['showroom']['Tables']['blog_media']['Row'], 'id' | 'post_id' | 'usage_status'> | null
+  const media = mediaData as Pick<Database['showroom']['Tables']['blog_media']['Row'], 'id' | 'post_id' | 'usage_status' | 'content_asset_id'> | null
 
   if (mediaError || !media) {
     return { ok: false as const, message: '수정할 사진을 찾지 못했습니다.' }
@@ -317,6 +320,34 @@ async function requireOwnedMedia(
   }
 
   return { ok: true as const, media }
+}
+
+async function centralBrandMediaPublicationIssues(
+  showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
+  mediaRows: Array<Pick<BlogMedia, 'content_asset_id'>>,
+) {
+  const assetIds = [...new Set(mediaRows.map(media => media.content_asset_id).filter(Boolean) as string[])]
+  if (assetIds.length === 0) return []
+
+  const { data, error } = await showroomAdmin
+    .from('content_assets')
+    .select('id, labels')
+    .in('id', assetIds)
+  if (error) throw new Error(`Central brand publication review failed: ${error.message}`)
+
+  const assets = (data ?? []) as Array<Pick<ContentAsset, 'id' | 'labels'>>
+  const assetById = new Map(assets.map(asset => [asset.id, asset]))
+  const issues: string[] = []
+  for (const assetId of assetIds) {
+    const asset = assetById.get(assetId)
+    if (!asset) {
+      issues.push(`Linked content asset is missing: ${assetId}.`)
+      continue
+    }
+    const blocker = centralBrandPublicationBlocker(asset.labels)
+    if (blocker) issues.push(blocker)
+  }
+  return [...new Set(issues)]
 }
 
 function revalidateBlogEditorPaths(postId: string, slugs: Array<string | null | undefined>, isPublished: boolean) {
@@ -736,6 +767,7 @@ function extensionForFile(file: File) {
   if (file.type === 'image/jpeg') return 'jpg'
   if (file.type === 'image/png') return 'png'
   if (file.type === 'image/webp') return 'webp'
+  if (file.type === 'image/gif') return 'gif'
   if (file.type === 'image/heic') return 'heic'
   if (file.type === 'image/heif') return 'heif'
 
@@ -765,8 +797,11 @@ export async function uploadBlogMedia(formData: FormData): Promise<MediaActionRe
     }
 
     if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
-      return { ok: false, message: 'jpeg, png, webp, heic 이미지만 업로드할 수 있습니다.' }
+      return { ok: false, message: 'jpeg, png, webp, gif, heic 이미지만 업로드할 수 있습니다.' }
     }
+
+    const uploadBuffer = Buffer.from(await file.arrayBuffer())
+    await inspectContentAssetImage(uploadBuffer, file.type)
 
     const showroomAdmin = createShowroomAdminClient()
     const editablePost = await requireEditablePost(showroomAdmin, postId)
@@ -778,7 +813,7 @@ export async function uploadBlogMedia(formData: FormData): Promise<MediaActionRe
     const objectPath = `${postId}/${Date.now()}-${randomUUID()}.${extensionForFile(file)}`
     const { error: uploadError } = await showroomAdmin.storage
       .from(PRIVATE_MEDIA_BUCKET)
-      .upload(objectPath, file, {
+      .upload(objectPath, uploadBuffer, {
         cacheControl: '3600',
         contentType: file.type,
         upsert: false,
@@ -862,6 +897,11 @@ export async function attachContentAssetToBlogMedia(payload: {
     }
     if (!asset.privacy_checked || !asset.promotion_consent_checked) {
       return { ok: false, message: '사진보관함에서 민감정보와 블로그 사용 가능 여부가 확인된 사진만 연결할 수 있습니다.' }
+    }
+
+    const centralBrandBlocker = centralBrandPublicationBlocker(asset.labels)
+    if (centralBrandBlocker) {
+      return { ok: false, message: centralBrandBlocker }
     }
 
     const { data: assetFilesData, error: assetFilesError } = await showroomAdmin
@@ -1032,6 +1072,11 @@ export async function updateBlogMedia(payload: UpdateBlogMediaPayload): Promise<
       if (!altText) return { ok: false, message: '사진 설명이 필요합니다.' }
       if (!payload.privacyChecked) return { ok: false, message: '사진의 민감정보 확인이 필요합니다.' }
       if (!payload.promotionConsentChecked) return { ok: false, message: '사진의 블로그 사용 가능 여부 확인이 필요합니다.' }
+    }
+
+    if (payload.usageStatus === 'approved') {
+      const centralBrandIssues = await centralBrandMediaPublicationIssues(showroomAdmin, [ownedMedia.media])
+      if (centralBrandIssues.length > 0) return { ok: false, message: centralBrandIssues.join(' ') }
     }
 
     if (payload.usageStatus === 'rejected' && !rejectionReason) {
@@ -1280,7 +1325,7 @@ export async function updateBlogPostStatus(
         .order('display_order', { ascending: true }),
       showroomAdmin
         .from('blog_media')
-        .select('id, post_id, source_type, source_measurement_media_id, source_as_media_id, private_bucket, private_object_path, public_bucket, public_object_path, public_url, alt_text, caption, source_label, usage_status, privacy_checked, promotion_consent_checked, used_as_cover, approved_by, approved_at, published_at, rejection_reason, created_at, updated_at')
+        .select('id, post_id, content_asset_id, source_type, source_measurement_media_id, source_as_media_id, private_bucket, private_object_path, public_bucket, public_object_path, public_url, alt_text, caption, source_label, usage_status, privacy_checked, promotion_consent_checked, used_as_cover, approved_by, approved_at, published_at, rejection_reason, created_at, updated_at')
         .eq('post_id', postId),
     ])
 
@@ -1388,29 +1433,21 @@ export async function updateBlogPostStatus(
   }
 }
 
-function publicObjectPathForMedia(postId: string, mediaId: string) {
-  return `${postId}/${mediaId}.webp`
-}
-
-async function convertToPublicWebp(source: Blob) {
-  const { default: sharp } = await import('sharp')
-  const input = Buffer.from(await source.arrayBuffer())
-  return sharp(input)
-    .rotate()
-    .webp({ quality: 84, effort: 4 })
-    .toBuffer()
+function publicObjectPathForMedia(postId: string, mediaId: string, extension: 'gif' | 'webp') {
+  return `${postId}/${mediaId}.${extension}`
 }
 
 async function cleanupPublicObjects(paths: string[]) {
   if (paths.length === 0) return
   const showroomAdmin = createShowroomAdminClient()
-  await showroomAdmin.storage.from(PUBLIC_MEDIA_BUCKET).remove(paths)
+  const { error } = await showroomAdmin.storage.from(PUBLIC_MEDIA_BUCKET).remove(paths)
+  if (error) throw new Error(`공개 사진 정리 실패: ${error.message}`)
 }
 
 async function rollbackPublishedMedia(mediaIds: string[]) {
   if (mediaIds.length === 0) return
   const showroomAdmin = createShowroomAdminClient()
-  await showroomAdmin
+  const { data, error } = await showroomAdmin
     .from('blog_media')
     .update({
       usage_status: 'approved',
@@ -1421,6 +1458,44 @@ async function rollbackPublishedMedia(mediaIds: string[]) {
       updated_at: new Date().toISOString(),
     } as never)
     .in('id', mediaIds)
+    .select('id')
+  if (error) throw new Error(`공개 사진 상태 복구 실패: ${error.message}`)
+  if ((data ?? []).length !== mediaIds.length) {
+    throw new Error('공개 사진 상태 복구 실패: 일부 사진의 상태가 동시에 변경되었습니다.')
+  }
+}
+
+async function rollbackPublishedPost(postId: string | null) {
+  if (!postId) return
+  const showroomAdmin = createShowroomAdminClient()
+  const { data, error } = await showroomAdmin
+    .from('blog_posts')
+    .update({
+      status: 'ready',
+      published_by: null,
+      published_at: null,
+      updated_at: new Date().toISOString(),
+    } as never)
+    .eq('id', postId)
+    .eq('status', 'published')
+    .select('id')
+  if (error) throw new Error(`글 공개 상태 복구 실패: ${error.message}`)
+  if ((data ?? []).length !== 1) {
+    throw new Error('글 공개 상태 복구 실패: 글 상태가 동시에 변경되었습니다.')
+  }
+}
+
+async function compensateFailedPublication(mediaIds: string[], paths: string[], postId: string | null = null) {
+  const results = await Promise.allSettled([
+    rollbackPublishedMedia(mediaIds),
+    cleanupPublicObjects(paths),
+    rollbackPublishedPost(postId),
+  ])
+  return results.flatMap(result => (
+    result.status === 'rejected'
+      ? [result.reason instanceof Error ? result.reason.message : String(result.reason)]
+      : []
+  ))
 }
 
 async function promoteMediaForPublish(
@@ -1446,13 +1521,17 @@ async function promoteMediaForPublish(
         throw new Error('사진 원본을 불러오지 못했습니다.')
       }
 
-      const publicObjectPath = publicObjectPathForMedia(postId, media.id)
-      const publicWebp = await convertToPublicWebp(privateObject)
+      const privateBuffer = Buffer.from(await privateObject.arrayBuffer())
+      const prepared = await prepareBlogMediaForPublication(privateBuffer, privateObject.type)
+      if (prepared.extension !== 'gif' && prepared.extension !== 'webp') {
+        throw new Error('공개용 사진 확장자를 확인하지 못했습니다.')
+      }
+      const publicObjectPath = publicObjectPathForMedia(postId, media.id, prepared.extension)
       const { error: uploadError } = await showroomAdmin.storage
         .from(PUBLIC_MEDIA_BUCKET)
-        .upload(publicObjectPath, publicWebp, {
+        .upload(publicObjectPath, prepared.buffer, {
           cacheControl: '31536000',
-          contentType: 'image/webp',
+          contentType: prepared.contentType,
           upsert: false,
         })
 
@@ -1498,8 +1577,11 @@ async function promoteMediaForPublish(
       publishedMediaIds,
     }
   } catch (error) {
-    await rollbackPublishedMedia(publishedMediaIds)
-    await cleanupPublicObjects(uploadedPaths)
+    const compensationIssues = await compensateFailedPublication(publishedMediaIds, uploadedPaths)
+    if (compensationIssues.length > 0) {
+      const originalMessage = error instanceof Error ? error.message : String(error)
+      throw new Error(`${originalMessage} 보상 처리도 실패했습니다: ${compensationIssues.join(' / ')}`)
+    }
     throw error
   }
 }
@@ -1507,6 +1589,7 @@ async function promoteMediaForPublish(
 export async function publishBlogPost(postId: string): Promise<PublishBlogPostResult> {
   let uploadedPaths: string[] = []
   let publishedMediaIds: string[] = []
+  let publishedPostId: string | null = null
 
   try {
     const actorId = await requireAdministrator()
@@ -1529,7 +1612,7 @@ export async function publishBlogPost(postId: string): Promise<PublishBlogPostRe
         .order('display_order', { ascending: true }),
       showroomAdmin
         .from('blog_media')
-        .select('id, post_id, source_type, source_measurement_media_id, source_as_media_id, private_bucket, private_object_path, public_bucket, public_object_path, public_url, alt_text, caption, source_label, usage_status, privacy_checked, promotion_consent_checked, used_as_cover, approved_by, approved_at, published_at, rejection_reason, created_at, updated_at')
+        .select('id, post_id, content_asset_id, source_type, source_measurement_media_id, source_as_media_id, private_bucket, private_object_path, public_bucket, public_object_path, public_url, alt_text, caption, source_label, usage_status, privacy_checked, promotion_consent_checked, used_as_cover, approved_by, approved_at, published_at, rejection_reason, created_at, updated_at')
         .eq('post_id', postId),
     ])
 
@@ -1550,11 +1633,13 @@ export async function publishBlogPost(postId: string): Promise<PublishBlogPostRe
     }
 
     const gate = validatePublishGate(post, blocks, media)
-    if (gate.issues.length > 0) {
+    const centralBrandIssues = await centralBrandMediaPublicationIssues(showroomAdmin, gate.mediaToPublish)
+    const publishIssues = [...new Set([...gate.issues, ...centralBrandIssues])]
+    if (publishIssues.length > 0) {
       return {
         ok: false,
         message: '발행 전 검수 게이트를 통과하지 못했습니다.',
-        issues: gate.issues,
+        issues: publishIssues,
       }
     }
 
@@ -1584,6 +1669,7 @@ export async function publishBlogPost(postId: string): Promise<PublishBlogPostRe
       throw new Error('발행 준비가 끝난 글만 공개할 수 있습니다.')
     }
 
+    publishedPostId = post.id
     const { error: eventError } = await showroomAdmin
       .from('blog_post_events')
       .insert({
@@ -1600,25 +1686,19 @@ export async function publishBlogPost(postId: string): Promise<PublishBlogPostRe
       } as never)
 
     if (eventError) {
-      await showroomAdmin
-        .from('blog_posts')
-        .update({
-          status: 'ready',
-          published_by: null,
-          published_at: null,
-          updated_at: new Date().toISOString(),
-        } as never)
-        .eq('id', post.id)
-        .eq('status', 'published')
-
       throw new Error('발행 기록을 남기지 못했습니다.')
     }
 
-    revalidatePath('/blog')
-    revalidatePath(`/blog/${post.slug}`)
-    revalidatePath('/sitemap.xml')
-    revalidatePath(`/admin/platform/blog/${post.id}`)
-    revalidatePath(`/admin/platform/blog/${post.id}/preview`)
+    publishedPostId = null
+    try {
+      revalidatePath('/blog')
+      revalidatePath(`/blog/${post.slug}`)
+      revalidatePath('/sitemap.xml')
+      revalidatePath(`/admin/platform/blog/${post.id}`)
+      revalidatePath(`/admin/platform/blog/${post.id}/preview`)
+    } catch {
+      // Publication is already committed with an audit event. A cache refresh failure must not undo it.
+    }
 
     return {
       ok: true,
@@ -1627,12 +1707,14 @@ export async function publishBlogPost(postId: string): Promise<PublishBlogPostRe
       slug: post.slug,
     }
   } catch (error) {
-    await rollbackPublishedMedia(publishedMediaIds)
-    await cleanupPublicObjects(uploadedPaths)
+    const compensationIssues = await compensateFailedPublication(publishedMediaIds, uploadedPaths, publishedPostId)
+    const originalMessage = error instanceof Error ? error.message : '발행 중 오류가 발생했습니다.'
 
     return {
       ok: false,
-      message: error instanceof Error ? error.message : '발행 중 오류가 발생했습니다.',
+      message: compensationIssues.length > 0
+        ? `${originalMessage} 보상 처리도 실패했습니다: ${compensationIssues.join(' / ')}`
+        : originalMessage,
     }
   }
 }

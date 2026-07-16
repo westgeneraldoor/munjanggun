@@ -110,3 +110,17 @@ evidence_ref: appsheet_case_2026_06_redacted_001
 - 중앙 업데이트 후보 발굴 자료
 
 새 콘텐츠를 작성할 때 `docs/platform/BRAND_CONTEXT.md`만 보고 발행하면 안 된다.
+
+## 7. 중앙 승인 자산의 프로젝트 재사용 계약
+
+중앙 브랜드 저장소의 product asset manifest가 가리키는 파일 중 `privacyStatus = official_reviewed`인 항목은 문장군 프로젝트가 검증된 서버 경로로 가져올 수 있는 공식 원본 소스다. 이 상태는 개인정보·OCR 재검수를 반복하지 않아도 된다는 뜻이지, 자동 공개 승인이라는 뜻은 아니다.
+
+프로젝트 재사용 시 다음을 모두 지킨다.
+
+- manifest의 `assetId`, `productId`, `sourceId`, `proofId`, `repositoryPath`, byte size, dimensions, GIF frame count, SHA-256을 실제 파일과 대조한다.
+- 중앙 저장소의 허용된 root 밖 경로, symlink 탈출, Git LFS pointer, MIME magic 불일치 파일은 거부한다.
+- `usageStatus`, `privacyStatus`, `claimRisk`, `externalPublish`, 중앙 commit을 프로젝트 provenance와 감사 이벤트에 보존한다.
+- 중앙 `candidate`는 프로젝트에서도 비공개 후보로 시작한다. `official_reviewed`를 `approved_public`이나 홍보 사용 동의로 바꾸지 않는다.
+- 가격·이벤트·스펙·운영 조건이 들어갈 수 있는 자산은 `claimRisk`와 `externalPublish`에 따라 최신성 검수를 별도로 통과해야 한다.
+
+금지되는 것은 서버측 등록 자체가 아니라 검증·권한·감사·발행 승격 경계를 우회한 등록이다.

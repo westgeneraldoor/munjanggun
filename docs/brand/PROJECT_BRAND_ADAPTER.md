@@ -97,7 +97,7 @@ Codex 외부 원고 작성
 -> 사진 승인
 -> 관리자 미리보기
 -> 발행 server action
--> public WebP 승격
+-> public WebP 또는 승인된 원본 GIF 승격
 -> 공개 /blog, /blog/[slug]
 -> sitemap / robots / metadata / JSON-LD
 ```
@@ -203,7 +203,7 @@ Codex 외부 원고 작성
 
 - Content OS DB/RLS/Storage 구조
 - Supabase bucket policy
-- publish server action과 WebP 승격 로직
+- publish server action과 WebP/원본 GIF 승격 로직
 - `/admin/platform/blog` UX
 - `/blog`, `/blog/[slug]` 렌더링 방식
 - sitemap/robots/generateMetadata/JSON-LD 구현 기준
@@ -238,3 +238,21 @@ Codex 외부 원고 작성
 6. 사진이 필요한 문단과 승인 상태를 분리했는가?
 7. 공개 발행 전 검수 게이트를 통과할 수 있는가?
 ```
+
+## 9. 중앙 공식 자산 등록과 GIF 계약
+
+`privacyStatus = official_reviewed` 중앙 자산은 이 프로젝트 사진보관함의 공식 원본 소스다. Codex와 관리자 UI는 같은 MIME·용량·dimensions·SHA-256 검증 코어를 사용한다.
+
+Codex 등록은 사람용 파일 선택창을 대신 조작하지 않는다. 서버 전용 명령이 중앙 manifest의 `assetId`를 받아 원본 검증, private Storage 업로드, 정적 WebP poster/thumbnail 생성, 사진보관함 메타데이터·감사 이벤트 생성, 선택적인 `blog_media`·본문 image block 연결을 수행한다. 중앙 저장소는 clean 상태여야 하고 선택한 manifest와 원본은 모두 현재 HEAD에 tracked되어 실제 bytes가 HEAD와 같아야 한다. service-role 또는 Supabase secret key는 이 서버 명령과 서버 런타임에서만 사용한다. 감사 actor는 서버 allowlist `CODEX_AUDIT_ACTOR_ID`와 일치하는 administrator만 허용한다.
+
+등록 직후 상태는 다음과 같다.
+
+- `official_reviewed`는 `privacy_checked = true`로 매핑할 수 있다.
+- 중앙의 모든 `candidate`는 `promotion_consent_checked = false`인 비공개 후보로 시작한다.
+- `claimRisk` 또는 `externalPublish`가 추가 확인을 요구하면 공개 승격을 막는다.
+- 글 연결은 `reviewing` 원고에만 허용하고, 중앙 `assetId` 중복은 DB unique index로도 막는다.
+- 공개 발행은 기존 관리자 승인과 publish server action만 수행한다.
+
+GIF는 private 원본 애니메이션을 그대로 보존하고 poster와 thumbnail만 정적 WebP로 만든다. 공개 승격이 승인된 GIF는 원본 GIF bytes와 `image/gif` MIME을 `blog-media`에 새 경로, `upsert: false`로 복사해 브라우저에서 애니메이션을 재생한다. alt가 없거나 용량 제한을 넘거나 주장 검수가 끝나지 않은 GIF는 공개하지 않는다.
+
+따라서 문서의 “직접 등록 금지”는 “검증·권한·감사 경계를 우회한 등록 금지”로 해석한다. 임의 SQL insert, `storage.objects` 직접 조작, 검증 없는 Storage 업로드는 금지한다.

@@ -379,3 +379,20 @@ Out of scope for PR-08:
 - Publish flow changes.
 - Existing `blog-media` and `blog-media-private` policy changes.
 - Body component expansion.
+
+## 9. Official central asset import and GIF extension
+
+The central brand repository is an allowed source only through manifest asset IDs with `privacyStatus = official_reviewed`. Importers must verify the canonical root, a clean Git worktree, the selected manifest and asset as HEAD-tracked files, resolved path, source/proof/product IDs, MIME magic, byte size, dimensions, GIF frame count, SHA-256, and Git LFS pointer state before Storage or DB writes. The command actor must match the server-side `CODEX_AUDIT_ACTOR_ID` allowlist and an administrator profile.
+
+Central provenance is stored in `content_assets.labels.centralBrand` and repeated in `content_asset_events.metadata`. Existing free-form JSON and event fields are sufficient; no ad hoc SQL insert or direct `storage.objects` mutation is permitted.
+
+Storage contract after `20260715090000_official_asset_gif_support.sql`:
+
+- `content-assets-private`: private JPEG/PNG/WebP/GIF/HEIC/HEIF originals plus central `candidate` static WebP web/poster and thumbnail derivatives, maximum 100MB; validated GIF imports are additionally limited to 20MB by application code. Candidate derivatives have no public URL.
+- `content-assets-public`: static WebP derivatives intentionally promoted for public delivery only, maximum 20MB. Central candidate import does not use this bucket.
+- `blog-media-private`: private blog candidates including GIF.
+- `blog-media`: approved public JPEG/PNG/WebP/GIF; non-GIF publication still produces WebP, while GIF publication preserves the original animation.
+
+All central assets currently enter as candidates. `official_reviewed` maps only the privacy review; it does not set promotion consent or public approval. Candidate originals and derivatives remain private. When a blog post passes project approval and publish gates, the blog-media publication path creates a new public delivery object; it does not expose the content-asset candidate path. Public promotion still requires alt text, consent, post publish gates, and claim-freshness review when the central manifest requires it.
+
+The project enforces one row per central `assetId` and one central import per original SHA-256 with partial unique expression indexes. The command also checks original SHA-256 before insertion; byte-identical imports under a different project asset are rejected even under concurrent imports. A DB trigger makes `labels.centralBrand` immutable after creation, while ordinary metadata edits merge tag changes without erasing provenance. Active blog-media attachment, post usage, and block usage have matching uniqueness boundaries. Optional blog attachment is limited to a `reviewing` post, and block replacement is refused when it would overwrite another asset's auditable usage.

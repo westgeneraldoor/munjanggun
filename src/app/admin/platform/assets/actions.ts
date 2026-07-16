@@ -2,6 +2,7 @@
 
 import { createHash } from 'crypto'
 import { revalidatePath } from 'next/cache'
+import { mergeContentAssetLabelsWithTags } from '@/lib/content-assets/content-asset-labels.mjs'
 import {
   buildContentAssetObjectPath,
   CONTENT_ASSET_PRIVATE_BUCKET,
@@ -472,11 +473,21 @@ export async function updateContentAsset(payload: UpdateContentAssetPayload): Pr
       return { ok: false, message: '사진을 찾을 수 없습니다.' }
     }
 
+    const { data: currentAssetData, error: currentAssetError } = await showroomAdmin
+      .from('content_assets')
+      .select('id, labels')
+      .eq('id', payload.assetId)
+      .single()
+    const currentAsset = currentAssetData as Pick<Database['showroom']['Tables']['content_assets']['Row'], 'id' | 'labels'> | null
+    if (currentAssetError || !currentAsset) {
+      return { ok: false, message: currentAssetError?.message ?? 'Content asset was not found.' }
+    }
+
     const updatePayload: Database['showroom']['Tables']['content_assets']['Update'] = {
       title: cleanText(payload.title),
       description: cleanText(payload.description),
       category: cleanText(payload.category),
-      labels: labelsForTags(tagNames),
+      labels: mergeContentAssetLabelsWithTags(currentAsset.labels, tagNames),
       product_type: cleanText(payload.productType),
       space_type: cleanText(payload.spaceType),
       region: cleanText(payload.region),

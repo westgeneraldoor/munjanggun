@@ -674,3 +674,29 @@ Next PR boundary:
 - PR-09 may implement the operator-facing photo library and multi-upload flow.
 - PR-09 must keep operator language simple: photo library, upload, select, description, category, tag.
 - PR-09 must not expose bucket names, object paths, private/public states, or transform internals in the UI.
+
+## 13. Official central asset import and GIF verification
+
+Migration:
+
+- `supabase/migrations/20260715090000_official_asset_gif_support.sql`
+
+Required checks:
+
+- [ ] The migration was applied through the approved migration path; bucket settings were not edited ad hoc.
+- [ ] `content-assets-private`, `blog-media-private`, and `blog-media` allow `image/gif`.
+- [ ] `content-assets-public` remains WebP-only.
+- [ ] The Codex command accepts only manifest `assetId` values under the canonical central root.
+- [ ] The central worktree is clean and both the selected manifest and original are tracked by, and byte-identical to, HEAD.
+- [ ] `CODEX_AUDIT_ACTOR_ID` matches the supplied administrator actor and any post attachment targets a `reviewing` post.
+- [ ] MIME magic, size, dimensions, GIF frames, SHA-256, LFS pointer, privacy status, claim risk, and duplicate checksum checks pass before upload.
+- [ ] A central candidate's original, static WebP poster/web, and thumbnail remain in `content-assets-private`, have no public URL, and keep `promotion_consent_checked = false`.
+- [ ] Candidate or unresolved-claim central media is rejected again by both media approval and final publish server gates.
+- [ ] Asset metadata edits preserve `labels.centralBrand`; the DB trigger rejects provenance changes and central ID/SHA indexes reject concurrent duplicates.
+- [ ] The administrator upload path and Codex import path call the same original-image validation module.
+- [ ] GIF poster and thumbnail rows are private static WebP while the private original remains byte-identical GIF; only the validated blog publish path creates a new `blog-media` public object.
+- [ ] Approved public GIF promotion keeps `.gif`, `image/gif`, animation, alt, and caption.
+- [ ] The real Basic JPG and GIF import records include central asset/source/proof IDs, commit, checksum, and audit events.
+- [ ] The current `reviewing` manuscript can receive the imported media without exposing private bucket paths in the browser.
+
+“Direct registration prohibited” means bypassing validation, authorization, audit, or publish promotion gates is prohibited. A validated server-only registration command is an approved ingestion path; arbitrary SQL inserts and unchecked Storage uploads are not.
