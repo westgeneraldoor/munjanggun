@@ -19,7 +19,6 @@ export default function AdminSidebar() {
 
   const openSidebar = () => {
     setIsOpen(true)
-    requestAnimationFrame(() => closeButtonRef.current?.focus())
   }
 
   const closeSidebar = () => {
@@ -29,6 +28,10 @@ export default function AdminSidebar() {
 
   useEffect(() => {
     if (!isOpen) return
+
+    let focusFrame = requestAnimationFrame(() => {
+      focusFrame = requestAnimationFrame(() => closeButtonRef.current?.focus({ preventScroll: true }))
+    })
     const mobileViewport = window.matchMedia('(max-width: 1023px)')
     const mainContent = document.querySelector<HTMLElement>('main')
     const mainWasInert = mainContent?.inert ?? false
@@ -67,6 +70,7 @@ export default function AdminSidebar() {
     mobileViewport.addEventListener('change', handleViewportChange)
     document.addEventListener('keydown', handleKeyDown)
     return () => {
+      cancelAnimationFrame(focusFrame)
       mobileViewport.removeEventListener('change', handleViewportChange)
       document.removeEventListener('keydown', handleKeyDown)
       if (mainContent) mainContent.inert = mainWasInert

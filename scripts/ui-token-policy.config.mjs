@@ -20,6 +20,7 @@ const uiTokenPolicyConfig = {
     'src/components/admin/NodeList.module.css',
     'src/components/admin/SiteSettingsForm.module.css',
     'src/app/admin/settings/settings.module.css',
+    'src/app/admin/error.module.css',
     'src/app/admin/platform/[id]/platform-detail.module.css',
     'src/app/admin/layout.module.css',
     'src/app/admin/login/login.module.css',
@@ -282,6 +283,7 @@ const uiTokenPolicyConfig = {
   ],
   externalDefinitions: [
     '--admin-bg',
+    '--admin-route-block-inset',
     '--admin-border',
     '--admin-surface',
     '--admin-surface-elevated',

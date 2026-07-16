@@ -191,6 +191,8 @@ html {
 
 [data-mg-theme="admin"] {
   color-scheme: light;
+  --admin-mobile-header-height: calc(var(--mg-control-size-min) + var(--mg-space-3));
+  --admin-sidebar-width: calc(var(--mg-space-8) * 3 + var(--mg-space-7));
   --mg-bg: var(--admin-bg);
   --mg-surface: var(--admin-surface-elevated);
   --mg-surface-raised: var(--admin-surface);
