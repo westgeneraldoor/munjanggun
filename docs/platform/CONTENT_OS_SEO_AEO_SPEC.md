@@ -254,8 +254,7 @@ FAQ는 MVP에서 다음처럼 관리한다.
 - `target_question`
 - `summary_answer`
 - `related_questions`
-- `source_evidence`
-- `last_fact_checked_at`
+- `source_evidence` (서버 자동 내부 provenance)
 - `ai_citation_ready`
 
 작성 기준:
@@ -263,7 +262,7 @@ FAQ는 MVP에서 다음처럼 관리한다.
 - `target_question`은 고객이 실제로 물을 법한 질문형 문장.
 - `summary_answer`는 2-4문장으로 결론을 먼저 제시.
 - `related_questions`는 검색 변형을 양산하기 위한 필드가 아니라 내부 Q&A 자산.
-- `source_evidence`는 AppSheet, 리뷰, 브랜드 문서, 현장 기록 등 근거를 요약.
+- `source_evidence`는 승인 원고 등록 서버가 출처 종류와 등록 시각을 내부 provenance로 자동 기록한다. 사람이 작성하거나 공개·발행 gate에 사용하지 않는다.
 - `ai_citation_ready`는 구조가 갖춰졌다는 내부 상태일 뿐 AI 인용을 보장하지 않는다.
 
 ## 8. Open Graph

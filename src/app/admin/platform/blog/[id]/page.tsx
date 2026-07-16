@@ -87,10 +87,6 @@ function summarizeBrandCheck(value: Json) {
   }
 }
 
-function summarizeSourceEvidence(value: Json) {
-  return isJsonArray(value) ? value.length : 0
-}
-
 function mediaStatusCount(media: BlogMedia[]) {
   return media.reduce<Record<BlogMediaUsageStatus, number>>((acc, item) => {
     acc[item.usage_status] += 1
@@ -105,7 +101,6 @@ function mediaStatusCount(media: BlogMedia[]) {
 
 function toEditorPost(post: BlogPost, media: BlogMedia[], blocks: BlogBlock[]): BlogEditorPost {
   const brandCheck = summarizeBrandCheck(post.brand_check_result)
-  const sourceEvidenceCount = summarizeSourceEvidence(post.source_evidence)
   const statusCounts = mediaStatusCount(media)
   const publicReadyMedia = media.filter(item => item.usage_status === 'approved' || item.usage_status === 'published')
 
@@ -126,13 +121,11 @@ function toEditorPost(post: BlogPost, media: BlogMedia[], blocks: BlogBlock[]): 
     serviceArea: post.service_area,
     productType: post.product_type,
     aiCitationReady: post.ai_citation_ready,
-    lastFactCheckedAt: post.last_fact_checked_at,
     mediaMissingReason: post.media_missing_reason,
     publishedAt: post.published_at,
     createdAt: post.created_at,
     updatedAt: post.updated_at,
     gateSummary: {
-      sourceEvidenceCount,
       brandCheck,
       blockCount: blocks.length,
       ctaCount: blocks.filter(block => block.type === 'cta').length,
@@ -255,7 +248,7 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
   ] = await Promise.all([
     showroomAdmin
       .from('blog_posts')
-      .select('id, title, slug, excerpt, seo_title, meta_description, canonical_url, status, category, primary_keyword, target_question, summary_answer, related_questions, service_area, product_type, source_evidence, brand_check_result, ai_citation_ready, last_fact_checked_at, media_missing_reason, published_at, created_at, updated_at')
+      .select('id, title, slug, excerpt, seo_title, meta_description, canonical_url, status, category, primary_keyword, target_question, summary_answer, related_questions, service_area, product_type, brand_check_result, ai_citation_ready, media_missing_reason, published_at, created_at, updated_at')
       .eq('id', id)
       .single(),
     showroomAdmin

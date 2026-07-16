@@ -49,7 +49,6 @@ export type BlogDraftQueueRow = {
   } | null
   risks: {
     forbiddenExpression: boolean
-    evidenceNeeded: boolean
     mediaApprovalNeeded: boolean
     altMissing: boolean
     ctaMissing: boolean
@@ -103,7 +102,6 @@ const RISK_LABELS: Array<{
   tone: 'danger' | 'warning' | 'info'
 }> = [
   { key: 'forbiddenExpression', label: '금지표현', tone: 'danger' },
-  { key: 'evidenceNeeded', label: '근거확인', tone: 'warning' },
   { key: 'mediaApprovalNeeded', label: '사진승인필요', tone: 'warning' },
   { key: 'altMissing', label: 'alt누락', tone: 'info' },
   { key: 'ctaMissing', label: 'CTA없음', tone: 'info' },

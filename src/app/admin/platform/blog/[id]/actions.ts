@@ -37,7 +37,6 @@ export type SaveBlogEditorPayload = {
     serviceArea: string | null
     productType: string | null
     aiCitationReady: boolean
-    lastFactCheckedAt: string | null
     mediaMissingReason: string | null
   }
   blocks: SaveableBlock[]
@@ -155,11 +154,6 @@ function hasForbiddenExpression(value: Json) {
     jsonString(value.status) === 'blocked' ||
     warningCount > 0
   )
-}
-
-function hasSourceEvidence(value: Json) {
-  if (!Array.isArray(value)) return false
-  return value.length > 0
 }
 
 function isExpansionBlockType(type: BlogBlockType) {
@@ -548,7 +542,6 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
       service_area: cleanText(payload.post.serviceArea),
       product_type: cleanText(payload.post.productType),
       ai_citation_ready: payload.post.aiCitationReady,
-      last_fact_checked_at: cleanText(payload.post.lastFactCheckedAt),
       media_missing_reason: cleanText(payload.post.mediaMissingReason),
       updated_at: new Date().toISOString(),
     }
@@ -1172,8 +1165,6 @@ function validatePublishGate(post: BlogPost, blocks: BlogBlock[], media: BlogMed
   }
   if (!cleanText(post.target_question)) issues.push('대표 질문이 필요합니다.')
   if (!cleanText(post.summary_answer)) issues.push('요약 답변이 필요합니다.')
-  if (!post.last_fact_checked_at) issues.push('사실 확인 날짜가 필요합니다.')
-  if (!hasSourceEvidence(post.source_evidence)) issues.push('출처 근거가 필요합니다.')
   if (blocks.length === 0) issues.push('본문 블록이 필요합니다.')
   if (ctaBlocks.length === 0) issues.push('CTA 블록이 필요합니다.')
   if (hasForbiddenExpression(post.brand_check_result)) issues.push('금지표현/브랜드 검수 blocker가 남아 있습니다.')
@@ -1248,8 +1239,6 @@ function validateReadyGate(post: BlogPost, blocks: BlogBlock[], media: BlogMedia
   }
   if (!cleanText(post.target_question)) issues.push('대표 질문이 필요합니다.')
   if (!cleanText(post.summary_answer)) issues.push('요약 답변이 필요합니다.')
-  if (!post.last_fact_checked_at) issues.push('사실 확인 날짜가 필요합니다.')
-  if (!hasSourceEvidence(post.source_evidence)) issues.push('출처 근거가 필요합니다.')
   if (blocks.length === 0) issues.push('본문 블록이 필요합니다.')
   if (ctaBlocks.length === 0) issues.push('CTA 블록이 필요합니다.')
   if (hasForbiddenExpression(post.brand_check_result)) issues.push('금지표현/브랜드 검수 blocker가 남아 있습니다.')
@@ -1315,7 +1304,7 @@ export async function updateBlogPostStatus(
     const [postResult, blocksResult, mediaResult] = await Promise.all([
       showroomAdmin
         .from('blog_posts')
-        .select('id, title, slug, excerpt, seo_title, meta_description, canonical_url, status, category, primary_keyword, target_question, summary_answer, related_questions, service_area, product_type, source_evidence, brand_check_result, ai_citation_ready, last_fact_checked_at, media_missing_reason, created_by, reviewed_by, published_by, published_at, created_at, updated_at')
+        .select('id, title, slug, excerpt, seo_title, meta_description, canonical_url, status, category, primary_keyword, target_question, summary_answer, related_questions, service_area, product_type, source_evidence, brand_check_result, ai_citation_ready, media_missing_reason, created_by, reviewed_by, published_by, published_at, created_at, updated_at')
         .eq('id', postId)
         .single(),
       showroomAdmin
@@ -1602,7 +1591,7 @@ export async function publishBlogPost(postId: string): Promise<PublishBlogPostRe
     const [postResult, blocksResult, mediaResult] = await Promise.all([
       showroomAdmin
         .from('blog_posts')
-        .select('id, title, slug, excerpt, seo_title, meta_description, canonical_url, status, category, primary_keyword, target_question, summary_answer, related_questions, service_area, product_type, source_evidence, brand_check_result, ai_citation_ready, last_fact_checked_at, media_missing_reason, created_by, reviewed_by, published_by, published_at, created_at, updated_at')
+        .select('id, title, slug, excerpt, seo_title, meta_description, canonical_url, status, category, primary_keyword, target_question, summary_answer, related_questions, service_area, product_type, source_evidence, brand_check_result, ai_citation_ready, media_missing_reason, created_by, reviewed_by, published_by, published_at, created_at, updated_at')
         .eq('id', postId)
         .single(),
       showroomAdmin

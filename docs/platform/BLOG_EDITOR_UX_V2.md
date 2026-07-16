@@ -115,7 +115,6 @@ Visible:
 - Related questions
 - Service area
 - Product type
-- Last fact checked at
 
 Principle:
 
