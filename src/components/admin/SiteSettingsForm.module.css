@@ -1,114 +1,92 @@
+.form,
+.fieldset,
+.sections {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .form {
+  gap: var(--mg-space-4);
+}
+
+.fieldset {
+  gap: var(--mg-space-6);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.sections {
+  gap: var(--mg-space-6);
+}
+
+.section {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--mg-space-5);
 }
 
-.inputGroup {
+.sectionHeader {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--mg-space-4);
 }
 
-.label {
-  font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
-  color: var(--admin-text);
+.sectionCopy {
+  min-width: 0;
 }
 
-.input, .textarea {
-  background-color: var(--admin-surface);
-  border: 1px solid var(--admin-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
-  font-size: var(--text-base);
-  color: var(--admin-text);
-  transition: var(--transition-fast);
-  width: 100%;
-}
-
-.input {
-  height: 48px;
-}
-
-.textarea {
-  min-height: 80px;
-  resize: vertical;
-}
-
-.input::placeholder, .textarea::placeholder {
-  color: var(--admin-text-muted);
-}
-
-.input:focus-visible, .textarea:focus-visible {
-  outline: none;
-  border-color: var(--admin-accent);
-  box-shadow: 0 0 0 3px rgba(196, 162, 101, 0.15);
-}
-
-.input:disabled, .textarea:disabled {
-  opacity: 0.6;
-  background-color: var(--admin-surface-elevated);
-  cursor: not-allowed;
-}
-
-.helpText {
-  font-size: var(--text-xs);
-  color: var(--admin-text-sub);
+.sectionCopy h2,
+.sectionCopy p,
+.mediaField p {
   margin: 0;
 }
 
-.error {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: var(--color-error);
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
+.sectionCopy h2 {
+  color: var(--mg-text-primary);
+  font-family: var(--mg-font-display);
+  font-size: var(--mg-current-title);
+  line-height: var(--mg-line-height-title);
 }
 
-.success {
-  background-color: rgba(34, 197, 94, 0.1);
-  color: var(--color-success);
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
+.sectionCopy p,
+.mediaField p {
+  color: var(--mg-text-muted);
+  font-family: var(--mg-font-body);
+  font-size: var(--mg-current-caption);
+  line-height: var(--mg-line-height-caption);
+}
+
+.mediaField {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mg-space-xs);
+}
+
+.mediaLabel {
+  color: var(--mg-text-body);
+  font-family: var(--mg-font-body);
+  font-size: var(--mg-current-label);
+  font-weight: var(--mg-font-weight-label);
+  line-height: var(--mg-line-height-label);
 }
 
 .actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--admin-border);
+  padding-top: var(--mg-space-4);
+  border-top: var(--mg-border-width) solid var(--mg-border-subtle);
 }
 
-.submitBtn {
-  height: 44px;
-  padding: 0 var(--space-6);
-  border: none;
-  background-color: var(--admin-accent);
-  color: var(--admin-text);
-  font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.submitBtn:hover:not(:disabled) {
-  background-color: var(--admin-accent-hover);
-}
-
-.submitBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-@media (min-width: 1024px) {
-  .input {
-    height: 40px;
+@media (max-width: 639px) {
+  .sectionHeader {
+    flex-direction: column;
   }
-  .submitBtn {
-    height: 36px;
+
+  .actions > * {
+    width: 100%;
   }
 }

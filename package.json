@@ -26,6 +26,8 @@
     "test:admin-node-list-browser": "playwright test tests/admin-node-list-primitives.spec.ts",
     "test:admin-switch-primitives": "node scripts/test-admin-switch-primitives.mjs",
     "test:admin-switch-browser": "playwright test tests/admin-switch-primitives.spec.ts",
+    "test:admin-site-settings-primitives": "node scripts/test-admin-site-settings-primitives.mjs",
+    "test:admin-site-settings-browser": "playwright test tests/admin-site-settings-primitives.spec.ts",
     "sync:brand-tokens": "node scripts/sync-brand-tokens.mjs",
     "verify:brand-tokens": "node scripts/verify-brand-tokens.mjs",
     "check:brand-token-drift": "node scripts/check-brand-token-drift.mjs",

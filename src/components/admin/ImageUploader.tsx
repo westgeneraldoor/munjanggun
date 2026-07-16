@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useId, useState, useRef } from 'react'
 import { logError } from '@/lib/logger'
 import Image from 'next/image'
 import { UploadCloud, X, Edit2 } from 'lucide-react'
@@ -36,6 +36,7 @@ export default function ImageUploader({
   compressionMaxDimension = 1600,
   compressionQuality = 0.8
 }: ImageUploaderProps) {
+  const fileInputId = useId().replaceAll(':', '')
   const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -46,7 +47,7 @@ export default function ImageUploader({
 
   // 이미지 리사이즈 & 압축 (브라우저 메모리 절약 + 업로드 속도 개선)
   const compressImage = (file: File, maxDimension = 1600, quality = 0.8): Promise<File> => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       // 이미 작은 파일은 압축 불필요 (500KB 이하)
       if (file.size <= 500 * 1024) {
         resolve(file)
@@ -109,17 +110,6 @@ export default function ImageUploader({
 
       img.src = url
     })
-  }
-
-  // URL에서 파일명 추출하여 스토리지 경로 구하기
-  const getStoragePathFromUrl = (url: string) => {
-    try {
-      const parts = url.split(`/${bucketName}/`)
-      if (parts.length > 1) return parts[1]
-      return null
-    } catch {
-      return null
-    }
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -275,15 +265,6 @@ export default function ImageUploader({
     setProgress(10)
 
     try {
-      // 기존 이미지가 있다면 삭제 처리
-      if (currentImageUrl) {
-        const oldPath = getStoragePathFromUrl(currentImageUrl)
-        if (oldPath) {
-          const supabase = createClient()
-          await supabase.storage.from(bucketName).remove([oldPath])
-        }
-      }
-
       setProgress(40)
       const url = await uploadSingleFile(file)
       
@@ -304,18 +285,7 @@ export default function ImageUploader({
     }
   }
 
-  const handleDeleteClick = async () => {
-    if (currentImageUrl) {
-      try {
-        const path = getStoragePathFromUrl(currentImageUrl)
-        if (path) {
-          const supabase = createClient()
-          await supabase.storage.from(bucketName).remove([path])
-        }
-      } catch (err) {
-        logError('삭제 실패', err)
-      }
-    }
+  const handleDeleteClick = () => {
     setPreviewUrl(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
     if (onDelete) onDelete()
@@ -331,12 +301,14 @@ export default function ImageUploader({
   return (
     <div className={styles.uploader}>
       <input
+        id={fileInputId}
         type="file"
         ref={fileInputRef}
         onChange={multiple ? handleMultiFileChange : handleFileChange}
         accept={acceptTypes}
         multiple={multiple}
-        style={{ display: 'none' }}
+        className={styles.fileInput}
+        aria-label="이미지 파일 선택"
       />
       
       {displayUrl ? (
@@ -362,6 +334,7 @@ export default function ImageUploader({
               className={styles.actionBtn} 
               onClick={triggerSelect}
               title="변경"
+              aria-label="이미지 변경"
               disabled={isUploading}
             >
               <Edit2 size={16} />
@@ -371,6 +344,7 @@ export default function ImageUploader({
               className={`${styles.actionBtn} ${styles.deleteBtn}`} 
               onClick={handleDeleteClick}
               title="삭제"
+              aria-label="이미지 삭제"
               disabled={isUploading}
             >
               <X size={16} />
@@ -386,12 +360,14 @@ export default function ImageUploader({
           )}
         </div>
       ) : (
-        <div 
+        <button
+          type="button"
           className={`${styles.dropzone} ${isDragging ? styles.dragActive : ''}`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={triggerSelect}
+          disabled={isUploading}
         >
           <UploadCloud size={32} className={styles.icon} />
           <p className={styles.text}>클릭하거나 파일을 여기로 드래그하세요</p>
@@ -405,10 +381,10 @@ export default function ImageUploader({
               <span className={styles.progressText}>{progress}%</span>
             </div>
           )}
-        </div>
+        </button>
       )}
       
-      {error && <p className={styles.errorText}>{error}</p>}
+      {error && <p className={styles.errorText} role="alert">{error}</p>}
     </div>
   )
 }

@@ -60,6 +60,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: var(--mg-control-size-min);
+  min-height: var(--mg-control-size-min);
   transition: var(--transition-fast);
 }
 
@@ -148,11 +150,17 @@
 }
 
 .sectionHeader {
+  width: 100%;
+  min-height: var(--mg-control-size-min);
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: var(--space-3) var(--space-4);
   background-color: var(--admin-surface-elevated);
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
   user-select: none;
   transition: var(--transition-fast);
@@ -160,6 +168,13 @@
 
 .sectionHeader:hover {
   background-color: var(--admin-hover);
+}
+
+.sectionHeader:focus-visible,
+.actionBtn:focus-visible,
+.videoInput:focus-visible {
+  outline: var(--mg-focus-ring-width) solid var(--mg-focus-ring);
+  outline-offset: var(--mg-focus-ring-width);
 }
 
 .sectionTitle {
@@ -186,8 +201,15 @@
   gap: var(--space-2);
 }
 
+.videoLabel {
+  color: var(--admin-text);
+  font-size: var(--text-sm);
+  font-weight: var(--mg-font-weight-label);
+}
+
 .videoInput {
   width: 100%;
+  min-height: var(--mg-control-size-min);
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--admin-border);
   border-radius: var(--radius-sm);

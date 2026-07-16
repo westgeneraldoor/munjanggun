@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useId, useState } from 'react'
 import { ArrowUp, ArrowDown, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import ImageUploader from './ImageUploader'
 import styles from './HeroConfigurator.module.css'
@@ -32,6 +32,13 @@ export default function HeroConfigurator({
   onVideoUrlChange,
   onMobileVideoUrlChange
 }: HeroConfiguratorProps) {
+  const instanceId = useId().replaceAll(':', '')
+  const desktopImagePanelId = `${instanceId}-desktop-image-panel`
+  const mobileImagePanelId = `${instanceId}-mobile-image-panel`
+  const desktopVideoPanelId = `${instanceId}-desktop-video-panel`
+  const mobileVideoPanelId = `${instanceId}-mobile-video-panel`
+  const desktopVideoInputId = `${instanceId}-desktop-video-url`
+  const mobileVideoInputId = `${instanceId}-mobile-video-url`
   const [openSections, setOpenSections] = useState({
     desktopImage: true,
     mobileImage: true,
@@ -105,13 +112,19 @@ export default function HeroConfigurator({
     <div className={styles.container}>
       {/* Desktop Image Section */}
       <div className={styles.section}>
-        <div className={styles.sectionHeader} onClick={() => toggleSection('desktopImage')}>
-          <h3 className={styles.sectionTitle}>🖥️ 데스크탑 이미지</h3>
+        <button
+          type="button"
+          className={styles.sectionHeader}
+          onClick={() => toggleSection('desktopImage')}
+          aria-expanded={openSections.desktopImage}
+          aria-controls={desktopImagePanelId}
+        >
+          <span className={styles.sectionTitle}>🖥️ 데스크탑 이미지</span>
           {openSections.desktopImage ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        </div>
+        </button>
         
         {openSections.desktopImage && (
-          <div className={styles.sectionContent}>
+          <div id={desktopImagePanelId} className={styles.sectionContent}>
             <div className={styles.photosList}>
               {desktopImages.map((media, index) => (
                 <div key={`desktop-${index}`} className={styles.slideCard}>
@@ -119,14 +132,14 @@ export default function HeroConfigurator({
                     <h4 className={styles.slideTitle}>슬라이드 {index + 1}</h4>
                     <div className={styles.slideActions}>
                       <div className={styles.orderActions}>
-                        <button type="button" className={styles.actionBtn} onClick={() => handleMoveUpDesktop(index)} disabled={index === 0} title="위로 이동">
+                        <button type="button" className={styles.actionBtn} onClick={() => handleMoveUpDesktop(index)} disabled={index === 0} aria-label={`데스크탑 슬라이드 ${index + 1} 위로 이동`} title="위로 이동">
                           <ArrowUp size={16} />
                         </button>
-                        <button type="button" className={styles.actionBtn} onClick={() => handleMoveDownDesktop(index)} disabled={index === desktopImages.length - 1} title="아래로 이동">
+                        <button type="button" className={styles.actionBtn} onClick={() => handleMoveDownDesktop(index)} disabled={index === desktopImages.length - 1} aria-label={`데스크탑 슬라이드 ${index + 1} 아래로 이동`} title="아래로 이동">
                           <ArrowDown size={16} />
                         </button>
                       </div>
-                      <button type="button" className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleRemoveDesktop(index)} title="삭제">
+                      <button type="button" className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleRemoveDesktop(index)} aria-label={`데스크탑 슬라이드 ${index + 1} 삭제`} title="삭제">
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -141,11 +154,7 @@ export default function HeroConfigurator({
                         updateMedia(newDesktop, mobileImages)
                       }}
                       currentImageUrl={media.image_url}
-                      onDelete={() => {
-                        const newDesktop = [...desktopImages]
-                        newDesktop[index].image_url = ''
-                        updateMedia(newDesktop, mobileImages)
-                      }}
+                      onDelete={() => handleRemoveDesktop(index)}
                       compressionMaxDimension={1920}
                       compressionQuality={0.8}
                     />
@@ -181,13 +190,19 @@ export default function HeroConfigurator({
 
       {/* Mobile Image Section */}
       <div className={styles.section}>
-        <div className={styles.sectionHeader} onClick={() => toggleSection('mobileImage')}>
-          <h3 className={styles.sectionTitle}>📱 모바일 이미지</h3>
+        <button
+          type="button"
+          className={styles.sectionHeader}
+          onClick={() => toggleSection('mobileImage')}
+          aria-expanded={openSections.mobileImage}
+          aria-controls={mobileImagePanelId}
+        >
+          <span className={styles.sectionTitle}>📱 모바일 이미지</span>
           {openSections.mobileImage ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        </div>
+        </button>
         
         {openSections.mobileImage && (
-          <div className={styles.sectionContent}>
+          <div id={mobileImagePanelId} className={styles.sectionContent}>
             <div className={styles.photosList}>
               {mobileImages.map((media, index) => (
                 <div key={`mobile-${index}`} className={styles.slideCard}>
@@ -195,14 +210,14 @@ export default function HeroConfigurator({
                     <h4 className={styles.slideTitle}>슬라이드 {index + 1}</h4>
                     <div className={styles.slideActions}>
                       <div className={styles.orderActions}>
-                        <button type="button" className={styles.actionBtn} onClick={() => handleMoveUpMobile(index)} disabled={index === 0} title="위로 이동">
+                        <button type="button" className={styles.actionBtn} onClick={() => handleMoveUpMobile(index)} disabled={index === 0} aria-label={`모바일 슬라이드 ${index + 1} 위로 이동`} title="위로 이동">
                           <ArrowUp size={16} />
                         </button>
-                        <button type="button" className={styles.actionBtn} onClick={() => handleMoveDownMobile(index)} disabled={index === mobileImages.length - 1} title="아래로 이동">
+                        <button type="button" className={styles.actionBtn} onClick={() => handleMoveDownMobile(index)} disabled={index === mobileImages.length - 1} aria-label={`모바일 슬라이드 ${index + 1} 아래로 이동`} title="아래로 이동">
                           <ArrowDown size={16} />
                         </button>
                       </div>
-                      <button type="button" className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleRemoveMobile(index)} title="삭제">
+                      <button type="button" className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleRemoveMobile(index)} aria-label={`모바일 슬라이드 ${index + 1} 삭제`} title="삭제">
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -217,11 +232,7 @@ export default function HeroConfigurator({
                         updateMedia(desktopImages, newMobile)
                       }}
                       currentImageUrl={media.image_url}
-                      onDelete={() => {
-                        const newMobile = [...mobileImages]
-                        newMobile[index].image_url = ''
-                        updateMedia(desktopImages, newMobile)
-                      }}
+                      onDelete={() => handleRemoveMobile(index)}
                       compressionMaxDimension={1200}
                       compressionQuality={0.8}
                     />
@@ -257,21 +268,30 @@ export default function HeroConfigurator({
 
       {/* Desktop Video Section */}
       <div className={styles.section}>
-        <div className={styles.sectionHeader} onClick={() => toggleSection('desktopVideo')}>
-          <h3 className={styles.sectionTitle}>🎬 데스크탑 영상</h3>
+        <button
+          type="button"
+          className={styles.sectionHeader}
+          onClick={() => toggleSection('desktopVideo')}
+          aria-expanded={openSections.desktopVideo}
+          aria-controls={desktopVideoPanelId}
+        >
+          <span className={styles.sectionTitle}>🎬 데스크탑 영상</span>
           {openSections.desktopVideo ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        </div>
+        </button>
         
         {openSections.desktopVideo && (
-          <div className={styles.sectionContent}>
+          <div id={desktopVideoPanelId} className={styles.sectionContent}>
             <div className={styles.videoBox}>
-              <p className={styles.mediaHint}>권장 1920×1080 (비메오, 유튜브 등 스트리밍 URL 또는 MP4 URL 직접 입력)</p>
+              <label htmlFor={desktopVideoInputId} className={styles.videoLabel}>데스크탑 영상 URL</label>
+              <p id={`${desktopVideoInputId}-hint`} className={styles.mediaHint}>권장 1920×1080 (비메오, 유튜브 등 스트리밍 URL 또는 MP4 URL 직접 입력)</p>
               <input
+                id={desktopVideoInputId}
                 type="text"
                 className={styles.videoInput}
                 placeholder="https://... (.mp4 또는 유튜브/비메오 URL)"
                 value={videoUrl || ''}
                 onChange={(e) => onVideoUrlChange?.(e.target.value)}
+                aria-describedby={`${desktopVideoInputId}-hint`}
               />
             </div>
           </div>
@@ -280,21 +300,30 @@ export default function HeroConfigurator({
 
       {/* Mobile Video Section */}
       <div className={styles.section}>
-        <div className={styles.sectionHeader} onClick={() => toggleSection('mobileVideo')}>
-          <h3 className={styles.sectionTitle}>📱 모바일 영상</h3>
+        <button
+          type="button"
+          className={styles.sectionHeader}
+          onClick={() => toggleSection('mobileVideo')}
+          aria-expanded={openSections.mobileVideo}
+          aria-controls={mobileVideoPanelId}
+        >
+          <span className={styles.sectionTitle}>📱 모바일 영상</span>
           {openSections.mobileVideo ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        </div>
+        </button>
         
         {openSections.mobileVideo && (
-          <div className={styles.sectionContent}>
+          <div id={mobileVideoPanelId} className={styles.sectionContent}>
             <div className={styles.videoBox}>
-              <p className={styles.mediaHint}>권장 1080×1920 (비메오, 유튜브 등 스트리밍 URL 또는 MP4 URL 직접 입력)</p>
+              <label htmlFor={mobileVideoInputId} className={styles.videoLabel}>모바일 영상 URL</label>
+              <p id={`${mobileVideoInputId}-hint`} className={styles.mediaHint}>권장 1080×1920 (비메오, 유튜브 등 스트리밍 URL 또는 MP4 URL 직접 입력)</p>
               <input
+                id={mobileVideoInputId}
                 type="text"
                 className={styles.videoInput}
                 placeholder="https://... (.mp4 또는 유튜브/비메오 URL)"
                 value={mobileVideoUrl || ''}
                 onChange={(e) => onMobileVideoUrlChange?.(e.target.value)}
+                aria-describedby={`${mobileVideoInputId}-hint`}
               />
             </div>
           </div>

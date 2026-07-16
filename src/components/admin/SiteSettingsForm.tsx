@@ -6,8 +6,32 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import ImageUploader from './ImageUploader'
 import HeroConfigurator from './HeroConfigurator'
-import { PlatformSwitch } from '@/components/platform/ui'
+import {
+  PlatformButton,
+  PlatformField,
+  PlatformPanel,
+  PlatformSelect,
+  PlatformStatePanel,
+  PlatformSwitch,
+} from '@/components/platform/ui'
 import styles from './SiteSettingsForm.module.css'
+
+type SiteSettingsRpcClient = {
+  rpc(
+    name: 'save_site_settings',
+    args: { p_settings: Record<string, unknown>; p_media: Array<Record<string, unknown>> },
+  ): PromiseLike<{ error: { message: string } | null }>
+}
+
+const CARD_POSITION_OPTIONS = [
+  { value: 'overlay', label: '이미지 위 (오버레이)' },
+  { value: 'below', label: '이미지 아래' },
+] as const
+
+const HERO_TRANSITION_OPTIONS = [
+  { value: 'fade', label: 'fade (페이드)' },
+  { value: 'slide', label: 'slide (슬라이드)' },
+] as const
 
 interface SiteSettingsData {
   id?: string
@@ -81,6 +105,11 @@ export default function SiteSettingsForm({ initialData, heroMedia: initialHeroMe
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
+  const updateField = <T,>(setter: React.Dispatch<React.SetStateAction<T>>, value: T) => {
+    setSuccess(false)
+    setter(value)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -96,12 +125,9 @@ export default function SiteSettingsForm({ initialData, heroMedia: initialHeroMe
     }
 
     try {
-      const showroomDb = supabase.schema('showroom')
-
-      const { error: upsertError } = await showroomDb
-        .from('site_settings')
-        .upsert({
-          id: 'singleton',
+      const showroomDb = supabase.schema('showroom') as unknown as SiteSettingsRpcClient
+      const { error: saveError } = await showroomDb.rpc('save_site_settings', {
+        p_settings: {
           site_title: title || null,
           site_description: description || null,
           og_image_url: ogImageUrl,
@@ -116,40 +142,18 @@ export default function SiteSettingsForm({ initialData, heroMedia: initialHeroMe
           hero_slide_interval: heroSlideInterval,
           hero_slide_transition: heroSlideTransition,
           card_text_position: cardTextPosition,
-          updated_at: new Date().toISOString()
-        })
-        
-      if (upsertError) throw upsertError
-      
-      // Update site_hero_media
-      await showroomDb
-        .from('site_hero_media')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000') // delete all hack (assuming id is valid UUID) - actually, .neq on uuid requires a valid uuid string or just true. A better way to delete all is .neq('id', '00000000-0000-0000-0000-000000000000') but let's just delete by looking for display_order >= 0
-        // Wait, .gte('display_order', 0) is safer.
-      await showroomDb
-        .from('site_hero_media')
-        .delete()
-        .gte('display_order', 0)
-      
-      if (heroMedia.length > 0) {
-        const { error: heroError } = await showroomDb
-          .from('site_hero_media')
-          .insert(
-            heroMedia.map((m, index) => ({
-              image_url: m.image_url,
-              device_type: m.device_type,
-              media_type: m.media_type,
-              display_order: index
-            }))
-          )
-        if (heroError) throw heroError
-      }
+        },
+        p_media: heroMedia.map((media) => ({
+          image_url: media.image_url,
+          device_type: media.device_type,
+          media_type: media.media_type,
+        })),
+      })
+
+      if (saveError) throw new Error(saveError.message)
 
       setSuccess(true)
       router.refresh()
-      
-      setTimeout(() => setSuccess(false), 3000)
     } catch (err: unknown) {
       logError('Save error:', err)
       const message = err instanceof Error ? err.message : '저장 중 오류가 발생했습니다.'
@@ -161,205 +165,168 @@ export default function SiteSettingsForm({ initialData, heroMedia: initialHeroMe
 
   return (
     <form onSubmit={handleSubmit} className={styles.form}>
-      {error && <div className={styles.error}>{error}</div>}
-      {success && <div className={styles.success}>설정이 성공적으로 저장되었습니다.</div>}
+      {error ? <PlatformStatePanel tone="error" title="설정을 저장하지 못했습니다" description={error} /> : null}
+      {success ? <PlatformStatePanel tone="success" title="설정을 저장했습니다" description="변경한 쇼룸 설정이 반영되었습니다." /> : null}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-        <div style={{ padding: 'var(--space-5)', background: 'var(--admin-bg)', border: '1px solid var(--admin-border)', borderRadius: 'var(--radius-lg)' }}>
-          <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 'bold', marginBottom: 'var(--space-4)' }}>기본 정보</h2>
-          
-          <div className={styles.inputGroup}>
-            <label htmlFor="title" className={styles.label}>사이트 제목</label>
-            <input
+      <fieldset className={styles.fieldset} disabled={isLoading}>
+        <div className={styles.sections}>
+          <PlatformPanel as="section" className={styles.section}>
+            <div className={styles.sectionCopy}>
+              <h2>기본 정보</h2>
+              <p>검색 결과와 외부 공유에 사용되는 쇼룸 정보를 설정합니다.</p>
+            </div>
+
+            <PlatformField
               id="title"
-              type="text"
-              className={styles.input}
+              label="사이트 제목"
+              required
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              disabled={isLoading}
+              onChange={(event) => updateField(setTitle, event.target.value)}
               placeholder="예: 문장군 디지털 컬러북"
+              maxLength={160}
             />
-          </div>
 
-          <div className={styles.inputGroup}>
-            <label htmlFor="description" className={styles.label}>사이트 설명 (SEO)</label>
-            <textarea
+            <PlatformField
               id="description"
-              className={styles.textarea}
+              label="사이트 설명 (SEO)"
+              multiline
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              disabled={isLoading}
+              onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => updateField(setDescription, event.target.value)}
               placeholder="검색 결과에 표시될 사이트 설명을 입력하세요."
               rows={3}
+              maxLength={5000}
             />
-          </div>
 
-          <div className={styles.inputGroup}>
-            <label htmlFor="cardTextPosition" className={styles.label}>메인 페이지 카드 표시 방식</label>
-            <select
+            <PlatformSelect
               id="cardTextPosition"
-              className={styles.select}
+              label="메인 페이지 카드 표시 방식"
+              options={CARD_POSITION_OPTIONS}
               value={cardTextPosition}
-              onChange={(e) => setCardTextPosition(e.target.value as 'overlay' | 'below')}
-              disabled={isLoading}
-            >
-              <option value="overlay">이미지 위 (오버레이)</option>
-              <option value="below">이미지 아래</option>
-            </select>
-          </div>
+              onChange={(event) => updateField(setCardTextPosition, event.target.value as 'overlay' | 'below')}
+            />
 
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>대표 이미지 (OG Image)</label>
-            <p className={styles.helpText}>카카오톡 공유 등 링크 전송 시 표시될 이미지입니다. (권장 비율 1200x630)</p>
-            <div style={{ marginTop: '8px' }}>
+            <div className={styles.mediaField}>
+              <div className={styles.mediaLabel}>대표 이미지 (OG Image)</div>
+              <p>카카오톡 공유 등 링크 전송 시 표시될 이미지입니다. 권장 비율은 1200:630입니다.</p>
               <ImageUploader
                 folderPath="og"
-                onUploadComplete={(url) => setOgImageUrl(url)}
+                onUploadComplete={(url) => updateField<string | null>(setOgImageUrl, url)}
                 currentImageUrl={ogImageUrl || undefined}
-                onDelete={() => setOgImageUrl(null)}
+                onDelete={() => updateField<string | null>(setOgImageUrl, null)}
               />
             </div>
-          </div>
 
-          <div className={styles.inputGroup}>
-            <label htmlFor="reservationUrl" className={styles.label}>예약 상담 URL</label>
-            <input
+            <PlatformField
               id="reservationUrl"
               type="url"
-              className={styles.input}
+              label="예약 상담 URL"
               value={reservationUrl}
-              onChange={(e) => setReservationUrl(e.target.value)}
-              disabled={isLoading}
+              onChange={(event) => updateField(setReservationUrl, event.target.value)}
               placeholder="예: https://booking.naver.com/..."
+              maxLength={2048}
             />
-          </div>
 
-          <div className={styles.inputGroup}>
-            <label htmlFor="storeUrl" className={styles.label}>스토어 URL</label>
-            <input
+            <PlatformField
               id="storeUrl"
               type="url"
-              className={styles.input}
+              label="스토어 URL"
               value={storeUrl}
-              onChange={(e) => setStoreUrl(e.target.value)}
-              disabled={isLoading}
+              onChange={(event) => updateField(setStoreUrl, event.target.value)}
               placeholder="예: https://smartstore.naver.com/..."
+              maxLength={2048}
             />
-          </div>
-        </div>
+          </PlatformPanel>
 
-        <div style={{ padding: 'var(--space-5)', background: 'var(--admin-bg)', border: '1px solid var(--admin-border)', borderRadius: 'var(--radius-lg)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
-            <div>
-              <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 'bold' }}>메인 히어로 설정</h2>
-              <p style={{ color: 'var(--admin-text-sub)', fontSize: 'var(--text-sm)' }}>메인 페이지 상단에 표시될 히어로 영역입니다.</p>
-            </div>
-            <PlatformSwitch
-              checked={heroEnabled}
-              onCheckedChange={setHeroEnabled}
-              label="히어로 사용"
-              disabled={isLoading}
-            />
-          </div>
-
-          {heroEnabled && (
-            <>
-              <div className={styles.inputGroup}>
-                <label className={styles.label}>히어로 이미지/비디오 슬라이드</label>
-                <HeroConfigurator
-                  heroMedia={heroMedia}
-                  onHeroMediaChange={setHeroMedia}
-                  nodeSlug="site_main"
-                  videoUrl={heroVideoUrl}
-                  mobileVideoUrl={heroMobileVideoUrl}
-                  onVideoUrlChange={setHeroVideoUrl}
-                  onMobileVideoUrlChange={setHeroMobileVideoUrl}
-                />
+          <PlatformPanel as="section" className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <div className={styles.sectionCopy}>
+                <h2>메인 히어로 설정</h2>
+                <p>메인 페이지 상단에 표시될 히어로 영역입니다.</p>
               </div>
+              <PlatformSwitch
+                checked={heroEnabled}
+                onCheckedChange={(checked) => updateField(setHeroEnabled, checked)}
+                label="히어로 사용"
+                disabled={isLoading}
+              />
+            </div>
 
-              <div className={styles.inputGroup}>
-                <label htmlFor="heroSlideInterval" className={styles.label}>슬라이드 전환 시간 (초)</label>
-                <input
+            {heroEnabled ? (
+              <>
+                <div className={styles.mediaField}>
+                  <div className={styles.mediaLabel}>히어로 이미지/비디오 슬라이드</div>
+                  <HeroConfigurator
+                    heroMedia={heroMedia}
+                    onHeroMediaChange={(media) => updateField(setHeroMedia, media)}
+                    nodeSlug="site_main"
+                    videoUrl={heroVideoUrl}
+                    mobileVideoUrl={heroMobileVideoUrl}
+                    onVideoUrlChange={(url) => updateField(setHeroVideoUrl, url)}
+                    onMobileVideoUrlChange={(url) => updateField(setHeroMobileVideoUrl, url)}
+                  />
+                </div>
+
+                <PlatformField
                   id="heroSlideInterval"
                   type="number"
-                  min="1"
-                  max="60"
-                  className={styles.input}
+                  min={1}
+                  max={60}
+                  label="슬라이드 전환 시간 (초)"
                   value={heroSlideInterval}
-                  onChange={(e) => setHeroSlideInterval(parseInt(e.target.value) || 5)}
-                  disabled={isLoading}
+                  onChange={(event) => updateField(setHeroSlideInterval, Number.parseInt(event.target.value, 10) || 5)}
                 />
-              </div>
 
-              <div className={styles.inputGroup}>
-                <label htmlFor="heroSlideTransition" className={styles.label}>슬라이드 전환 효과</label>
-                <select
+                <PlatformSelect
                   id="heroSlideTransition"
-                  className={styles.select}
+                  label="슬라이드 전환 효과"
+                  options={HERO_TRANSITION_OPTIONS}
                   value={heroSlideTransition}
-                  onChange={(e) => setHeroSlideTransition(e.target.value as 'fade' | 'slide')}
-                  disabled={isLoading}
-                >
-                  <option value="fade">fade (페이드)</option>
-                  <option value="slide">slide (슬라이드)</option>
-                </select>
-              </div>
+                  onChange={(event) => updateField(setHeroSlideTransition, event.target.value as 'fade' | 'slide')}
+                />
 
-              {/* Video inputs moved to HeroConfigurator */}
-
-              <div className={styles.inputGroup}>
-                <label htmlFor="heroTitle" className={styles.label}>히어로 제목</label>
-                <input
+                <PlatformField
                   id="heroTitle"
-                  type="text"
-                  className={styles.input}
+                  label="히어로 제목"
                   value={heroTitle}
-                  onChange={(e) => setHeroTitle(e.target.value)}
-                  disabled={isLoading || !!hasVideo}
+                  onChange={(event) => updateField(setHeroTitle, event.target.value)}
+                  disabled={!!hasVideo}
+                  hint={hasVideo ? '영상이 등록되면 히어로 문구는 표시되지 않습니다.' : undefined}
                   placeholder="메인 히어로 제목"
+                  maxLength={300}
                 />
-                {hasVideo && <p className={styles.helpText} style={{ color: 'var(--admin-text-sub)', fontSize: 'var(--text-xs)', marginTop: '4px' }}>영상이 등록되면 히어로 문구는 표시되지 않습니다.</p>}
-              </div>
 
-              <div className={styles.inputGroup}>
-                <label htmlFor="heroSubtitle" className={styles.label}>히어로 부제</label>
-                <input
+                <PlatformField
                   id="heroSubtitle"
-                  type="text"
-                  className={styles.input}
+                  label="히어로 부제"
                   value={heroSubtitle}
-                  onChange={(e) => setHeroSubtitle(e.target.value)}
-                  disabled={isLoading || !!hasVideo}
+                  onChange={(event) => updateField(setHeroSubtitle, event.target.value)}
+                  disabled={!!hasVideo}
                   placeholder="메인 히어로 서브 제목"
+                  maxLength={500}
                 />
-              </div>
 
-              <div className={styles.inputGroup}>
-                <label htmlFor="heroDescription" className={styles.label}>히어로 설명</label>
-                <textarea
+                <PlatformField
                   id="heroDescription"
-                  className={styles.textarea}
+                  label="히어로 설명"
+                  multiline
                   value={heroDescription}
-                  onChange={(e) => setHeroDescription(e.target.value)}
-                  disabled={isLoading || !!hasVideo}
+                  onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => updateField(setHeroDescription, event.target.value)}
+                  disabled={!!hasVideo}
                   placeholder="메인 히어로 상세 설명"
                   rows={3}
+                  maxLength={5000}
                 />
-              </div>
-            </>
-          )}
+              </>
+            ) : null}
+          </PlatformPanel>
         </div>
-      </div>
 
-      <div className={styles.actions}>
-        <button 
-          type="submit" 
-          className={styles.submitBtn}
-          disabled={isLoading}
-        >
-          {isLoading ? '저장 중...' : '설정 저장'}
-        </button>
-      </div>
+        <div className={styles.actions}>
+          <PlatformButton type="submit" isLoading={isLoading} loadingLabel="저장 중…">
+            설정 저장
+          </PlatformButton>
+        </div>
+      </fieldset>
     </form>
   )
 }
