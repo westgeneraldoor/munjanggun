@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import styles from './ConfirmModal.module.css'
+import { PlatformButton, PlatformModal } from '@/components/platform/ui'
 
 interface ConfirmModalProps {
   isOpen: boolean
@@ -26,33 +26,35 @@ export default function ConfirmModal({
   isDestructive = false,
   isLoading = false
 }: ConfirmModalProps) {
-  if (!isOpen) return null
-
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <h2 id="modal-title" className={styles.title}>{title}</h2>
-        <p className={styles.message}>{message}</p>
-        
-        <div className={styles.actions}>
-          <button 
-            type="button" 
-            className={styles.cancelBtn} 
+    <PlatformModal
+      isOpen={isOpen}
+      title={title}
+      description={message}
+      onClose={onCancel}
+      closeDisabled={isLoading}
+      footer={(
+        <>
+          <PlatformButton
+            type="button"
+            variant="secondary"
             onClick={onCancel}
             disabled={isLoading}
+            data-modal-initial-focus={isLoading ? undefined : true}
           >
             {cancelText}
-          </button>
-          <button 
-            type="button" 
-            className={`${styles.confirmBtn} ${isDestructive ? styles.destructive : ''}`} 
+          </PlatformButton>
+          <PlatformButton
+            type="button"
+            variant={isDestructive ? 'danger' : 'primary'}
             onClick={onConfirm}
-            disabled={isLoading}
+            isLoading={isLoading}
+            loadingLabel="처리 중"
           >
-            {isLoading ? '처리 중...' : confirmText}
-          </button>
-        </div>
-      </div>
-    </div>
+            {confirmText}
+          </PlatformButton>
+        </>
+      )}
+    />
   )
 }

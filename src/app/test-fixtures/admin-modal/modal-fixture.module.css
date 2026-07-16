@@ -1,0 +1,33 @@
+.page {
+  min-height: 100dvh;
+  padding: var(--mg-space-6);
+  color: var(--mg-text-primary);
+  background: var(--mg-surface-page);
+}
+
+.fixture {
+  width: min(100%, var(--mg-reading-max));
+  display: flex;
+  flex-direction: column;
+  gap: var(--mg-space-4);
+  margin-inline: auto;
+}
+
+.fixture h1,
+.fixture p {
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mg-space-3);
+}
+
+.result {
+  padding: var(--mg-space-3);
+  color: var(--mg-text-body);
+  background: var(--mg-surface-card);
+  border: var(--mg-border-width) solid var(--mg-border-subtle);
+  border-radius: var(--mg-radius-card);
+}

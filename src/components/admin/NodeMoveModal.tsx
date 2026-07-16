@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { createShowroomClient } from '@/lib/supabase/client'
 import { logError } from '@/lib/logger'
+import { PlatformButton, PlatformModal } from '@/components/platform/ui'
 import styles from './NodeMoveModal.module.css'
 
 type SimpleNode = {
@@ -20,58 +21,74 @@ interface NodeMoveModalProps {
 }
 
 export default function NodeMoveModal({ isOpen, node, onClose, onSuccess }: NodeMoveModalProps) {
-  const [targetParentId, setTargetParentId] = useState<string | null | undefined>(undefined)
+  if (!isOpen || !node) return null
+
+  return (
+    <NodeMoveModalContent
+      key={`${node.id}:${node.parent_id ?? 'root'}`}
+      node={node}
+      onClose={onClose}
+      onSuccess={onSuccess}
+    />
+  )
+}
+
+function NodeMoveModalContent({ node, onClose, onSuccess }: Omit<NodeMoveModalProps, 'isOpen'> & { node: NonNullable<NodeMoveModalProps['node']> }) {
+  const [targetParentId, setTargetParentId] = useState<string | null>(node.parent_id)
   const [candidates, setCandidates] = useState<SimpleNode[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [loadAttempt, setLoadAttempt] = useState(0)
 
   const supabase = createShowroomClient()
 
-  const fetchCandidates = async () => {
-    setIsLoading(true)
-    try {
-      const { data, error } = await supabase
-        .schema('showroom')
-        .from('nodes')
-        .select('id, name, parent_id, type')
-        .eq('type', 'listing')
+  useEffect(() => {
+    let cancelled = false
 
-      if (error) throw error
+    void (async () => {
+      await Promise.resolve()
+      if (cancelled) return
+      setIsLoading(true)
+      setLoadError(null)
+      setCandidates([])
+      try {
+        const client = createShowroomClient()
+        const { data, error } = await client
+          .schema('showroom')
+          .from('nodes')
+          .select('id, name, parent_id, type')
+          .eq('type', 'listing')
 
-      if (data && node) {
-        // 순환 참조 방지
+        if (error) throw error
+        if (!data || cancelled) return
+
         const getDescendantIds = (nodeId: string, allNodes: SimpleNode[]): string[] => {
-          const children = allNodes.filter(n => n.parent_id === nodeId)
-          return [nodeId, ...children.flatMap(c => getDescendantIds(c.id, allNodes))]
+          const children = allNodes.filter(candidate => candidate.parent_id === nodeId)
+          return [nodeId, ...children.flatMap(child => getDescendantIds(child.id, allNodes))]
         }
-
         const descendants = getDescendantIds(node.id, data)
-        const validCandidates = data.filter(n => !descendants.includes(n.id))
-        setCandidates(validCandidates)
+        setCandidates(data.filter(candidate => !descendants.includes(candidate.id)))
+      } catch (err) {
+        if (!cancelled) {
+          logError('이동 가능한 노드 목록 로딩 실패:', err)
+          setLoadError('이동 가능한 위치를 불러오지 못했습니다.')
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false)
       }
-    } catch (err) {
-      logError('이동 가능한 노드 목록 로딩 실패:', err)
-    } finally {
-      setIsLoading(false)
+    })()
+
+    return () => {
+      cancelled = true
     }
+  }, [loadAttempt, node])
+
+  const handleClose = () => {
+    onClose()
   }
 
-  useEffect(() => {
-    if (isOpen && node) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTargetParentId(node.parent_id)
-      fetchCandidates()
-    } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCandidates([])
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTargetParentId(undefined)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, node])
-
   const handleConfirm = async () => {
-    if (!node || targetParentId === undefined) return
     setIsSaving(true)
 
     try {
@@ -110,34 +127,59 @@ export default function NodeMoveModal({ isOpen, node, onClose, onSuccess }: Node
     }
   }
 
-  if (!isOpen || !node) return null
-
   return (
-    <div className={styles.overlay} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <div className={styles.modal}>
-        <h2 className={styles.title}>노드 이동</h2>
-        <p className={styles.message}>&apos;{node.name}&apos; 노드를 어디로 이동할까요?</p>
-
-        <div className={styles.list}>
-          {/* 최상위(탭) 옵션 */}
-          <label className={`${styles.listItem} ${targetParentId === null ? styles.selected : ''}`}>
-            <input
-              type="radio"
-              name="targetParent"
-              checked={targetParentId === null}
-              onChange={() => setTargetParentId(null)}
-              disabled={node.parent_id === null}
-            />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div className={styles.itemName}>📌 최상위 (탭)</div>
-              {node.parent_id === null && <div className={styles.itemDesc}>(현재 위치)</div>}
-            </div>
-          </label>
-
-          {isLoading ? (
-            <div style={{ padding: '16px', textAlign: 'center', color: 'var(--admin-text-muted)' }}>로딩 중...</div>
-          ) : (
-            candidates.map(candidate => {
+    <PlatformModal
+      isOpen
+      title="노드 이동"
+      description={`'${node.name}' 노드를 어디로 이동할까요?`}
+      onClose={handleClose}
+      showCloseButton
+      closeOnBackdrop
+      closeDisabled={isSaving}
+      size="md"
+      footer={(
+        <>
+          <PlatformButton type="button" variant="secondary" onClick={handleClose} disabled={isSaving}>
+            취소
+          </PlatformButton>
+          <PlatformButton
+            type="button"
+            onClick={handleConfirm}
+            isLoading={isSaving}
+            loadingLabel="이동 중"
+            disabled={isLoading || Boolean(loadError) || targetParentId === node.parent_id}
+          >
+            이동하기
+          </PlatformButton>
+        </>
+      )}
+    >
+      <div className={styles.list}>
+        {isLoading ? (
+          <p className={styles.loading} role="status">이동할 위치를 불러오는 중입니다.</p>
+        ) : loadError ? (
+          <div className={styles.loadError} role="alert">
+            <p>{loadError}</p>
+            <PlatformButton type="button" variant="secondary" onClick={() => setLoadAttempt(attempt => attempt + 1)}>
+              다시 시도
+            </PlatformButton>
+          </div>
+        ) : (
+          <>
+            <label className={`${styles.listItem} ${targetParentId === null ? styles.selected : ''}`}>
+              <input
+                type="radio"
+                name="targetParent"
+                checked={targetParentId === null}
+                onChange={() => setTargetParentId(null)}
+                disabled={node.parent_id === null}
+              />
+              <span className={styles.itemCopy}>
+                <span className={styles.itemName}>최상위 (탭)</span>
+                {node.parent_id === null ? <span className={styles.itemDesc}>(현재 위치)</span> : null}
+              </span>
+            </label>
+            {candidates.map(candidate => {
               const isCurrentParent = candidate.id === node.parent_id
               return (
                 <label key={candidate.id} className={`${styles.listItem} ${targetParentId === candidate.id ? styles.selected : ''}`}>
@@ -148,33 +190,16 @@ export default function NodeMoveModal({ isOpen, node, onClose, onSuccess }: Node
                     onChange={() => setTargetParentId(candidate.id)}
                     disabled={isCurrentParent}
                   />
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <div className={styles.itemName}>{candidate.name}</div>
-                    {isCurrentParent && <div className={styles.itemDesc}>(현재 위치)</div>}
-                  </div>
+                  <span className={styles.itemCopy}>
+                    <span className={styles.itemName}>{candidate.name}</span>
+                    {isCurrentParent ? <span className={styles.itemDesc}>(현재 위치)</span> : null}
+                  </span>
                 </label>
               )
-            })
-          )}
-        </div>
-
-        <div className={styles.actions}>
-          <button
-            className={styles.cancelBtn}
-            onClick={onClose}
-            disabled={isSaving}
-          >
-            취소
-          </button>
-          <button
-            className={styles.confirmBtn}
-            onClick={handleConfirm}
-            disabled={isSaving || targetParentId === undefined || targetParentId === node.parent_id}
-          >
-            {isSaving ? '이동 중...' : '이동하기'}
-          </button>
-        </div>
+            })}
+          </>
+        )}
       </div>
-    </div>
+    </PlatformModal>
   )
 }

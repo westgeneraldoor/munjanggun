@@ -1,0 +1,96 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: var(--mg-space-4);
+  background: color-mix(in srgb, var(--mg-text-primary) 48%, transparent);
+}
+
+.modal {
+  width: 100%;
+  max-height: calc(100dvh - var(--mg-space-8));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--mg-text-primary);
+  background: var(--mg-surface-card);
+  border: var(--mg-border-width) solid var(--mg-border-subtle);
+  border-radius: var(--mg-radius-frame);
+  box-shadow: var(--mg-shadow-panel);
+  animation: modal-enter var(--mg-dur-micro) var(--mg-ease-cinema);
+}
+
+.sm {
+  max-width: calc(var(--mg-space-8) * 6);
+}
+
+.md {
+  max-width: calc(var(--mg-space-8) * 7);
+}
+
+.header {
+  min-height: var(--mg-control-size-nav);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mg-space-3);
+  padding: var(--mg-space-3) var(--mg-space-5);
+  border-bottom: var(--mg-border-width) solid var(--mg-border-subtle);
+}
+
+.title {
+  margin: 0;
+  color: var(--mg-text-primary);
+  font-family: var(--mg-font-body);
+  font-size: var(--mg-font-size-card);
+  font-weight: var(--mg-font-weight-strong);
+  line-height: var(--mg-line-height-card);
+}
+
+.body {
+  min-width: 0;
+  overflow-y: auto;
+  padding: var(--mg-space-5);
+}
+
+.description {
+  margin: 0;
+  color: var(--mg-text-body);
+  font-size: var(--mg-current-body);
+  line-height: var(--mg-line-height-body);
+  white-space: pre-line;
+}
+
+.description + :not(:empty) {
+  margin-top: var(--mg-space-4);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--mg-space-3);
+  padding: var(--mg-space-3) var(--mg-space-5);
+  background: var(--mg-surface-card-subtle);
+  border-top: var(--mg-border-width) solid var(--mg-border-subtle);
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(var(--mg-motion-scale-pressed));
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal {
+    animation: none;
+  }
+}

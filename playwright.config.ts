@@ -17,6 +17,11 @@ export default defineConfig({
     : {
         command: 'node ./node_modules/next/dist/bin/next dev --hostname 127.0.0.1 --port 3000',
         url: 'http://127.0.0.1:3000',
+        env: {
+          ...process.env,
+          NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321',
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? 'playwright-anon-key',
+        },
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
       },
