@@ -35,6 +35,7 @@ export async function checkBrandTokenDrift({
   brandRoot,
   brandRootWasExplicit = brandRoot !== undefined || hasExplicitBrandRoot(process.env),
   readHead = readGitHead,
+  expectedManifest,
 } = {}) {
   const resolvedBrandRoot = brandRoot ?? await resolveBrandRoot({ cwd: projectRoot })
   if (!await pathExists(resolvedBrandRoot)) {
@@ -44,7 +45,7 @@ export async function checkBrandTokenDrift({
     return { status: 'skipped', reason: `default central brand checkout is absent: ${resolvedBrandRoot}` }
   }
 
-  const { manifest } = await verifyBrandTokens({ projectRoot })
+  const { manifest } = await verifyBrandTokens({ projectRoot, expectedManifest })
   const head = await readHead(resolvedBrandRoot)
   if (head !== manifest.sourceCommit) {
     throw new Error(`Source commit drift: manifest ${manifest.sourceCommit}, central HEAD ${head}.`)

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 
 import { verifyUiTokenPolicy } from './verify-ui-token-policy.mjs'
 
@@ -7,6 +8,12 @@ const baseConfig = {
   declarationAllowlist: ['--mg-project-surface', '--mg-project-gap', '--mg-external-brand-color'],
   rawValueTokenAllowlist: ['--mg-external-brand-color'],
   externalDefinitions: ['--external-token'],
+  generatedTokenOverrideScopes: [
+    {
+      file: 'src/styles/munjanggun-brand.css',
+      selectors: ['[data-mg-theme="portal"]'],
+    },
+  ],
   layoutConstants: [
     {
       name: 'approved-preview-gap',
@@ -36,6 +43,46 @@ const baseConfig = {
     [],
     'an explicitly allowlisted external-brand token may own its raw color',
   )
+}
+
+{
+  const result = verifyUiTokenPolicy({
+    config: baseConfig,
+    files: [{
+      path: 'src/styles/munjanggun-brand.css',
+      content: '.card { --mg-project-gap: 28px; color: #123456; padding: 17px; }\n@media (max-width: 640px) { .card { color: var(--external-token); } }\n',
+    }],
+  })
+  assert.ok(result.diagnostics.some(item => /unauthorized raw color #123456/.test(item)))
+  assert.ok(result.diagnostics.some(item => /unauthorized layout constant 17px/.test(item)))
+  assert.deepEqual(result.usedLayoutConstants, ['approved-mobile-breakpoint', 'approved-preview-gap'])
+}
+
+{
+  const generated = ':root { --mg-bg: #fff; }\n'
+  const allowed = verifyUiTokenPolicy({
+    config: baseConfig,
+    files: [
+      { path: 'src/styles/generated/brand.css', content: generated },
+      {
+        path: 'src/styles/munjanggun-brand.css',
+        content: '[data-mg-theme="portal"] { --mg-bg: var(--external-token); --mg-project-gap: 28px; }\n@media (max-width: 640px) {}\n',
+      },
+    ],
+  })
+  assert.equal(allowed.diagnostics.some(item => /central token collision/.test(item)), false)
+
+  const collision = verifyUiTokenPolicy({
+    config: baseConfig,
+    files: [
+      { path: 'src/styles/generated/brand.css', content: generated },
+      {
+        path: 'src/styles/munjanggun-brand.css',
+        content: ':root { --mg-bg: var(--external-token); --mg-project-gap: 28px; }\n@media (max-width: 640px) {}\n',
+      },
+    ],
+  })
+  assert.ok(collision.diagnostics.some(item => /central token collision --mg-bg in selector :root/.test(item)))
 }
 
 {
@@ -110,7 +157,16 @@ const baseConfig = {
     files: [{ path: 'src/styles/munjanggun-brand.css', content: ':root {\n  --mg-project-gap: 29px;\n}\n' }],
   })
   assert.ok(result.diagnostics.some(item => /unauthorized layout constant 29px/.test(item)))
-  assert.ok(result.diagnostics.some(item => /named layout constant approved-preview-gap was not used/.test(item)))
+assert.ok(result.diagnostics.some(item => /named layout constant approved-preview-gap was not used/.test(item)))
+}
+
+{
+  const adapter = await readFile(new URL('../src/styles/munjanggun-brand.css', import.meta.url), 'utf8')
+  for (const selector of ['portal', 'admin']) {
+    const scope = adapter.match(new RegExp(`\\[data-mg-theme="${selector}"\\] \\{([\\s\\S]*?)\\n\\}`))?.[1] ?? ''
+    assert.match(scope, /--mg-action-primary-bg:\s*var\(--mg-color-ink-900\)/)
+    assert.match(scope, /--mg-action-primary-hover:\s*var\(--mg-color-ink-700\)/)
+  }
 }
 
 console.log('UI token policy fixture contract passed')

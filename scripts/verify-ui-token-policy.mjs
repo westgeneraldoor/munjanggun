@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 const projectRootFromScript = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const RAW_COLOR_PATTERN = /#[0-9a-fA-F]{3,8}\b|\b(?:rgb|rgba|hsl|hsla)\([^)]*\)/g
 const RAW_LAYOUT_PATTERN = /(?<![-\w])(?:-?\d*\.\d+|-?\d+)(?:px|rem|em)\b/g
-const TOKEN_DECLARATION_PATTERN = /(--[A-Za-z0-9_-]+)\s*:\s*([^;}{]+);?/g
+const DECLARATION_PATTERN = /(?:^|(?<=[;{\n]))\s*(--[A-Za-z0-9_-]+|[A-Za-z-]+)\s*:\s*([^;}{]+);?/g
 const VARIABLE_USE_PATTERN = /var\(\s*(--[A-Za-z0-9_-]+)/g
 
 function matchesEntry(value, entries = []) {
@@ -20,6 +20,33 @@ function stripCommentsKeepingLines(source) {
   return source.replace(/\/\*[\s\S]*?\*\//g, match => match.replace(/[^\n]/g, ' '))
 }
 
+function selectorAtIndex(source, targetIndex) {
+  const stack = []
+  let segmentStart = 0
+
+  for (let index = 0; index < targetIndex; index += 1) {
+    const character = source[index]
+    if (character === '{') {
+      stack.push(source.slice(segmentStart, index).trim())
+      segmentStart = index + 1
+    } else if (character === '}') {
+      stack.pop()
+      segmentStart = index + 1
+    } else if (character === ';') {
+      segmentStart = index + 1
+    }
+  }
+
+  return [...stack].reverse().find(item => item && !item.startsWith('@')) ?? '(unknown)'
+}
+
+function allowsGeneratedOverride(filePath, selector, scopes = []) {
+  return scopes.some(scope => (
+    scope.file.replaceAll('\\', '/') === filePath
+    && (scope.selectors ?? []).includes(selector)
+  ))
+}
+
 export function verifyUiTokenPolicy({ files, config }) {
   const normalizedFiles = files.map(file => ({
     path: file.path.replaceAll('\\', '/'),
@@ -27,15 +54,19 @@ export function verifyUiTokenPolicy({ files, config }) {
   }))
   const generatedFiles = new Set((config.generatedFiles ?? []).map(file => file.replaceAll('\\', '/')))
   const defined = new Set(config.externalDefinitions ?? [])
+  const generatedTokenNames = new Set()
   const diagnostics = []
   const usedLayoutConstants = new Set()
 
   for (const file of normalizedFiles) {
     const source = stripCommentsKeepingLines(file.content)
     let match
-    TOKEN_DECLARATION_PATTERN.lastIndex = 0
-    while ((match = TOKEN_DECLARATION_PATTERN.exec(source)) !== null) {
-      defined.add(match[1])
+    DECLARATION_PATTERN.lastIndex = 0
+    while ((match = DECLARATION_PATTERN.exec(source)) !== null) {
+      const property = match[1]
+      if (!property.startsWith('--')) continue
+      defined.add(property)
+      if (generatedFiles.has(file.path)) generatedTokenNames.add(property)
     }
   }
 
@@ -44,12 +75,20 @@ export function verifyUiTokenPolicy({ files, config }) {
     const source = stripCommentsKeepingLines(file.content)
     let match
 
-    TOKEN_DECLARATION_PATTERN.lastIndex = 0
-    while ((match = TOKEN_DECLARATION_PATTERN.exec(source)) !== null) {
+    DECLARATION_PATTERN.lastIndex = 0
+    while ((match = DECLARATION_PATTERN.exec(source)) !== null) {
       const [full, property, value] = match
       const line = lineNumberAt(source, match.index + full.indexOf(property))
-      if (property.startsWith('--mg-') && !matchesEntry(property, config.declarationAllowlist)) {
-        diagnostics.push(`${file.path}:${line}: unauthorized token declaration ${property}`)
+      if (property.startsWith('--')) {
+        const selector = selectorAtIndex(source, match.index + full.indexOf(property))
+        if (
+          generatedTokenNames.has(property)
+          && !allowsGeneratedOverride(file.path, selector, config.generatedTokenOverrideScopes)
+        ) {
+          diagnostics.push(`${file.path}:${line}: central token collision ${property} in selector ${selector}`)
+        } else if (property.startsWith('--mg-') && !matchesEntry(property, config.declarationAllowlist)) {
+          diagnostics.push(`${file.path}:${line}: unauthorized token declaration ${property}`)
+        }
       }
 
       RAW_COLOR_PATTERN.lastIndex = 0
@@ -74,38 +113,28 @@ export function verifyUiTokenPolicy({ files, config }) {
         }
       }
 
-      TOKEN_DECLARATION_PATTERN.lastIndex = match.index + full.length
+      DECLARATION_PATTERN.lastIndex = match.index + full.length
     }
 
-    const lines = source.split('\n')
-    lines.forEach((lineSource, lineIndex) => {
-      const declarationLine = lineSource.includes('--') && TOKEN_DECLARATION_PATTERN.test(lineSource)
-      TOKEN_DECLARATION_PATTERN.lastIndex = 0
-      if (declarationLine) return
-      const trimmedLine = lineSource.trimStart()
-      const policyProperty = trimmedLine.startsWith('@media')
-        ? '@media'
-        : trimmedLine.match(/^([A-Za-z-]+)\s*:/)?.[1]
-
+    const mediaPattern = /@media\s*([^{}]*)\{/g
+    while ((match = mediaPattern.exec(source)) !== null) {
+      const prelude = match[1]
+      const line = lineNumberAt(source, match.index)
       let raw
-      RAW_COLOR_PATTERN.lastIndex = 0
-      while ((raw = RAW_COLOR_PATTERN.exec(lineSource)) !== null) {
-        diagnostics.push(`${file.path}:${lineIndex + 1}: unauthorized raw color ${raw[0]}`)
-      }
       RAW_LAYOUT_PATTERN.lastIndex = 0
-      while ((raw = RAW_LAYOUT_PATTERN.exec(lineSource)) !== null) {
+      while ((raw = RAW_LAYOUT_PATTERN.exec(prelude)) !== null) {
         const exception = (config.layoutConstants ?? []).find(item => (
           item.file.replaceAll('\\', '/') === file.path
-          && item.property === policyProperty
+          && item.property === '@media'
           && item.value === raw[0]
         ))
         if (exception) {
           usedLayoutConstants.add(exception.name)
         } else {
-          diagnostics.push(`${file.path}:${lineIndex + 1}: unauthorized layout constant ${raw[0]}`)
+          diagnostics.push(`${file.path}:${line}: unauthorized layout constant ${raw[0]}`)
         }
       }
-    })
+    }
   }
 
   for (const file of normalizedFiles) {

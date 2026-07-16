@@ -10,6 +10,7 @@ import {
   generateBrandSnapshot,
   normalizeLineEndings,
   resolveBrandRoot,
+  sha256,
   stableJson,
 } from './brand-token-snapshot.mjs'
 import { syncBrandTokens } from './sync-brand-tokens.mjs'
@@ -132,26 +133,56 @@ try {
   ])
   assert.deepEqual(after, before, 'repeated sync must be byte-identical')
 
-  const offline = await verifyBrandTokens({ projectRoot })
+  const offline = await verifyBrandTokens({ projectRoot, expectedManifest: snapshot.manifest })
   assert.equal(offline.tokenCount, 2, 'offline verify must not require the central checkout')
 
-  await writeFile(path.join(projectRoot, 'src/styles/generated/brand.css'), `${before[0]}/* tamper */\n`)
-  await assert.rejects(() => verifyBrandTokens({ projectRoot }), /generated CSS hash mismatch/i)
+  const tamperedCss = `${before[0]}/* tamper */\n`
+  const tamperedManifest = {
+    ...snapshot.manifest,
+    generated: {
+      ...snapshot.manifest.generated,
+      css: {
+        ...snapshot.manifest.generated.css,
+        sha256: sha256(tamperedCss),
+      },
+    },
+  }
+  await writeFile(path.join(projectRoot, 'src/styles/generated/brand.css'), tamperedCss)
+  await writeFile(
+    path.join(projectRoot, 'src/styles/generated/brand.manifest.json'),
+    stableJson(tamperedManifest),
+  )
+  await assert.rejects(
+    () => verifyBrandTokens({ projectRoot, expectedManifest: snapshot.manifest }),
+    /immutable snapshot contract/i,
+  )
   await writeFile(path.join(projectRoot, 'src/styles/generated/brand.css'), before[0])
+  await writeFile(path.join(projectRoot, 'src/styles/generated/brand.manifest.json'), before[2])
 
   const matchingDrift = await checkBrandTokenDrift({
     projectRoot,
     brandRoot,
+    expectedManifest: snapshot.manifest,
     readHead: async () => 'b'.repeat(40),
   })
   assert.equal(matchingDrift.status, 'current')
   await assert.rejects(
-    () => checkBrandTokenDrift({ projectRoot, brandRoot, readHead: async () => 'c'.repeat(40) }),
+    () => checkBrandTokenDrift({
+      projectRoot,
+      brandRoot,
+      expectedManifest: snapshot.manifest,
+      readHead: async () => 'c'.repeat(40),
+    }),
     /source commit drift/i,
   )
   await writeFile(path.join(brandRoot, 'tokens', 'brand.css'), `${fixtureCss}/* drift */\n`)
   await assert.rejects(
-    () => checkBrandTokenDrift({ projectRoot, brandRoot, readHead: async () => 'b'.repeat(40) }),
+    () => checkBrandTokenDrift({
+      projectRoot,
+      brandRoot,
+      expectedManifest: snapshot.manifest,
+      readHead: async () => 'b'.repeat(40),
+    }),
     /source CSS hash drift/i,
   )
   const skipped = await checkBrandTokenDrift({

@@ -71,7 +71,7 @@ central_brand_root: "C:\\Users\\hjh\\안티그래비티\\문장군_브랜드"
 
 중앙 `DESIGN.md` v5.0의 `Editorial Showroom`을 기본 디자인 기준으로 삼는다. Ink를 주요 정보 위계와 CTA에, Forest를 상담·도움·선택 상태와 포커스에 사용한다. 큰 한글 display는 Tmoney RoundWind ExtraBold, 본문과 UI는 Pretendard를 사용한다. 과거 v3/v4 팔레트 이름을 새 canonical 토큰처럼 늘리지 않는다.
 
-프로젝트는 중앙 저장소의 토큰 파일을 런타임에 직접 참조하지 않는다. 중앙 커밋 `e6b6eb618e08b907307497d87f58995bd945531c`의 `tokens/brand.css`와 `tokens/brand.tokens.json`을 `src/styles/generated/`에 생성하고 `brand.manifest.json`의 SHA-256/114개 고유 토큰 계약으로 검증한다. `src/app/globals.css`의 import 순서는 생성 CSS → 얇은 프로젝트 어댑터 → 블로그 scoped experience다.
+프로젝트는 중앙 저장소의 토큰 파일을 런타임에 직접 참조하지 않는다. 중앙 커밋 `e6b6eb618e08b907307497d87f58995bd945531c`의 `tokens/brand.css`와 `tokens/brand.tokens.json`을 `src/styles/generated/`에 생성하고, 코드에 고정된 manifest 전체 계약과 SHA-256/114개 고유 토큰 계약으로 검증한다. primary 정보·CTA는 Ink 900/700을, 상담·도움·선택 상태와 focus ring은 Forest를 사용한다. Tmoney RoundWind는 큰 한글 display에만 쓰며, 과거 팔레트 별칭은 호환 범위를 넘어 새 canonical 토큰으로 취급하지 않는다. `src/app/globals.css`의 import 순서는 생성 CSS → 얇은 프로젝트 어댑터 → 블로그 scoped experience다.
 
 `src/styles/munjanggun-brand.css`는 중앙 canonical 토큰을 재선언하는 두 번째 정본이 아니다. 기존 화면이 아직 소비하는 별칭과 `portal`, `showroom-dark`, `admin`의 명시적 route scope만 둔다. 새 raw token은 `scripts/ui-token-policy.config.mjs`의 좁은 allowlist와 이름 있는 예외 없이 추가하지 않는다.
 

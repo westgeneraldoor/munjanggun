@@ -75,8 +75,8 @@ html {
   --mg-surface-card-subtle: var(--mg-color-neutral-150);
   --mg-surface-inverse: var(--mg-color-ink-900);
   --mg-text-primary: var(--mg-color-ink-900);
-  --mg-action-primary: var(--mg-color-forest-600);
-  --mg-action-primary-active: var(--mg-color-forest-700);
+  --mg-action-primary: var(--mg-color-ink-900);
+  --mg-action-primary-active: var(--mg-color-ink-700);
   --mg-action-primary-text: var(--mg-color-neutral-0);
   --mg-action-secondary: var(--mg-color-neutral-0);
   --mg-action-secondary-text: var(--mg-color-ink-900);
@@ -120,8 +120,8 @@ html {
   --mg-text-muted: var(--mg-color-ink-300);
   --mg-border-subtle: var(--mg-color-neutral-300);
   --mg-border-strong: var(--mg-color-neutral-500);
-  --mg-action-primary-bg: var(--mg-color-forest-600);
-  --mg-action-primary-hover: var(--mg-color-forest-700);
+  --mg-action-primary-bg: var(--mg-color-ink-900);
+  --mg-action-primary-hover: var(--mg-color-ink-700);
   --mg-action-primary-fg: var(--mg-color-neutral-0);
   --mg-current-bg: var(--mg-bg);
   --mg-current-surface: var(--mg-surface-raised);
@@ -133,7 +133,7 @@ html {
   --mg-surface-inverse: var(--mg-color-ink-900);
   --mg-text-primary: var(--mg-fg);
   --mg-action-primary: var(--mg-action-primary-bg);
-  --mg-action-primary-active: var(--mg-color-forest-700);
+  --mg-action-primary-active: var(--mg-action-primary-hover);
   --mg-action-primary-text: var(--mg-action-primary-fg);
   --mg-action-secondary: var(--mg-color-neutral-0);
   --mg-action-secondary-hover: var(--mg-color-neutral-100);
@@ -185,8 +185,8 @@ html {
   --mg-text-muted: var(--admin-text-muted);
   --mg-border-subtle: var(--admin-border);
   --mg-border-strong: var(--admin-text-muted);
-  --mg-action-primary-bg: var(--mg-color-forest-600);
-  --mg-action-primary-hover: var(--mg-color-forest-700);
+  --mg-action-primary-bg: var(--mg-color-ink-900);
+  --mg-action-primary-hover: var(--mg-color-ink-700);
   --mg-action-primary-fg: var(--mg-color-neutral-0);
   --mg-current-bg: var(--mg-bg);
   --mg-current-surface: var(--mg-surface-raised);

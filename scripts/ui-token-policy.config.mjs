@@ -5,6 +5,16 @@ const uiTokenPolicyConfig = {
     'src/styles/blog-experience.css',
   ],
   generatedFiles: ['src/styles/generated/brand.css'],
+  generatedTokenOverrideScopes: [
+    {
+      file: 'src/styles/munjanggun-brand.css',
+      selectors: [
+        '[data-mg-theme="portal"]',
+        '[data-mg-theme="showroom-dark"]',
+        '[data-mg-theme="admin"]',
+      ],
+    },
+  ],
   declarationAllowlist: [
     '--mg-action-primary',
     '--mg-action-primary-active',

@@ -49,6 +49,41 @@ export function stableJson(value) {
   return `${JSON.stringify(sortRecursively(value), null, 2)}\n`
 }
 
+function deepFreeze(value) {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.values(value).forEach(deepFreeze)
+    Object.freeze(value)
+  }
+  return value
+}
+
+export const PINNED_MANIFEST = deepFreeze(sortRecursively({
+  schemaVersion: 1,
+  designVersion: DESIGN_VERSION,
+  sourceCommit: PINNED_SOURCE_COMMIT,
+  source: {
+    css: {
+      path: SOURCE_PATHS.css,
+      sha256: 'd1a803fa3592c66121d6637ddb2fc52014ae07f4c9e2e708a61005e923fdb87c',
+    },
+    json: {
+      path: SOURCE_PATHS.json,
+      sha256: '17a330d8a26761bcd64ca69ddb860d123afd25d967b1dbbea4715ce0693f9cab',
+    },
+  },
+  generated: {
+    css: {
+      path: GENERATED_PATHS.css,
+      sha256: 'c21af4766c6e3c707f92ff8736281d48b264efca564c16e708c2ff09dfdf0103',
+    },
+    json: {
+      path: GENERATED_PATHS.json,
+      sha256: 'ed985f552b11ed005788fa7c4cd84cbc8c70c6b640246e6e31822d6e015b1b28',
+    },
+  },
+  tokenCount: EXPECTED_TOKEN_COUNT,
+}))
+
 export function collectCssCustomPropertyNames(cssSource) {
   const names = new Set()
   const declarationPattern = /(?:^|[;{]\s*|\n\s*)(--[A-Za-z0-9_-]+)\s*:/g
