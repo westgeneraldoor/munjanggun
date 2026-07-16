@@ -3,6 +3,13 @@ const uiTokenPolicyConfig = {
     'src/styles/generated/brand.css',
     'src/styles/munjanggun-brand.css',
     'src/styles/blog-experience.css',
+    'src/components/platform/ui/PlatformButton.module.css',
+    'src/components/platform/ui/PlatformIconButton.module.css',
+    'src/components/platform/ui/PlatformSegmentedControl.module.css',
+    'src/components/platform/ui/PlatformStatusBadge.module.css',
+    'src/components/platform/ui/PlatformPageHeader.module.css',
+    'src/components/platform/ui/PlatformPanel.module.css',
+    'src/components/platform/ui/PlatformStatePanel.module.css',
   ],
   generatedFiles: ['src/styles/generated/brand.css'],
   generatedTokenOverrideScopes: [
@@ -229,6 +236,18 @@ const uiTokenPolicyConfig = {
       file: 'src/styles/blog-experience.css',
       property: '--mg-blog-layout-section',
       value: '84px',
+    },
+    {
+      name: 'admin-page-header-mobile-breakpoint',
+      file: 'src/components/platform/ui/PlatformPageHeader.module.css',
+      property: '@media',
+      value: '639px',
+    },
+    {
+      name: 'admin-state-panel-mobile-breakpoint',
+      file: 'src/components/platform/ui/PlatformStatePanel.module.css',
+      property: '@media',
+      value: '639px',
     },
   ],
 }

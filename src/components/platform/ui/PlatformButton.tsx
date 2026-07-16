@@ -9,6 +9,7 @@ export interface PlatformButtonProps extends React.ButtonHTMLAttributes<HTMLButt
   size?: PlatformButtonSize
   fullWidth?: boolean
   isLoading?: boolean
+  loadingLabel?: string
 }
 
 export function PlatformButton({
@@ -16,6 +17,7 @@ export function PlatformButton({
   size = 'md',
   fullWidth = false,
   isLoading = false,
+  loadingLabel = '처리 중…',
   className,
   disabled,
   children,
@@ -36,7 +38,9 @@ export function PlatformButton({
       disabled={disabled || isLoading}
       aria-busy={isLoading || undefined}
     >
-      {children}
+      <span className={styles.content} aria-live="polite">
+        {isLoading ? loadingLabel : children}
+      </span>
     </button>
   )
 }

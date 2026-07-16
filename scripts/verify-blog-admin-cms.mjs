@@ -340,7 +340,7 @@ assert.match(queue, /ai_draft: '검토 필요'/)
 assert.match(editor, /ai_draft: '검토 필요'/)
 assert.match(editorActions, /ai_draft: \['reviewing'\]/)
 
-assert.match(queue, /<Link href=\{`\/admin\/platform\/blog\/\$\{row\.id\}`\}/)
+assert.match(queue, /<PlatformLinkButton href=\{`\/admin\/platform\/blog\/\$\{row\.id\}`\}/)
 assert.match(queue, /블로그 콘텐츠 큐/)
 assert.match(queue, /href="\/admin\/platform\/blog\/new"/)
 assert.match(queue, /승인 원고 등록/)

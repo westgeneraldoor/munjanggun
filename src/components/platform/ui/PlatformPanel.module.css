@@ -1,0 +1,16 @@
+.panel {
+  min-width: 0;
+  color: var(--mg-text-primary);
+  border: var(--mg-border-width) solid var(--mg-border-subtle);
+  border-radius: var(--mg-radius-frame);
+}
+
+.default {
+  background: var(--mg-surface-card);
+  box-shadow: var(--mg-shadow-card);
+}
+
+.subtle {
+  background: var(--mg-surface-page-soft);
+  box-shadow: none;
+}

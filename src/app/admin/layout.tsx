@@ -4,7 +4,7 @@ import styles from './layout.module.css'
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <div className={styles.layout}>
+    <div className={styles.layout} data-mg-theme="admin">
       <AdminSidebar />
       <main className={styles.main}>
         {children}

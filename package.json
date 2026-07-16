@@ -13,6 +13,7 @@
     "test:blog-editor-preview": "node scripts/test-blog-editor-preview.mjs",
     "test:brand-token-snapshot": "node scripts/test-brand-token-snapshot.mjs",
     "test:ui-token-policy": "node scripts/test-ui-token-policy.mjs",
+    "test:admin-ui-primitives": "node scripts/test-admin-ui-primitives.mjs",
     "sync:brand-tokens": "node scripts/sync-brand-tokens.mjs",
     "verify:brand-tokens": "node scripts/verify-brand-tokens.mjs",
     "check:brand-token-drift": "node scripts/check-brand-token-drift.mjs",

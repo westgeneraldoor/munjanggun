@@ -48,11 +48,13 @@
   display: flex;
   flex-direction: column;
   z-index: 50;
+  visibility: hidden;
   transform: translateX(-100%);
   transition: transform var(--transition-normal);
 }
 
 .sidebar.open {
+  visibility: visible;
   transform: translateX(0);
 }
 
@@ -179,10 +181,21 @@
   }
   
   .sidebar {
+    visibility: visible;
     transform: translateX(0);
   }
   
   .closeButton {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
+
+  .navItem.pending::after {
+    animation: none;
   }
 }
