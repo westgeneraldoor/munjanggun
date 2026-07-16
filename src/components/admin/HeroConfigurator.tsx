@@ -4,6 +4,7 @@ import React, { useId, useState } from 'react'
 import { ArrowUp, ArrowDown, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import ImageUploader from './ImageUploader'
 import styles from './HeroConfigurator.module.css'
+import type { UploadStateChange } from './useUploadPendingTracker'
 
 export interface HeroMedia {
   id?: string
@@ -21,6 +22,8 @@ interface HeroConfiguratorProps {
   mobileVideoUrl?: string
   onVideoUrlChange?: (url: string) => void
   onMobileVideoUrlChange?: (url: string) => void
+  onUploadStateChange?: UploadStateChange
+  disabled?: boolean
 }
 
 export default function HeroConfigurator({ 
@@ -30,7 +33,9 @@ export default function HeroConfigurator({
   videoUrl,
   mobileVideoUrl,
   onVideoUrlChange,
-  onMobileVideoUrlChange
+  onMobileVideoUrlChange,
+  onUploadStateChange,
+  disabled = false,
 }: HeroConfiguratorProps) {
   const instanceId = useId().replaceAll(':', '')
   const desktopImagePanelId = `${instanceId}-desktop-image-panel`
@@ -116,6 +121,7 @@ export default function HeroConfigurator({
           type="button"
           className={styles.sectionHeader}
           onClick={() => toggleSection('desktopImage')}
+          disabled={disabled}
           aria-expanded={openSections.desktopImage}
           aria-controls={desktopImagePanelId}
         >
@@ -132,14 +138,14 @@ export default function HeroConfigurator({
                     <h4 className={styles.slideTitle}>슬라이드 {index + 1}</h4>
                     <div className={styles.slideActions}>
                       <div className={styles.orderActions}>
-                        <button type="button" className={styles.actionBtn} onClick={() => handleMoveUpDesktop(index)} disabled={index === 0} aria-label={`데스크탑 슬라이드 ${index + 1} 위로 이동`} title="위로 이동">
+                        <button type="button" className={styles.actionBtn} onClick={() => handleMoveUpDesktop(index)} disabled={disabled || index === 0} aria-label={`데스크탑 슬라이드 ${index + 1} 위로 이동`} title="위로 이동">
                           <ArrowUp size={16} />
                         </button>
-                        <button type="button" className={styles.actionBtn} onClick={() => handleMoveDownDesktop(index)} disabled={index === desktopImages.length - 1} aria-label={`데스크탑 슬라이드 ${index + 1} 아래로 이동`} title="아래로 이동">
+                        <button type="button" className={styles.actionBtn} onClick={() => handleMoveDownDesktop(index)} disabled={disabled || index === desktopImages.length - 1} aria-label={`데스크탑 슬라이드 ${index + 1} 아래로 이동`} title="아래로 이동">
                           <ArrowDown size={16} />
                         </button>
                       </div>
-                      <button type="button" className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleRemoveDesktop(index)} aria-label={`데스크탑 슬라이드 ${index + 1} 삭제`} title="삭제">
+                      <button type="button" className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleRemoveDesktop(index)} disabled={disabled} aria-label={`데스크탑 슬라이드 ${index + 1} 삭제`} title="삭제">
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -157,6 +163,8 @@ export default function HeroConfigurator({
                       onDelete={() => handleRemoveDesktop(index)}
                       compressionMaxDimension={1920}
                       compressionQuality={0.8}
+                      onUploadStateChange={onUploadStateChange}
+                      disabled={disabled}
                     />
                   </div>
                 </div>
@@ -172,6 +180,8 @@ export default function HeroConfigurator({
                   multiple={true}
                   compressionMaxDimension={1920}
                   compressionQuality={0.8}
+                  onUploadStateChange={onUploadStateChange}
+                  disabled={disabled}
                   onMultiUploadComplete={(urls) => {
                     const newItems: HeroMedia[] = urls.map((url, i) => ({
                       image_url: url,
@@ -194,6 +204,7 @@ export default function HeroConfigurator({
           type="button"
           className={styles.sectionHeader}
           onClick={() => toggleSection('mobileImage')}
+          disabled={disabled}
           aria-expanded={openSections.mobileImage}
           aria-controls={mobileImagePanelId}
         >
@@ -210,14 +221,14 @@ export default function HeroConfigurator({
                     <h4 className={styles.slideTitle}>슬라이드 {index + 1}</h4>
                     <div className={styles.slideActions}>
                       <div className={styles.orderActions}>
-                        <button type="button" className={styles.actionBtn} onClick={() => handleMoveUpMobile(index)} disabled={index === 0} aria-label={`모바일 슬라이드 ${index + 1} 위로 이동`} title="위로 이동">
+                        <button type="button" className={styles.actionBtn} onClick={() => handleMoveUpMobile(index)} disabled={disabled || index === 0} aria-label={`모바일 슬라이드 ${index + 1} 위로 이동`} title="위로 이동">
                           <ArrowUp size={16} />
                         </button>
-                        <button type="button" className={styles.actionBtn} onClick={() => handleMoveDownMobile(index)} disabled={index === mobileImages.length - 1} aria-label={`모바일 슬라이드 ${index + 1} 아래로 이동`} title="아래로 이동">
+                        <button type="button" className={styles.actionBtn} onClick={() => handleMoveDownMobile(index)} disabled={disabled || index === mobileImages.length - 1} aria-label={`모바일 슬라이드 ${index + 1} 아래로 이동`} title="아래로 이동">
                           <ArrowDown size={16} />
                         </button>
                       </div>
-                      <button type="button" className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleRemoveMobile(index)} aria-label={`모바일 슬라이드 ${index + 1} 삭제`} title="삭제">
+                      <button type="button" className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleRemoveMobile(index)} disabled={disabled} aria-label={`모바일 슬라이드 ${index + 1} 삭제`} title="삭제">
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -235,6 +246,8 @@ export default function HeroConfigurator({
                       onDelete={() => handleRemoveMobile(index)}
                       compressionMaxDimension={1200}
                       compressionQuality={0.8}
+                      onUploadStateChange={onUploadStateChange}
+                      disabled={disabled}
                     />
                   </div>
                 </div>
@@ -250,6 +263,8 @@ export default function HeroConfigurator({
                   multiple={true}
                   compressionMaxDimension={1200}
                   compressionQuality={0.8}
+                  onUploadStateChange={onUploadStateChange}
+                  disabled={disabled}
                   onMultiUploadComplete={(urls) => {
                     const newItems: HeroMedia[] = urls.map((url, i) => ({
                       image_url: url,
@@ -272,6 +287,7 @@ export default function HeroConfigurator({
           type="button"
           className={styles.sectionHeader}
           onClick={() => toggleSection('desktopVideo')}
+          disabled={disabled}
           aria-expanded={openSections.desktopVideo}
           aria-controls={desktopVideoPanelId}
         >
@@ -304,6 +320,7 @@ export default function HeroConfigurator({
           type="button"
           className={styles.sectionHeader}
           onClick={() => toggleSection('mobileVideo')}
+          disabled={disabled}
           aria-expanded={openSections.mobileVideo}
           aria-controls={mobileVideoPanelId}
         >

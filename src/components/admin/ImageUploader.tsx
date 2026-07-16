@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { UploadCloud, X, Edit2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import styles from './ImageUploader.module.css'
+import type { UploadStateChange } from './useUploadPendingTracker'
 
 interface ImageUploaderProps {
   bucketName?: string
@@ -20,6 +21,8 @@ interface ImageUploaderProps {
   onUploadReplace?: (oldUrl: string, newUrl: string) => void  // blob→실제URL 교체용
   compressionMaxDimension?: number   // 압축 최대 크기 (px)
   compressionQuality?: number        // JPEG 품질 (0~1)
+  onUploadStateChange?: UploadStateChange
+  disabled?: boolean
 }
 
 export default function ImageUploader({
@@ -34,7 +37,9 @@ export default function ImageUploader({
   onMultiUploadComplete,
   onUploadReplace,
   compressionMaxDimension = 1600,
-  compressionQuality = 0.8
+  compressionQuality = 0.8,
+  onUploadStateChange,
+  disabled = false,
 }: ImageUploaderProps) {
   const fileInputId = useId().replaceAll(':', '')
   const [isDragging, setIsDragging] = useState(false)
@@ -125,7 +130,7 @@ export default function ImageUploader({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
-    if (isUploading) return
+    if (disabled || isUploading) return
     
     if (multiple) {
       const files = Array.from(e.dataTransfer.files)
@@ -137,11 +142,13 @@ export default function ImageUploader({
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return
     const file = e.target.files?.[0]
     if (file) handleUpload(file)
   }
 
   const handleMultiFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return
     const files = e.target.files
     if (!files || files.length === 0) return
     try {
@@ -150,15 +157,17 @@ export default function ImageUploader({
       logError('Multi file change error:', err)
       setError(err instanceof Error ? err.message : '업로드 중 오류가 발생했습니다.')
       setIsUploading(false)
+      onUploadStateChange?.(fileInputId, false)
       setProgress(0)
     }
   }
 
   const handleMultiFiles = async (files: File[]) => {
-    if (isUploading) return
+    if (disabled || isUploading) return
     
     setError(null)
     setIsUploading(true)
+    onUploadStateChange?.(fileInputId, true)
     setProgress(0)
     
     // 즉시 미리보기: Object URL로 사진을 바로 표시
@@ -207,6 +216,7 @@ export default function ImageUploader({
     
     setTimeout(() => {
       setIsUploading(false)
+      onUploadStateChange?.(fileInputId, false)
       setProgress(0)
     }, 500)
   }
@@ -255,6 +265,7 @@ export default function ImageUploader({
   }
 
   const handleUpload = async (file: File) => {
+    if (disabled || isUploading) return
     setError(null)
     
     // 미리보기 설정 (로컬 Object URL)
@@ -262,6 +273,7 @@ export default function ImageUploader({
     setPreviewUrl(localUrl)
 
     setIsUploading(true)
+    onUploadStateChange?.(fileInputId, true)
     setProgress(10)
 
     try {
@@ -280,19 +292,21 @@ export default function ImageUploader({
     } finally {
       setTimeout(() => {
         setIsUploading(false)
+        onUploadStateChange?.(fileInputId, false)
         setProgress(0)
       }, 500)
     }
   }
 
   const handleDeleteClick = () => {
+    if (disabled || isUploading) return
     setPreviewUrl(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
     if (onDelete) onDelete()
   }
 
   const triggerSelect = () => {
-    if (isUploading) return
+    if (disabled || isUploading) return
     fileInputRef.current?.click()
   }
 
@@ -307,6 +321,7 @@ export default function ImageUploader({
         onChange={multiple ? handleMultiFileChange : handleFileChange}
         accept={acceptTypes}
         multiple={multiple}
+        disabled={disabled || isUploading}
         className={styles.fileInput}
         aria-label="이미지 파일 선택"
       />
@@ -335,7 +350,7 @@ export default function ImageUploader({
               onClick={triggerSelect}
               title="변경"
               aria-label="이미지 변경"
-              disabled={isUploading}
+              disabled={disabled || isUploading}
             >
               <Edit2 size={16} />
             </button>
@@ -345,7 +360,7 @@ export default function ImageUploader({
               onClick={handleDeleteClick}
               title="삭제"
               aria-label="이미지 삭제"
-              disabled={isUploading}
+              disabled={disabled || isUploading}
             >
               <X size={16} />
             </button>
@@ -367,7 +382,7 @@ export default function ImageUploader({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={triggerSelect}
-          disabled={isUploading}
+          disabled={disabled || isUploading}
         >
           <UploadCloud size={32} className={styles.icon} />
           <p className={styles.text}>클릭하거나 파일을 여기로 드래그하세요</p>

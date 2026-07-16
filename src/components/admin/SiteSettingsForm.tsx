@@ -15,6 +15,7 @@ import {
   PlatformSwitch,
 } from '@/components/platform/ui'
 import styles from './SiteSettingsForm.module.css'
+import { useUploadPendingTracker } from './useUploadPendingTracker'
 
 type SiteSettingsRpcClient = {
   rpc(
@@ -104,6 +105,7 @@ export default function SiteSettingsForm({ initialData, heroMedia: initialHeroMe
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const { hasPendingUploads, onUploadStateChange } = useUploadPendingTracker()
 
   const updateField = <T,>(setter: React.Dispatch<React.SetStateAction<T>>, value: T) => {
     setSuccess(false)
@@ -112,6 +114,10 @@ export default function SiteSettingsForm({ initialData, heroMedia: initialHeroMe
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (hasPendingUploads) {
+      setError('이미지가 아직 업로드 중입니다. 완료 후 다시 시도해 주세요.')
+      return
+    }
     setIsLoading(true)
     setError(null)
     setSuccess(false)
@@ -168,7 +174,7 @@ export default function SiteSettingsForm({ initialData, heroMedia: initialHeroMe
       {error ? <PlatformStatePanel tone="error" title="설정을 저장하지 못했습니다" description={error} /> : null}
       {success ? <PlatformStatePanel tone="success" title="설정을 저장했습니다" description="변경한 쇼룸 설정이 반영되었습니다." /> : null}
 
-      <fieldset className={styles.fieldset} disabled={isLoading}>
+      <fieldset className={styles.fieldset} disabled={isLoading || hasPendingUploads}>
         <div className={styles.sections}>
           <PlatformPanel as="section" className={styles.section}>
             <div className={styles.sectionCopy}>
@@ -213,6 +219,8 @@ export default function SiteSettingsForm({ initialData, heroMedia: initialHeroMe
                 onUploadComplete={(url) => updateField<string | null>(setOgImageUrl, url)}
                 currentImageUrl={ogImageUrl || undefined}
                 onDelete={() => updateField<string | null>(setOgImageUrl, null)}
+                onUploadStateChange={onUploadStateChange}
+                disabled={isLoading || hasPendingUploads}
               />
             </div>
 
@@ -247,7 +255,7 @@ export default function SiteSettingsForm({ initialData, heroMedia: initialHeroMe
                 checked={heroEnabled}
                 onCheckedChange={(checked) => updateField(setHeroEnabled, checked)}
                 label="히어로 사용"
-                disabled={isLoading}
+                disabled={isLoading || hasPendingUploads}
               />
             </div>
 
@@ -263,6 +271,8 @@ export default function SiteSettingsForm({ initialData, heroMedia: initialHeroMe
                     mobileVideoUrl={heroMobileVideoUrl}
                     onVideoUrlChange={(url) => updateField(setHeroVideoUrl, url)}
                     onMobileVideoUrlChange={(url) => updateField(setHeroMobileVideoUrl, url)}
+                    onUploadStateChange={onUploadStateChange}
+                    disabled={isLoading || hasPendingUploads}
                   />
                 </div>
 
@@ -322,7 +332,7 @@ export default function SiteSettingsForm({ initialData, heroMedia: initialHeroMe
         </div>
 
         <div className={styles.actions}>
-          <PlatformButton type="submit" isLoading={isLoading} loadingLabel="저장 중…">
+          <PlatformButton type="submit" isLoading={isLoading} loadingLabel="저장 중…" disabled={isLoading || hasPendingUploads}>
             설정 저장
           </PlatformButton>
         </div>
