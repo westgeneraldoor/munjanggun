@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 import { QueueSourceType, QueueWorkStatus } from '@/types/database'
+import { PlatformButton, PlatformStatusBadge } from '@/components/platform/ui'
 import styles from './platform-admin.module.css'
 
 interface Props {
@@ -38,14 +39,16 @@ const ACTION_BY_STATUS: Partial<Record<QueueWorkStatus, {
 export default function UnifiedQueueActions({ sourceType, requestId, queueStatus, onCompleted }: Props) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const action = ACTION_BY_STATUS[queueStatus]
 
   if (!action) {
-    return <span className={styles.doneText}>처리완료</span>
+    return <PlatformStatusBadge tone="success">처리완료</PlatformStatusBadge>
   }
 
   const handleClick = async () => {
+    setErrorMessage(null)
     setBusy(true)
     try {
       const res = await fetch('/api/platform/admin-queue-action', {
@@ -71,16 +74,19 @@ export default function UnifiedQueueActions({ sourceType, requestId, queueStatus
         router.refresh()
       }
     } catch (error) {
-      alert(error instanceof Error ? error.message : '처리 상태를 저장하지 못했습니다.')
+      setErrorMessage(error instanceof Error ? error.message : '처리 상태를 저장하지 못했습니다.')
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <button type="button" className={styles.queueActionButton} onClick={handleClick} disabled={busy}>
-      <CheckCircle2 size={15} aria-hidden="true" />
-      <span>{busy ? '처리 중' : action.label}</span>
-    </button>
+    <div className={styles.queueActionStack}>
+      <PlatformButton type="button" onClick={handleClick} isLoading={busy} loadingLabel="처리 중…">
+        <CheckCircle2 size={15} aria-hidden="true" />
+        {action.label}
+      </PlatformButton>
+      {errorMessage ? <p className={styles.queueActionError} role="alert">{errorMessage}</p> : null}
+    </div>
   )
 }
