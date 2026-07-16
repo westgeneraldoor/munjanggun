@@ -11,12 +11,12 @@
 }
 
 .published {
-  background: rgba(34, 197, 94, 0.15);
+  background: var(--mg-state-success-surface);
   color: var(--color-success);
 }
 
 .draft {
-  background: rgba(245, 158, 11, 0.15);
+  background: var(--mg-state-pending-surface);
   color: var(--color-warning);
 }
 

@@ -32,7 +32,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--mg-overlay-scrim);
   z-index: 45;
 }
 
@@ -113,8 +113,8 @@
 }
 
 .navItem.active {
-  background-color: rgba(196, 162, 101, 0.1);
-  color: var(--admin-accent);
+  background-color: color-mix(in srgb, var(--mg-focus-ring) 10%, transparent);
+  color: var(--mg-admin-accent-text);
 }
 
 .navItem.pending {
@@ -126,7 +126,7 @@
   width: 7px;
   height: 7px;
   margin-left: auto;
-  border-radius: 999px;
+  border-radius: var(--mg-radius-full);
   background: var(--admin-accent);
   animation: pendingPulse 0.72s ease-in-out infinite alternate;
 }

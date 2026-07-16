@@ -10,7 +10,7 @@
   flex: 1;
   padding: var(--space-4);
   /* for mobile, padding top will account for header */
-  padding-top: calc(var(--space-4) + 56px); /* 56px is mobile header height */
+  padding-top: calc(var(--space-4) + var(--admin-mobile-header-height));
 }
 
 @media (min-width: 1024px) {
@@ -21,6 +21,6 @@
   .main {
     padding: var(--space-8);
     padding-top: var(--space-8);
-    margin-left: 240px; /* Sidebar width */
+    margin-left: var(--admin-sidebar-width);
   }
 }

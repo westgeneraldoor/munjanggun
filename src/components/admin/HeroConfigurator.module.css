@@ -80,7 +80,7 @@
 }
 
 .deleteBtn:hover {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: var(--mg-state-danger-surface);
 }
 
 .addPhotoSection {
@@ -167,7 +167,7 @@
 }
 
 .sectionHeader:hover {
-  background-color: var(--admin-hover);
+  background-color: var(--mg-surface-sunken);
 }
 
 .sectionHeader:focus-visible,
@@ -222,5 +222,5 @@
 .videoInput:focus {
   outline: none;
   border-color: var(--admin-accent);
-  box-shadow: 0 0 0 2px rgba(var(--admin-accent-rgb), 0.1);
+  box-shadow: var(--mg-focus-shadow);
 }

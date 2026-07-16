@@ -145,18 +145,18 @@
 }
 
 .row:focus-visible td {
-  box-shadow: inset 0 0 0 2px rgba(196, 162, 101, 0.45);
+  box-shadow: var(--mg-focus-shadow-inset);
 }
 
 .rowSelected td {
-  background: #eef8f1 !important;
+  background: var(--mg-admin-accent-surface) !important;
 }
 
 .stackCell {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--mg-space-1);
 }
 
 .stackCell strong,
@@ -205,9 +205,9 @@
 }
 
 .categoryPill {
-  color: #173b31;
-  background: #eef8f1;
-  border: 1px solid #cae3d0;
+  color: var(--mg-admin-accent-text);
+  background: var(--mg-admin-accent-surface);
+  border: 1px solid var(--mg-admin-accent-border);
 }
 
 .riskBadges {
@@ -222,26 +222,26 @@
 }
 
 .risk_danger {
-  color: #991b1b;
-  background: #fee2e2;
-  border-color: #fecaca;
+  color: var(--mg-state-danger);
+  background: var(--mg-state-danger-surface);
+  border-color: var(--mg-state-danger-border);
 }
 
 .risk_warning {
-  color: #8a5d00;
-  background: #fff3cd;
-  border-color: #fde68a;
+  color: var(--mg-state-pending);
+  background: var(--mg-state-pending-surface);
+  border-color: var(--mg-state-pending-border);
 }
 
 .risk_info {
-  color: #1d4ed8;
-  background: #eff6ff;
-  border-color: #bfdbfe;
+  color: var(--mg-state-proof);
+  background: var(--mg-state-proof-surface);
+  border-color: var(--mg-state-proof-border);
 }
 
 .safeBadge {
-  color: #17643d;
-  background: #e7f6ec;
+  color: var(--mg-state-success);
+  background: var(--mg-state-success-surface);
 }
 
 .desktopDetail {
@@ -377,7 +377,7 @@
 
 .mobileCardButton:focus-visible {
   outline: 2px solid var(--admin-ring);
-  outline-offset: 2px;
+  outline-offset: var(--admin-focus-offset);
 }
 
 .mobileCardTop {

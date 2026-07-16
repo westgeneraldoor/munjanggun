@@ -23,7 +23,7 @@
 
 .eyebrow {
   margin-bottom: var(--space-1);
-  color: var(--admin-accent);
+  color: var(--mg-admin-accent-text);
   font-size: var(--text-xs);
   font-weight: var(--font-bold);
   letter-spacing: 0.06em;
@@ -81,17 +81,17 @@
 .queueLink:hover,
 .secondaryButton:hover,
 .iconButton:hover:not(:disabled) {
-  color: #4c3510;
-  background: #fff7e7;
-  border-color: #a2762d;
+  color: var(--mg-admin-accent-text);
+  background: var(--mg-admin-accent-surface);
+  border-color: var(--mg-admin-accent-border);
 }
 
 .queueLink:active,
 .secondaryButton:active,
 .iconButton:active:not(:disabled) {
-  color: #ffffff;
-  background: #5b4219;
-  border-color: #5b4219;
+  color: var(--mg-color-ink-900);
+  background: var(--mg-admin-accent-border);
+  border-color: var(--admin-accent);
 }
 
 .queueLink:focus-visible,
@@ -102,8 +102,8 @@
 .field textarea:focus-visible,
 .field select:focus-visible,
 .compactField select:focus-visible {
-  outline: 3px solid rgba(122, 91, 34, 0.38);
-  outline-offset: 2px;
+  outline: 3px solid color-mix(in srgb, var(--mg-state-pending) 38%, transparent);
+  outline-offset: var(--admin-focus-offset);
 }
 
 .form {
@@ -169,7 +169,7 @@
 .compactField select {
   width: 100%;
   min-width: 0;
-  padding: 10px 12px;
+  padding: calc(var(--mg-space-2) + (var(--mg-space-1) / 2)) var(--mg-space-3);
   color: var(--admin-text);
   background: var(--admin-surface-elevated);
   border: 1px solid var(--admin-border);
@@ -190,8 +190,8 @@
 .primaryButton:disabled,
 .iconButton:disabled {
   color: var(--admin-text-muted);
-  background: #e9edf1;
-  border-color: #d7dde3;
+  background: var(--mg-disabled-surface);
+  border-color: var(--mg-border-subtle);
   cursor: not-allowed;
 }
 
@@ -262,7 +262,7 @@
 
 .feedback {
   min-height: 1.5em;
-  color: #9f2f2f;
+  color: var(--mg-state-danger);
   font-size: var(--text-sm);
   line-height: 1.5;
 }
@@ -270,21 +270,21 @@
 .primaryButton {
   flex: 0 0 auto;
   padding: 0 var(--space-4);
-  color: #ffffff;
-  background: #71521d;
-  border: 1px solid #71521d;
+  color: var(--mg-action-primary-fg);
+  background: var(--mg-action-primary-bg);
+  border: 1px solid var(--mg-action-primary-bg);
 }
 
 .primaryButton:hover:not(:disabled) {
-  color: #ffffff;
-  background: #523a12;
-  border-color: #523a12;
+  color: var(--mg-action-primary-fg);
+  background: var(--mg-action-primary-hover);
+  border-color: var(--mg-action-primary-hover);
 }
 
 .primaryButton:active:not(:disabled) {
-  color: #ffffff;
-  background: #3f2b0d;
-  border-color: #3f2b0d;
+  color: var(--mg-action-primary-fg);
+  background: var(--mg-action-primary-active);
+  border-color: var(--mg-action-primary-active);
 }
 
 .srOnly {
@@ -292,7 +292,7 @@
   width: 1px;
   height: 1px;
   padding: 0;
-  margin: -1px;
+  margin: var(--admin-sr-offset);
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;

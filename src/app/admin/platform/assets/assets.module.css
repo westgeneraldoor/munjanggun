@@ -45,7 +45,7 @@
 
 .uploadDrop svg {
   flex: 0 0 auto;
-  color: var(--admin-accent);
+  color: var(--mg-admin-accent-text);
 }
 
 .uploadDrop strong,
@@ -59,7 +59,7 @@
 }
 
 .uploadDrop span {
-  margin-top: 4px;
+  margin-top: var(--mg-space-1);
   font-size: var(--text-sm);
 }
 
@@ -128,7 +128,7 @@
 }
 
 .limitWarning {
-  color: var(--mg-status-danger-text);
+  color: var(--mg-state-danger);
   background: var(--mg-state-danger-surface);
   border: var(--mg-border-width) solid color-mix(in srgb, var(--mg-status-error) 28%, transparent);
 }
@@ -273,7 +273,7 @@
 .filterGrid select:focus,
 .searchBox input:focus {
   border-color: var(--admin-accent);
-  box-shadow: 0 0 0 var(--mg-focus-ring-offset) color-mix(in srgb, var(--mg-focus-ring) 20%, transparent);
+  box-shadow: var(--mg-focus-shadow);
 }
 
 .uploadActions {
@@ -459,7 +459,7 @@
 
 .assetCard:focus-visible {
   outline: 2px solid var(--admin-ring);
-  outline-offset: 2px;
+  outline-offset: var(--admin-focus-offset);
 }
 
 .cardThumb {
@@ -584,11 +584,11 @@
 }
 
 .saveMessage[data-tone='success'] {
-  color: var(--mg-status-success-text);
+  color: var(--mg-state-success);
 }
 
 .saveMessage[data-tone='error'] {
-  color: var(--mg-status-danger-text);
+  color: var(--mg-state-danger);
 }
 
 .mobileDetail {

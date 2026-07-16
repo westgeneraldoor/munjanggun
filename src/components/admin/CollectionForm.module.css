@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.4);
+  background-color: var(--mg-overlay-scrim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -74,7 +74,7 @@
 .input:focus-visible, .textarea:focus-visible, .select:focus-visible {
   outline: none;
   border-color: var(--admin-accent);
-  box-shadow: 0 0 0 3px rgba(196, 162, 101, 0.15);
+  box-shadow: var(--mg-focus-shadow);
 }
 
 .input:disabled, .textarea:disabled, .select:disabled {
@@ -90,7 +90,7 @@
 }
 
 .error {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: var(--mg-state-danger-surface);
   color: var(--color-error);
   padding: var(--space-3);
   border-radius: var(--radius-md);
@@ -166,11 +166,11 @@
 }
 
 .inputError {
-  border-color: #ef4444 !important;
+  border-color: var(--mg-state-danger) !important;
 }
 
 .slugWarning {
   font-size: var(--text-xs);
-  color: #ef4444;
+  color: var(--mg-state-danger);
   margin-top: var(--space-1);
 }

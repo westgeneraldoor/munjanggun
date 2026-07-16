@@ -39,7 +39,7 @@ textarea.control {
 
 .control:focus-visible {
   border-color: var(--mg-focus-ring);
-  box-shadow: 0 0 0 var(--mg-focus-ring-width) color-mix(in srgb, var(--mg-focus-ring) 12%, transparent);
+  box-shadow: var(--mg-focus-shadow-soft);
 }
 
 .control:disabled {

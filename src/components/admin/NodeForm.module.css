@@ -60,7 +60,7 @@
   padding: var(--space-4);
   border: 1px solid var(--admin-border);
   border-radius: var(--radius-md);
-  background: var(--admin-bg-hover);
+  background: var(--mg-surface-sunken);
 }
 
 .previewUrl {
