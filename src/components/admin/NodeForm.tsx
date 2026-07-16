@@ -7,6 +7,7 @@ import { generateSlug, validateSlug } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Database } from '@/types/database'
 import { Link2, Copy, Check } from 'lucide-react'
+import { PlatformSwitch } from '@/components/platform/ui'
 import ImageUploader from './ImageUploader'
 import HeroConfigurator from './HeroConfigurator'
 import GalleryManager from './GalleryManager'
@@ -402,18 +403,12 @@ export default function NodeForm({ node, heroMedia: initialHeroMedia, galleryPho
               <h3 className={styles.sectionTitle}>히어로 설정</h3>
               <p className={styles.sectionDesc} style={{ marginBottom: 0 }}>목록 페이지 상단에 표시될 히어로 영역입니다.</p>
             </div>
-            <label className={styles.switchContainer}>
-              <span className={styles.label} style={{ marginBottom: 0 }}>사용</span>
-              <div 
-                className={styles.switch} 
-                data-checked={heroEnabled}
-                onClick={() => {
-                  setHeroEnabled(!heroEnabled)
-                }}
-              >
-                <div className={styles.switchThumb} />
-              </div>
-            </label>
+            <PlatformSwitch
+              checked={heroEnabled}
+              onCheckedChange={setHeroEnabled}
+              label="히어로 사용"
+              disabled={isLoading}
+            />
           </div>
 
           {heroEnabled && (

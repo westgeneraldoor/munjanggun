@@ -7,6 +7,7 @@ const uiTokenPolicyConfig = {
     'src/components/platform/ui/PlatformIconButton.module.css',
     'src/components/platform/ui/PlatformSegmentedControl.module.css',
     'src/components/platform/ui/PlatformStatusBadge.module.css',
+    'src/components/platform/ui/PlatformSwitch.module.css',
     'src/components/platform/ui/PlatformPageHeader.module.css',
     'src/components/platform/ui/PlatformPanel.module.css',
     'src/components/platform/ui/PlatformStatePanel.module.css',

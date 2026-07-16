@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import ImageUploader from './ImageUploader'
 import HeroConfigurator from './HeroConfigurator'
+import { PlatformSwitch } from '@/components/platform/ui'
 import styles from './SiteSettingsForm.module.css'
 
 interface SiteSettingsData {
@@ -253,24 +254,12 @@ export default function SiteSettingsForm({ initialData, heroMedia: initialHeroMe
               <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 'bold' }}>메인 히어로 설정</h2>
               <p style={{ color: 'var(--admin-text-sub)', fontSize: 'var(--text-sm)' }}>메인 페이지 상단에 표시될 히어로 영역입니다.</p>
             </div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer' }}>
-              <span style={{ fontSize: 'var(--text-sm)', fontWeight: 'bold', color: 'var(--admin-text)' }}>사용</span>
-              <div 
-                style={{ 
-                  width: '44px', height: '24px', background: heroEnabled ? 'var(--admin-primary)' : 'var(--admin-border)', 
-                  borderRadius: '12px', position: 'relative', transition: 'background-color 0.2s'
-                }}
-                onClick={() => {
-                  setHeroEnabled(!heroEnabled)
-                }}
-              >
-                <div style={{ 
-                  position: 'absolute', top: '2px', left: heroEnabled ? '22px' : '2px', 
-                  width: '20px', height: '20px', background: 'white', borderRadius: '50%', 
-                  transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                }} />
-              </div>
-            </label>
+            <PlatformSwitch
+              checked={heroEnabled}
+              onCheckedChange={setHeroEnabled}
+              label="히어로 사용"
+              disabled={isLoading}
+            />
           </div>
 
           {heroEnabled && (
