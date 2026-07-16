@@ -87,8 +87,8 @@ Codex 완성 원고 → 승인 원고 등록 → reviewing 콘텐츠 큐 → 사
 
 ### 외부 원고 작성과 CMS 인계
 
-1. Codex는 문장군_브랜드와 문장군블로그를 조사한 뒤, 본문 블록과 `summary_answer`, `target_question`, `primary_keyword`, `related_questions`, `source_evidence`를 포함한 원고를 외부에서 작성한다.
-2. 인증된 관리자는 `/admin/platform/blog/new`의 승인 원고 등록 화면에서 원고의 메타데이터, 본문 블록, 근거를 구조화해 등록한다. 새 승인 원고는 `reviewing`에서 시작한다.
+1. Codex는 문장군_브랜드와 문장군블로그를 조사한 뒤, 본문 블록과 `summary_answer`, `target_question`, `primary_keyword`, `related_questions`를 포함한 원고를 외부에서 작성한다.
+2. 인증된 관리자는 `/admin/platform/blog/new`의 승인 원고 등록 화면에서 원고의 메타데이터와 본문 블록을 등록한다. 새 승인 원고는 `reviewing`에서 시작하고, 서버는 내부 `source_evidence` provenance를 자동 기록한다.
 3. 등록 직후 원고는 `reviewing` 콘텐츠 큐에서 사진 연결, 에디터 수정, 브랜드·사실 검수를 진행한다.
 4. 사진·검수 게이트를 통과한 원고만 관리자 미리보기와 발행 단계로 이동한다.
 5. `/admin/platform/blog`와 그 server action에는 AI 생성 요청, 모델 선택, AI 전용 환경변수나 비밀값 설정이 없다.
@@ -97,7 +97,7 @@ Codex 완성 원고 → 승인 원고 등록 → reviewing 콘텐츠 큐 → 사
 ### 원고 검수
 
 1. 관리자는 `/admin/platform/blog`에서 승인된 원고와 레거시 검토 대상을 확인한다.
-2. 카테고리, 상태, 사진 부족, 금지표현 경고, 근거 확인 필요 여부로 필터링한다.
+2. 카테고리, 상태, 사진 부족, 금지표현 경고로 필터링한다.
 3. 글을 선택하면 `/admin/platform/blog/[id]` 에디터로 이동한다.
 4. 관리자는 제목, slug, 본문 블록, SEO/AEO 필드, CTA를 검토한다.
 
@@ -142,7 +142,6 @@ Codex 완성 원고 → 승인 원고 등록 → reviewing 콘텐츠 큐 → 사
 - 대표 이미지 또는 사진 부족 사유 확인
 - 모든 공개 이미지 alt 입력
 - 금지표현 없음
-- 사실관계 확인일 입력
 - 미리보기 확인
 
 금지표현과 위험 주제:

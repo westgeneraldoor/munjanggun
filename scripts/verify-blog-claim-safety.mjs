@@ -39,108 +39,26 @@ function codes(result) {
   assert.equal(result.status, 'passed')
 }
 
-for (const status of ['needs_confirmation', 'restricted', 'expired']) {
-  const result = validateBlogClaimSafety({
-    mode: 'publish',
-    sourceEvidence: [{ claim_id: `claim-${status}`, status }],
-  })
-
-  assert.equal(result.passed, false, `${status} claims should block publishing`)
-  assert.ok(codes(result).includes(`claim_status_${status}`))
-}
-
-{
-  const draft = validateBlogClaimSafety({
-    mode: 'draft',
-    sourceEvidence: [{ claim_id: 'claim-candidate', status: 'candidate' }],
-  })
-  const ready = validateBlogClaimSafety({
-    mode: 'ready',
-    sourceEvidence: [{ claim_id: 'claim-candidate', status: 'candidate' }],
-  })
-
-  assert.equal(draft.passed, true, 'candidate evidence may remain in draft mode for review')
-  assert.equal(ready.passed, false, 'candidate evidence should block ready/publish gates')
-  assert.ok(codes(ready).includes('claim_status_candidate'))
-}
-
 {
   const result = validateBlogClaimSafety({
     mode: 'publish',
-    sourceEvidence: [{ claim_id: 'claim-review-count', type: 'review_count' }],
+    sourceEvidence: [],
   })
 
-  assert.equal(result.passed, false, 'volatile claims need an explicit status before publishing')
-  assert.ok(codes(result).includes('claim_status_missing'))
-  assert.ok(codes(result).includes('volatile_claim_missing_status'))
+  assert.equal(result.passed, true, 'missing provenance must not block publishing')
+  assert.equal(result.status, 'passed')
+  assert.deepEqual(result.issues, [])
 }
 
-{
-  const result = validateBlogClaimSafety({
-    mode: 'publish',
-    sourceEvidence: [{ ref: 'EVIDENCE_REGISTER' }],
-  })
-
-  assert.equal(result.passed, false, 'loose evidence references without claim status should not pass')
-  assert.ok(codes(result).includes('claim_status_missing'))
-}
-
-{
-  const result = validateBlogClaimSafety({
-    mode: 'publish',
-    sourceEvidence: [{ status: 'publishable' }],
-  })
-
-  assert.equal(result.passed, false, 'evidence rows need a traceable claim/source/proof/asset id')
-  assert.ok(codes(result).includes('evidence_missing_ref'))
-}
-
-{
-  const result = validateBlogClaimSafety({
-    mode: 'publish',
-    sourceEvidence: [
-      {
-        claim_id: 'claim-price-guide',
-        status: 'vetted',
-        type: 'price',
-        checked_at: '2026-07-03',
-      },
-    ],
-  })
-
-  assert.equal(result.passed, true, 'vetted volatile claims with checked_at should pass')
-}
-
-{
-  const result = validateBlogClaimSafety({
-    mode: 'ready',
-    sourceEvidence: [
-      {
-        claim_id: 'claim-event',
-        status: 'publishable',
-        type: 'event',
-      },
-    ],
-  })
-
-  assert.equal(result.passed, false, 'volatile publishable claims without checked_at should block ready/publish gates')
-  assert.ok(codes(result).includes('volatile_claim_missing_checked_at'))
-}
-
-{
-  const result = validateBlogClaimSafety({
-    mode: 'publish',
-    sourceEvidence: [
-      {
-        asset_id: 'asset-price-tagged',
-        status: 'vetted',
-        tags: ['product:door', 'claim_type:price'],
-      },
-    ],
-  })
-
-  assert.equal(result.passed, false, 'claim_type tags should trigger volatile freshness gates')
-  assert.ok(codes(result).includes('volatile_claim_missing_checked_at'))
+for (const sourceEvidence of [
+  [{ claim_id: 'claim-candidate', status: 'candidate' }],
+  [{ claim_id: 'claim-expired', status: 'expired' }],
+  [{ status: 'publishable' }],
+  [{ claim_id: 'claim-event', status: 'publishable', type: 'event' }],
+]) {
+  const result = validateBlogClaimSafety({ mode: 'publish', sourceEvidence })
+  assert.equal(result.passed, true, 'provenance completeness, status, and freshness must not be publish gates')
+  assert.deepEqual(result.issues, [])
 }
 
 {
@@ -192,10 +110,10 @@ for (const status of ['needs_confirmation', 'restricted', 'expired']) {
 {
   const result = validateBlogClaimSafety({
     mode: 'publish',
-    sourceEvidence: [{ claim_id: 'claim-review-raw', type: 'raw_review', status: 'publishable' }],
+    sourceEvidence: [{ claim_id: 'claim-review-raw', type: 'RAW_REVIEW', status: 'publishable' }],
   })
 
-  assert.equal(result.passed, false, 'raw review evidence should not be directly publishable')
+  assert.equal(result.passed, false, 'raw review provenance should remain private regardless of case')
   assert.ok(codes(result).includes('private_source_type'))
 }
 

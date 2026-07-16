@@ -37,7 +37,6 @@ export type ApprovedManuscriptPayload = {
   relatedQuestions?: string[]
   serviceArea?: string | null
   productType?: string | null
-  sourceEvidence: Array<Record<string, unknown>>
   blocks: ApprovedManuscriptBlock[]
 }
 
@@ -137,37 +136,6 @@ const BLOCK_TYPES = new Set<ApprovedManuscriptBlockType>([
   'cta',
   'qa',
 ])
-const TRACEABLE_EVIDENCE_STATUSES = new Set(['publishable', 'vetted'])
-const APPROVED_EVIDENCE_KEYS = new Set(['claim_id', 'status', 'claim_type', 'checked_at'])
-const VOLATILE_CLAIM_TYPES = new Set([
-  'price',
-  'discount',
-  'installment',
-  'review_count',
-  'review',
-  'schedule',
-  'as',
-  'warranty',
-  'travel_fee',
-  'service_area',
-  'event',
-])
-const APPROVED_CLAIM_TYPES = new Set(['scope', ...VOLATILE_CLAIM_TYPES])
-
-function isIsoDate(value: string) {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
-  if (!match) return false
-
-  const year = Number(match[1])
-  const month = Number(match[2])
-  const day = Number(match[3])
-  const date = new Date(Date.UTC(year, month - 1, day))
-
-  return date.getUTCFullYear() === year
-    && date.getUTCMonth() === month - 1
-    && date.getUTCDate() === day
-}
-
 function cleanText(value: unknown) {
   if (typeof value !== 'string') return ''
   return value.replace(/\s+/g, ' ').trim()
@@ -197,28 +165,6 @@ function nestedText(value: JsonValue): string[] {
   if (Array.isArray(value)) return value.flatMap(nestedText)
   if (value && typeof value === 'object') return Object.values(value).flatMap(nestedText)
   return []
-}
-
-function normalizeEvidence(value: unknown) {
-  if (!isRecord(value)) return null
-
-  const entries = Object.entries(value)
-  if (entries.some(([key, item]) => !APPROVED_EVIDENCE_KEYS.has(key) || typeof item !== 'string')) return null
-
-  const reference = cleanText(value.claim_id)
-  const status = cleanText(value.status)
-  const claimType = cleanText(value.claim_type).toLocaleLowerCase('ko-KR').replace(/^claim[_-]?type:/, '')
-  const checkedAt = cleanText(value.checked_at)
-  if (!reference || !TRACEABLE_EVIDENCE_STATUSES.has(status) || !APPROVED_CLAIM_TYPES.has(claimType)) return null
-  if (checkedAt && !isIsoDate(checkedAt)) return null
-  if (VOLATILE_CLAIM_TYPES.has(claimType) && !checkedAt) return null
-
-  return {
-    claim_id: reference,
-    status,
-    claim_type: claimType,
-    ...(checkedAt ? { checked_at: checkedAt } : {}),
-  }
 }
 
 function normalizeBlock(value: ApprovedManuscriptBlock) {
@@ -284,15 +230,7 @@ export async function registerApprovedManuscript(
   if (!CATEGORIES.has(category)) return failure('콘텐츠 분류가 올바르지 않습니다.')
   if (!excerpt || !seoTitle || !metaDescription) return failure('요약과 SEO 제목, 메타 설명을 모두 입력해야 합니다.')
   if (!targetQuestion || !summaryAnswer) return failure('대상 질문과 요약 답변을 모두 입력해야 합니다.')
-  if (!Array.isArray(payload.sourceEvidence) || payload.sourceEvidence.length === 0) return failure('추적 가능한 근거를 하나 이상 입력해야 합니다.')
   if (!Array.isArray(payload.blocks) || payload.blocks.length === 0) return failure('본문 블록을 하나 이상 입력해야 합니다.')
-
-  const sourceEvidenceCandidates = payload.sourceEvidence.map(normalizeEvidence)
-  if (sourceEvidenceCandidates.some(evidence => evidence === null)) {
-    return failure('근거에는 허용된 상태와 추적 가능한 참조값이 필요합니다.')
-  }
-
-  const sourceEvidence = sourceEvidenceCandidates as Array<Record<string, JsonValue>>
   const blockCandidates = payload.blocks.map(normalizeBlock)
   if (blockCandidates.some(block => block === null)) {
     return failure('본문 블록 형식 또는 필수 입력값이 올바르지 않습니다.')
@@ -306,6 +244,12 @@ export async function registerApprovedManuscript(
   const canonicalUrl = cleanText(payload.canonicalUrl) || null
   const serviceArea = cleanText(payload.serviceArea) || null
   const productType = cleanText(payload.productType) || null
+  const sourceEvidence: Array<Record<string, JsonValue>> = [{
+    source_id: `approved-manuscript:${slug}`,
+    source_kind: 'approved_manuscript_intake',
+    recorded_at: now,
+    visibility: 'internal',
+  }]
   const textSegments = [
     slug,
     excerpt,
@@ -319,7 +263,6 @@ export async function registerApprovedManuscript(
     ...relatedQuestions,
     serviceArea,
     productType,
-    ...sourceEvidence.flatMap(nestedText),
     ...blocks.flatMap(block => [block.text ?? '', ...nestedText(block.metadata)]),
   ].filter((segment): segment is string => Boolean(segment))
   const claimSafety = await repository.validateClaimSafety({
@@ -353,7 +296,7 @@ export async function registerApprovedManuscript(
       intake: 'approved_manuscript',
       status: claimSafety.status,
       passed: claimSafety.passed,
-      evidence_count: claimSafety.evidenceCount,
+      provenance_count: sourceEvidence.length,
       blockers: claimSafety.blockers,
       warnings: claimSafety.warnings,
       forbidden_terms: claimSafety.forbiddenTerms,

@@ -74,13 +74,11 @@ export type BlogEditorPost = {
   serviceArea: string | null
   productType: string | null
   aiCitationReady: boolean
-  lastFactCheckedAt: string | null
   mediaMissingReason: string | null
   publishedAt: string | null
   createdAt: string
   updatedAt: string
   gateSummary: {
-    sourceEvidenceCount: number
     brandCheck: {
       hasResult: boolean
       forbiddenExpression: boolean
@@ -299,18 +297,6 @@ function formatDateTime(value: string | null) {
     hour12: false,
     timeZone: 'Asia/Seoul',
   }).format(new Date(value))
-}
-
-function toDateTimeLocal(value: string | null) {
-  if (!value) return ''
-  const date = new Date(value)
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-  return local.toISOString().slice(0, 16)
-}
-
-function fromDateTimeLocal(value: string) {
-  if (!value) return null
-  return new Date(value).toISOString()
 }
 
 function createBlock(type: BlogBlockType, options: { mediaId?: string | null; photoSlotLabel?: string } = {}): EditableBlock {
@@ -1184,11 +1170,9 @@ export default function BlogEditorClient({
     serviceArea: initialPost.serviceArea,
     productType: initialPost.productType,
     aiCitationReady: initialPost.aiCitationReady,
-    lastFactCheckedAt: initialPost.lastFactCheckedAt,
     mediaMissingReason: initialPost.mediaMissingReason,
   })
   const [relatedText, setRelatedText] = useState(initialPost.relatedQuestions.join('\n'))
-  const [factCheckedLocal, setFactCheckedLocal] = useState(toDateTimeLocal(initialPost.lastFactCheckedAt))
   const [blocks, setBlocks] = useState<EditableBlock[]>(initialBlocks.map(block => ({
     ...block,
     clientId: block.id,
@@ -1207,7 +1191,6 @@ export default function BlogEditorClient({
   const summaryAnswerRef = useRef<HTMLTextAreaElement>(null)
   const metaDescriptionRef = useRef<HTMLTextAreaElement>(null)
   const targetQuestionRef = useRef<HTMLTextAreaElement>(null)
-  const factCheckedRef = useRef<HTMLInputElement>(null)
   const coverPickerRef = useRef<HTMLDivElement>(null)
   const blockToolbarRef = useRef<HTMLDivElement>(null)
   const blockListRef = useRef<HTMLDivElement>(null)
@@ -1366,12 +1349,6 @@ export default function BlogEditorClient({
       label: 'SEO',
       detail: !post.metaDescription?.trim() ? '메타 설명' : !post.targetQuestion?.trim() ? '타깃 질문' : undefined,
     },
-    {
-      key: 'fact',
-      ok: Boolean(factCheckedLocal && initialPost.gateSummary.sourceEvidenceCount > 0),
-      label: '근거',
-      detail: !factCheckedLocal ? '사실 확인일' : `${initialPost.gateSummary.sourceEvidenceCount}개`,
-    },
   ]
 
   const jumpGateItem = (key: string) => {
@@ -1404,9 +1381,6 @@ export default function BlogEditorClient({
     if (key === 'seo') {
       jumpToSeoField(post.metaDescription?.trim() ? targetQuestionRef : metaDescriptionRef)
       return
-    }
-    if (key === 'fact') {
-      jumpToSeoField(factCheckedRef)
     }
   }
 
@@ -1501,7 +1475,6 @@ export default function BlogEditorClient({
       serviceArea: emptyToNull(post.serviceArea ?? ''),
       productType: emptyToNull(post.productType ?? ''),
       aiCitationReady: post.aiCitationReady,
-      lastFactCheckedAt: fromDateTimeLocal(factCheckedLocal),
       mediaMissingReason: emptyToNull(post.mediaMissingReason ?? ''),
     },
     blocks: blocks.map(block => ({
@@ -1531,7 +1504,6 @@ export default function BlogEditorClient({
       serviceArea: emptyToNull(initialPost.serviceArea ?? ''),
       productType: emptyToNull(initialPost.productType ?? ''),
       aiCitationReady: initialPost.aiCitationReady,
-      lastFactCheckedAt: fromDateTimeLocal(toDateTimeLocal(initialPost.lastFactCheckedAt)),
       mediaMissingReason: emptyToNull(initialPost.mediaMissingReason ?? ''),
     },
     blocks: initialBlocks.map(block => ({
@@ -2103,9 +2075,6 @@ export default function BlogEditorClient({
                   <input value={post.productType ?? ''} onChange={event => updatePost('productType', event.target.value)} />
                 </Field>
               </div>
-              <Field label="사실 확인일">
-                <input ref={factCheckedRef} type="datetime-local" value={factCheckedLocal} onChange={event => setFactCheckedLocal(event.target.value)} />
-              </Field>
             </div>
 
             <details className={styles.activityDetails}>

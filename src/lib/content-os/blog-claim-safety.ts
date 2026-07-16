@@ -1,11 +1,3 @@
-export type BlogClaimStatus =
-  | 'publishable'
-  | 'vetted'
-  | 'candidate'
-  | 'needs_confirmation'
-  | 'restricted'
-  | 'expired'
-
 export type BlogClaimSafetyMode = 'draft' | 'ready' | 'publish'
 
 export type BlogClaimSafetyIssue = {
@@ -34,22 +26,6 @@ export type BlogClaimSafetyInput = {
 }
 
 type EvidenceRecord = Record<string, unknown>
-
-const BLOCKED_CLAIM_STATUSES = new Set<BlogClaimStatus>(['needs_confirmation', 'restricted', 'expired'])
-const SAFE_CLAIM_STATUSES = new Set<BlogClaimStatus>(['publishable', 'vetted'])
-const VOLATILE_CLAIM_TYPES = new Set([
-  'price',
-  'discount',
-  'installment',
-  'review_count',
-  'review',
-  'schedule',
-  'as',
-  'warranty',
-  'travel_fee',
-  'service_area',
-  'event',
-])
 
 const FORBIDDEN_COPY_RULES: Array<{ code: string; term: string; pattern: RegExp; message: string }> = [
   {
@@ -94,21 +70,6 @@ function asString(value: unknown) {
   return typeof value === 'string' ? value.trim() : ''
 }
 
-function normalizeStatus(value: unknown): BlogClaimStatus | null {
-  const status = asString(value)
-  if (
-    status === 'publishable' ||
-    status === 'vetted' ||
-    status === 'candidate' ||
-    status === 'needs_confirmation' ||
-    status === 'restricted' ||
-    status === 'expired'
-  ) {
-    return status
-  }
-  return null
-}
-
 function normalizeEvidenceArray(value: unknown): EvidenceRecord[] {
   if (!Array.isArray(value)) return []
   return value.filter(isRecord)
@@ -122,58 +83,8 @@ function evidenceString(evidence: EvidenceRecord, ...keys: string[]) {
   return ''
 }
 
-function evidenceStatus(evidence: EvidenceRecord) {
-  return normalizeStatus(evidence.status ?? evidence.claim_status ?? evidence.claimStatus ?? evidence.usageStatus ?? evidence.usage_status)
-}
-
 function evidenceRef(evidence: EvidenceRecord) {
   return evidenceString(evidence, 'claim_id', 'claimId', 'proof_id', 'proofId', 'asset_id', 'assetId', 'source_id', 'sourceId', 'ref')
-}
-
-function evidenceStringArray(evidence: EvidenceRecord, ...keys: string[]) {
-  const values: string[] = []
-
-  for (const key of keys) {
-    const value = evidence[key]
-    if (Array.isArray(value)) {
-      values.push(...value.map(asString).filter(Boolean))
-      continue
-    }
-
-    const scalar = asString(value)
-    if (scalar) values.push(scalar)
-  }
-
-  return values
-}
-
-function normalizeClaimTypeToken(value: string) {
-  return value
-    .trim()
-    .toLocaleLowerCase('ko-KR')
-    .replace(/^claim[_-]?type:/, '')
-}
-
-function evidenceClaimTypes(evidence: EvidenceRecord) {
-  return [
-    ...evidenceStringArray(evidence, 'claim_type', 'claimType', 'type'),
-    ...evidenceStringArray(evidence, 'claim_types', 'claimTypes', 'tags'),
-  ]
-    .flatMap(value => value.split(/[\s,]+/))
-    .map(normalizeClaimTypeToken)
-    .filter(Boolean)
-}
-
-function evidenceClaimRisk(evidence: EvidenceRecord) {
-  return evidenceString(evidence, 'claim_risk', 'claimRisk').toLocaleLowerCase('ko-KR')
-}
-
-function hasFreshnessMarker(evidence: EvidenceRecord) {
-  return Boolean(evidenceString(evidence, 'checked_at', 'checkedAt', 'basis_date', 'basisDate', 'verified_at', 'verifiedAt'))
-}
-
-function isExternalMode(mode: BlogClaimSafetyMode) {
-  return mode === 'ready' || mode === 'publish'
 }
 
 function addIssue(
@@ -271,51 +182,15 @@ function collectBrandCheckIssues(brandCheckResult: unknown, issues: BlogClaimSaf
   }
 }
 
-function collectEvidenceIssues(mode: BlogClaimSafetyMode, evidenceRows: EvidenceRecord[], issues: BlogClaimSafetyIssue[]) {
-  if (evidenceRows.length === 0) {
-    addIssue(issues, isExternalMode(mode) ? 'blocker' : 'warning', 'missing_source_evidence', '출처 근거가 필요합니다.')
-    return
-  }
-
+function collectEvidencePrivacyIssues(evidenceRows: EvidenceRecord[], issues: BlogClaimSafetyIssue[]) {
   for (const evidence of evidenceRows) {
-    const status = evidenceStatus(evidence)
-    const ref = evidenceRef(evidence)
-    const claimTypes = evidenceClaimTypes(evidence)
-    const claimRisk = evidenceClaimRisk(evidence)
-    const volatileClaim = claimTypes.some(claimType => VOLATILE_CLAIM_TYPES.has(claimType))
-
-    if (!ref) {
-      addIssue(issues, isExternalMode(mode) ? 'blocker' : 'warning', 'evidence_missing_ref', '근거에는 claim_id, proof_id, asset_id, source_id 또는 ref가 필요합니다.', evidence)
-    }
-
-    if (!status) {
-      addIssue(issues, isExternalMode(mode) ? 'blocker' : 'warning', 'claim_status_missing', '공개 검수 근거에는 publishable/vetted 등 명시적인 claim 상태값이 필요합니다.', evidence)
-    }
-
-    if (status && BLOCKED_CLAIM_STATUSES.has(status)) {
-      addIssue(issues, 'blocker', `claim_status_${status}`, `${status} 상태인 claim은 공개 초안/발행 게이트를 통과할 수 없습니다.`, evidence)
-      continue
-    }
-
-    if (status === 'candidate' && isExternalMode(mode)) {
-      addIssue(issues, 'blocker', 'claim_status_candidate', 'candidate claim은 외부 발행 전 최신성 또는 사용 범위 확인이 필요합니다.', evidence)
-      continue
-    }
-
-    if (volatileClaim && !status) {
-      addIssue(issues, isExternalMode(mode) ? 'blocker' : 'warning', 'volatile_claim_missing_status', '가격, 리뷰, 일정, A/S, 출장비, 이벤트 claim은 상태값이 필요합니다.', evidence)
-    }
-
-    if (volatileClaim && status && SAFE_CLAIM_STATUSES.has(status) && !hasFreshnessMarker(evidence)) {
-      addIssue(issues, isExternalMode(mode) ? 'blocker' : 'warning', 'volatile_claim_missing_checked_at', '변동 claim에는 기준일 또는 확인일을 남겨야 합니다.', evidence)
-    }
-
-    if (claimRisk === 'high' && (!status || !SAFE_CLAIM_STATUSES.has(status))) {
-      addIssue(issues, isExternalMode(mode) ? 'blocker' : 'warning', 'high_risk_claim_not_cleared', '고위험 claim은 publishable/vetted 상태 확인 없이 사용할 수 없습니다.', evidence)
-    }
-
     if (
-      claimTypes.some(claimType => (
+      [
+        ...([evidence.claim_type, evidence.claimType, evidence.type].map(asString)),
+        ...(Array.isArray(evidence.claim_types) ? evidence.claim_types.map(asString) : []),
+        ...(Array.isArray(evidence.claimTypes) ? evidence.claimTypes.map(asString) : []),
+        ...(Array.isArray(evidence.tags) ? evidence.tags.map(asString) : []),
+      ].map(claimType => claimType.toLocaleLowerCase('ko-KR')).some(claimType => (
         claimType.includes('raw_review') ||
         claimType.includes('consultation_transcript') ||
         claimType.includes('customer_private')
@@ -328,13 +203,12 @@ function collectEvidenceIssues(mode: BlogClaimSafetyMode, evidenceRows: Evidence
 }
 
 export function validateBlogClaimSafety(input: BlogClaimSafetyInput): BlogClaimSafetyResult {
-  const mode = input.mode ?? 'publish'
   const issues: BlogClaimSafetyIssue[] = []
   const evidenceRows = normalizeEvidenceArray(input.sourceEvidence)
   const forbiddenTerms = collectForbiddenCopyIssues(input, evidenceRows, issues)
 
   collectBrandCheckIssues(input.brandCheckResult, issues)
-  collectEvidenceIssues(mode, evidenceRows, issues)
+  collectEvidencePrivacyIssues(evidenceRows, issues)
 
   const uniqueIssues = issues.filter((issue, index, array) => (
     array.findIndex(candidate => (

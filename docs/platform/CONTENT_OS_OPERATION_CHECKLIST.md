@@ -263,8 +263,6 @@ Checklist:
 - [ ] Confirm meta description is 50-180 characters.
 - [ ] Confirm target question is present.
 - [ ] Confirm summary answer is present.
-- [ ] Confirm last fact checked date is present.
-- [ ] Confirm source evidence exists.
 - [ ] Confirm brand check has no blocker or forbidden expression.
 - [ ] Add at least one paragraph block.
 - [ ] Add at least one CTA block.
