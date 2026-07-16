@@ -22,6 +22,8 @@
     "test:admin-detail-primitives": "node scripts/test-admin-detail-primitives.mjs",
     "test:admin-modal-primitives": "node scripts/test-admin-modal-primitives.mjs",
     "test:admin-modal-browser": "playwright test tests/admin-modal-primitives.spec.ts",
+    "test:admin-node-list-primitives": "node scripts/test-admin-node-list-primitives.mjs",
+    "test:admin-node-list-browser": "playwright test tests/admin-node-list-primitives.spec.ts",
     "sync:brand-tokens": "node scripts/sync-brand-tokens.mjs",
     "verify:brand-tokens": "node scripts/verify-brand-tokens.mjs",
     "check:brand-token-drift": "node scripts/check-brand-token-drift.mjs",

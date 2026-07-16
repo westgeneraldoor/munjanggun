@@ -15,6 +15,7 @@ const uiTokenPolicyConfig = {
     'src/components/platform/ui/PlatformSelect.module.css',
     'src/components/admin/NodeAddModal.module.css',
     'src/components/admin/NodeMoveModal.module.css',
+    'src/components/admin/NodeList.module.css',
     'src/app/admin/platform/[id]/platform-detail.module.css',
   ],
   generatedFiles: ['src/styles/generated/brand.css'],
@@ -252,6 +253,12 @@ const uiTokenPolicyConfig = {
     {
       name: 'admin-state-panel-mobile-breakpoint',
       file: 'src/components/platform/ui/PlatformStatePanel.module.css',
+      property: '@media',
+      value: '639px',
+    },
+    {
+      name: 'admin-node-list-mobile-breakpoint',
+      file: 'src/components/admin/NodeList.module.css',
       property: '@media',
       value: '639px',
     },
