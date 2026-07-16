@@ -7,10 +7,16 @@
 }
 
 .main {
+  --admin-route-block-inset: calc(var(--admin-mobile-header-height) + var(--mg-space-4) * 2);
   flex: 1;
-  padding: var(--space-4);
-  /* for mobile, padding top will account for header */
-  padding-top: calc(var(--space-4) + 56px); /* 56px is mobile header height */
+  min-width: 0;
+  padding: var(--mg-space-4);
+  padding-top: calc(var(--mg-space-4) + var(--admin-mobile-header-height));
+}
+
+.main:only-child {
+  --admin-route-block-inset: 0;
+  padding: 0;
 }
 
 @media (min-width: 1024px) {
@@ -19,8 +25,15 @@
   }
   
   .main {
-    padding: var(--space-8);
-    padding-top: var(--space-8);
-    margin-left: 240px; /* Sidebar width */
+    --admin-route-block-inset: calc(var(--mg-space-6) * 2);
+    padding: var(--mg-space-6);
+    padding-top: var(--mg-space-6);
+    margin-left: var(--admin-sidebar-width);
+  }
+
+  .main:only-child {
+    --admin-route-block-inset: 0;
+    padding: 0;
+    margin-left: 0;
   }
 }

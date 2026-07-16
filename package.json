@@ -18,6 +18,7 @@
     "test:admin-settings-browser": "playwright test tests/platform-admin-settings.spec.ts",
     "test:admin-assets-primitives": "node scripts/test-admin-assets-primitives.mjs",
     "test:admin-loading-standard": "node scripts/test-admin-loading-standard.mjs",
+    "test:admin-shell-error": "node scripts/test-admin-shell-error.mjs",
     "sync:brand-tokens": "node scripts/sync-brand-tokens.mjs",
     "verify:brand-tokens": "node scripts/verify-brand-tokens.mjs",
     "check:brand-token-drift": "node scripts/check-brand-token-drift.mjs",

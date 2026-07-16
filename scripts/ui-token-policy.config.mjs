@@ -10,6 +10,9 @@ const uiTokenPolicyConfig = {
     'src/components/platform/ui/PlatformPageHeader.module.css',
     'src/components/platform/ui/PlatformPanel.module.css',
     'src/components/platform/ui/PlatformStatePanel.module.css',
+    'src/app/admin/layout.module.css',
+    'src/app/admin/error.module.css',
+    'src/components/admin/AdminSidebar.module.css',
   ],
   generatedFiles: ['src/styles/generated/brand.css'],
   generatedTokenOverrideScopes: [
@@ -248,6 +251,18 @@ const uiTokenPolicyConfig = {
       file: 'src/components/platform/ui/PlatformStatePanel.module.css',
       property: '@media',
       value: '639px',
+    },
+    {
+      name: 'admin-shell-desktop-breakpoint',
+      file: 'src/app/admin/layout.module.css',
+      property: '@media',
+      value: '1024px',
+    },
+    {
+      name: 'admin-sidebar-desktop-breakpoint',
+      file: 'src/components/admin/AdminSidebar.module.css',
+      property: '@media',
+      value: '1024px',
     },
   ],
 }
