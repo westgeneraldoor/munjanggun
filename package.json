@@ -19,6 +19,7 @@
     "test:admin-assets-primitives": "node scripts/test-admin-assets-primitives.mjs",
     "test:admin-loading-standard": "node scripts/test-admin-loading-standard.mjs",
     "test:admin-queue-primitives": "node scripts/test-admin-queue-primitives.mjs",
+    "test:admin-detail-primitives": "node scripts/test-admin-detail-primitives.mjs",
     "sync:brand-tokens": "node scripts/sync-brand-tokens.mjs",
     "verify:brand-tokens": "node scripts/verify-brand-tokens.mjs",
     "check:brand-token-drift": "node scripts/check-brand-token-drift.mjs",

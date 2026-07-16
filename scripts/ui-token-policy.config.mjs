@@ -10,6 +10,9 @@ const uiTokenPolicyConfig = {
     'src/components/platform/ui/PlatformPageHeader.module.css',
     'src/components/platform/ui/PlatformPanel.module.css',
     'src/components/platform/ui/PlatformStatePanel.module.css',
+    'src/components/platform/ui/PlatformField.module.css',
+    'src/components/platform/ui/PlatformSelect.module.css',
+    'src/app/admin/platform/[id]/platform-detail.module.css',
   ],
   generatedFiles: ['src/styles/generated/brand.css'],
   generatedTokenOverrideScopes: [
@@ -248,6 +251,24 @@ const uiTokenPolicyConfig = {
       file: 'src/components/platform/ui/PlatformStatePanel.module.css',
       property: '@media',
       value: '639px',
+    },
+    {
+      name: 'admin-detail-compact-form-breakpoint',
+      file: 'src/app/admin/platform/[id]/platform-detail.module.css',
+      property: '@media',
+      value: '480px',
+    },
+    {
+      name: 'admin-detail-wide-layout-breakpoint',
+      file: 'src/app/admin/platform/[id]/platform-detail.module.css',
+      property: '@media',
+      value: '768px',
+    },
+    {
+      name: 'admin-detail-mobile-layout-breakpoint',
+      file: 'src/app/admin/platform/[id]/platform-detail.module.css',
+      property: '@media',
+      value: '479px',
     },
   ],
 }

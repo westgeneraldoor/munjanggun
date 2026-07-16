@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createPlatformClient } from '@/lib/supabase/platform-server'
 import { logError } from '@/lib/logger'
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const objectPath = searchParams.get('object_path')
+  const mediaId = searchParams.get('media_id')
 
-  if (!objectPath) {
-    return NextResponse.json({ error: 'object_path required' }, { status: 400 })
+  if (!mediaId || !UUID_PATTERN.test(mediaId)) {
+    return NextResponse.json({ error: 'valid media_id required' }, { status: 400 })
   }
 
   // 관리자 인증 확인
@@ -33,7 +34,7 @@ export async function GET(request: Request) {
   const { data: mediaRow, error: mediaError } = await supabase
     .from('measurement_media')
     .select('id')
-    .eq('object_path', objectPath)
+    .eq('id', mediaId)
     .maybeSingle()
 
   if (mediaError) {
@@ -45,24 +46,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Media not found' }, { status: 404 })
   }
 
-  // service role로 signed URL 생성
-  try {
-    const adminStorage = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-    const { data, error } = await adminStorage.storage
-      .from('measurement-media')
-      .createSignedUrl(objectPath, 60) // 60초 만료
-
-    if (error || !data?.signedUrl) {
-      logError('Create signed URL error', error)
-      return NextResponse.json({ error: 'Failed to create signed URL' }, { status: 500 })
-    }
-
-    return NextResponse.json({ url: data.signedUrl })
-  } catch (err) {
-    logError('Signed URL unexpected error', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
+  const url = `/api/platform/measure/media-file?media_id=${encodeURIComponent(mediaId)}`
+  return NextResponse.json({ url }, {
+    headers: { 'Cache-Control': 'private, no-store, max-age=0' },
+  })
 }
