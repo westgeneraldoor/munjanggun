@@ -1,17 +1,19 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, FilePenLine, FilePlus2, Search, ShieldAlert } from 'lucide-react'
 import {
   PlatformButton,
   PlatformLinkButton,
+  PlatformList,
   PlatformPageHeader,
   PlatformPanel,
   PlatformSegmentedControl,
   PlatformStatePanel,
   PlatformStatusBadge,
+  PlatformTable,
   type PlatformStatusBadgeTone,
 } from '@/components/platform/ui'
 import type { BlogContentCategory, BlogMediaUsageStatus, BlogPostStatus } from '@/types/database'
@@ -266,6 +268,11 @@ export default function BlogDraftQueueClient({
     router.push(`/admin/platform/blog/${row.id}`)
   }
 
+  const handleRowClick = (event: ReactMouseEvent<HTMLTableRowElement>, row: BlogDraftQueueRow) => {
+    if (event.target instanceof Element && event.target.closest('a,button,input,select,textarea')) return
+    openEditor(row)
+  }
+
   const updateStatus = (next: StatusFilter) => {
     setStatusFilter(next)
     resetSelection()
@@ -346,8 +353,12 @@ export default function BlogDraftQueueClient({
             />
           ) : (
             <>
-              <div className={styles.tableWrap}>
-                <table className={styles.table}>
+              <PlatformTable
+                containerClassName={styles.desktopTable}
+                className={styles.queueTable}
+                layout="fixed"
+                aria-label="블로그 콘텐츠 목록"
+              >
                   <thead>
                     <tr>
                       <th>제목</th>
@@ -364,22 +375,20 @@ export default function BlogDraftQueueClient({
                       <tr
                         key={row.id}
                         className={`${styles.row} ${row.id === selectedId ? styles.rowSelected : ''}`}
-                        onClick={() => openEditor(row)}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault()
-                            openEditor(row)
-                          }
-                        }}
-                        aria-label={`${row.title} 에디터 열기`}
-                        role="link"
-                        tabIndex={0}
+                        onClick={(event) => handleRowClick(event, row)}
                       >
                         <td className={styles.titleCell}>
-                          <span className={styles.stackCell}>
-                            <strong>{row.title}</strong>
-                            <small>{row.slug}</small>
-                          </span>
+                          <Link
+                            href={`/admin/platform/blog/${row.id}`}
+                            className={styles.titleLink}
+                            prefetch={false}
+                            aria-label={`${row.title} 에디터 열기`}
+                          >
+                            <span className={styles.stackCell}>
+                              <strong>{row.title}</strong>
+                              <small>{row.slug}</small>
+                            </span>
+                          </Link>
                         </td>
                         <td>
                           <PlatformStatusBadge tone={getStatusTone(row.status)}>
@@ -408,10 +417,9 @@ export default function BlogDraftQueueClient({
                       </tr>
                     ))}
                   </tbody>
-                </table>
-              </div>
+              </PlatformTable>
 
-              <ul className={styles.mobileList}>
+              <PlatformList className={styles.mobileList} aria-label="블로그 콘텐츠 모바일 목록">
                 {filteredRows.map(row => (
                   <li key={row.id} className={styles.mobileCard}>
                     <Link
@@ -439,7 +447,7 @@ export default function BlogDraftQueueClient({
                     </Link>
                   </li>
                 ))}
-              </ul>
+              </PlatformList>
             </>
           )}
         </section>
