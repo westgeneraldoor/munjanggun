@@ -7,6 +7,7 @@ export interface PlatformStatePanelProps extends React.HTMLAttributes<HTMLDivEle
   tone?: PlatformStatePanelTone
   title: string
   description?: React.ReactNode
+  details?: React.ReactNode
   icon?: React.ReactNode
   action?: React.ReactNode
 }
@@ -15,6 +16,7 @@ export function PlatformStatePanel({
   tone = 'empty',
   title,
   description,
+  details,
   icon,
   action,
   className,
@@ -29,6 +31,7 @@ export function PlatformStatePanel({
       <div className={styles.copy}>
         <strong>{title}</strong>
         {description ? <p>{description}</p> : null}
+        {details ? <div className={styles.details}>{details}</div> : null}
       </div>
       {action ? <div className={styles.action}>{action}</div> : null}
     </div>

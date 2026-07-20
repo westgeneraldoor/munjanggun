@@ -593,7 +593,6 @@
   outline-offset: var(--admin-focus-offset);
 }
 
-.saveMessage,
 .lockNotice,
 .slotNotice,
 .emptyBlocks {
@@ -605,21 +604,18 @@
   overflow-wrap: anywhere;
 }
 
-.saveOk {
-  color: var(--mg-state-success);
-  background: var(--mg-state-success-surface);
-  border: 1px solid var(--mg-state-success-border);
-}
-
-.saveError,
 .lockNotice {
   color: var(--mg-state-danger);
   background: var(--mg-state-danger-surface);
   border: 1px solid var(--mg-state-danger-border);
 }
 
-.saveMessage p {
-  margin: 0;
+.editorStateMessage {
+  min-height: 0;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: var(--space-3);
+  text-align: left;
 }
 
 .publishIssues {

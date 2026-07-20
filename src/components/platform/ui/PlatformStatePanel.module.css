@@ -33,6 +33,11 @@
   line-height: var(--mg-line-height-body);
 }
 
+.details {
+  font-size: var(--mg-font-size-label);
+  line-height: var(--mg-line-height-body);
+}
+
 .action {
   flex: 0 0 auto;
 }

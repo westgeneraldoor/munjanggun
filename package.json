@@ -24,6 +24,8 @@
     "test:blog-public-gif-browser": "playwright test tests/blog-public-gif.spec.ts",
     "test:admin-login-primitives": "node scripts/test-admin-login-primitives.mjs",
     "test:admin-login-primitives-browser": "playwright test tests/admin-login-primitives.spec.ts",
+    "test:blog-editor-state-semantics": "node scripts/test-blog-editor-state-semantics.mjs",
+    "test:blog-editor-state-semantics-browser": "playwright test tests/blog-editor-state-semantics.spec.ts",
     "test:blog-queue-list-primitives": "node scripts/test-blog-queue-list-primitives.mjs",
     "test:blog-queue-list-primitives-browser": "playwright test tests/blog-queue-list-primitives.spec.ts",
     "test:brand-token-snapshot": "node scripts/test-brand-token-snapshot.mjs",

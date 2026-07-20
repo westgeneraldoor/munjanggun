@@ -40,6 +40,7 @@ import { PlatformCheckbox } from '@/components/platform/ui/PlatformCheckbox'
 import { PlatformChip } from '@/components/platform/ui/PlatformChip'
 import { PlatformModal } from '@/components/platform/ui/PlatformModal'
 import { PlatformPreviewFrame } from '@/components/platform/ui/PlatformPreviewFrame'
+import { PlatformStatePanel } from '@/components/platform/ui/PlatformStatePanel'
 import { PlatformStatusBadge, type PlatformStatusBadgeTone } from '@/components/platform/ui/PlatformStatusBadge'
 import { PlatformTabPanel } from '@/components/platform/ui/PlatformTabPanel'
 import { PlatformTabs } from '@/components/platform/ui/PlatformTabs'
@@ -320,6 +321,29 @@ function formatDateTime(value: string | null) {
     hour12: false,
     timeZone: 'Asia/Seoul',
   }).format(new Date(value))
+}
+
+function EditorStateMessage({
+  ok,
+  text,
+  issues,
+}: {
+  ok: boolean
+  text: string
+  issues?: string[]
+}) {
+  return (
+    <PlatformStatePanel
+      className={styles.editorStateMessage}
+      tone={ok ? 'success' : 'error'}
+      title={text}
+      details={issues && issues.length > 0 ? (
+        <ul className={styles.publishIssues}>
+          {issues.map(issue => <li key={issue}>{issue}</li>)}
+        </ul>
+      ) : undefined}
+    />
+  )
 }
 
 function createBlock(type: BlogBlockType, options: { mediaId?: string | null; photoSlotLabel?: string } = {}): EditableBlock {
@@ -744,9 +768,7 @@ function ContentAssetPicker({
               </div>
             ) : null}
             {uploadResult ? (
-              <div className={`${styles.saveMessage} ${uploadResult.ok ? styles.saveOk : styles.saveError}`} role="status">
-                {uploadResult.message}
-              </div>
+              <EditorStateMessage ok={uploadResult.ok} text={uploadResult.message} />
             ) : null}
             <button type="submit" className={styles.primaryButton} disabled={isUploadPending || uploadItems.length === 0 || isUploadOverLimit || !privacyChecked || !promotionConsentChecked}>
               {isUploadPending ? '사진 보관 중' : '사진 보관'}
@@ -829,9 +851,7 @@ function ContentAssetPicker({
         )}
 
         {message ? (
-          <div className={`${styles.saveMessage} ${message.ok ? styles.saveOk : styles.saveError}`} role="status">
-            {message.text}
-          </div>
+          <EditorStateMessage ok={message.ok} text={message.text} />
         ) : null}
 
         <div className={styles.assetPickerFooter}>
@@ -964,9 +984,7 @@ function ImageBlockDetails({
         설명 적용
       </button>
       {message && (
-        <div className={`${styles.saveMessage} ${message.ok ? styles.saveOk : styles.saveError}`} role="status">
-          {message.text}
-        </div>
+        <EditorStateMessage ok={message.ok} text={message.text} />
       )}
     </div>
   )
@@ -1885,29 +1903,13 @@ export default function BlogEditorClient({
           </section>
         </div>
         {saveMessage && (
-          <div className={`${styles.saveMessage} ${saveMessage.ok ? styles.saveOk : styles.saveError}`} role="status">
-            {saveMessage.text}
-          </div>
+          <EditorStateMessage ok={saveMessage.ok} text={saveMessage.text} />
         )}
         {statusMessage && (
-          <div className={`${styles.saveMessage} ${statusMessage.ok ? styles.saveOk : styles.saveError}`} role="status">
-            <p>{statusMessage.text}</p>
-            {statusMessage.issues && statusMessage.issues.length > 0 && (
-              <ul className={styles.publishIssues}>
-                {statusMessage.issues.map(issue => <li key={issue}>{issue}</li>)}
-              </ul>
-            )}
-          </div>
+          <EditorStateMessage ok={statusMessage.ok} text={statusMessage.text} issues={statusMessage.issues} />
         )}
         {publishMessage && (
-          <div className={`${styles.saveMessage} ${publishMessage.ok ? styles.saveOk : styles.saveError}`} role="status">
-            <p>{publishMessage.text}</p>
-            {publishMessage.issues && publishMessage.issues.length > 0 && (
-              <ul className={styles.publishIssues}>
-                {publishMessage.issues.map(issue => <li key={issue}>{issue}</li>)}
-              </ul>
-            )}
-          </div>
+          <EditorStateMessage ok={publishMessage.ok} text={publishMessage.text} issues={publishMessage.issues} />
         )}
         {isPublished && (
           <div className={styles.lockNotice} role="status">
