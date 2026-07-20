@@ -636,11 +636,11 @@ export default function MeasureForm({ userId, blogQuestionContext = null }: Prop
                 <input value={applicantRelationship} onChange={event => setApplicantRelationship(event.target.value)} placeholder="본인, 남편, 집주인, 세입자 등" />
               </label>
 
-              <div className={styles.segmentGroup} role="radiogroup" aria-label="연락받을 사람 선택">
-                <button type="button" className={sameContact ? styles.segmentActive : styles.segment} onClick={() => setSameContact(true)}>
+              <div className={styles.segmentGroup} role="group" aria-label="연락받을 사람 선택">
+                <button type="button" className={sameContact ? styles.segmentActive : styles.segment} aria-pressed={sameContact} onClick={() => setSameContact(true)}>
                   신청자가 연락받아요
                 </button>
-                <button type="button" className={!sameContact ? styles.segmentActive : styles.segment} onClick={() => setSameContact(false)}>
+                <button type="button" className={!sameContact ? styles.segmentActive : styles.segment} aria-pressed={!sameContact} onClick={() => setSameContact(false)}>
                   다른 분이 연락받아요
                 </button>
               </div>
