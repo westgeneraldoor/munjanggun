@@ -13,8 +13,10 @@ const uiTokenPolicyConfig = {
     'src/components/platform/ui/PlatformPanel.module.css',
     'src/components/platform/ui/PlatformStatePanel.module.css',
     'src/components/platform/ui/PlatformField.module.css',
+    'src/components/platform/ui/PlatformEditorSection.module.css',
     'src/components/platform/ui/PlatformModal.module.css',
     'src/components/platform/ui/PlatformSelect.module.css',
+    'src/components/platform/ui/PlatformToolbar.module.css',
     'src/components/admin/NodeAddModal.module.css',
     'src/components/admin/NodeMoveModal.module.css',
     'src/components/admin/NodeList.module.css',
@@ -375,6 +377,12 @@ const uiTokenPolicyConfig = {
     {
       name: 'admin-page-header-mobile-breakpoint',
       file: 'src/components/platform/ui/PlatformPageHeader.module.css',
+      property: '@media',
+      value: '639px',
+    },
+    {
+      name: 'admin-editor-section-mobile-breakpoint',
+      file: 'src/components/platform/ui/PlatformEditorSection.module.css',
       property: '@media',
       value: '639px',
     },

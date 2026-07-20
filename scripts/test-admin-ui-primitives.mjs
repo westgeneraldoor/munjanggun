@@ -50,11 +50,13 @@ assert.match(adminLayout, /data-mg-theme=["']admin["']/)
 
 for (const name of [
   'PlatformLinkButton',
+  'PlatformEditorSection',
   'PlatformSegmentedControl',
   'PlatformStatusBadge',
   'PlatformPageHeader',
   'PlatformPanel',
   'PlatformStatePanel',
+  'PlatformToolbar',
 ]) {
   assert.match(barrel, new RegExp(`export \\{ ${name} \\}`), `${name} must be exported from the shared UI barrel`)
 }
@@ -110,12 +112,14 @@ assert.match(adminSidebarCss, /@media \(min-width: 1024px\)[\s\S]*?\.sidebar\s*\
 
 for (const cssFile of [
   'PlatformButton.module.css',
+  'PlatformEditorSection.module.css',
   'PlatformIconButton.module.css',
   'PlatformSegmentedControl.module.css',
   'PlatformStatusBadge.module.css',
   'PlatformPageHeader.module.css',
   'PlatformPanel.module.css',
   'PlatformStatePanel.module.css',
+  'PlatformToolbar.module.css',
 ]) {
   assert.match(tokenPolicyConfig, new RegExp(cssFile.replace('.', '\\.')), `${cssFile} must be governed by the raw-token policy`)
 }

@@ -9,6 +9,8 @@
     "lint": "eslint",
     "test:e2e": "node scripts/run-playwright-e2e.mjs",
     "test:approved-manuscript-intake": "node scripts/test-approved-manuscript-intake.mjs",
+    "test:approved-manuscript-intake-primitives": "node scripts/test-approved-manuscript-intake-primitives.mjs",
+    "test:approved-manuscript-intake-primitives-browser": "playwright test tests/approved-manuscript-intake-primitives.spec.ts",
     "test:blog-private-media": "node scripts/test-blog-private-media.mjs",
     "test:blog-editor-preview": "node scripts/test-blog-editor-preview.mjs",
     "test:brand-token-snapshot": "node scripts/test-brand-token-snapshot.mjs",
