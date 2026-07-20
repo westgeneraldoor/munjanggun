@@ -11,6 +11,7 @@ async function openEditor(page: Page) {
     loginParams.set('token', process.env.PLAYWRIGHT_LOGIN_TOKEN)
   }
   await page.goto(`/api/dev/playwright-login?${loginParams}`, { waitUntil: 'domcontentloaded' })
+  await page.goto(editorPath ?? '/admin/platform/blog', { waitUntil: 'networkidle' })
 
   test.skip(
     new URL(page.url()).pathname === '/admin/login',
@@ -56,23 +57,24 @@ test('mobile editor keeps the closed admin sidebar out of the canvas', async ({ 
 
   const menuButton = page.getByRole('button', { name: '메뉴 열기' })
   const sidebar = page.locator('#admin-sidebar')
+  const adminMain = page.getByRole('main').first()
 
   await expect(menuButton).toHaveAttribute('aria-expanded', 'false')
   await expect(sidebar).toBeHidden()
-  expect(await page.locator('main').evaluate(element => (element as HTMLElement).inert)).toBe(false)
+  expect(await adminMain.evaluate(element => (element as HTMLElement).inert)).toBe(false)
 
   await menuButton.press('Enter')
   await expect(menuButton).toHaveAttribute('aria-expanded', 'true')
   await expect(sidebar).toBeVisible()
   const closeButton = page.getByRole('button', { name: '메뉴 닫기' })
   await expect(closeButton).toBeFocused()
-  expect(await page.locator('main').evaluate(element => (element as HTMLElement).inert)).toBe(true)
+  expect(await adminMain.evaluate(element => (element as HTMLElement).inert)).toBe(true)
 
   await page.keyboard.press('Escape')
   await expect(sidebar).toBeHidden()
   await expect(menuButton).toHaveAttribute('aria-expanded', 'false')
   await expect(menuButton).toBeFocused()
-  expect(await page.locator('main').evaluate(element => (element as HTMLElement).inert)).toBe(false)
+  expect(await adminMain.evaluate(element => (element as HTMLElement).inert)).toBe(false)
   await expect.poll(() => sidebar.evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0)
 
   const sidebarState = await sidebar.evaluate((element) => {

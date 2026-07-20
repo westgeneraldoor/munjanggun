@@ -55,8 +55,11 @@ for (const name of [
   'PlatformStatusBadge',
   'PlatformPageHeader',
   'PlatformPanel',
+  'PlatformPreviewFrame',
   'PlatformStatePanel',
   'PlatformToolbar',
+  'PlatformTabPanel',
+  'PlatformTabs',
 ]) {
   assert.match(barrel, new RegExp(`export \\{ ${name} \\}`), `${name} must be exported from the shared UI barrel`)
 }
@@ -118,8 +121,10 @@ for (const cssFile of [
   'PlatformStatusBadge.module.css',
   'PlatformPageHeader.module.css',
   'PlatformPanel.module.css',
+  'PlatformPreviewFrame.module.css',
   'PlatformStatePanel.module.css',
   'PlatformToolbar.module.css',
+  'PlatformTabs.module.css',
 ]) {
   assert.match(tokenPolicyConfig, new RegExp(cssFile.replace('.', '\\.')), `${cssFile} must be governed by the raw-token policy`)
 }

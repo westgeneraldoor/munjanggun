@@ -68,6 +68,14 @@ html {
   --mg-space-section: var(--mg-space-8);
   --mg-button-height-sm: 40px;
   --mg-form-field-height: var(--mg-field-height);
+  --mg-admin-preview-device-width: 390px;
+  --mg-admin-preview-ratio-width: 390;
+  --mg-admin-preview-ratio-height: 844;
+  --mg-admin-preview-chrome-height: 34px;
+  --mg-admin-preview-handle-width: 72px;
+  --mg-admin-preview-handle-height: 5px;
+  --mg-admin-preview-scroll-max-height: 840px;
+  --mg-admin-preview-scroll-offset: 244px;
 
   /* Legacy semantic aliases. */
   --mg-surface-page: var(--mg-color-neutral-50);

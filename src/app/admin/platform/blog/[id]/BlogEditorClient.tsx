@@ -36,6 +36,9 @@ import {
   XCircle,
 } from 'lucide-react'
 import BlogPostRenderer from '@/components/blog/BlogPostRenderer'
+import { PlatformPreviewFrame } from '@/components/platform/ui/PlatformPreviewFrame'
+import { PlatformTabPanel } from '@/components/platform/ui/PlatformTabPanel'
+import { PlatformTabs } from '@/components/platform/ui/PlatformTabs'
 import type {
   BlogBlockType,
   BlogContentCategory,
@@ -184,6 +187,11 @@ type AssetPickerTarget =
   | { type: 'replace'; clientId: string }
   | { type: 'insertBefore'; clientId: string }
 type EditorMode = 'write' | 'seo'
+
+const EDITOR_MODE_TABS: ReadonlyArray<{ value: EditorMode; label: string }> = [
+  { value: 'write', label: '작성란' },
+  { value: 'seo', label: 'SEO/AEO' },
+]
 type PickerUploadItem = {
   id: string
   file: File
@@ -1839,24 +1847,13 @@ export default function BlogEditorClient({
           </div>
         </div>
         <div className={styles.editorWorkbenchBar}>
-          <div className={styles.editorModeTabs} aria-label="편집 모드">
-            <button
-              type="button"
-              className={editorMode === 'write' ? styles.editorModeActive : ''}
-              aria-pressed={editorMode === 'write'}
-              onClick={() => setEditorMode('write')}
-            >
-              작성란
-            </button>
-            <button
-              type="button"
-              className={editorMode === 'seo' ? styles.editorModeActive : ''}
-              aria-pressed={editorMode === 'seo'}
-              onClick={() => setEditorMode('seo')}
-            >
-              SEO/AEO
-            </button>
-          </div>
+          <PlatformTabs
+            id="blog-editor-mode"
+            label="편집 모드"
+            items={EDITOR_MODE_TABS}
+            value={editorMode}
+            onChange={setEditorMode}
+          />
           <section className={styles.gateBarPanel} aria-label="발행 전 검수">
             <span className={styles.gateBarLabel}>검수</span>
             <ul className={styles.gateList}>
@@ -1913,8 +1910,12 @@ export default function BlogEditorClient({
 
       <div className={styles.editorLayout}>
         <main className={styles.mainEditor}>
-          {editorMode === 'write' && (
-          <>
+          <PlatformTabPanel
+            tabsId="blog-editor-mode"
+            value="write"
+            active={editorMode === 'write'}
+            className={styles.editorModePanel}
+          >
           <section className={styles.panel}>
             <div className={styles.panelTitle}>
               <FileText size={17} aria-hidden="true" />
@@ -2040,10 +2041,14 @@ export default function BlogEditorClient({
               )}
             </div>
           </section>
-          </>
-          )}
+          </PlatformTabPanel>
 
-          {editorMode === 'seo' && (
+          <PlatformTabPanel
+            tabsId="blog-editor-mode"
+            value="seo"
+            active={editorMode === 'seo'}
+            className={styles.editorModePanel}
+          >
           <section className={`${styles.panel} ${styles.seoPanel}`}>
             <h2>SEO/AEO</h2>
             <div className={styles.formStack}>
@@ -2095,17 +2100,18 @@ export default function BlogEditorClient({
               )}
             </details>
           </section>
-          )}
+          </PlatformTabPanel>
         </main>
 
         <aside className={styles.sidePanel} aria-label="모바일 미리보기">
           <div className={styles.mobilePreviewDock}>
-            <div className={styles.mobilePreviewShell}>
-              <div className={styles.mobilePreviewChrome} aria-hidden="true"><span /></div>
-              <div className={styles.mobilePreviewArticle}>
-                <BlogPostRenderer data={previewData} surface="embedded-preview" />
-              </div>
-            </div>
+            <PlatformPreviewFrame
+              label="390px 모바일 미리보기"
+              className={styles.mobilePreviewFrame}
+              data-testid="blog-editor-preview-frame"
+            >
+              <BlogPostRenderer data={previewData} surface="embedded-preview" />
+            </PlatformPreviewFrame>
           </div>
         </aside>
       </div>

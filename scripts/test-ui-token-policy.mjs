@@ -53,13 +53,14 @@ function contrastRatio(left, right) {
 }
 
 {
-  const [generated, adapter, editor, intake, queue, button, ...adminCssSources] = await Promise.all([
+  const [generated, adapter, editor, intake, queue, button, tabs, ...adminCssSources] = await Promise.all([
     readFile(path.join(projectRoot, 'src/styles/generated/brand.css'), 'utf8'),
     readFile(path.join(projectRoot, 'src/styles/munjanggun-brand.css'), 'utf8'),
     readFile(path.join(projectRoot, 'src/app/admin/platform/blog/[id]/blog-editor.module.css'), 'utf8'),
     readFile(path.join(projectRoot, 'src/app/admin/platform/blog/new/approved-manuscript-intake.module.css'), 'utf8'),
     readFile(path.join(projectRoot, 'src/app/admin/platform/blog/blog-draft-queue.module.css'), 'utf8'),
     readFile(path.join(projectRoot, 'src/components/platform/ui/PlatformButton.module.css'), 'utf8'),
+    readFile(path.join(projectRoot, 'src/components/platform/ui/PlatformTabs.module.css'), 'utf8'),
     ...protectedAdminCss.map(file => readFile(path.join(projectRoot, file), 'utf8')),
   ])
   const warningHex = generated.match(/--mg-color-warning-600:\s*(#[0-9a-f]{6})/i)?.[1]
@@ -79,7 +80,8 @@ function contrastRatio(left, right) {
   assert.match(button, /\.primary:hover:not\(:disabled\)[\s\S]*?background:\s*var\(--mg-action-primary-hover\)/)
   assert.match(button, /\.primary:active:not\(:disabled\)[\s\S]*?background:\s*var\(--mg-action-primary-active\)/)
   assert.match(button, /\.secondary:active:not\(:disabled\)[\s\S]*?color:\s*var\(--mg-text-primary\)/)
-  assert.match(editor, /\.editorModeActive \{[\s\S]*?background:\s*var\(--mg-admin-accent-surface\)/)
+  assert.doesNotMatch(editor, /\.editorModeActive\b/)
+  assert.match(tabs, /\.tab\[aria-selected=['"]true['"]\],[\s\S]*?background:\s*var\(--mg-admin-accent-surface\)/)
   assert.match(queue, /\.rowSelected td \{[\s\S]*?background:\s*var\(--mg-admin-accent-surface\)/)
 }
 
