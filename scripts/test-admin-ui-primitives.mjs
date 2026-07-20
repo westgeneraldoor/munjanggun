@@ -49,6 +49,8 @@ const [
 assert.match(adminLayout, /data-mg-theme=["']admin["']/)
 
 for (const name of [
+  'PlatformCheckbox',
+  'PlatformChip',
   'PlatformLinkButton',
   'PlatformEditorSection',
   'PlatformSegmentedControl',
@@ -114,6 +116,8 @@ assert.match(adminSidebarCss, /\.sidebar\s*\{[\s\S]*?visibility:\s*hidden/)
 assert.match(adminSidebarCss, /@media \(min-width: 1024px\)[\s\S]*?\.sidebar\s*\{[\s\S]*?visibility:\s*visible/)
 
 for (const cssFile of [
+  'PlatformCheckbox.module.css',
+  'PlatformChip.module.css',
   'PlatformButton.module.css',
   'PlatformEditorSection.module.css',
   'PlatformIconButton.module.css',

@@ -36,7 +36,10 @@ import {
   XCircle,
 } from 'lucide-react'
 import BlogPostRenderer from '@/components/blog/BlogPostRenderer'
+import { PlatformCheckbox } from '@/components/platform/ui/PlatformCheckbox'
+import { PlatformChip } from '@/components/platform/ui/PlatformChip'
 import { PlatformPreviewFrame } from '@/components/platform/ui/PlatformPreviewFrame'
+import { PlatformStatusBadge, type PlatformStatusBadgeTone } from '@/components/platform/ui/PlatformStatusBadge'
 import { PlatformTabPanel } from '@/components/platform/ui/PlatformTabPanel'
 import { PlatformTabs } from '@/components/platform/ui/PlatformTabs'
 import type {
@@ -232,8 +235,12 @@ const STATUS_ACTION_LABEL: Record<BlogPostStatus, string> = {
   archived: '보관으로',
 }
 
-function getStatusBadgeClass(status: BlogPostStatus) {
-  return status === 'ai_draft' ? styles.status_reviewing : styles[`status_${status}`]
+function getPostStatusTone(status: BlogPostStatus): PlatformStatusBadgeTone {
+  if (status === 'needs_media') return 'danger'
+  if (status === 'ready') return 'success'
+  if (status === 'published') return 'info'
+  if (status === 'archived') return 'neutral'
+  return 'review'
 }
 
 const QUESTION_STATUS_LABEL: Record<BlogQuestionStatus, string> = {
@@ -242,6 +249,13 @@ const QUESTION_STATUS_LABEL: Record<BlogQuestionStatus, string> = {
   approved: '승인됨',
   rejected: '반려',
   archived: '보관',
+}
+
+function getQuestionStatusTone(status: BlogQuestionStatus): PlatformStatusBadgeTone {
+  if (status === 'approved') return 'success'
+  if (status === 'rejected') return 'danger'
+  if (status === 'archived') return 'neutral'
+  return 'review'
 }
 
 const BLOCK_LABEL: Record<BlogBlockType, string> = {
@@ -397,9 +411,9 @@ function ReaderQuestionPanel({
             return (
               <article key={question.id} className={styles.readerQuestionCard}>
                 <div className={styles.readerQuestionHeader}>
-                  <span className={`${styles.questionStatus} ${styles[`questionStatus_${question.status}`]}`}>
+                  <PlatformStatusBadge tone={getQuestionStatusTone(question.status)}>
                     {QUESTION_STATUS_LABEL[question.status]}
-                  </span>
+                  </PlatformStatusBadge>
                   <time dateTime={question.createdAt}>{formatDateTime(question.createdAt)}</time>
                 </div>
                 <details className={styles.readerQuestionOriginal}>
@@ -698,26 +712,22 @@ function ContentAssetPicker({
             ) : null}
             <fieldset className={styles.assetUploadReview}>
               <legend>사진 사용 전 확인</legend>
-              <label>
-                <input
-                  type="checkbox"
-                  name="privacyChecked"
-                  checked={privacyChecked}
-                  onChange={event => setPrivacyChecked(event.target.checked)}
-                  disabled={isUploadPending}
-                />
+              <PlatformCheckbox
+                name="privacyChecked"
+                checked={privacyChecked}
+                onChange={event => setPrivacyChecked(event.target.checked)}
+                disabled={isUploadPending}
+              >
                 고객 정보·주소·연락처 등 민감정보가 보이지 않는지 확인했습니다.
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  name="promotionConsentChecked"
-                  checked={promotionConsentChecked}
-                  onChange={event => setPromotionConsentChecked(event.target.checked)}
-                  disabled={isUploadPending}
-                />
+              </PlatformCheckbox>
+              <PlatformCheckbox
+                name="promotionConsentChecked"
+                checked={promotionConsentChecked}
+                onChange={event => setPromotionConsentChecked(event.target.checked)}
+                disabled={isUploadPending}
+              >
                 블로그·홍보용으로 사용할 수 있는 사진인지 확인했습니다.
-              </label>
+              </PlatformCheckbox>
             </fieldset>
             {isUploadPending || uploadProgress > 0 ? (
               <div className={styles.assetUploadProgress} role="status" aria-live="polite">
@@ -790,15 +800,21 @@ function ContentAssetPicker({
                     ) : (
                       <ImageIcon size={24} aria-hidden="true" />
                     )}
-                    {selected ? <span className={styles.assetPickerCheck}>선택</span> : null}
+                    {selected ? (
+                      <PlatformChip tone="selected" className={styles.assetPickerSelectionChip} aria-hidden="true">
+                        선택
+                      </PlatformChip>
+                    ) : null}
                   </div>
                   <div className={styles.assetPickerCardBody}>
                     <strong>{displayAssetTitle(item, index)}</strong>
-                    <span>{item.description || '설명을 추가해 주세요.'}</span>
+                    <span className={styles.assetPickerDescription}>{item.description || '설명을 추가해 주세요.'}</span>
                     <time dateTime={item.createdAt}>{formatAssetDateTime(item.createdAt)}</time>
                     <div className={styles.assetPickerBadges}>
-                      {item.category ? <small>{item.category}</small> : null}
-                      {ready ? <small>사용 가능</small> : <small>정보 필요</small>}
+                      {item.category ? <PlatformChip>{item.category}</PlatformChip> : null}
+                      <PlatformStatusBadge tone={ready ? 'success' : 'warning'}>
+                        {ready ? '사용 가능' : '정보 필요'}
+                      </PlatformStatusBadge>
                     </div>
                   </div>
                 </button>
@@ -995,7 +1011,7 @@ function BlockEditor({
     <article className={`${styles.blockCard} ${styles[`blockCard_${block.type}`]}`} data-block-type={block.type} data-block-client-id={block.clientId}>
       <div className={styles.blockTop}>
         <div className={styles.blockIdentity}>
-          <span className={styles.blockType}>{BLOCK_LABEL[block.type]}</span>
+          <PlatformChip tone="accent">{BLOCK_LABEL[block.type]}</PlatformChip>
           <strong>본문 #{index + 1}</strong>
         </div>
         <div className={styles.iconActions} aria-label="블록 위치 및 삭제">
@@ -1803,7 +1819,7 @@ export default function BlogEditorClient({
         </Link>
         <div className={styles.titleRow}>
           <div>
-            <span className={`${styles.statusBadge} ${getStatusBadgeClass(post.status)}`}>{STATUS_LABEL[post.status]}</span>
+            <PlatformStatusBadge tone={getPostStatusTone(post.status)}>{STATUS_LABEL[post.status]}</PlatformStatusBadge>
             <h1 data-testid="blog-editor-title">{post.title || '제목 없는 원고'}</h1>
             <p>{post.slug}</p>
           </div>

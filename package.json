@@ -15,6 +15,8 @@
     "test:blog-editor-preview": "node scripts/test-blog-editor-preview.mjs",
     "test:blog-editor-frame-primitives": "node scripts/test-blog-editor-frame-primitives.mjs",
     "test:blog-editor-frame-primitives-browser": "playwright test tests/blog-editor-frame-primitives.spec.ts",
+    "test:blog-editor-choice-primitives": "node scripts/test-blog-editor-choice-primitives.mjs",
+    "test:blog-editor-choice-primitives-browser": "playwright test tests/blog-editor-choice-primitives.spec.ts",
     "test:brand-token-snapshot": "node scripts/test-brand-token-snapshot.mjs",
     "test:ui-token-policy": "node scripts/test-ui-token-policy.mjs",
     "test:admin-ui-primitives": "node scripts/test-admin-ui-primitives.mjs",

@@ -5,6 +5,8 @@ const uiTokenPolicyConfig = {
     'src/styles/blog-experience.css',
     'src/components/blog/BlogPostRenderer.module.css',
     'src/components/platform/ui/PlatformButton.module.css',
+    'src/components/platform/ui/PlatformCheckbox.module.css',
+    'src/components/platform/ui/PlatformChip.module.css',
     'src/components/platform/ui/PlatformIconButton.module.css',
     'src/components/platform/ui/PlatformSegmentedControl.module.css',
     'src/components/platform/ui/PlatformStatusBadge.module.css',
