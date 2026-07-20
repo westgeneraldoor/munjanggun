@@ -22,8 +22,9 @@ export interface PlatformModalProps {
   children?: React.ReactNode
   footer?: React.ReactNode
   onClose: () => void
-  size?: 'sm' | 'md'
+  size?: 'sm' | 'md' | 'wide'
   showCloseButton?: boolean
+  closeLabel?: string
   closeOnBackdrop?: boolean
   closeDisabled?: boolean
   className?: string
@@ -38,6 +39,7 @@ export function PlatformModal({
   onClose,
   size = 'sm',
   showCloseButton = false,
+  closeLabel = '닫기',
   closeOnBackdrop = false,
   closeDisabled = false,
   className,
@@ -131,7 +133,7 @@ export function PlatformModal({
             <PlatformIconButton
               type="button"
               variant="ghost"
-              aria-label="닫기"
+              aria-label={closeLabel}
               onClick={onClose}
               disabled={closeDisabled}
             >

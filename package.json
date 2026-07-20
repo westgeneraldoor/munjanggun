@@ -17,6 +17,8 @@
     "test:blog-editor-frame-primitives-browser": "playwright test tests/blog-editor-frame-primitives.spec.ts",
     "test:blog-editor-choice-primitives": "node scripts/test-blog-editor-choice-primitives.mjs",
     "test:blog-editor-choice-primitives-browser": "playwright test tests/blog-editor-choice-primitives.spec.ts",
+    "test:blog-editor-asset-picker-modal": "node scripts/test-blog-editor-asset-picker-modal.mjs",
+    "test:blog-editor-asset-picker-modal-browser": "playwright test tests/blog-editor-asset-picker-modal.spec.ts",
     "test:blog-queue-list-primitives": "node scripts/test-blog-queue-list-primitives.mjs",
     "test:blog-queue-list-primitives-browser": "playwright test tests/blog-queue-list-primitives.spec.ts",
     "test:brand-token-snapshot": "node scripts/test-brand-token-snapshot.mjs",

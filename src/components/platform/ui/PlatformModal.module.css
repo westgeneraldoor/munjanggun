@@ -30,6 +30,10 @@
   max-width: calc(var(--mg-space-8) * 7);
 }
 
+.wide {
+  max-width: calc(var(--mg-space-8) * 15);
+}
+
 .header {
   min-height: var(--mg-control-size-nav);
   display: flex;
@@ -50,7 +54,9 @@
 }
 
 .body {
+  flex: 1;
   min-width: 0;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--mg-space-5);
 }

@@ -38,6 +38,7 @@ import {
 import BlogPostRenderer from '@/components/blog/BlogPostRenderer'
 import { PlatformCheckbox } from '@/components/platform/ui/PlatformCheckbox'
 import { PlatformChip } from '@/components/platform/ui/PlatformChip'
+import { PlatformModal } from '@/components/platform/ui/PlatformModal'
 import { PlatformPreviewFrame } from '@/components/platform/ui/PlatformPreviewFrame'
 import { PlatformStatusBadge, type PlatformStatusBadgeTone } from '@/components/platform/ui/PlatformStatusBadge'
 import { PlatformTabPanel } from '@/components/platform/ui/PlatformTabPanel'
@@ -653,19 +654,23 @@ function ContentAssetPicker({
   if (!open) return null
 
   return (
-    <div className={styles.assetPickerOverlay} role="dialog" aria-modal="true" aria-labelledby="asset-picker-title">
-      <div className={styles.assetPicker}>
-        <div className={styles.assetPickerHeader}>
-          <div>
-            <span>사진보관함</span>
-            <h2 id="asset-picker-title">본문에 넣을 사진 선택</h2>
-          </div>
-          <button type="button" onClick={onClose} aria-label="사진보관함 닫기" className={styles.iconOnlyButton}>
-            <XCircle size={18} aria-hidden="true" />
-          </button>
-        </div>
-
-        <button type="button" className={styles.assetPickerUploadToggle} onClick={() => setUploadOpen(current => !current)}>
+    <PlatformModal
+      isOpen={open}
+      title="본문에 넣을 사진 선택"
+      onClose={onClose}
+      size="wide"
+      showCloseButton
+      closeLabel="사진보관함 닫기"
+      closeDisabled={pending || isUploadPending}
+      className={styles.assetPickerModal}
+    >
+      <div className={styles.assetPickerContent}>
+        <button
+          type="button"
+          className={styles.assetPickerUploadToggle}
+          onClick={() => setUploadOpen(current => !current)}
+          data-modal-initial-focus
+        >
           <Plus size={15} aria-hidden="true" />
           {uploadOpen ? '사진 추가 닫기' : '이 글에서 바로 사진 추가'}
         </button>
@@ -850,7 +855,7 @@ function ContentAssetPicker({
           </button>
         </div>
       </div>
-    </div>
+    </PlatformModal>
   )
 }
 
