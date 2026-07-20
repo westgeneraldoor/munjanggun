@@ -101,6 +101,10 @@ related:
 
 사진은 글을 꾸미는 장식이 아니라 판단 근거다.
 
+중앙 브랜드 manifest에서 `privacyStatus = official_reviewed`로 승인된 자산은 문장군의 공식 원본 소스다. 관리자는 사진보관함 UI를 사용하고, Codex는 사람용 파일 선택창 대신 `scripts/register-official-brand-asset.mjs` 서버 명령으로 같은 작업을 수행할 수 있다. 관리자 UI와 Codex 서버 명령은 같은 원본 검증 모듈을 사용하며, service-role은 서버 밖으로 노출하지 않는다.
+
+이 명령은 중앙 `assetId`와 허용 경로, Git HEAD 일치, 개인정보·주장 검수 상태, MIME magic, 용량, 크기, GIF frame count, SHA-256 중복, 감사 actor를 검증한 뒤에만 비공개 Storage와 메타데이터·감사 이력·선택한 `reviewing` 글 연결을 처리한다. 금지되는 것은 서버측 등록 자체가 아니라 검증·권한·감사·발행 승격 경계를 우회한 등록이다. 임의 SQL 삽입이나 검증 없는 Storage 업로드는 운영 경로가 아니다.
+
 사진 확인 순서:
 
 1. 필요한 사진 유형을 정한다.

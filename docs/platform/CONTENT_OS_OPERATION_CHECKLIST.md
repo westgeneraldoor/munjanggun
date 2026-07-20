@@ -3,6 +3,7 @@ document_type: "Content OS Operation Checklist"
 version: "1.0.0"
 status: "ops-ready-draft"
 created: "2026-06-25"
+updated: "2026-07-20"
 owner: "Codex PM"
 source_prd: "docs/platform/CONTENT_OS_PRD.md"
 source_schema: "docs/platform/CONTENT_OS_SCHEMA.md"
@@ -31,7 +32,7 @@ admin content queue
 -> media approval
 -> preview
 -> publish server action
--> public WebP promotion
+-> public publish promotion (static WebP or original GIF)
 -> /blog and /blog/[slug]
 -> sitemap / robots / metadata / JSON-LD
 ```
@@ -55,9 +56,9 @@ Excluded:
 - Admin AI draft generation is not a product feature; the CMS starts from an approved external manuscript.
 - Search Console API automation.
 
-## 2. Current Verification Status
+## 2. Initial Verification Status (historical)
 
-As of 2026-06-25 in the Codex local session:
+This section preserves the initial 2026-06-25 Codex session result. Its temporary remote-confirmation limitation was resolved by the later evidence in 2.1 and 13.
 
 - `npm run lint`: passed with existing non-Content-OS admin warnings.
 - `npm run build`: passed.
@@ -67,7 +68,7 @@ As of 2026-06-25 in the Codex local session:
 - `npx supabase --version` failed with a transient npm network `ECONNRESET`.
 - Service-role REST access to the `storage` schema was blocked because only `public`, `colorbook`, `showroom`, and `platform` schemas are exposed through the Data API.
 
-Conclusion:
+Historical conclusion at that time:
 
 ```text
 storage.objects policy remote application is not confirmed from this Codex session.
@@ -154,11 +155,11 @@ Confirm the target Supabase project has these buckets:
 ```text
 blog-media-private
 public: false
-allowed_mime_types: image/jpeg, image/png, image/webp, image/heic, image/heif
+allowed_mime_types: image/jpeg, image/png, image/webp, image/gif, image/heic, image/heif
 
 blog-media
 public: true
-allowed_mime_types: image/jpeg, image/png, image/webp
+allowed_mime_types: image/jpeg, image/png, image/webp, image/gif
 ```
 
 SQL:
@@ -321,7 +322,7 @@ Checklist:
 - [ ] Confirm `blog_posts.status = published`.
 - [ ] Confirm `blog_posts.published_at` is set.
 - [ ] Confirm `blog_posts.published_by` is set.
-- [ ] Confirm used approved media is converted to WebP.
+- [ ] JPG·PNG·WebP는 정적 WebP 파생본으로 승격되고, GIF는 원본 `.gif`와 `image/gif`를 보존하는지 확인한다.
 - [ ] Confirm `blog_media.usage_status = published`.
 - [ ] Confirm `blog_media.public_bucket = blog-media`.
 - [ ] Confirm `blog_media.public_object_path` is set.
@@ -385,7 +386,7 @@ Checklist:
 - [ ] Public HTML does not include `brand_check_result`.
 - [ ] Public HTML does not include `blog-media-private`.
 - [ ] Public HTML does not include private object paths.
-- [ ] Cover image uses public WebP URL.
+- [ ] Cover image uses the validated public WebP derivative or approved original GIF URL.
 - [ ] 390px mobile viewport has no horizontal overflow.
 
 Recommended command:
@@ -681,20 +682,24 @@ Migration:
 
 Required checks:
 
-- [ ] The migration was applied through the approved migration path; bucket settings were not edited ad hoc.
-- [ ] `content-assets-private`, `blog-media-private`, and `blog-media` allow `image/gif`.
-- [ ] `content-assets-public` remains WebP-only.
-- [ ] The Codex command accepts only manifest `assetId` values under the canonical central root.
-- [ ] The central worktree is clean and both the selected manifest and original are tracked by, and byte-identical to, HEAD.
-- [ ] `CODEX_AUDIT_ACTOR_ID` matches the supplied administrator actor and any post attachment targets a `reviewing` post.
-- [ ] MIME magic, size, dimensions, GIF frames, SHA-256, LFS pointer, privacy status, claim risk, and duplicate checksum checks pass before upload.
-- [ ] A central candidate's original, static WebP poster/web, and thumbnail remain in `content-assets-private`, have no public URL, and keep `promotion_consent_checked = false`.
-- [ ] Candidate or unresolved-claim central media is rejected again by both media approval and final publish server gates.
-- [ ] Asset metadata edits preserve `labels.centralBrand`; the DB trigger rejects provenance changes and central ID/SHA indexes reject concurrent duplicates.
-- [ ] The administrator upload path and Codex import path call the same original-image validation module.
-- [ ] GIF poster and thumbnail rows are private static WebP while the private original remains byte-identical GIF; only the validated blog publish path creates a new `blog-media` public object.
-- [ ] Approved public GIF promotion keeps `.gif`, `image/gif`, animation, alt, and caption.
-- [ ] The real Basic JPG and GIF import records include central asset/source/proof IDs, commit, checksum, and audit events.
-- [ ] The current `reviewing` manuscript can receive the imported media without exposing private bucket paths in the browser.
+- [x] The migration was applied through the approved migration path; bucket settings were not edited ad hoc.
+- [x] `content-assets-private`, `blog-media-private`, and `blog-media` allow `image/gif`.
+- [x] `content-assets-public` remains WebP-only.
+- [x] The Codex command accepts only manifest `assetId` values under the canonical central root.
+- [x] The central worktree is clean and both the selected manifest and original are tracked by, and byte-identical to, HEAD.
+- [x] `CODEX_AUDIT_ACTOR_ID` matches the supplied administrator actor and any post attachment targets a `reviewing` post.
+- [x] MIME magic, size, dimensions, GIF frames, SHA-256, LFS pointer, privacy status, claim risk, and duplicate checksum checks pass before upload.
+- [x] A central candidate's original, static WebP poster/web, and thumbnail remain in `content-assets-private`, have no public URL, and keep `promotion_consent_checked = false`.
+- [x] `official_reviewed` candidate is not automatic public approval: it stays private until project promotion consent and media approval. Unresolved claim risk is rejected again by both media approval and final publish server gates.
+- [x] Asset metadata edits preserve `labels.centralBrand`; the DB trigger rejects provenance changes and central ID/SHA indexes reject concurrent duplicates.
+- [x] The administrator upload path and Codex import path call the same original-image validation module.
+- [x] GIF poster and thumbnail rows are private static WebP while the private original remains byte-identical GIF; only the validated blog publish path creates a new `blog-media` public object.
+- [x] Publication-path tests preserve `.gif`, `image/gif`, animation, alt, and caption for an approved GIF.
+- [x] The real Basic JPG and GIF import records include central asset/source/proof IDs, commit, checksum, and audit events.
+- [x] The current `reviewing` manuscript received a cover JPG, body JPG, and original GIF without exposing private bucket paths in the browser.
+- [x] A development-only public renderer regression proves the deterministic 2-frame GIF remains animated at desktop and 390px widths.
+- [ ] 실제 reviewing 원고의 production 발행. 이 원고와 실제 GIF는 검수 큐에 유지하며 merge·production 승인 전에는 공개하지 않는다.
+
+2026-07-20 evidence commands: `npm run test:official-brand-asset-import`, `npm run test:official-brand-asset-placement`, `npm run test:official-media-evidence-docs`, `npm run test:blog-public-gif-browser`, `npm run verify:blog-admin-cms`. Remote DB/storage state and the authenticated editor/preview were also checked directly; no production publish was performed.
 
 “Direct registration prohibited” means bypassing validation, authorization, audit, or publish promotion gates is prohibited. A validated server-only registration command is an approved ingestion path; arbitrary SQL inserts and unchecked Storage uploads are not.
