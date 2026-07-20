@@ -93,21 +93,6 @@
   font-weight: var(--font-bold);
 }
 
-.uploadReview label {
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-sm);
-  line-height: 1.45;
-}
-
-.uploadReview input {
-  width: 18px;
-  height: 18px;
-  flex: 0 0 auto;
-}
-
 .limitInfo,
 .limitWarning {
   min-height: 34px;
@@ -241,41 +226,6 @@
   }
 }
 
-.filterGrid label {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  color: var(--admin-text-sub);
-  font-size: var(--text-xs);
-  font-weight: var(--font-semibold);
-}
-
-.filterGrid select,
-.searchBox input {
-  width: 100%;
-  min-width: 0;
-  color: var(--admin-text);
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
-  border-radius: var(--radius-md);
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  outline: none;
-}
-
-.filterGrid select,
-.searchBox input {
-  min-height: 44px;
-  padding: 0 var(--space-3);
-}
-
-.filterGrid select:focus,
-.searchBox input:focus {
-  border-color: var(--admin-accent);
-  box-shadow: var(--mg-focus-shadow);
-}
-
 .uploadActions {
   display: flex;
   justify-content: flex-end;
@@ -357,30 +307,6 @@
   gap: var(--space-3);
   margin-bottom: var(--space-5);
   padding: var(--space-4);
-}
-
-.searchBox {
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 0 var(--space-3);
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--admin-shadow-sm);
-}
-
-.searchBox svg {
-  flex: 0 0 auto;
-  color: var(--admin-text-muted);
-}
-
-.searchBox input {
-  padding: 0;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
 }
 
 @media (min-width: 900px) {

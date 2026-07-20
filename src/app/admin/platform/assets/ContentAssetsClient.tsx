@@ -9,17 +9,18 @@ import {
   ImageIcon,
   Images,
   Plus,
-  Search,
   UploadCloud,
   X,
 } from 'lucide-react'
 import {
   PlatformButton,
+  PlatformCheckbox,
   PlatformField,
   PlatformIconButton,
   PlatformPageHeader,
   PlatformPanel,
   PlatformSegmentedControl,
+  PlatformSelect,
   PlatformStatePanel,
   PlatformStatusBadge,
 } from '@/components/platform/ui'
@@ -322,26 +323,22 @@ function UploadPanel() {
 
       <fieldset className={styles.uploadReview}>
         <legend>사진 사용 전 확인</legend>
-        <label>
-          <input
-            type="checkbox"
-            name="privacyChecked"
-            checked={privacyChecked}
-            onChange={event => setPrivacyChecked(event.target.checked)}
-            disabled={isPending}
-          />
+        <PlatformCheckbox
+          name="privacyChecked"
+          checked={privacyChecked}
+          onChange={event => setPrivacyChecked(event.target.checked)}
+          disabled={isPending}
+        >
           고객 정보·주소·연락처 등 민감정보가 보이지 않는지 확인했습니다.
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            name="promotionConsentChecked"
-            checked={promotionConsentChecked}
-            onChange={event => setPromotionConsentChecked(event.target.checked)}
-            disabled={isPending}
-          />
+        </PlatformCheckbox>
+        <PlatformCheckbox
+          name="promotionConsentChecked"
+          checked={promotionConsentChecked}
+          onChange={event => setPromotionConsentChecked(event.target.checked)}
+          disabled={isPending}
+        >
           블로그·홍보용으로 사용할 수 있는 사진인지 확인했습니다.
-        </label>
+        </PlatformCheckbox>
       </fieldset>
 
       {isPending || uploadProgress > 0 ? (
@@ -603,15 +600,13 @@ export default function ContentAssetsClient({
       ) : null}
 
       <PlatformPanel as="section" className={styles.toolbar} aria-label="사진 검색과 필터">
-        <label className={styles.searchBox}>
-          <Search aria-hidden="true" size={16} />
-          <input
-            value={search}
-            onChange={event => setSearch(event.target.value)}
-            placeholder="사진명, 설명, 태그로 검색"
-            aria-label="사진 검색"
-          />
-        </label>
+        <PlatformField
+          type="search"
+          label="사진 검색"
+          value={search}
+          onChange={event => setSearch(event.target.value)}
+          placeholder="사진명, 설명, 태그로 검색"
+        />
         <details className={styles.filterDetails}>
           <summary>
             <span>상세 필터</span>
@@ -619,16 +614,16 @@ export default function ContentAssetsClient({
           </summary>
           <div className={styles.filterGrid}>
             {(Object.keys(FILTER_LABELS) as FilterKey[]).map(key => (
-              <label key={key}>
-                <span>{FILTER_LABELS[key]}</span>
-                <select
-                  value={filters[key]}
-                  onChange={event => setFilters(current => ({ ...current, [key]: event.target.value }))}
-                >
-                  <option value="">전체</option>
-                  {options[key].map(value => <option key={value} value={value}>{value}</option>)}
-                </select>
-              </label>
+              <PlatformSelect
+                key={key}
+                label={FILTER_LABELS[key]}
+                value={filters[key]}
+                onChange={event => setFilters(current => ({ ...current, [key]: event.target.value }))}
+                options={[
+                  { value: '', label: '전체' },
+                  ...options[key].map(value => ({ value, label: value })),
+                ]}
+              />
             ))}
           </div>
           {tagOptions.length > 0 ? (
