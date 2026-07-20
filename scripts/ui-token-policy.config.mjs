@@ -338,7 +338,6 @@ const uiTokenPolicyConfig = {
     { name: 'admin-compact-table-breakpoint', property: '@media', value: '720px' },
     { name: 'admin-settings-compact-breakpoint', property: '@media', value: '760px' },
     { name: 'admin-tablet-breakpoint', property: '@media', value: '768px' },
-    { name: 'admin-tablet-table-max-breakpoint', property: '@media', value: '899px' },
     { name: 'admin-tablet-table-breakpoint', property: '@media', value: '900px' },
     { name: 'admin-workspace-max-breakpoint', property: '@media', value: '979px' },
     { name: 'admin-workspace-breakpoint', property: '@media', value: '980px' },

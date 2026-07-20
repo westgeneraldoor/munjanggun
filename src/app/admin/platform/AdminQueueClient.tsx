@@ -5,11 +5,13 @@ import { ArrowDownAZ, ArrowLeft, ArrowUpAZ, Settings } from 'lucide-react'
 import {
   PlatformButton,
   PlatformLinkButton,
+  PlatformList,
   PlatformPageHeader,
   PlatformPanel,
   PlatformSegmentedControl,
   PlatformStatePanel,
   PlatformStatusBadge,
+  PlatformTable,
   type PlatformStatusBadgeTone,
 } from '@/components/platform/ui'
 import { CustomerRequestStatus, QueueSourceType, QueueWorkStatus } from '@/types/database'
@@ -328,8 +330,11 @@ export default function AdminQueueClient({ initialRows }: { initialRows: QueueRo
             <PlatformStatePanel title="해당 조건의 접수 건이 없습니다." />
           ) : (
             <>
-              <div className={styles.tableWrap}>
-                <table className={styles.table}>
+              <PlatformTable
+                containerClassName={styles.desktopTable}
+                className={styles.queueTable}
+                aria-label="통합 접수 목록"
+              >
                   <thead>
                     <tr>
                       <th aria-sort={sort === 'receivedAt' ? (dir === 'asc' ? 'ascending' : 'descending') : 'none'}><button type="button" onClick={() => updateSort('receivedAt')}>접수일시 {sortIcon('receivedAt')}</button></th>
@@ -391,10 +396,9 @@ export default function AdminQueueClient({ initialRows }: { initialRows: QueueRo
                       </tr>
                     ))}
                   </tbody>
-                </table>
-              </div>
+              </PlatformTable>
 
-              <ul className={styles.mobileList}>
+              <PlatformList className={styles.mobileList} aria-label="통합 접수 모바일 목록">
                 {filteredRows.map(row => (
                   <li key={row.key} className={styles.mobileCard}>
                     <PlatformButton
@@ -422,7 +426,7 @@ export default function AdminQueueClient({ initialRows }: { initialRows: QueueRo
                     </PlatformButton>
                   </li>
                 ))}
-              </ul>
+              </PlatformList>
             </>
           )}
         </section>

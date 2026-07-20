@@ -30,6 +30,8 @@
     "test:admin-assets-primitives": "node scripts/test-admin-assets-primitives.mjs",
     "test:admin-loading-standard": "node scripts/test-admin-loading-standard.mjs",
     "test:admin-queue-primitives": "node scripts/test-admin-queue-primitives.mjs",
+    "test:admin-unified-list-primitives": "node scripts/test-admin-unified-list-primitives.mjs",
+    "test:admin-unified-list-primitives-browser": "playwright test tests/platform-admin-queue.spec.ts",
     "test:admin-detail-primitives": "node scripts/test-admin-detail-primitives.mjs",
     "test:admin-modal-primitives": "node scripts/test-admin-modal-primitives.mjs",
     "test:admin-modal-browser": "playwright test tests/admin-modal-primitives.spec.ts",
