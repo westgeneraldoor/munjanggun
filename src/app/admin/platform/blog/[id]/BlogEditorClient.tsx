@@ -1796,7 +1796,7 @@ export default function BlogEditorClient({
         <div className={styles.titleRow}>
           <div>
             <span className={`${styles.statusBadge} ${getStatusBadgeClass(post.status)}`}>{STATUS_LABEL[post.status]}</span>
-            <h1>{post.title || '제목 없는 원고'}</h1>
+            <h1 data-testid="blog-editor-title">{post.title || '제목 없는 원고'}</h1>
             <p>{post.slug}</p>
           </div>
           <div className={styles.headerActions}>
