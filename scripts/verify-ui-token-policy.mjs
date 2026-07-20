@@ -9,6 +9,7 @@ const RAW_LAYOUT_PATTERN = /(?<![-\w])(?:-?\d*\.\d+|-?\d+)(?:px|rem|em)\b/g
 const DECLARATION_PATTERN = /(?:^|(?<=[;{\n]))\s*(--[A-Za-z0-9_-]+|[A-Za-z-]+)\s*:\s*([^;}{]+);?/g
 const VARIABLE_USE_PATTERN = /var\(\s*(--[A-Za-z0-9_-]+)/g
 const RAW_LAYOUT_PROPERTIES = /^(?:--|margin(?:-.+)?$|padding(?:-.+)?$|gap$|row-gap$|column-gap$|inset(?:-.+)?$|top$|right$|bottom$|left$|border(?:-.+)?-radius$|border-radius$|box-shadow$|outline-offset$|scroll-margin(?:-.+)?$|scroll-padding(?:-.+)?$)/
+const STRICT_LAYOUT_PROPERTIES = /^(?:font-size|(?:min-|max-)?(?:width|height)|grid-template-(?:columns|rows)|border(?:-(?:top|right|bottom|left))?(?:-width)?|outline(?:-width)?|transform)$/
 const TOKENIZED_SHADOW_PATTERN = /^(?:none|var\(\s*--[A-Za-z0-9_-]+\s*\)|inherit|initial|unset|revert(?:-layer)?)$/
 
 function matchesEntry(value, entries = []) {
@@ -70,8 +71,9 @@ function allowsTokenDefinition(filePath, selector, scopes = []) {
   ))
 }
 
-function validatesRawLayout(property) {
+function validatesRawLayout(strictLayoutFiles, filePath, property) {
   return RAW_LAYOUT_PROPERTIES.test(property)
+    || (strictLayoutFiles.has(filePath) && STRICT_LAYOUT_PROPERTIES.test(property))
 }
 
 function findLayoutConstant(config, filePath, property, value) {
@@ -102,6 +104,7 @@ export function verifyUiTokenPolicy({ files, config }) {
   }))
   const generatedFiles = new Set((config.generatedFiles ?? []).map(file => file.replaceAll('\\', '/')))
   const tokenDefinitionFiles = new Set((config.tokenDefinitionFiles ?? []).map(file => file.replaceAll('\\', '/')))
+  const strictLayoutFiles = new Set((config.strictLayoutFiles ?? []).map(file => file.replaceAll('\\', '/')))
   const globalDefinitionFiles = new Set([
     ...generatedFiles,
     ...tokenDefinitionFiles,
@@ -174,7 +177,7 @@ export function verifyUiTokenPolicy({ files, config }) {
         diagnostics.push(`${file.path}:${line}: unauthorized raw shadow ${value.trim()}`)
       }
 
-      if (!tokenDefinition && !rawShadow && validatesRawLayout(property)) {
+      if (!tokenDefinition && !rawShadow && validatesRawLayout(strictLayoutFiles, file.path, property)) {
         RAW_LAYOUT_PATTERN.lastIndex = 0
         while ((raw = RAW_LAYOUT_PATTERN.exec(value)) !== null) {
           const exception = findLayoutConstant(config, file.path, property, raw[0])
@@ -201,6 +204,24 @@ export function verifyUiTokenPolicy({ files, config }) {
           usedLayoutConstants.add(exception.name)
         } else {
           diagnostics.push(`${file.path}:${line}: unauthorized layout constant ${raw[0]}`)
+        }
+      }
+    }
+
+    if (strictLayoutFiles.has(file.path)) {
+      const containerPattern = /@container\s*([^{}]*)\{/g
+      while ((match = containerPattern.exec(source)) !== null) {
+        const prelude = match[1]
+        const line = lineNumberAt(source, match.index)
+        let raw
+        RAW_LAYOUT_PATTERN.lastIndex = 0
+        while ((raw = RAW_LAYOUT_PATTERN.exec(prelude)) !== null) {
+          const exception = findLayoutConstant(config, file.path, '@container', raw[0])
+          if (exception) {
+            usedLayoutConstants.add(exception.name)
+          } else {
+            diagnostics.push(`${file.path}:${line}: unauthorized layout constant ${raw[0]}`)
+          }
         }
       }
     }

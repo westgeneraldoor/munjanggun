@@ -337,6 +337,37 @@ assert.ok(result.diagnostics.some(item => /named layout constant approved-previe
 }
 
 {
+  const result = verifyUiTokenPolicy({
+    config: {
+      ...baseConfig,
+      strictLayoutFiles: ['src/components/blog/Reader.module.css'],
+      layoutConstants: [],
+    },
+    files: [{
+      path: 'src/components/blog/Reader.module.css',
+      content: '.reader { width: 1120px; max-width: 880px; font-size: 46px; min-height: 38px; grid-template-columns: minmax(280px, 1fr); border: 1px solid; outline: 2px solid; transform: translateY(-1px); }\n@container reader (max-width: 820px) {}\n',
+    }],
+  })
+
+  for (const [property, value] of [
+    ['font-size', '46px'],
+    ['min-height', '38px'],
+    ['grid-template-columns', '280px'],
+    ['width', '1120px'],
+    ['max-width', '880px'],
+    ['border', '1px'],
+    ['outline', '2px'],
+    ['transform', '-1px'],
+    ['@container', '820px'],
+  ]) {
+    assert.ok(
+      result.diagnostics.some(item => item.includes(`unauthorized layout constant ${value}`)),
+      `strict layout policy must reject raw ${property} value ${value}`,
+    )
+  }
+}
+
+{
   const adapter = await readFile(new URL('../src/styles/munjanggun-brand.css', import.meta.url), 'utf8')
   for (const selector of ['portal', 'admin']) {
     const scope = adapter.match(new RegExp(`\\[data-mg-theme="${selector}"\\] \\{([\\s\\S]*?)\\n\\}`))?.[1] ?? ''
