@@ -22,6 +22,7 @@ type SaveableBlock = {
 
 export type SaveBlogEditorPayload = {
   postId: string
+  expectedUpdatedAt: string
   post: {
     title: string
     slug: string
@@ -236,6 +237,9 @@ function validatePayload(payload: SaveBlogEditorPayload) {
   const slug = cleanText(payload.post.slug)
 
   if (!payload.postId) return '글 ID가 없습니다.'
+  if (!payload.expectedUpdatedAt || Number.isNaN(Date.parse(payload.expectedUpdatedAt))) {
+    return '편집 기준 시각이 없습니다. 새로고침 후 다시 저장해주세요.'
+  }
   if (!title) return '제목을 입력해야 합니다.'
   if (!slug || !SLUG_PATTERN.test(slug)) {
     return '주소는 영문 소문자, 숫자, 하이픈만 사용할 수 있습니다.'
@@ -429,6 +433,7 @@ async function validateImageMediaOwnership(
 }
 
 export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<SaveBlogEditorResult> {
+  let editorLease: { postId: string; actorId: string; token: string } | null = null
   try {
     const actorId = await requireAdministrator()
 
@@ -526,6 +531,18 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
         return { ok: false, message: '연결된 고객 질문을 찾지 못했습니다.' }
       }
     }
+
+    const leaseToken = randomUUID()
+    const { error: leaseError } = await showroomAdmin.rpc('acquire_blog_editor_save_lease' as never, {
+      p_post_id: payload.postId,
+      p_actor_id: actorId,
+      p_lease_token: leaseToken,
+      p_expected_updated_at: payload.expectedUpdatedAt,
+    } as never)
+    if (leaseError) {
+      return { ok: false, message: '글 또는 사진 배치가 바뀌었습니다. 새로고침 후 다시 저장해주세요.' }
+    }
+    editorLease = { postId: payload.postId, actorId, token: leaseToken }
 
     const postUpdate: Database['showroom']['Tables']['blog_posts']['Update'] = {
       title: payload.post.title.trim(),
@@ -749,6 +766,16 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
     return {
       ok: false,
       message: '저장 중 오류가 발생했습니다.',
+    }
+  } finally {
+    if (editorLease) {
+      const lease = editorLease
+      const leaseClient = createShowroomAdminClient()
+      await leaseClient.rpc('release_blog_editor_save_lease' as never, {
+        p_post_id: lease.postId,
+        p_actor_id: lease.actorId,
+        p_lease_token: lease.token,
+      } as never)
     }
   }
 }

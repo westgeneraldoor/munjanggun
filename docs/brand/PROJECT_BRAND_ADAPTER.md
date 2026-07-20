@@ -1,9 +1,9 @@
 ---
 document_type: "Project Brand Adapter"
-version: "1.2.0"
+version: "1.2.1"
 status: "active"
 created: "2026-06-25"
-last_updated: "2026-07-15"
+last_updated: "2026-07-20"
 owner: "Codex PM"
 source_brand_reference: "docs/brand/BRAND_SOURCE.md"
 central_brand_root: "C:\\Users\\hjh\\안티그래비티\\문장군_브랜드"
@@ -249,6 +249,8 @@ Codex 외부 원고 작성
 `privacyStatus = official_reviewed` 중앙 자산은 이 프로젝트 사진보관함의 공식 원본 소스다. Codex와 관리자 UI는 같은 MIME·용량·dimensions·SHA-256 검증 코어를 사용한다.
 
 Codex 등록은 사람용 파일 선택창을 대신 조작하지 않는다. 서버 전용 명령이 중앙 manifest의 `assetId`를 받아 원본 검증, private Storage 업로드, 정적 WebP poster/thumbnail 생성, 사진보관함 메타데이터·감사 이벤트 생성, 선택적인 `blog_media`·본문 image block 연결을 수행한다. 중앙 저장소는 clean 상태여야 하고 선택한 manifest와 원본은 모두 현재 HEAD에 tracked되어 실제 bytes가 HEAD와 같아야 한다. service-role 또는 Supabase secret key는 이 서버 명령과 서버 런타임에서만 사용한다. 감사 actor는 서버 allowlist `CODEX_AUDIT_ACTOR_ID`와 일치하는 administrator만 허용한다.
+
+`scripts/register-official-brand-asset.mjs`의 `--cover`는 다른 대표사진이 없는 `reviewing` 글에만 대표사진을 지정한다. `--insert-after-block-id`는 지정한 기존 본문 블록 뒤에 image block을 만들고, 뒤 블록을 높은 순번부터 이동해 `(post_id, display_order)` 고유 계약을 보존한다. 이 연결은 service-role 전용 `showroom.attach_official_asset_to_reviewing_post(...)`가 글과 블록을 잠근 단일 DB 트랜잭션에서 media·usage·cover·순번·block·감사 이벤트를 함께 처리하므로 중간 실패는 전부 롤백된다. 관리자 편집기 저장은 같은 글의 server-side lease를 먼저 획득하므로 본문 저장 중 자동 배치는 거부되고, 자동 배치가 먼저 끝났다면 오래된 편집기 저장이 거부된다. lease는 자동 만료로 안전 경계를 약화하지 않으며 정상 저장의 `finally`에서 해제한다. 서버 장애로 15분 이상 남은 lease는 `scripts/reconcile-blog-editor-save-lease.mjs`가 관리자 allowlist·사유·감사 이벤트를 강제하는 RPC로만 조정한다. 연결 실패 뒤 새 자산 정리는 자산 행 잠금과 참조 확인·메타데이터 삭제를 하나의 RPC로 수행한 뒤 반환된 경로와 업로드 직후 알고 있는 경로만 Storage에서 지운다. 응답 유실 등 결과를 확인할 수 없는 경우에는 Storage를 건드리지 않는다. 이미 같은 media가 본문에 연결된 재실행은 중복 블록을 만들지 않는다.
 
 등록 직후 상태는 다음과 같다.
 

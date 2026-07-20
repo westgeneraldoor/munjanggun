@@ -15,6 +15,8 @@
     "test:ui-token-policy": "node scripts/test-ui-token-policy.mjs",
     "test:admin-ui-primitives": "node scripts/test-admin-ui-primitives.mjs",
     "test:source-provenance-automation": "node scripts/test-source-provenance-automation.mjs",
+    "test:official-brand-asset-placement": "node scripts/test-official-brand-asset-placement.mjs",
+    "reconcile:blog-editor-lease": "node scripts/reconcile-blog-editor-save-lease.mjs",
     "test:admin-settings-primitives": "node scripts/test-admin-settings-primitives.mjs",
     "test:admin-settings-browser": "playwright test tests/platform-admin-settings.spec.ts",
     "test:admin-assets-primitives": "node scripts/test-admin-assets-primitives.mjs",

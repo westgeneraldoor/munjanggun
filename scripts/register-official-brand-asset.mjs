@@ -9,6 +9,10 @@ import {
   createStaticContentAssetDerivatives,
   extensionForContentAssetMimeType,
 } from '../src/lib/content-assets/content-asset-validation.mjs'
+import {
+  normalizeOfficialAssetPlacementResult,
+  validateOfficialAssetPlacementOptions,
+} from '../src/lib/content-assets/official-brand-blog-placement.mjs'
 import { loadOfficialBrandAsset } from '../src/lib/content-assets/official-brand-asset.mjs'
 
 const execFileAsync = promisify(execFile)
@@ -21,15 +25,17 @@ function usage() {
     --brand-root <absolute-path> --asset-id <manifest-asset-id> \\
     --actor-id <administrator-uuid> [--post-id <reviewing-post-uuid>] \\
     [--block-id <existing-image-block-uuid>] [--alt <text>] [--caption <text>] \\
-    [--title <text>] [--apply]
+    [--insert-after-block-id <existing-block-uuid>] [--cover] [--title <text>] [--apply]
 
 Default mode is validation-only. --apply performs server-side Storage and DB writes.
---block-id requires --post-id and may point only to an existing image block in that post.`
+--block-id connects an existing empty image block. --insert-after-block-id creates a new image block
+after the selected block while preserving order. --cover marks the imported media as the post cover.
+All placement flags require --post-id; --block-id and --insert-after-block-id are mutually exclusive.`
 }
 
 function parseArgs(argv) {
   const values = {}
-  const booleanFlags = new Set(['apply', 'help'])
+  const booleanFlags = new Set(['apply', 'cover', 'help'])
 
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index]
@@ -48,7 +54,7 @@ function parseArgs(argv) {
 
   const allowed = new Set([
     'apply', 'help', 'brand-root', 'asset-id', 'actor-id', 'post-id', 'block-id',
-    'alt', 'caption', 'title',
+    'insert-after-block-id', 'cover', 'alt', 'caption', 'title',
   ])
   for (const key of Object.keys(values)) {
     if (!allowed.has(key)) throw new Error(`Unknown argument: --${key}.`)
@@ -57,9 +63,12 @@ function parseArgs(argv) {
   for (const key of ['brand-root', 'asset-id', 'actor-id']) {
     if (!values[key]) throw new Error(`--${key} is required.`)
   }
-  if (values['block-id'] && !values['post-id']) {
-    throw new Error('--block-id requires --post-id.')
-  }
+  validateOfficialAssetPlacementOptions({
+    postId: values['post-id'],
+    cover: values.cover,
+    blockId: values['block-id'],
+    insertAfterBlockId: values['insert-after-block-id'],
+  })
   if (values['post-id'] && !String(values.alt || '').trim()) {
     throw new Error('--alt is required when attaching an asset to a blog post.')
   }
@@ -213,31 +222,12 @@ function cleanupFailureMessage(result, label) {
   return null
 }
 
-async function cleanupCreatedAsset(showroom, assetId, files) {
+async function cleanupUploadedFiles(showroom, files) {
   const failures = []
   for (const file of files ?? []) {
     const result = await showroom.storage.from(file.bucket).remove([file.object_path])
     const failure = cleanupFailureMessage(result, `Storage cleanup failed for ${file.bucket}/${file.object_path}`)
     if (failure) failures.push(failure)
-  }
-  if (assetId) {
-    const result = await showroom.from('content_assets').delete().eq('id', assetId)
-    const failure = cleanupFailureMessage(result, `Content asset cleanup failed for ${assetId}`)
-    if (failure) failures.push(failure)
-  }
-  if (failures.length > 0) throw new Error(failures.join(' | '))
-}
-
-async function runCompensations(operations) {
-  const failures = []
-  for (const operation of operations) {
-    try {
-      const result = await operation.run()
-      const failure = cleanupFailureMessage(result, operation.label)
-      if (failure) failures.push(failure)
-    } catch (error) {
-      failures.push(`${operation.label}: ${error instanceof Error ? error.message : String(error)}`)
-    }
   }
   if (failures.length > 0) throw new Error(failures.join(' | '))
 }
@@ -246,6 +236,49 @@ function withCleanupFailure(error, cleanupError) {
   const originalMessage = error instanceof Error ? error.message : String(error)
   const cleanupMessage = cleanupError instanceof Error ? cleanupError.message : String(cleanupError)
   return new Error(`${originalMessage} Cleanup also failed: ${cleanupMessage}`, { cause: error })
+}
+
+async function cleanupCreatedAssetIfUnreferenced(showroom, assetId, actorId, uploadedFiles = []) {
+  const { data, error } = await showroom.rpc('delete_unreferenced_official_asset', {
+    p_asset_id: assetId,
+    p_actor_id: actorId,
+  })
+  if (error) {
+    throw new Error(
+      `New asset ${assetId} cleanup outcome is inconclusive; Storage was not touched: ${error.message}`,
+    )
+  }
+  if (!data || typeof data !== 'object' || Array.isArray(data) || typeof data.deleted !== 'boolean') {
+    throw new Error(`New asset ${assetId} cleanup returned an invalid result; Storage was not touched.`)
+  }
+  if (!data.deleted) {
+    throw new Error(`New asset ${assetId} was retained for reconciliation because committed references exist.`)
+  }
+  if (!Array.isArray(data.storageFiles)) {
+    throw new Error(`New asset ${assetId} metadata was deleted but Storage paths were not returned.`)
+  }
+
+  const storageFiles = [...data.storageFiles, ...uploadedFiles.map(file => ({
+    bucket: file.bucket,
+    objectPath: file.object_path,
+  }))]
+  const uniqueFiles = new Map(storageFiles.map(file => [`${file?.bucket}/${file?.objectPath}`, file]))
+  const failures = []
+  for (const file of uniqueFiles.values()) {
+    if (!file || typeof file.bucket !== 'string' || typeof file.objectPath !== 'string') {
+      failures.push('Cleanup RPC returned an invalid Storage path')
+      continue
+    }
+    const result = await showroom.storage.from(file.bucket).remove([file.objectPath])
+    const failure = cleanupFailureMessage(
+      result,
+      `Orphan Storage cleanup failed for ${file.bucket}/${file.objectPath}`,
+    )
+    if (failure) failures.push(failure)
+  }
+  if (failures.length > 0) {
+    throw new Error(`Asset metadata was deleted safely, but ${failures.join(' | ')}`)
+  }
 }
 
 function centralBrandSnapshot(asset) {
@@ -503,11 +536,12 @@ async function createAsset(showroom, asset, actorId, title) {
     }
   } catch (error) {
     try {
-      await cleanupCreatedAsset(
-        showroom,
-        assetId,
-        uploaded.map(item => ({ bucket: item.bucket, object_path: item.path })),
-      )
+      const uploadedFiles = uploaded.map(item => ({ bucket: item.bucket, object_path: item.path }))
+      if (assetId) {
+        await cleanupCreatedAssetIfUnreferenced(showroom, assetId, actorId, uploadedFiles)
+      } else {
+        await cleanupUploadedFiles(showroom, uploadedFiles)
+      }
     } catch (cleanupError) {
       throw withCleanupFailure(error, cleanupError)
     }
@@ -516,175 +550,31 @@ async function createAsset(showroom, asset, actorId, title) {
 }
 
 async function attachToBlog(showroom, assetRecord, asset, actorId, options) {
-  if (!options.postId) return { mediaId: null, blockId: null, createdMedia: false }
-
-  const { data: post, error: postError } = await showroom
-    .from('blog_posts')
-    .select('id, status, slug')
-    .eq('id', options.postId)
-    .single()
-  if (postError || !post) throw new Error('The requested blog post does not exist.')
-  if (post.status !== 'reviewing') throw new Error('Only reviewing posts can receive candidate media through this command.')
-
-  const { data: existingRows, error: existingError } = await showroom
-    .from('blog_media')
-    .select('id')
-    .eq('post_id', post.id)
-    .eq('content_asset_id', assetRecord.asset.id)
-    .neq('usage_status', 'rejected')
-    .limit(2)
-  if (existingError) throw new Error(`Existing blog media lookup failed: ${existingError.message}`)
-
-  let mediaId = existingRows?.[0]?.id ?? null
-  let createdMedia = false
-  let createdPostUsage = false
-  let createdBlockUsage = false
-  let previousBlockMediaId = null
-  let blockUpdated = false
-  try {
-    if (!mediaId) {
-      const { data: media, error: mediaError } = await showroom.from('blog_media').insert({
-        post_id: post.id,
-        content_asset_id: assetRecord.asset.id,
-        source_type: 'showroom_asset',
-        private_bucket: assetRecord.original.bucket,
-        private_object_path: assetRecord.original.object_path,
-        source_label: options.title || asset.product || asset.fileName,
-        alt_text: options.alt,
-        caption: cleanText(options.caption),
-        usage_status: 'candidate',
-        privacy_checked: true,
-        promotion_consent_checked: false,
-        used_as_cover: false,
-      }).select('id').single()
-      if (mediaError || !media) throw new Error(`Blog media link creation failed: ${mediaError?.message ?? 'no row'}`)
-      mediaId = media.id
-      createdMedia = true
-    }
-
-    const { data: postUsages, error: postUsageLookupError } = await showroom
-      .from('content_asset_usages')
-      .select('id')
-      .eq('asset_id', assetRecord.asset.id)
-      .eq('usage_context', 'blog_post')
-      .eq('ref_table', 'showroom.blog_posts')
-      .eq('ref_id', post.id)
-      .limit(1)
-    if (postUsageLookupError) throw new Error(`Blog post usage lookup failed: ${postUsageLookupError.message}`)
-    if (!postUsages?.length) {
-      const { error } = await showroom.from('content_asset_usages').insert({
-        asset_id: assetRecord.asset.id,
-        usage_context: 'blog_post',
-        ref_table: 'showroom.blog_posts',
-        ref_id: post.id,
-        role: 'body',
-        caption_override: cleanText(options.caption),
-        alt_text_override: options.alt,
-        metadata: { blog_media_id: mediaId, central_asset_id: asset.assetId },
-        created_by: actorId,
-      })
-      if (error) throw new Error(`Blog post usage creation failed: ${error.message}`)
-      createdPostUsage = true
-    }
-
-    if (options.blockId) {
-      const { data: block, error: blockError } = await showroom
-        .from('blog_blocks')
-        .select('id, type, media_id')
-        .eq('id', options.blockId)
-        .eq('post_id', post.id)
-        .single()
-      if (blockError || !block || block.type !== 'image') {
-        throw new Error('--block-id must belong to an existing image block in the selected post.')
-      }
-      if (block.media_id && block.media_id !== mediaId) {
-        throw new Error('--block-id already points to different media; replace it in the editor so prior usage remains auditable.')
-      }
-      previousBlockMediaId = block.media_id
-      if (block.media_id !== mediaId) {
-        const { data: updatedBlocks, error: updateError } = await showroom.from('blog_blocks')
-          .update({ media_id: mediaId })
-          .eq('id', block.id)
-          .eq('post_id', post.id)
-          .is('media_id', null)
-          .select('id')
-        if (updateError || (updatedBlocks ?? []).length !== 1) {
-          throw new Error(`Blog image block update failed: ${updateError?.message ?? 'the block changed concurrently'}`)
-        }
-        blockUpdated = true
-      }
-
-      const { data: blockUsages, error: blockUsageLookupError } = await showroom
-        .from('content_asset_usages')
-        .select('id')
-        .eq('asset_id', assetRecord.asset.id)
-        .eq('usage_context', 'blog_block')
-        .eq('ref_table', 'showroom.blog_blocks')
-        .eq('ref_id', block.id)
-        .limit(1)
-      if (blockUsageLookupError) throw new Error(`Blog block usage lookup failed: ${blockUsageLookupError.message}`)
-      if (!blockUsages?.length) {
-        const { error: usageError } = await showroom.from('content_asset_usages').insert({
-          asset_id: assetRecord.asset.id,
-          usage_context: 'blog_block',
-          ref_table: 'showroom.blog_blocks',
-          ref_id: block.id,
-          role: 'body',
-          caption_override: cleanText(options.caption),
-          alt_text_override: options.alt,
-          metadata: { post_id: post.id, blog_media_id: mediaId, central_asset_id: asset.assetId },
-          created_by: actorId,
-        })
-        if (usageError) throw new Error(`Blog block usage creation failed: ${usageError.message}`)
-        createdBlockUsage = true
-      }
-    }
-
-    if (createdMedia || createdPostUsage || createdBlockUsage || blockUpdated) {
-      const { error: eventError } = await showroom.from('content_asset_events').insert({
-        asset_id: assetRecord.asset.id,
-        event_type: options.blockId ? 'attached_to_blog_block' : 'attached_to_blog_post',
-        actor_id: actorId,
-        metadata: {
-          post_id: post.id,
-          blog_media_id: mediaId,
-          block_id: options.blockId || null,
-          central_asset_id: asset.assetId,
-        },
-      })
-      if (eventError) throw new Error(`Blog attachment audit event creation failed: ${eventError.message}`)
-    }
-
-    return { mediaId, blockId: options.blockId || null, createdMedia }
-  } catch (error) {
-    const compensations = []
-    if (blockUpdated) compensations.push({
-      label: 'Blog block rollback failed',
-      run: () => showroom.from('blog_blocks').update({ media_id: previousBlockMediaId }).eq('id', options.blockId),
-    })
-    if (createdBlockUsage) compensations.push({
-      label: 'Blog block usage rollback failed',
-      run: () => showroom.from('content_asset_usages')
-        .delete().eq('ref_table', 'showroom.blog_blocks').eq('ref_id', options.blockId).eq('asset_id', assetRecord.asset.id),
-    })
-    if (createdPostUsage) compensations.push({
-      label: 'Blog post usage rollback failed',
-      run: () => showroom.from('content_asset_usages')
-        .delete().eq('ref_table', 'showroom.blog_posts').eq('ref_id', options.postId).eq('asset_id', assetRecord.asset.id),
-    })
-    if (createdMedia && mediaId) compensations.push({
-      label: 'Blog media rollback failed',
-      run: () => showroom.from('blog_media').delete().eq('id', mediaId),
-    })
-    try {
-      await runCompensations(compensations)
-    } catch (cleanupError) {
-      throw withCleanupFailure(error, cleanupError)
-    }
-    throw error
+  const placement = validateOfficialAssetPlacementOptions(options)
+  if (!placement.postId) return {
+    mediaId: null,
+    blockId: null,
+    createdMedia: false,
+    cover: false,
+    insertedBlock: false,
+    shiftedBlocks: 0,
+    eventsCreated: 0,
   }
-}
 
+  const { data, error } = await showroom.rpc('attach_official_asset_to_reviewing_post', {
+    p_post_id: placement.postId,
+    p_asset_id: assetRecord.asset.id,
+    p_actor_id: actorId,
+    p_alt_text: options.alt,
+    p_caption: cleanText(options.caption),
+    p_source_label: options.title || asset.product || asset.fileName,
+    p_existing_block_id: placement.blockId,
+    p_insert_after_block_id: placement.insertAfterBlockId,
+    p_set_cover: placement.cover,
+  })
+  if (error) throw new Error(`Atomic blog placement failed: ${error.message}`)
+  return normalizeOfficialAssetPlacementResult(data)
+}
 async function main() {
   const args = parseArgs(process.argv.slice(2))
   if (args.help) {
@@ -716,6 +606,8 @@ async function main() {
     requiresClaimReview: asset.requiresClaimReview,
     postId: args['post-id'] || null,
     blockId: args['block-id'] || null,
+    insertAfterBlockId: args['insert-after-block-id'] || null,
+    cover: args.cover === true,
   }
   if (!args.apply) {
     console.log(JSON.stringify(plan, null, 2))
@@ -748,6 +640,8 @@ async function main() {
     const attachment = await attachToBlog(showroom, assetRecord, asset, args['actor-id'], {
       postId: args['post-id'] || null,
       blockId: args['block-id'] || null,
+      insertAfterBlockId: args['insert-after-block-id'] || null,
+      cover: args.cover === true,
       alt: cleanText(args.alt),
       caption: cleanText(args.caption),
       title: cleanText(args.title),
@@ -762,7 +656,12 @@ async function main() {
   } catch (error) {
     if (assetRecord.created) {
       try {
-        await cleanupCreatedAsset(showroom, assetRecord.asset.id, assetRecord.files)
+        await cleanupCreatedAssetIfUnreferenced(
+          showroom,
+          assetRecord.asset.id,
+          args['actor-id'],
+          assetRecord.files,
+        )
       } catch (cleanupError) {
         throw withCleanupFailure(error, cleanupError)
       }

@@ -1460,6 +1460,7 @@ export default function BlogEditorClient({
 
   const buildPayload = (): SaveBlogEditorPayload => ({
     postId: post.id,
+    expectedUpdatedAt: initialPost.updatedAt,
     post: {
       title: post.title,
       slug: post.slug,

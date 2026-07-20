@@ -26,6 +26,7 @@ const migrationPath = new URL('../supabase/migrations/20260715090000_official_as
 const hardeningMigrationPath = new URL('../supabase/migrations/20260715092000_official_asset_provenance_hardening.sql', import.meta.url)
 const privateDerivativeMigrationPath = new URL('../supabase/migrations/20260715100000_private_candidate_derivatives.sql', import.meta.url)
 const privateDerivativeFixMigrationPath = new URL('../supabase/migrations/20260715101000_fix_private_derivative_rpc_role_cast.sql', import.meta.url)
+const atomicPlacementMigrationPath = new URL('../supabase/migrations/20260720000313_atomic_official_asset_blog_placement.sql', import.meta.url)
 const commandPath = new URL('./register-official-brand-asset.mjs', import.meta.url)
 const rendererPath = new URL('../src/components/blog/BlogPostRenderer.tsx', import.meta.url)
 const assetClientPath = new URL('../src/app/admin/platform/assets/ContentAssetsClient.tsx', import.meta.url)
@@ -189,12 +190,13 @@ assert.equal(preparedJpeg.extension, 'webp')
 assert.equal(preparedJpeg.originalAnimationPreserved, false)
 assert.equal((await sharp(preparedJpeg.buffer).metadata()).format, 'webp')
 
-const [actionsSource, migrationSource, hardeningMigrationSource, privateDerivativeMigrationSource, privateDerivativeFixMigrationSource, commandSource, rendererSource, assetClientSource, assetActionsSource, blogEditorClientSource] = await Promise.all([
+const [actionsSource, migrationSource, hardeningMigrationSource, privateDerivativeMigrationSource, privateDerivativeFixMigrationSource, atomicPlacementMigrationSource, commandSource, rendererSource, assetClientSource, assetActionsSource, blogEditorClientSource] = await Promise.all([
   readFile(actionsPath, 'utf8'),
   readFile(migrationPath, 'utf8'),
   readFile(hardeningMigrationPath, 'utf8'),
   readFile(privateDerivativeMigrationPath, 'utf8'),
   readFile(privateDerivativeFixMigrationPath, 'utf8'),
+  readFile(atomicPlacementMigrationPath, 'utf8'),
   readFile(commandPath, 'utf8'),
   readFile(rendererPath, 'utf8'),
   readFile(assetClientPath, 'utf8'),
@@ -241,18 +243,19 @@ assert.match(commandSource, /currentHeadOutput\.trim\(\)\.toLowerCase\(\) !== ce
 assert.match(commandSource, /gitBlobOid\(asset\.buffer\) !== committedBlob/)
 assert.match(commandSource, /isDeepStrictEqual\(committedManifestAsset, asset\.provenance\.manifest_asset\)/)
 assert.match(commandSource, /CODEX_AUDIT_ACTOR_ID/)
-assert.match(commandSource, /post\.status !== 'reviewing'/)
+assert.match(commandSource, /\.rpc\('attach_official_asset_to_reviewing_post'/)
+assert.match(atomicPlacementMigrationSource, /v_post_status IS DISTINCT FROM 'reviewing'/)
 assert.doesNotMatch(commandSource, /execute_sql|insert into|storage\.objects/i)
-assert.match(commandSource, /content_asset_events/)
-assert.match(commandSource, /content_asset_usages/)
-assert.match(commandSource, /blog_media/)
-assert.match(commandSource, /blog_blocks/)
+assert.match(atomicPlacementMigrationSource, /showroom\.content_asset_usages/)
+assert.match(atomicPlacementMigrationSource, /showroom\.blog_media/)
+assert.match(atomicPlacementMigrationSource, /INSERT INTO showroom\.content_asset_events/)
+assert.match(atomicPlacementMigrationSource, /INSERT INTO showroom\.blog_blocks/)
 assert.match(commandSource, /centralBrandSnapshot\(asset\)/)
 assert.match(commandSource, /privatizeExistingDerivatives/)
 assert.match(commandSource, /storage\.from\(PUBLIC_BUCKET\)[\s\S]*\.remove[\s\S]*\.rpc\('privatize_central_asset_derivatives'/)
 assert.match(commandSource, /bucket: PRIVATE_BUCKET, path: webPath/)
 assert.match(commandSource, /bucket: PRIVATE_BUCKET, path: thumbnailPath/)
-assert.match(commandSource, /\.is\('media_id', null\)/)
+assert.match(commandSource, /cleanupCreatedAssetIfUnreferenced/)
 assert.match(rendererSource, /<img src=\{media\.url\}/, 'public renderer must preserve browser-native GIF playback')
 assert.match(assetClientSource, /image\/gif/, 'asset library file input must allow GIF selection')
 assert.match(assetActionsSource, /mergeContentAssetLabelsWithTags\(currentAsset\.labels, tagNames\)/, 'metadata edits must preserve central provenance')
