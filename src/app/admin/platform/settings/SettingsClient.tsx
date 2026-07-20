@@ -6,6 +6,7 @@ import { ArrowDown, ArrowUp, Eye, EyeOff, ImagePlus, Pencil, Save } from 'lucide
 import { createBrowserClient } from '@supabase/ssr'
 import {
   PlatformButton,
+  PlatformCheckbox,
   PlatformField,
   PlatformIconButton,
   PlatformLinkButton,
@@ -482,18 +483,15 @@ export default function SettingsClient() {
                 </div>
 
                 <div className={styles.checkboxGroup}>
-                  <label className={styles.checkboxLabel}>
-                    <input type="checkbox" checked={settings.close_saturday} onChange={e => setSettings(prev => ({ ...prev, close_saturday: e.target.checked }))} className={styles.checkbox} />
-                    <span>매주 토요일 자동 마감</span>
-                  </label>
-                  <label className={styles.checkboxLabel}>
-                    <input type="checkbox" checked={settings.close_sunday} onChange={e => setSettings(prev => ({ ...prev, close_sunday: e.target.checked }))} className={styles.checkbox} />
-                    <span>매주 일요일 자동 마감</span>
-                  </label>
-                  <label className={styles.checkboxLabel}>
-                    <input type="checkbox" checked={settings.close_holidays} onChange={e => setSettings(prev => ({ ...prev, close_holidays: e.target.checked }))} className={styles.checkbox} />
-                    <span>공휴일 자동 마감</span>
-                  </label>
+                  <PlatformCheckbox name="closeSaturday" checked={settings.close_saturday} onChange={e => setSettings(prev => ({ ...prev, close_saturday: e.target.checked }))}>
+                    매주 토요일 자동 마감
+                  </PlatformCheckbox>
+                  <PlatformCheckbox name="closeSunday" checked={settings.close_sunday} onChange={e => setSettings(prev => ({ ...prev, close_sunday: e.target.checked }))}>
+                    매주 일요일 자동 마감
+                  </PlatformCheckbox>
+                  <PlatformCheckbox name="closeHolidays" checked={settings.close_holidays} onChange={e => setSettings(prev => ({ ...prev, close_holidays: e.target.checked }))}>
+                    공휴일 자동 마감
+                  </PlatformCheckbox>
                 </div>
 
                 <PlatformButton type="submit" isLoading={settingsSaving} loadingLabel="예약 규칙 저장 중…" className={styles.formAction}>예약 규칙 저장</PlatformButton>

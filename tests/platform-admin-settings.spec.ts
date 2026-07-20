@@ -33,6 +33,16 @@ test('settings primitives preserve keyboard, selected state, and desktop layout'
   await expect(schedule).toHaveAttribute('aria-pressed', 'true')
   await expect(schedule).toBeFocused()
 
+  const saturday = page.getByRole('checkbox', { name: '매주 토요일 자동 마감' })
+  const wasSaturdayClosed = await saturday.isChecked()
+  await saturday.focus()
+  await page.keyboard.press('Space')
+  await expect(saturday).toBeChecked({ checked: !wasSaturdayClosed })
+  await expect(saturday).toBeFocused()
+  expect((await saturday.locator('xpath=..').boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44)
+  await page.keyboard.press('Space')
+  await expect(saturday).toBeChecked({ checked: wasSaturdayClosed })
+
   const selectedBeforeHover = await schedule.evaluate(element => {
     const style = getComputedStyle(element)
     return { background: style.backgroundColor, color: style.color }
@@ -63,6 +73,7 @@ test('settings stay within 390px and expose validation feedback without a databa
   await loginAsAdministrator(page)
 
   await page.getByRole('group', { name: '견적 운영설정 구분' }).getByRole('button', { name: '방문일 운영 설정' }).click()
+  await expect(page.getByRole('checkbox', { name: '공휴일 자동 마감' })).toBeVisible()
   await page.getByLabel('최소 접수 가능일').fill('31')
   await page.getByLabel('최대 예약 가능일').fill('30')
   await page.getByRole('button', { name: '예약 규칙 저장' }).click()

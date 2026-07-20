@@ -12,6 +12,7 @@ const [client, css] = await Promise.all([
 
 for (const primitive of [
   'PlatformButton',
+  'PlatformCheckbox',
   'PlatformField',
   'PlatformIconButton',
   'PlatformLinkButton',
@@ -25,6 +26,7 @@ for (const primitive of [
 }
 
 assert.doesNotMatch(client, /\balert\s*\(/, 'settings feedback must use the shared state contract')
+assert.doesNotMatch(client, /<input[^>]*type="checkbox"/, 'booking rules must use the shared checkbox')
 assert.match(client, /aria-live|PlatformStatePanel/, 'async feedback must be announced')
 assert.match(client, /label="견적 운영설정 구분"/)
 assert.match(client, /label="예외 날짜 예약 상태"/)
@@ -57,6 +59,8 @@ for (const removedClass of [
   '.emptyText',
   '.loading',
   '.spinner',
+  '.checkboxLabel',
+  '.checkbox {',
 ]) {
   assert.equal(css.includes(removedClass), false, `shared primitive styling must replace ${removedClass}`)
 }
