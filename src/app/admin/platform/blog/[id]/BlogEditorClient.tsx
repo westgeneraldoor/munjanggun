@@ -1939,7 +1939,7 @@ export default function BlogEditorClient({
             active={editorMode === 'write'}
             className={styles.editorModePanel}
           >
-          <section className={styles.panel}>
+          <section className={styles.panel} data-testid="blog-basic-information">
             <div className={styles.panelTitle}>
               <FileText size={17} aria-hidden="true" />
               <h2>기본 정보</h2>

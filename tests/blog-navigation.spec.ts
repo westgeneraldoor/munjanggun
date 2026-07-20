@@ -46,17 +46,20 @@ test('authenticated search and account menus stay mutually exclusive and keyboar
   const response = await page.goto('/api/dev/playwright-login?role=customer&next=/blog')
 
   if (response && response.status() >= 500) {
-    test.skip(true, 'Dev Supabase login is not configured in this environment.')
+    const errorBody = await response.json().catch(() => null) as { error?: string } | null
+    test.skip(
+      errorBody?.error === 'Dev Supabase login is not configured',
+      'Dev Supabase login is not configured in this environment.',
+    )
+    expect(response.status(), `Dev customer login failed: ${errorBody?.error ?? 'unknown error'}`).toBeLessThan(500)
   }
-  if (page.url().includes('/login')) {
-    test.skip(true, 'Dev customer login redirected to the public login page in this environment.')
-  }
+  await expect(page, 'Dev login must preserve the request host and establish a customer session.').not.toHaveURL(/\/login(?:\?|$)/)
 
   await expect(page.getByTestId('blog-home-hero')).toBeVisible()
   const navigation = page.getByTestId('blog-navigation')
   const accountControls = navigation.locator('#public-login-link, #public-user-menu-toggle')
   await expect.poll(async () => accountControls.count()).toBe(1)
-  test.skip(await navigation.locator('#public-user-menu-toggle').count() === 0, 'Authenticated blog menu is unavailable in this environment.')
+  await expect(navigation.locator('#public-user-menu-toggle')).toHaveCount(1)
 
   const accountToggle = navigation.getByRole('button', { name: '계정 메뉴 열기' })
   await expect(accountToggle).toBeVisible()
