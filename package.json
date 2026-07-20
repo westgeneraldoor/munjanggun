@@ -21,6 +21,7 @@
     "test:blog-editor-asset-picker-modal-browser": "playwright test tests/blog-editor-asset-picker-modal.spec.ts",
     "test:customer-intake-a11y": "node scripts/test-customer-intake-a11y.mjs",
     "test:customer-intake-a11y-browser": "playwright test tests/customer-intake-a11y.spec.ts",
+    "test:blog-public-gif-browser": "playwright test tests/blog-public-gif.spec.ts",
     "test:blog-queue-list-primitives": "node scripts/test-blog-queue-list-primitives.mjs",
     "test:blog-queue-list-primitives-browser": "playwright test tests/blog-queue-list-primitives.spec.ts",
     "test:brand-token-snapshot": "node scripts/test-brand-token-snapshot.mjs",
