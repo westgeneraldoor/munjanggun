@@ -38,86 +38,13 @@
   gap: var(--space-5);
 }
 
-.inputGroup {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+.errorPanel {
+  min-height: 0;
+  justify-content: flex-start;
+  padding: var(--mg-space-3);
+  text-align: left;
 }
 
-.label {
-  color: var(--admin-text);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-}
-
-.input {
-  height: 48px;
-  background-color: var(--admin-surface);
-  border: 1px solid var(--admin-border);
-  border-radius: var(--radius-md);
-  padding: 0 var(--space-3);
-  font-size: var(--text-base);
-  color: var(--admin-text);
-  transition: var(--transition-fast);
-}
-
-.input::placeholder {
-  color: var(--admin-text-muted);
-}
-
-.input:focus-visible {
-  outline: none;
-  border-color: var(--admin-accent);
-  box-shadow: var(--mg-focus-shadow);
-}
-
-.input:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: var(--admin-surface-elevated);
-}
-
-.error {
-  color: var(--color-error);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-}
-
-.button {
-  height: 48px;
-  background-color: var(--admin-accent);
-  color: var(--color-accent-foreground);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  font-weight: var(--font-semibold);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.submitButton {
   margin-top: var(--space-2);
-}
-
-.button:hover:not(:disabled) {
-  background-color: var(--admin-accent-hover);
-}
-
-.button:active:not(:disabled) {
-  transform: scale(0.97);
-}
-
-.button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-@media (min-width: 1024px) {
-  .input {
-    height: 40px;
-  }
-  
-  .button {
-    height: 36px;
-  }
 }
