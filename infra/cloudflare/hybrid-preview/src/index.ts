@@ -6,11 +6,13 @@ interface Env {
 
 const APP_PATH_PREFIXES = [
   '/_next/',
-  '/api/blog',
-  '/api/blog/',
+  '/api',
   '/admin',
+  '/assets/blog-home/',
+  '/assets/fonts/',
   '/auth/callback',
   '/blog',
+  '/images/blog-launch/',
   '/login',
   '/measure',
   '/portal',
@@ -21,15 +23,18 @@ const APP_PATH_PREFIXES = [
 const PRIVATE_PATH_PREFIXES = [
   '/admin',
   '/auth/',
+  '/api',
   '/login',
   '/measure',
   '/portal',
-  '/preview/',
-  '/api/',
+  '/preview',
 ] as const
 
 function matchesPath(pathname: string, prefix: string) {
-  return pathname === prefix || pathname.startsWith(prefix)
+  if (pathname === prefix) return true
+  return prefix.endsWith('/')
+    ? pathname.startsWith(prefix)
+    : pathname.startsWith(`${prefix}/`)
 }
 
 function isAppPath(pathname: string) {
