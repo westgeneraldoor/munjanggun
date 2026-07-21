@@ -20,6 +20,8 @@ const expectedRemoteAlignedMigrations = [
   '20260720075020_harden_showroom_preview_payload.sql',
   '20260720075047_detach_unused_official_asset_from_reviewing_post.sql',
   '20260720075242_fix_detach_unused_official_asset_uuid_selection.sql',
+  '20260721013710_restrict_showroom_preview_and_fix_asset_rls.sql',
+  '20260721015552_enforce_content_asset_public_derivative_boundary.sql',
 ]
 for (const name of expectedRemoteAlignedMigrations) {
   assert.ok(migrationNames.includes(name), `missing exact remote-aligned migration ${name}`)

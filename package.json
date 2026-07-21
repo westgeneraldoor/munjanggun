@@ -55,6 +55,8 @@
     "test:admin-node-form-persistence": "node scripts/test-admin-node-form-persistence.mjs",
     "test:admin-node-form-browser": "playwright test tests/admin-node-form-persistence.spec.ts",
     "test:showroom-preview-payload": "node scripts/test-showroom-preview-payload.mjs",
+    "test:showroom-rls-hardening": "node scripts/test-showroom-rls-hardening.mjs",
+    "test:production-fixture-boundary": "node scripts/test-production-fixture-boundary.mjs",
     "test:supabase-stabilization-migrations": "node scripts/test-supabase-stabilization-migrations.mjs",
     "test:official-asset-detach": "node scripts/test-official-asset-detach.mjs",
     "test:admin-shell-error": "node scripts/test-admin-shell-error.mjs",

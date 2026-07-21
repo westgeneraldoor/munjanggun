@@ -30,6 +30,17 @@ function hasSupabasePublicEnv() {
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
+  const isProductionTestFixture =
+    process.env.NODE_ENV === 'production' &&
+    (pathname === '/test-fixtures' || pathname.startsWith('/test-fixtures/'))
+
+  if (isProductionTestFixture) {
+    return new NextResponse('Not Found', {
+      status: 404,
+      headers: { 'X-Robots-Tag': 'noindex, nofollow' },
+    })
+  }
+
   const isAdminPrivateMediaRoute = pathname.startsWith('/admin/platform/blog/media/')
   const isAdminRoute = pathname.startsWith('/admin') && !isAdminPrivateMediaRoute
   const isAdminLoginRoute = pathname === '/admin/login'
@@ -191,6 +202,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/test-fixtures/:path*',
     /*
      * Match all request paths except for the ones starting with:
      * - _next/static (static files)

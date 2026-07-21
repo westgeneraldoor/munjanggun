@@ -66,8 +66,9 @@ Codex 완성 원고 → 승인 원고 등록 → reviewing 콘텐츠 큐 → 사
 | --- | --- |
 | aligned | `20260715090227`, `20260715233310`, `20260715235109`, `20260715235349`, `20260720005042`, `20260720005052` |
 | newly applied | `20260720074812`, `20260720074843`, `20260720074917`, `20260720074955`, `20260720075020`, `20260720075047`, `20260720075242`, `20260720084910` |
+| 2026-07-21 follow-up applied | `20260721013710` Preview token·draft showroom RLS, `20260721015552` 공식 자산·usage·public derivative 공개 경계 |
 
-어드민·블로그 최종 verifier는 token usage CSS 64개를 재귀 탐지하며 state-scope invariant를 유지한다. 최종 결과는 raw color 0, raw shadow 0, 미승인 raw layout 0, 미정의 custom property 0이며 property·value·reason 범위로 명명된 layout 예외는 45개다.
+어드민·블로그 최종 verifier는 token usage CSS 64개를 재귀 탐지하며 state-scope invariant를 유지한다. 이번 보정 실행 결과는 raw color 0, raw shadow 0, 미승인 raw layout 0, 미정의 custom property 0이며 property·value·reason 범위로 명명·허용된 layout 예외는 37개다. 예외는 하드코딩 0으로 표현하지 않고 승인된 화면 기하 예외 수로 별도 보고한다.
 
 ### Preview 환경변수 사전 점검
 

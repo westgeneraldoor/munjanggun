@@ -9,7 +9,7 @@
 - 저장소: `munjanggun`
 - 통합 브랜치: `codex/platform-admin-blog-stabilization`
 - base: `v2-cms`
-- 구현 위치: clean linked worktree `platform-admin-blog-stabilization`
+- 구현 위치: dedicated linked worktree `platform-admin-blog-stabilization`
 - 제품 북극성: `docs/platform/PLATFORM_STRATEGY.md`
 - 실행 순서: `docs/platform/PLATFORM_TASKS.md`
 - UI 계약: `docs/platform/PLATFORM_UI_CONSTITUTION.md`
@@ -21,11 +21,12 @@
 - 본문은 27블록, image block 2개, active private media 3개다.
 - active media의 public 노출은 0이고 promotion consent는 승인하지 않았다.
 - 미사용 공식 자산은 글 연결만 감사 detach했으며 asset record와 file row 3개를 보존했다.
-- target migration 14개는 원격 version과 일치하고 마지막 version은 `20260720084910`이다.
+- Preview token·draft showroom 권한 보정 migration `20260721013710`과 공식 자산 공개 파생 경계 migration `20260721015552`를 원격에 적용했고 로컬 version/name과 맞췄다.
+- 신규 target migration 정합은 확인했지만, 저장소 전체의 과거 local/remote migration history 차이는 상속 상태로 남아 있어 빈 DB fresh-reset 재현성과 동일한 의미로 보고하지 않는다.
 - public cleanup 미해결 감사 이벤트는 0건이다.
-- Admin·Blog UI verifier는 CSS 64개와 명명 layout 예외 45개를 검사한다.
-- 전체 브라우저 회귀는 실제 환경에서 83/83 통과했다.
-- UI와 DB/security 독립 재검토의 미해결 finding은 0건이다.
+- Admin·Blog UI verifier는 CSS 64개와 명명·허용된 layout 예외 37개를 검사하며 현재 정책 위반은 0건이다.
+- 통합 Draft PR [#73](https://github.com/westgeneraldoor/munjanggun/pull/73)은 생성됐고 superseded PR과 clean worktree 정리는 끝났다.
+- 이전 전체 브라우저 회귀는 실제 환경에서 83/83 통과했다. 이번 보정 diff의 전체 재검증과 독립 재검수는 진행 중이므로 새 최종 통과 수와 미해결 finding 수는 완료 후 확정한다.
 
 ## 전달 경계
 
@@ -33,4 +34,4 @@ GitHub CI는 비밀값 없는 정적·단위·타입·lint·build 검증만 맡�
 
 ## 다음 단계
 
-staged diff 재검수 → commit/push → 단일 Draft PR → CI/Vercel Preview QA → superseded Draft PR 정리 → clean superseded worktree 정리 순서로 진행한다.
+보정 diff 전체 재검증 → 독립 재검수 → commit/push → Draft PR #73 CI·Vercel Preview QA → Draft 재검수 결과에 따른 Ready 판단 순서로 진행한다. 이 오더에서는 Ready 전환 자체를 수행하지 않는다.
