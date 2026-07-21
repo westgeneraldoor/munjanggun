@@ -43,17 +43,31 @@ Codex 완성 원고 → 승인 원고 등록 → reviewing 콘텐츠 큐 → 사
 | 구분 | 현재 판정 | 확인 방법 |
 | --- | --- | --- |
 | 승인 원고 등록 | Ready | 관리자 권한, 필수 메타데이터·본문 블록 검증, 서버 자동 provenance, 원자 RPC, `reviewing` INSERT와 감사 이벤트 회귀 검증 통과 |
-| 콘텐츠 큐·편집·사진 | Ready for reviewing | 실제 중앙 브랜드 베이직 JPG 2건과 GIF 1건을 서버 명령으로 등록해 운영 원고 1건의 대표사진과 본문에 연결했다. 인증된 에디터와 저장된 미리보기에서 세 미디어, alt, caption을 확인했으며 원고는 `reviewing`에 유지했다. |
+| 콘텐츠 큐·편집·사진 | Ready for reviewing | 실제 중앙 브랜드 베이직 JPG 2건과 GIF 1건을 서버 명령으로 등록했다. 감사 detach 뒤 운영 원고는 27개 블록, image block 2개, active private media 3개이며 원고는 `reviewing`, `published_at = null`이다. |
 | 사진 업로드 안전 | Ready | 두 업로드 화면과 서버에서 개인정보·홍보 활용 확인을 함께 요구하고 자동 승인값을 저장하지 않는 회귀 검증 통과 |
 | 대표 사진 게이트 | Ready | `ready`와 `published` 모두 대표 사진 또는 관리자가 입력·저장한 비공백 사진 부족 사유를 요구하는 회귀 검증 통과 |
 | 공개 표현 정합성 | Ready | authored title은 H1·JSON-LD headline, SEO title은 metadata에만 쓰고 선택된 대표 사진·breadcrumb·날짜가 화면과 구조화 데이터에서 일치하는 회귀 검증 통과 |
 | 공개 범위 | Unchanged | `published` 글과 발행된 미디어만 공개 경로와 sitemap에 포함되는 기존 계약 유지 |
-| DB/RLS | Ready | 원고 provenance와 공식 자산·GIF·원자 연결 migration을 승인된 경로로 원격 적용하고 권한을 확인했다. service-role 전용 RPC는 서버에서만 실행되며 기존 공개·RLS 경계는 유지된다. |
-| 실제 접근 리허설 | Ready for reviewing; publication not exercised | 공개 `/blog`, 인증된 관리자 큐·편집기·저장 미리보기를 확인했다. 실제 `reviewing` 원고의 DB 블록·미디어·감사 이벤트와 비공개 원본 경계를 확인했으며 실제 원고의 `ready`·`published` 전환은 수행하지 않았다. |
+| DB/RLS | Ready | provenance·공식 자산·원자 연결, 어드민 원자 저장, Storage·lease, preview, detach migration을 승인된 경로로 원격 적용했다. public anon 객체 목록 권한은 제거했고 service-role RPC는 서버에서만 실행된다. |
+| 실제 접근 리허설 | Ready for reviewing; publication not exercised | 알려진 public object URL HTTP 200, anon 객체 목록 0건, private signed URL HTTP 200을 확인했다. 실제 원고의 `ready`·`published` 전환이나 미디어 공개 승격은 수행하지 않았다. |
 
 도입 순서 기준은 `RPC migration 적용·권한 확인 → 웹 배포 → Preview 등록 검증`이다. 현재는 원격 migration, 실제 원고의 `reviewing` 등록, 중앙 자산 세 건의 검증·비공개 업로드·감사 기록·사진 연결, 인증된 편집기와 저장 미리보기 확인까지 완료했다. 실제 등록 행은 발행하지 않고 검수 큐에 유지한다. 새 환경에 배포할 때도 RPC가 없는 DB에 웹 코드를 먼저 배포하지 않는다.
 
 실제 중앙 GIF는 비공개 원본의 checksum, MIME, 860×830 크기와 2-frame 애니메이션을 검증했고 CMS 미리보기에서 원본 경로로 표시했다. 공개 GIF 회귀는 개발 전용 deterministic fixture로 원본 `.gif`, `image/gif`, 두 프레임, alt, caption과 390px 렌더링을 확인했다. 실제 `reviewing` 원고나 그 GIF를 공개 발행했다는 뜻은 아니다.
+
+### 3.1 2026-07-20 통합 증거
+
+- 중앙 source는 clean `e6b6eb618e08b907307497d87f58995bd945531c`(`e6b6eb6`), `DESIGN.md` v5.0, 고유 토큰 114개다. 중앙 저장소는 수정하지 않았다.
+- 통합 브랜치는 `codex/platform-admin-blog-stabilization`, base는 `v2-cms`다. Draft PR 번호는 생성 후 기록할 pending 값이다.
+- 첫 원고는 `reviewing`, `published_at = null`, 27개 블록, image block 2개, active private media 3개다. `mg-3panel-thumbnail-basic-001`은 감사 detach했으며 중앙 asset과 file row 3개는 보존했다.
+- 실제 발행과 public promotion은 수행하지 않았다.
+
+| 상태 | 원격 migration version |
+| --- | --- |
+| aligned | `20260715090227`, `20260715233310`, `20260715235109`, `20260715235349`, `20260720005042`, `20260720005052` |
+| newly applied | `20260720074812`, `20260720074843`, `20260720074917`, `20260720074955`, `20260720075020`, `20260720075047`, `20260720075242`, `20260720084910` |
+
+어드민·블로그 최종 verifier는 token usage CSS 64개를 재귀 탐지하며 state-scope invariant를 유지한다. 최종 결과는 raw color 0, raw shadow 0, 미승인 raw layout 0, 미정의 custom property 0이며 property·value·reason 범위로 명명된 layout 예외는 45개다.
 
 ### Preview 환경변수 사전 점검
 

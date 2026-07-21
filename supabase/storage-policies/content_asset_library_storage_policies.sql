@@ -7,12 +7,9 @@
 -- - No UPDATE policy is defined for content-assets-public.
 -- - Upload code must use new object paths and upsert: false.
 
+-- Public object URLs remain readable because content-assets-public is a public
+-- bucket. Do not grant bucket-wide anon SELECT/listing access.
 DROP POLICY IF EXISTS content_assets_public_select ON storage.objects;
-CREATE POLICY content_assets_public_select
-ON storage.objects
-FOR SELECT
-TO anon
-USING (bucket_id = 'content-assets-public');
 
 DROP POLICY IF EXISTS content_assets_public_admin_insert ON storage.objects;
 CREATE POLICY content_assets_public_admin_insert

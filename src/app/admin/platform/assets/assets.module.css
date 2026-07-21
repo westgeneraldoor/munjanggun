@@ -32,14 +32,14 @@
 
 .uploadDrop {
   position: relative;
-  min-height: 112px;
+  min-height: calc(var(--mg-space-8) + var(--mg-space-7));
   display: flex;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-4);
   color: var(--admin-text-sub);
   background: var(--admin-surface-elevated);
-  border: 2px dashed var(--admin-border);
+  border: var(--mg-border-width-strong) dashed var(--admin-border);
   border-radius: var(--radius-lg);
 }
 
@@ -82,7 +82,7 @@
   padding: var(--space-3);
   color: var(--admin-text-sub);
   background: var(--admin-surface-elevated);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-md);
 }
 
@@ -95,7 +95,7 @@
 
 .limitInfo,
 .limitWarning {
-  min-height: 34px;
+  min-height: calc(var(--mg-space-6) + var(--mg-border-width-strong));
   display: inline-flex;
   align-items: center;
   width: max-content;
@@ -109,7 +109,7 @@
 .limitInfo {
   color: var(--admin-text-sub);
   background: var(--admin-bg);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
 }
 
 .limitWarning {
@@ -120,7 +120,7 @@
 
 .selectedPreviews {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--mg-layout-section) + var(--mg-space-8) + var(--mg-space-5) + var(--mg-space-1)), 1fr));
   gap: var(--space-3);
   list-style: none;
 }
@@ -128,11 +128,11 @@
 .selectedPreviews li {
   min-width: 0;
   display: grid;
-  grid-template-columns: 112px minmax(0, 1fr);
+  grid-template-columns: calc(var(--mg-space-8) + var(--mg-space-7)) minmax(0, 1fr);
   gap: var(--space-3);
   padding: var(--space-3);
   background: var(--admin-bg);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-md);
 }
 
@@ -141,7 +141,7 @@
   min-width: 0;
   overflow: hidden;
   background: var(--admin-surface-elevated);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-md);
 }
 
@@ -168,7 +168,7 @@
 .optionalFields,
 .filterDetails {
   min-width: 0;
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-md);
   background: var(--admin-bg);
 }
@@ -254,7 +254,7 @@
 }
 
 .progressTrack {
-  height: 8px;
+  height: var(--mg-admin-progress-track-height);
   overflow: hidden;
   background: color-mix(in srgb, var(--mg-action-primary) 16%, transparent);
   border-radius: var(--radius-full);
@@ -285,7 +285,7 @@
   margin: 0;
   padding: var(--space-3);
   list-style: none;
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-md);
 }
 
@@ -331,7 +331,7 @@
 
 @media (min-width: 1180px) {
   .libraryLayoutSelected {
-    grid-template-columns: minmax(0, 1fr) minmax(360px, 440px);
+    grid-template-columns: minmax(0, 1fr) minmax(calc(var(--mg-layout-section) * 2 + var(--mg-space-8) + var(--mg-space-6) + var(--mg-space-2)), calc(var(--mg-layout-section) * 3 + var(--mg-space-7) + var(--mg-space-2)));
     align-items: start;
   }
 }
@@ -356,7 +356,7 @@
 
 .assetGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--mg-layout-section) + var(--mg-space-7) + var(--mg-space-3) + var(--mg-border-width-strong)), 1fr));
   gap: var(--space-3);
 }
 
@@ -368,7 +368,7 @@
   overflow: hidden;
   color: inherit;
   background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--admin-shadow-sm);
   text-align: left;
@@ -384,7 +384,7 @@
 }
 
 .assetCard:focus-visible {
-  outline: 2px solid var(--admin-ring);
+  outline: var(--mg-border-width-strong) solid var(--admin-ring);
   outline-offset: var(--admin-focus-offset);
 }
 
@@ -405,7 +405,7 @@
 .thumbPlaceholder {
   width: 100%;
   height: 100%;
-  min-height: 160px;
+  min-height: calc(var(--mg-layout-section) + var(--mg-space-6));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -489,12 +489,12 @@
 }
 
 .detailMetaItem {
-  min-height: 24px;
+  min-height: var(--mg-space-5);
   display: inline-flex;
   align-items: center;
   padding: 0 var(--space-2);
   background: var(--admin-surface-elevated);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-md);
 }
 

@@ -107,7 +107,7 @@ Codex 외부 원고 작성
 -> sitemap / robots / metadata / JSON-LD
 ```
 
-승인 원고 등록은 인증된 관리자만 사용할 수 있다. 제목, slug, SEO/AEO 필드, 본문 블록, 검증된 근거를 받아 글·블록·등록 이력을 원자적으로 저장하고 새 글 상태를 반드시 `reviewing`으로 명시한다. 이 경계에는 AI 호출, 모델 설정, OpenAI 키가 없다. 왼쪽 메뉴의 고정 명칭은 `블로그 콘텐츠`다.
+승인 원고 등록은 인증된 관리자만 사용할 수 있다. 제목, slug, SEO/AEO 필드, 본문 블록을 받아 글·블록·등록 이력을 원자적으로 저장하고, 서버가 내부 provenance를 자동 기록하며 새 글 상태를 반드시 `reviewing`으로 명시한다. 이 경계에는 AI 호출, 모델 설정, OpenAI 키가 없다. 왼쪽 메뉴의 고정 명칭은 `블로그 콘텐츠`다.
 
 블로그 글은 다음 구조를 권장한다.
 
@@ -263,3 +263,11 @@ Codex 등록은 사람용 파일 선택창을 대신 조작하지 않는다. 서
 GIF는 private 원본 애니메이션을 그대로 보존하고 poster와 thumbnail만 정적 WebP로 만든다. 공개 승격이 승인된 GIF는 원본 GIF bytes와 `image/gif` MIME을 `blog-media`에 새 경로, `upsert: false`로 복사해 브라우저에서 애니메이션을 재생한다. alt가 없거나 용량 제한을 넘거나 주장 검수가 끝나지 않은 GIF는 공개하지 않는다.
 
 따라서 문서의 “직접 등록 금지”는 “검증·권한·감사 경계를 우회한 등록 금지”로 해석한다. 임의 SQL insert, `storage.objects` 직접 조작, 검증 없는 Storage 업로드는 금지한다.
+
+### 2026-07-20 통합 검증 상태
+
+- 중앙 source는 clean `e6b6eb618e08b907307497d87f58995bd945531c`(`e6b6eb6`), `DESIGN.md` v5.0, 고유 토큰 114개 계약이다.
+- 통합 브랜치는 `codex/platform-admin-blog-stabilization`, base는 `v2-cms`이며 Draft PR 번호는 pending이다.
+- 첫 원고는 `reviewing`, `published_at = null`, 27개 블록, image block 2개, active private media 3개다.
+- `mg-3panel-thumbnail-basic-001`은 글 연결만 감사 detach했고 중앙 asset과 file row 3개는 보존했다.
+- anon 목록은 0건, 알려진 public URL은 HTTP 200, private signed URL은 HTTP 200이다. 실제 발행과 public promotion은 수행하지 않았다.

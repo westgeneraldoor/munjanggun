@@ -63,7 +63,7 @@ assert.throws(
 
 const commandSource = await readFile(new URL('./register-official-brand-asset.mjs', import.meta.url), 'utf8')
 const migrationSource = await readFile(
-  new URL('../supabase/migrations/20260720000313_atomic_official_asset_blog_placement.sql', import.meta.url),
+  new URL('../supabase/migrations/20260720005052_atomic_official_asset_blog_placement.sql', import.meta.url),
   'utf8',
 )
 const adapterSource = await readFile(new URL('../docs/brand/PROJECT_BRAND_ADAPTER.md', import.meta.url), 'utf8')

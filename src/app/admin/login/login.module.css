@@ -9,12 +9,12 @@
 
 .card {
   background-color: var(--admin-surface);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-xl);
   box-shadow: var(--admin-shadow-lg);
   padding: var(--space-8) var(--space-6);
   width: 100%;
-  max-width: 400px;
+  max-width: calc(var(--mg-layout-section) * 3 + var(--mg-space-4));
 }
 
 .title {

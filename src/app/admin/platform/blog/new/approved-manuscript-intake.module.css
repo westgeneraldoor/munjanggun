@@ -1,6 +1,6 @@
 .page,
 .loadingPage {
-  max-width: 980px;
+  max-width: calc(var(--mg-layout-section) * 7 + var(--mg-space-8) + var(--mg-space-4) + var(--mg-space-1));
   padding: var(--space-4);
   color: var(--admin-text);
   font-family: var(--font-sans);
@@ -76,7 +76,7 @@
 }
 
 .compactField {
-  width: min(220px, 100%);
+  width: min(calc(var(--mg-layout-section) + var(--mg-space-8) + var(--mg-space-5) + var(--mg-space-1)), 100%);
 }
 
 .compactField > label {
@@ -106,7 +106,7 @@
   min-width: 0;
   padding: var(--space-4);
   background: var(--admin-surface-elevated);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-md);
 }
 

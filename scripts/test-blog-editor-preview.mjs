@@ -8,6 +8,7 @@ const rendererPath = new URL('../src/components/blog/BlogPostRenderer.tsx', impo
 const rendererCssPath = new URL('../src/components/blog/BlogPostRenderer.module.css', import.meta.url)
 const editorPath = new URL('../src/app/admin/platform/blog/[id]/BlogEditorClient.tsx', import.meta.url)
 const editorCssPath = new URL('../src/app/admin/platform/blog/[id]/blog-editor.module.css', import.meta.url)
+const platformModalPath = new URL('../src/components/platform/ui/PlatformModal.tsx', import.meta.url)
 const e2ePath = new URL('../tests/blog-editor-unsaved-navigation.spec.ts', import.meta.url)
 const actionsPath = new URL('../src/app/admin/platform/blog/[id]/actions.ts', import.meta.url)
 const renderingPath = new URL('../src/lib/content-os/blog-rendering.ts', import.meta.url)
@@ -177,11 +178,12 @@ assert.notEqual(
   'saved-state signatures must change with editor content',
 )
 
-const [rendererSource, rendererCss, editorSource, editorCss, e2eSource, actionsSource, renderingSource] = await Promise.all([
+const [rendererSource, rendererCss, editorSource, editorCss, platformModalSource, e2eSource, actionsSource, renderingSource] = await Promise.all([
   readRequiredFile(rendererPath, 'shared blog renderer'),
   readRequiredFile(rendererCssPath, 'shared blog renderer styles'),
   readRequiredFile(editorPath, 'blog editor client'),
   readRequiredFile(editorCssPath, 'blog editor styles'),
+  readRequiredFile(platformModalPath, 'shared platform modal'),
   readRequiredFile(e2ePath, 'blog editor navigation Playwright coverage'),
   readRequiredFile(actionsPath, 'blog editor server actions'),
   readRequiredFile(renderingPath, 'saved blog preview loader'),
@@ -204,12 +206,14 @@ assert.match(editorSource, /createStableEditorSignature/)
 assert.match(editorSource, /setSavedEditorSignature/, 'the saved signature must update after a successful save')
 assert.match(editorSource, /addEventListener\(['"]beforeunload['"]/, 'reload and tab close must be guarded')
 assert.match(editorSource, /onNavigate=\{handlePreviewNavigate\}/, 'Next Link navigation must use an explicit guard')
-assert.match(editorSource, /role=['"]dialog['"]/)
-assert.match(editorSource, /aria-modal=['"]true['"]/)
-assert.match(editorSource, /onKeyDown=\{handleDiscardDialogKeyDown\}/, 'the dialog must own Escape and Tab-cycle behavior')
-assert.match(editorSource, /previewLinkRef\.current\?\.focus/, 'cancel must restore focus to the Preview trigger')
-assert.match(editorCss, /\.discardDialogBackdrop/)
-assert.match(editorCss, /\.discardDialog/)
+assert.match(editorSource, /<PlatformModal[\s\S]*isOpen=\{discardDialogOpen\}/, 'the unsaved navigation guard must reuse the shared modal')
+assert.match(editorCss, /\.discardDialogActions/)
+assert.match(platformModalSource, /role=['"]dialog['"]/, 'the shared modal must expose dialog semantics')
+assert.match(platformModalSource, /aria-modal=['"]true['"]/, 'the shared modal must expose modal semantics')
+assert.match(platformModalSource, /event\.key === ['"]Escape['"]/, 'the shared modal must handle Escape')
+assert.match(platformModalSource, /event\.key !== ['"]Tab['"]/, 'the shared modal must trap Tab navigation')
+assert.match(platformModalSource, /previousActiveElement\?\.focus/, 'closing the shared modal must restore focus')
+assert.match(platformModalSource, /document\.body\.style\.overflow = ['"]hidden['"]/, 'the shared modal must lock page scroll')
 
 for (const scenario of ['cancel', 'confirm', 'beforeunload', 'Escape', 'Tab', 'focus']) {
   assert.match(e2eSource, new RegExp(scenario, 'i'), `Playwright coverage must include ${scenario}`)

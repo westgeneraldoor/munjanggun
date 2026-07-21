@@ -1,101 +1,47 @@
-# 현재 작업 오더 - n8n/AppSheet 견적·결제 흐름 지도화
+# 현재 작업 오더 - Admin·CMS·Blog 통합 안정화
 
-발행: 2026-06-10
-브랜치: `platform-v1`
-상태: 대화로 방향 확정, 구현 전 운영 흐름 정리
+발행: 2026-07-21
+
+브랜치: `codex/platform-admin-blog-stabilization`
+
+base: `v2-cms`
+
+상태: 구현·원격 DB·로컬 브라우저 검증 완료, 단일 Draft PR 패키징 중
 
 ## 목표
 
-MVP-03/04/05 구현으로 바로 가지 않는다.
+승인된 Admin·CMS·Blog·공식 브랜드 자산·GIF 작업을 하나의 안전한 통합 변경으로 정리한다. 로컬 migration ledger와 원격 Supabase를 맞추고, Admin과 공개 Blog를 중앙 Editorial Showroom v5 토큰 정책에 연결하며, 실제 첫 원고는 발행하지 않은 `reviewing` 상태로 보존한다.
 
-먼저 현재 문장군의 실제 견적 발송과 결제 안내 흐름을 지도화한다. 목적은 영업부 담당자에게 이중 입력을 만들지 않고, 기존 AppSheet+n8n+솔라피 알림톡 흐름을 살리면서 플랫폼이 어디에 붙어야 하는지 결정하는 것이다.
+## 현재 완료 범위
 
-## 현재 이해
+- 로컬·원격 target migration version/name 정합
+- 관리자 원자 저장 RPC와 Storage·lease·Preview·공식 자산 경계 원격 적용
+- public derivative 정리의 crash-safe 감사 이벤트와 재조정 계약
+- 실제 원고 27블록, image block 2개, active private media 3개 유지
+- 미사용 공식 자산 연결의 감사 detach와 원본·파일 record 보존
+- Admin·Blog CSS 64개 재귀 정책 검사, 명명 layout 예외 45개
+- visible interaction 44px, 키보드·모달·Sidebar·모바일 overflow 검증
+- secretless CI, 정적·타입·lint·build, 인증/공개 Playwright 검증
+- UI·DB/security 독립 재검토 완료
 
-현재 운영 흐름:
+## 남은 실행 순서
 
-```text
-영업부 담당자
--> AppSheet에 고객 발주/견적/시공/스펙 등록
--> AppSheet의 견적서 보내기 액션 실행
--> n8n으로 payload 전달
--> n8n이 데이터 가공
--> HTML 견적서 생성
--> 솔라피 알림톡 발송
--> 고객은 알림톡 버튼으로 상세 견적서 확인
--> 결제는 네이버 결제, 일반/계좌 결제, 유선 안내 등으로 분기
-```
-
-중요한 사실:
-
-- 영업부 담당자는 생성된 HTML 견적서 링크를 직접 알거나 붙여넣지 않는다.
-- 기존 HTML 견적서에는 고객명, 주소, 견적일자, 품목, 온라인 결제 항목, 일반 결제 항목, 계약금, 잔금, 입금계좌, 담당자 정보가 들어간다.
-- 플랫폼이 견적서를 새로 작성하게 만들면 AppSheet와 이중 입력이 될 위험이 크다.
-- 결제는 플랫폼 결제만으로 고정할 수 없다.
-
-## 먼저 정리할 분기
-
-견적 1건은 결제 경로를 가져야 한다.
-
-```text
-payment_route:
-- naver
-- bank_transfer
-- platform
-- split
-```
-
-각 경로의 의미:
-
-- `naver`: 네이버 결제 또는 네이버 장바구니/결제 안내 중심
-- `bank_transfer`: 계좌이체/일반 결제 안내 중심
-- `platform`: 문장군 플랫폼에서 결제 진행
-- `split`: 계약금/잔금 또는 혼합 결제. 예: 계약금 계좌, 잔금 플랫폼
-
-## 작업 범위
-
-1. 현재 AppSheet 견적/시공/스펙 입력 항목 목록화
-2. n8n이 받는 payload 예시 확보
-3. n8n 워크플로우 단계 지도화
-4. 기존 HTML 견적서에 들어가는 필드 목록화
-5. 솔라피 알림톡 템플릿 버튼 구조 확인
-6. 네이버 결제 / 일반 결제 / 플랫폼 결제 / split 분기표 작성
-7. 플랫폼이 맡을 역할 정의
-8. n8n MCP 연결이 필요한 영역과 단순 API/Webhook이면 충분한 영역 분리
-
-## 산출물
-
-새 문서:
-
-- `docs/platform/QUOTE_PAYMENT_FLOW_MAP.md`
-
-문서에 반드시 포함할 것:
-
-- 현재 운영 흐름 다이어그램
-- AppSheet, n8n, 솔라피, HTML 견적서, 플랫폼의 역할 경계
-- 결제 경로별 고객 화면/알림톡/어드민 큐 동작
-- 영업부 이중 입력 방지 원칙
-- n8n을 버리지 않고 AI와 유기적으로 쓰기 위한 다음 단계
-- 플랫폼 결제 구현 전 반드시 확인할 리스크
+1. 전체 변경을 한 커밋 경계로 stage하고 migration rename을 staged diff에서 재확인한다.
+2. 원격 브랜치에 push한다.
+3. `v2-cms` 대상 단일 Draft PR을 만들고 CI·Vercel Preview를 확인한다.
+4. Preview 공개 Blog와 인증 경계를 실제 브라우저에서 재검수한다.
+5. 새 Draft PR 링크를 남긴 뒤 superseded Draft PR #34–#72를 닫는다.
+6. 원격 보존을 확인한 clean superseded worktree만 `git worktree remove`로 정리한다.
 
 ## 금지
 
-- 이 오더에서 결제 기능을 구현하지 않는다.
-- 이 오더에서 n8n 운영 워크플로우를 바로 수정하지 않는다.
-- 이 오더에서 AppSheet를 대체한다고 전제하지 않는다.
-- 영업부가 AppSheet와 플랫폼에 같은 견적/스펙을 두 번 입력하는 구조를 제안하지 않는다.
-
-## 확인 질문 후보
-
-- AppSheet에서 n8n으로 넘어가는 실제 payload를 어디서 볼 수 있는가?
-- 현재 n8n 워크플로우를 복사본으로 테스트할 수 있는가?
-- 솔라피 알림톡 템플릿 버튼은 몇 개까지 쓸 수 있고, 어떤 버튼명이 현재 승인되어 있는가?
-- 기존 HTML 견적서 링크를 계속 유지할지, 플랫폼 링크를 메인으로 바꿀지 단계별 전환이 가능한가?
-- 네이버 결제/일반 결제/플랫폼 결제 중 어떤 경로가 현재 매출 비중이 가장 큰가?
+- PR merge 또는 Draft → Ready 전환
+- production 배포
+- 실제 원고의 `ready`/`published` 전환이나 미디어 공개 승격
+- 중앙 브랜드 저장소 수정
+- dirty worktree 삭제·reset·checkout
+- 서비스 role key, 비밀번호, 쿠키, token 기록
 
 ## 완료 기준
 
-- `QUOTE_PAYMENT_FLOW_MAP.md`가 작성된다.
-- `DECISION_LOG.md`에 "플랫폼 결제 직행 보류, n8n/AppSheet 흐름 지도화 우선" 결정이 기록된다.
-- `PLATFORM_TASKS.md`의 MVP-03/04/05 순서가 현재 결정과 충돌하지 않게 보정된다.
-- 사용자가 보고 "이제 어느 흐름부터 건드릴지 감이 온다"고 판단할 수 있다.
+`v2-cms` 대상 단일 Draft PR이 존재하고 CI·Preview QA가 통과하며, superseded PR과 clean worktree가 안전하게 정리되고, 원본 루트·중앙 브랜드·보존 대상 dirty worktree가 변경되지 않은 상태다.

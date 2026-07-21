@@ -317,4 +317,5 @@ $$;
 
 REVOKE ALL ON FUNCTION showroom.save_node(UUID, JSONB, JSONB, JSONB) FROM PUBLIC;
 REVOKE ALL ON FUNCTION showroom.save_node(UUID, JSONB, JSONB, JSONB) FROM anon;
+REVOKE ALL ON FUNCTION showroom.save_node(UUID, JSONB, JSONB, JSONB) FROM service_role;
 GRANT EXECUTE ON FUNCTION showroom.save_node(UUID, JSONB, JSONB, JSONB) TO authenticated;

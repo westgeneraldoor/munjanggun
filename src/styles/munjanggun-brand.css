@@ -77,6 +77,27 @@ html {
   --mg-admin-preview-scroll-max-height: 840px;
   --mg-admin-preview-scroll-offset: 244px;
 
+  /* Project component geometry aliases. */
+  --mg-visually-hidden-size: var(--mg-border-width);
+  --mg-navigation-backdrop-blur: calc(var(--mg-space-3) + var(--mg-border-width-strong));
+  --mg-overlay-backdrop-blur: calc(var(--mg-space-4) + var(--mg-border-width-strong));
+  --mg-admin-editor-backdrop-blur: var(--mg-space-3);
+  --mg-admin-progress-track-height: var(--mg-space-2);
+  --mg-admin-status-rail-width: var(--mg-space-1);
+  --mg-admin-choice-control-size: var(--mg-space-4);
+  --mg-admin-gate-marker-size: calc(var(--mg-space-4) - var(--mg-border-width));
+  --mg-platform-badge-min-height: calc(var(--mg-space-5) + var(--mg-space-1));
+  --mg-blog-wordmark-label-size: calc(var(--mg-space-2) + var(--mg-border-width-strong));
+  --mg-blog-wordmark-label-compact-size: calc(var(--mg-space-2) + var(--mg-border-width));
+  --mg-blog-wordmark-mobile-brand-size: calc(var(--mg-space-4) - var(--mg-border-width));
+  --mg-blog-wordmark-mobile-label-size: var(--mg-space-2);
+  --mg-showroom-preview-content-max-width: calc(var(--mg-reading-max) + var(--mg-space-6) + var(--mg-space-2));
+  --mg-showroom-preview-expired-card-max-width: calc(var(--mg-layout-section) * 3 + var(--mg-space-4));
+  --mg-showroom-preview-hero-grid-min: calc(var(--mg-layout-section) + var(--mg-space-4) + var(--mg-space-1) + var(--mg-border-width-strong));
+  --mg-showroom-preview-gallery-grid-min: calc(var(--mg-layout-section) + var(--mg-space-8) + var(--mg-space-2));
+  --mg-showroom-preview-title-size: var(--mg-space-6);
+  --mg-showroom-preview-banner-blur: var(--mg-space-2);
+
   /* Legacy semantic aliases. */
   --mg-surface-page: var(--mg-color-neutral-50);
   --mg-surface-page-soft: var(--mg-color-neutral-100);

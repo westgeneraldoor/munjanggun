@@ -70,6 +70,7 @@ export default function BlogHomeHero({ media, hasPosts, searchPosts }: BlogHomeH
             fill
             loading="eager"
             fetchPriority="high"
+            quality={85}
             sizes="100vw"
             style={{ objectPosition: media.focalPoint }}
           />

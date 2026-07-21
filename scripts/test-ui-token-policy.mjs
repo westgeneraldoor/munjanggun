@@ -19,24 +19,34 @@ async function listCssFiles(relativeDirectory) {
   return files.flat().filter(file => file.endsWith('.css'))
 }
 
-const protectedAdminCss = [
+const protectedUsageCss = [
   ...await listCssFiles('src/app/admin'),
   ...await listCssFiles('src/components/admin'),
+  ...await listCssFiles('src/app/blog'),
+  ...await listCssFiles('src/components/blog'),
+  ...await listCssFiles('src/components/platform/ui'),
+  'src/app/preview/[token]/preview.module.css',
+  'src/components/customer/PublicUserMenu.module.css',
 ].sort()
 
 {
   const configuredCss = new Set(uiTokenPolicyConfig.files)
-  const omittedCss = protectedAdminCss.filter(file => !configuredCss.has(file))
+  const omittedCss = protectedUsageCss.filter(file => !configuredCss.has(file))
 
   assert.deepEqual(
     omittedCss,
     [],
-    'every admin and CMS stylesheet must be covered by the UI token policy',
+    'every Admin, Blog, and shared UI stylesheet must be covered by the UI token policy',
   )
   assert.deepEqual(
     uiTokenPolicyConfig.requiredCssDirectories,
-    ['src/app/admin', 'src/components/admin'],
-    'the standalone verifier must discover future admin and CMS stylesheets',
+    ['src/app/admin', 'src/components/admin', 'src/app/blog', 'src/components/blog', 'src/components/platform/ui'],
+    'the standalone verifier must discover future Admin, Blog, and shared UI stylesheets',
+  )
+  assert.deepEqual(
+    uiTokenPolicyConfig.requiredCssFiles,
+    ['src/app/preview/[token]/preview.module.css', 'src/components/customer/PublicUserMenu.module.css'],
+    'Preview and Blog-consumed common UI stylesheets must be explicitly required',
   )
 }
 
@@ -61,7 +71,7 @@ function contrastRatio(left, right) {
     readFile(path.join(projectRoot, 'src/app/admin/platform/blog/blog-draft-queue.module.css'), 'utf8'),
     readFile(path.join(projectRoot, 'src/components/platform/ui/PlatformButton.module.css'), 'utf8'),
     readFile(path.join(projectRoot, 'src/components/platform/ui/PlatformTabs.module.css'), 'utf8'),
-    ...protectedAdminCss.map(file => readFile(path.join(projectRoot, file), 'utf8')),
+    ...protectedUsageCss.map(file => readFile(path.join(projectRoot, file), 'utf8')),
   ])
   const warningHex = generated.match(/--mg-color-warning-600:\s*(#[0-9a-f]{6})/i)?.[1]
   const surfaceHex = generated.match(/--mg-color-neutral-0:\s*(#[0-9a-f]{6})/i)?.[1]
@@ -105,12 +115,14 @@ const baseConfig = {
       file: 'src/styles/munjanggun-brand.css',
       property: '--mg-project-gap',
       value: '28px',
+      reason: 'Fixture-approved adapter spacing.',
     },
     {
       name: 'approved-mobile-breakpoint',
       file: 'src/styles/munjanggun-brand.css',
       property: '@media',
       value: '640px',
+      reason: 'Fixture-approved adapter breakpoint.',
     },
   ],
 }
@@ -155,7 +167,13 @@ const baseConfig = {
       ...baseConfig,
       layoutConstants: [],
       sharedLayoutConstants: [
-        { name: 'admin-tablet-breakpoint', property: '@media', value: '768px' },
+        {
+          name: 'admin-tablet-breakpoint',
+          file: 'src/components/admin/Card.module.css',
+          property: '@media',
+          value: '768px',
+          reason: 'Fixture-approved component breakpoint.',
+        },
       ],
     },
     files: [{
@@ -166,6 +184,51 @@ const baseConfig = {
 
   assert.deepEqual(result.diagnostics, [])
   assert.deepEqual(result.usedLayoutConstants, ['admin-tablet-breakpoint'])
+}
+
+{
+  for (const legacyToken of ['--mg-blog-legacy-tone-deadbeef', '--mg-blog-legacy-shadow-deadbeef']) {
+    assert.equal(
+      uiTokenPolicyConfig.declarationAllowlist.some(entry => (
+        entry instanceof RegExp && entry.test(legacyToken)
+      )),
+      false,
+      `production policy must not broadly allow ${legacyToken}`,
+    )
+  }
+
+  const result = verifyUiTokenPolicy({
+    config: baseConfig,
+    files: [{
+      path: 'src/styles/blog-experience.css',
+      content: '[data-mg-theme="blog"] { --mg-blog-legacy-tone-deadbeef: #123456; --mg-blog-legacy-shadow-deadbeef: 0 1px 2px #000000; }\n',
+    }],
+  })
+
+  assert.ok(result.diagnostics.some(item => /unauthorized token declaration --mg-blog-legacy-tone-deadbeef/.test(item)))
+  assert.ok(result.diagnostics.some(item => /unauthorized token declaration --mg-blog-legacy-shadow-deadbeef/.test(item)))
+}
+
+{
+  const result = verifyUiTokenPolicy({
+    config: {
+      ...baseConfig,
+      strictLayoutFiles: ['src/components/blog/Reader.module.css'],
+      layoutConstants: [{
+        name: 'invalid-global-layout-bypass',
+        property: 'width',
+        value: '1120px',
+        reason: '',
+      }],
+    },
+    files: [{
+      path: 'src/components/blog/Reader.module.css',
+      content: '.reader { width: 1120px; }\n',
+    }],
+  })
+
+  assert.ok(result.diagnostics.some(item => /must declare file, property, value, and reason/.test(item)))
+  assert.ok(result.diagnostics.some(item => /unauthorized layout constant 1120px/.test(item)))
 }
 
 {
@@ -369,6 +432,23 @@ assert.ok(result.diagnostics.some(item => /named layout constant approved-previe
       `strict layout policy must reject raw ${property} value ${value}`,
     )
   }
+}
+
+{
+  const result = verifyUiTokenPolicy({
+    config: {
+      ...baseConfig,
+      strictLayoutFiles: ['src/components/blog/Reader.module.css'],
+      layoutConstants: [],
+    },
+    files: [{
+      path: 'src/components/blog/Reader.module.css',
+      content: '.reader { width: calc(var(--mg-border-width) * 12345); gap: calc(var(--mg-space-1) * 12345); }\n',
+    }],
+  })
+
+  assert.ok(result.diagnostics.some(item => /unsafe token multiplier --mg-border-width \* 12345/.test(item)))
+  assert.ok(result.diagnostics.some(item => /unsafe token multiplier --mg-space-1 \* 12345/.test(item)))
 }
 
 {

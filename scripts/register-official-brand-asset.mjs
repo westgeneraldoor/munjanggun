@@ -232,6 +232,91 @@ async function cleanupUploadedFiles(showroom, files) {
   if (failures.length > 0) throw new Error(failures.join(' | '))
 }
 
+async function recordPublicDerivativeCleanupEvent(showroom, {
+  assetId,
+  actorId,
+  eventType,
+  publicPaths,
+  pendingEventId = null,
+  failureMessage = null,
+}) {
+  const { error } = await showroom.from('content_asset_events').insert({
+    asset_id: assetId,
+    event_type: eventType,
+    actor_id: actorId,
+    metadata: {
+      public_bucket: PUBLIC_BUCKET,
+      public_paths: publicPaths,
+      pending_event_id: pendingEventId,
+      failure: failureMessage,
+    },
+  })
+  if (error) throw new Error(`Public derivative cleanup audit failed: ${error.message}`)
+}
+
+async function reconcilePendingPublicDerivativeCleanup(showroom, assetId, actorId) {
+  const { data: pendingEvents, error: pendingError } = await showroom
+    .from('content_asset_events')
+    .select('id, metadata, created_at')
+    .eq('asset_id', assetId)
+    .eq('event_type', 'central_brand_public_cleanup_pending')
+    .order('created_at', { ascending: true })
+    .limit(50)
+  if (pendingError) throw new Error(`Pending public cleanup lookup failed: ${pendingError.message}`)
+  if (!pendingEvents?.length) return false
+
+  const { data: completedEvents, error: completedError } = await showroom
+    .from('content_asset_events')
+    .select('metadata')
+    .eq('asset_id', assetId)
+    .eq('event_type', 'central_brand_public_cleanup_completed')
+    .limit(50)
+  if (completedError) throw new Error(`Completed public cleanup lookup failed: ${completedError.message}`)
+
+  const completedIds = new Set((completedEvents ?? [])
+    .map(event => event.metadata?.pending_event_id)
+    .filter(id => typeof id === 'string'))
+  let reconciled = false
+
+  for (const pending of pendingEvents) {
+    if (completedIds.has(pending.id)) continue
+    const publicPaths = pending.metadata?.public_paths
+    if (!Array.isArray(publicPaths)
+      || publicPaths.length === 0
+      || publicPaths.some(path => typeof path !== 'string' || path.length === 0)) {
+      throw new Error(`Pending public cleanup event ${pending.id} has invalid paths.`)
+    }
+
+    const { error: removeError } = await showroom.storage.from(PUBLIC_BUCKET).remove(publicPaths)
+    if (removeError) {
+      throw new Error(`Pending public derivative cleanup failed: ${removeError.message}`)
+    }
+
+    await recordPublicDerivativeCleanupEvent(showroom, {
+      assetId,
+      actorId,
+      eventType: 'central_brand_public_cleanup_completed',
+      publicPaths,
+      pendingEventId: pending.id,
+    })
+    reconciled = true
+  }
+
+  return reconciled
+}
+
+async function hasPendingPublicDerivativeCleanup(showroom, assetId, cleanupEventId) {
+  const { data, error } = await showroom
+    .from('content_asset_events')
+    .select('id')
+    .eq('id', cleanupEventId)
+    .eq('asset_id', assetId)
+    .eq('event_type', 'central_brand_public_cleanup_pending')
+    .maybeSingle()
+  if (error) throw new Error(`Privatization commit verification failed: ${error.message}`)
+  return Boolean(data)
+}
+
 function withCleanupFailure(error, cleanupError) {
   const originalMessage = error instanceof Error ? error.message : String(error)
   const cleanupMessage = cleanupError instanceof Error ? cleanupError.message : String(cleanupError)
@@ -363,7 +448,14 @@ async function privatizeExistingDerivatives(showroom, assetRecord, asset, actorI
     ['web', 'thumbnail'].includes(file.file_role)
     && (file.bucket !== PRIVATE_BUCKET || file.public_url !== null)
   ))
-  if (exposedFiles.length === 0) return { ...assetRecord, privatized: false }
+  if (exposedFiles.length === 0) {
+    const cleanupReconciled = await reconcilePendingPublicDerivativeCleanup(
+      showroom,
+      assetRecord.asset.id,
+      actorId,
+    )
+    return { ...assetRecord, privatized: false, cleanupReconciled }
+  }
   if (exposedFiles.length !== 2) throw new Error('Existing central derivatives are only partially private.')
 
   const derivativeByRole = {
@@ -371,44 +463,90 @@ async function privatizeExistingDerivatives(showroom, assetRecord, asset, actorI
     thumbnail: assetRecord.derivatives.thumbnail,
   }
   const uploaded = []
-  for (const file of exposedFiles) {
-    const derivative = derivativeByRole[file.file_role]
-    const privatePath = objectPath(assetRecord.asset.id, file.file_role, 'webp')
-    const upload = await showroom.storage.from(PRIVATE_BUCKET).upload(privatePath, derivative.buffer, {
-      cacheControl: '3600', contentType: 'image/webp', upsert: false,
-    })
-    if (upload.error) {
-      const existing = await showroom.storage.from(PRIVATE_BUCKET).download(privatePath)
-      if (existing.error || !existing.data) {
-        throw new Error(`Private derivative upload failed: ${upload.error.message}`)
+  const newlyUploaded = []
+  const cleanupEventId = randomUUID()
+  let metadataCommitted = false
+
+  try {
+    for (const file of exposedFiles) {
+      const derivative = derivativeByRole[file.file_role]
+      const privatePath = objectPath(assetRecord.asset.id, file.file_role, 'webp')
+      const upload = await showroom.storage.from(PRIVATE_BUCKET).upload(privatePath, derivative.buffer, {
+        cacheControl: '3600', contentType: 'image/webp', upsert: false,
+      })
+      if (upload.error) {
+        const existing = await showroom.storage.from(PRIVATE_BUCKET).download(privatePath)
+        if (existing.error || !existing.data) {
+          throw new Error(`Private derivative upload failed: ${upload.error.message}`)
+        }
+        const existingBuffer = Buffer.from(await existing.data.arrayBuffer())
+        const existingChecksum = createHash('sha256').update(existingBuffer).digest('hex')
+        if (existingBuffer.length !== derivative.sizeBytes || existingChecksum !== derivative.checksumSha256) {
+          throw new Error('Existing private derivative does not match the validated derivative.')
+        }
+      } else {
+        newlyUploaded.push({ bucket: PRIVATE_BUCKET, object_path: privatePath })
       }
-      const existingBuffer = Buffer.from(await existing.data.arrayBuffer())
-      const existingChecksum = createHash('sha256').update(existingBuffer).digest('hex')
-      if (existingBuffer.length !== derivative.sizeBytes || existingChecksum !== derivative.checksumSha256) {
-        throw new Error('Existing private derivative does not match the validated derivative.')
+      uploaded.push({ file, privatePath })
+    }
+
+    const { data: updatedCount, error: rpcError } = await showroom.rpc('privatize_central_asset_derivatives', {
+      p_asset_id: assetRecord.asset.id,
+      p_actor_id: actorId,
+      p_central_asset_id: asset.assetId,
+      p_files: uploaded.map(item => ({
+        id: item.file.id,
+        file_role: item.file.file_role,
+        old_object_path: item.file.object_path,
+        new_object_path: item.privatePath,
+      })),
+      p_cleanup_event_id: cleanupEventId,
+    })
+    if (rpcError || updatedCount !== 2) {
+      const transactionFailure = new Error(
+        `Private derivative metadata transaction failed: ${rpcError?.message || 'unexpected row count'}`,
+      )
+      try {
+        const committed = await hasPendingPublicDerivativeCleanup(
+          showroom,
+          assetRecord.asset.id,
+          cleanupEventId,
+        )
+        if (!committed) throw transactionFailure
+      } catch (verificationError) {
+        if (verificationError === transactionFailure) throw transactionFailure
+        metadataCommitted = true
+        throw new Error(
+          `Privatization transaction outcome is inconclusive; private Storage was retained: ${verificationError.message}`,
+          { cause: transactionFailure },
+        )
       }
     }
-    uploaded.push({ file, privatePath })
+    metadataCommitted = true
+  } catch (error) {
+    if (!metadataCommitted && newlyUploaded.length > 0) {
+      try {
+        await cleanupUploadedFiles(showroom, newlyUploaded)
+      } catch (cleanupError) {
+        throw withCleanupFailure(error, cleanupError)
+      }
+    }
+    throw error
   }
 
-  const { error: removeError } = await showroom.storage.from(PUBLIC_BUCKET)
-    .remove(uploaded.map(item => item.file.object_path))
-  if (removeError) throw new Error(`Exposed derivative cleanup failed: ${removeError.message}`)
+  const publicPaths = uploaded.map(item => item.file.object_path)
+  const { error: removeError } = await showroom.storage.from(PUBLIC_BUCKET).remove(publicPaths)
+  if (removeError) {
+    throw new Error(`Exposed derivative cleanup failed after metadata commit and was queued for reconciliation: ${removeError.message}`)
+  }
 
-  const { data: updatedCount, error: rpcError } = await showroom.rpc('privatize_central_asset_derivatives', {
-    p_asset_id: assetRecord.asset.id,
-    p_actor_id: actorId,
-    p_central_asset_id: asset.assetId,
-    p_files: uploaded.map(item => ({
-      id: item.file.id,
-      file_role: item.file.file_role,
-      old_object_path: item.file.object_path,
-      new_object_path: item.privatePath,
-    })),
+  await recordPublicDerivativeCleanupEvent(showroom, {
+    assetId: assetRecord.asset.id,
+    actorId,
+    eventType: 'central_brand_public_cleanup_completed',
+    publicPaths,
+    pendingEventId: cleanupEventId,
   })
-  if (rpcError || updatedCount !== 2) {
-    throw new Error(`Private derivative metadata transaction failed: ${rpcError?.message || 'unexpected row count'}`)
-  }
 
   const replacementPaths = new Map(uploaded.map(item => [item.file.file_role, item.privatePath]))
   return {
@@ -651,6 +789,7 @@ async function main() {
       assetId: assetRecord.asset.id,
       created: assetRecord.created,
       derivativesPrivatized: assetRecord.privatized ?? false,
+      derivativeCleanupReconciled: assetRecord.cleanupReconciled ?? false,
       ...attachment,
     }, null, 2))
   } catch (error) {

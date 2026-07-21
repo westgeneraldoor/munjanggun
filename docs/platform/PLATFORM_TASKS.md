@@ -2,7 +2,7 @@
 document_type: "Platform Task Board"
 version: "1.2.0"
 status: "active"
-last_updated: "2026-07-14"
+last_updated: "2026-07-21"
 owner: "Codex PM"
 source_strategy: "docs/platform/PLATFORM_STRATEGY.md"
 source_prd: "docs/platform/PRD_PLATFORM_v1.0.md"
@@ -28,20 +28,23 @@ source_development_strategy: "docs/platform/DEVELOPMENT_STRATEGY.md"
 
 ## 현재 판단
 
-기존 고객 여정 크리티컬 패스는 유지한다. 다만 2026-07-14 현재 블로그/Content OS 작업선에서 아래 기반이 `origin/v2-cms`에 완료됐다.
+기존 고객 여정 크리티컬 패스는 유지한다. 다만 2026-07-20 현재 블로그/Content OS와 플랫폼 어드민 안정화 작업은 `v2-cms`를 base로 한 통합 브랜치 `codex/platform-admin-blog-stabilization`에서 아래 상태까지 완료됐다.
 
 - [x] `/blog` 이미지 쇼룸 경험과 블로그 전용 scoped 디자인 시스템 병합 — PR #27, `8280546`
 - [x] 관리자 AI 초안 생성 흐름 제거, 메뉴 명칭 `블로그 콘텐츠` 통일 — PR #29, `ca6e5aa`
-- [x] 관리자 승인 원고 등록, `reviewing` 시작, 감사 이력, 원자 RPC 병합 — PR #30, `e291f91`
+- [x] 관리자 승인 원고 등록, `reviewing` 시작, 감사 이력, 원자 RPC 병합 — PR #30
 - [x] 원격 RPC migration과 `service_role` 전용 실행 권한 확인
 - [x] `v2-cms` Preview에서 관리자 로그인·콘텐츠 큐와 공개 `/blog` 응답 확인
 - [x] 실제 승인 원고 1건을 `reviewing`으로 등록하고 글·블록·감사 이벤트 확인
-- [ ] 관리자 화면에서 해당 원고의 편집·사진 연결을 수동 확인
-- [ ] 공개 이미지·렌더링 안전장치를 현재 운영 모델에 맞춰 깨끗한 후속 PR로 재구성
+- [x] 관리자 편집·저장 미리보기와 사진 연결 확인: 27개 블록, image block 2개, active private media 3개
+- [x] 미사용 `mg-3panel-thumbnail-basic-001` 연결을 감사 RPC로 분리하고 중앙 자산 행과 파일 행 3개는 보존
+- [x] public Storage 경계 확인: anon 목록 0건, 알려진 public object URL HTTP 200, private signed URL HTTP 200
+- [x] 어드민 원자 저장·순서 변경, 미리보기 payload, Storage·lease, 공식 자산 detach migration 원격 적용
+- [ ] 실제 원고의 `ready`/`published` 전환 및 미디어 공개 승격. 원고는 `reviewing`, `published_at = null`로 유지한다.
 
 블로그 운영 모델은 확정됐다. Codex가 중앙 브랜드와 블로그 운영 본진을 근거로 완성 원고를 외부에서 작성하고, CMS는 등록·편집·사진 연결·미리보기·발행·이력을 담당한다. 관리자 AI 초안 생성, OpenAI 키, 모델 설정은 다시 도입하지 않는다.
 
-현재 구현 기준점은 `origin/v2-cms`의 `e291f91`이다. Production 배포와 공개 글 발행은 별도 승인·검수 단계이며 이번 완료 사실에 포함하지 않는다.
+현재 통합 기준점은 `v2-cms`를 base로 한 `codex/platform-admin-blog-stabilization`이다. Draft PR 번호는 생성 후 기록하며 아직 확정하지 않는다. Production 배포·공개 글 발행·미디어 공개 승격은 이번 완료 사실에 포함하지 않는다. 어드민·블로그 최종 검증기는 state-scope invariant를 유지하며, 최종 실행 전에는 통과 개수를 임의로 적지 않는다.
 
 ## 크리티컬 패스
 

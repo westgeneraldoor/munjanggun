@@ -24,13 +24,13 @@
 }
 
 .searchBox {
-  min-height: 42px;
+  min-height: var(--mg-control-size-min);
   display: flex;
   align-items: center;
   gap: var(--space-2);
   padding: 0 var(--space-3);
   background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-md);
   box-shadow: var(--admin-shadow-sm);
 }
@@ -63,7 +63,7 @@
 
 @media (min-width: 1180px) {
   .queueLayoutSelected {
-    grid-template-columns: minmax(0, 1fr) minmax(360px, 460px);
+    grid-template-columns: minmax(0, 1fr) minmax(calc(var(--mg-layout-section) * 2 + var(--mg-space-8) + var(--mg-space-6) + var(--mg-space-2)), calc(var(--mg-layout-section) * 3 + var(--mg-space-8) + var(--mg-space-3)));
     align-items: start;
   }
 }
@@ -98,12 +98,12 @@
 }
 
 .queueTable th:nth-child(1) { width: 23%; }
-.queueTable th:nth-child(2) { width: 96px; }
-.queueTable th:nth-child(3) { width: 112px; }
+.queueTable th:nth-child(2) { width: calc(var(--mg-space-8) + var(--mg-space-6)); }
+.queueTable th:nth-child(3) { width: calc(var(--mg-space-8) + var(--mg-space-7)); }
 .queueTable th:nth-child(4) { width: 20%; }
 .queueTable th:nth-child(5) { width: 15%; }
 .queueTable th:nth-child(6) { width: 18%; }
-.queueTable th:nth-child(7) { width: 104px; }
+.queueTable th:nth-child(7) { width: calc(var(--mg-space-8) + var(--mg-space-6) + var(--mg-space-2)); }
 
 .row {
   cursor: pointer;
@@ -168,7 +168,7 @@
 .categoryPill,
 .riskBadge,
 .safeBadge {
-  min-height: 24px;
+  min-height: var(--mg-space-5);
   display: inline-flex;
   align-items: center;
   width: max-content;
@@ -184,7 +184,7 @@
 .categoryPill {
   color: var(--mg-admin-accent-text);
   background: var(--mg-admin-accent-surface);
-  border: 1px solid var(--mg-admin-accent-border);
+  border: var(--mg-border-width) solid var(--mg-admin-accent-border);
 }
 
 .riskBadges {
@@ -195,7 +195,7 @@
 }
 
 .riskBadge {
-  border: 1px solid transparent;
+  border: var(--mg-border-width) solid transparent;
 }
 
 .risk_danger {
@@ -282,7 +282,7 @@
 
 .infoRow {
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-columns: calc(var(--mg-space-8) + var(--mg-space-5) + var(--mg-space-1)) minmax(0, 1fr);
   gap: var(--space-3);
 }
 
@@ -305,7 +305,7 @@
   flex-direction: column;
   gap: var(--space-2);
   padding-top: var(--space-3);
-  border-top: 1px solid var(--admin-border);
+  border-top: var(--mg-border-width) solid var(--admin-border);
 }
 
 .detailFooter p {
@@ -323,7 +323,7 @@
 .mobileCard {
   min-width: 0;
   background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--admin-shadow-sm);
 }
@@ -346,7 +346,7 @@
 }
 
 .mobileCardButton:focus-visible {
-  outline: 2px solid var(--admin-ring);
+  outline: var(--mg-border-width-strong) solid var(--admin-ring);
   outline-offset: var(--admin-focus-offset);
 }
 
@@ -415,6 +415,6 @@
   }
 
   .infoRow {
-    grid-template-columns: 86px minmax(0, 1fr);
+    grid-template-columns: calc(var(--mg-space-8) + var(--mg-space-4) + var(--mg-space-1) + var(--mg-border-width-strong)) minmax(0, 1fr);
   }
 }

@@ -1,0 +1,57 @@
+name: Secretless CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - v2-cms
+      - "codex/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: secretless-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Static and unit contracts
+        run: |
+          npm run test:supabase-stabilization-migrations
+          npm run test:showroom-preview-payload
+          npm run test:official-asset-detach
+          npm run test:admin-node-list-primitives
+          npm run test:admin-site-settings-primitives
+          npm run test:admin-node-form-persistence
+          npm run test:official-brand-asset-import
+          npm run test:official-brand-asset-placement
+          npm run test:official-media-evidence-docs
+          npm run test:source-provenance-automation
+          npm run test:brand-token-snapshot
+          npm run test:ui-token-policy
+          npm run verify:brand-tokens
+          npm run verify:ui-token-policy
+          npm run verify:blog-admin-cms
+          npm run verify:blog-public-safety
+          npm run verify:blog-body-blocks
+          npm run verify:blog-claim-safety
+      - name: Type generation
+        run: npx next typegen
+      - name: TypeScript
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build
+      # Authenticated Playwright and live Supabase checks remain local/Preview
+      # gates so this workflow never requires repository secrets.

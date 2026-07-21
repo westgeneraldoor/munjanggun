@@ -9,7 +9,6 @@ import {
   type ChangeEvent,
   type ComponentProps,
   type FormEvent,
-  type KeyboardEvent as ReactKeyboardEvent,
   type RefObject,
 } from 'react'
 import Link from 'next/link'
@@ -1242,8 +1241,6 @@ export default function BlogEditorClient({
   const blockToolbarRef = useRef<HTMLDivElement>(null)
   const blockListRef = useRef<HTMLDivElement>(null)
   const previewLinkRef = useRef<HTMLAnchorElement>(null)
-  const discardDialogRef = useRef<HTMLDivElement>(null)
-  const discardCancelRef = useRef<HTMLButtonElement>(null)
 
   const isPublished = post.status === 'published'
   const statusActions = useMemo<Array<{ status: BlogPostStatus; label: string; icon: 'review' | 'media' | 'ready' }>>(() => {
@@ -1579,43 +1576,14 @@ export default function BlogEditorClient({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [hasUnsavedEditorChanges])
 
-  useEffect(() => {
-    if (!discardDialogOpen) return
-    const frame = window.requestAnimationFrame(() => discardCancelRef.current?.focus())
-    return () => window.cancelAnimationFrame(frame)
-  }, [discardDialogOpen])
-
   const closeDiscardDialog = () => {
     setDiscardDialogOpen(false)
-    window.requestAnimationFrame(() => previewLinkRef.current?.focus())
   }
 
   const handlePreviewNavigate: NonNullable<ComponentProps<typeof Link>['onNavigate']> = (event) => {
     if (!hasUnsavedEditorChanges) return
     event.preventDefault()
     setDiscardDialogOpen(true)
-  }
-
-  const handleDiscardDialogKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Escape') {
-      event.preventDefault()
-      closeDiscardDialog()
-      return
-    }
-    if (event.key !== 'Tab') return
-
-    const focusable = Array.from(discardDialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled])') ?? [])
-    if (focusable.length === 0) return
-    const first = focusable[0]
-    const last = focusable[focusable.length - 1]
-
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault()
-      last.focus()
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault()
-      first.focus()
-    }
   }
 
   const confirmDiscardAndPreview = () => {
@@ -2138,31 +2106,21 @@ export default function BlogEditorClient({
           </div>
         </aside>
       </div>
-      {discardDialogOpen && (
-        <div className={styles.discardDialogBackdrop}>
-          <div
-            ref={discardDialogRef}
-            className={styles.discardDialog}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="discard-dialog-title"
-            aria-describedby="discard-dialog-description"
-            onKeyDown={handleDiscardDialogKeyDown}
-          >
-            <AlertTriangle size={24} aria-hidden="true" />
-            <div>
-              <h2 id="discard-dialog-title">저장하지 않은 변경 사항</h2>
-              <p id="discard-dialog-description">미리보기는 마지막으로 저장된 내용을 엽니다. 현재 변경 사항을 버리고 계속할까요?</p>
-            </div>
-            <div className={styles.discardDialogActions}>
-              <button ref={discardCancelRef} type="button" onClick={closeDiscardDialog}>계속 편집</button>
-              <button type="button" className={styles.discardConfirmButton} onClick={confirmDiscardAndPreview}>
-                변경 사항 버리고 미리보기
-              </button>
-            </div>
+      <PlatformModal
+        isOpen={discardDialogOpen}
+        title="저장하지 않은 변경 사항"
+        description="미리보기는 마지막으로 저장된 내용을 엽니다. 현재 변경 사항을 버리고 계속할까요?"
+        onClose={closeDiscardDialog}
+        closeOnBackdrop={false}
+        footer={(
+          <div className={styles.discardDialogActions}>
+            <button data-modal-initial-focus type="button" onClick={closeDiscardDialog}>계속 편집</button>
+            <button type="button" className={styles.discardConfirmButton} onClick={confirmDiscardAndPreview}>
+              변경 사항 버리고 미리보기
+            </button>
           </div>
-        </div>
-      )}
+        )}
+      />
     </div>
   )
 }

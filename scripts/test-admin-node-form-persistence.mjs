@@ -11,7 +11,7 @@ const [page, form, formStyles, gallery, hero, imageUploader, siteSettings, migra
   read('src/components/admin/HeroConfigurator.tsx'),
   read('src/components/admin/ImageUploader.tsx'),
   read('src/components/admin/SiteSettingsForm.tsx'),
-  read('supabase/migrations/20260716170000_atomic_node_save.sql'),
+  read('supabase/migrations/20260720074917_atomic_node_save.sql'),
   read('src/app/test-fixtures/admin-node-form/page.tsx'),
 ])
 
@@ -86,6 +86,7 @@ assert.doesNotMatch(migration, /IF v_type = 'listing' THEN[\s\S]*?INSERT INTO sh
 assert.doesNotMatch(migration, /EXCEPTION\s+WHEN/i, 'the RPC must not swallow failures that should roll back the transaction')
 assert.match(migration, /REVOKE ALL ON FUNCTION showroom\.save_node\(UUID, JSONB, JSONB, JSONB\) FROM PUBLIC/i)
 assert.match(migration, /REVOKE ALL ON FUNCTION showroom\.save_node\(UUID, JSONB, JSONB, JSONB\) FROM anon/i)
+assert.match(migration, /REVOKE ALL ON FUNCTION showroom\.save_node\(UUID, JSONB, JSONB, JSONB\) FROM service_role/i)
 assert.match(migration, /GRANT EXECUTE ON FUNCTION showroom\.save_node\(UUID, JSONB, JSONB, JSONB\) TO authenticated/i)
 
 assert.match(fixture, /process\.env\.NODE_ENV === 'production'/, 'the fixture must be disabled in production')

@@ -12,6 +12,17 @@ DECLARE
   requested_node_ids UUID[];
   updated_count INTEGER;
 BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM platform.profiles AS profile
+    WHERE profile.id = auth.uid()
+      AND profile.role::TEXT = 'administrator'
+  ) THEN
+    RAISE EXCEPTION USING
+      ERRCODE = '42501',
+      MESSAGE = 'administrator role is required';
+  END IF;
+
   IF p_ordered_node_ids IS NULL OR cardinality(p_ordered_node_ids) = 0 THEN
     RAISE EXCEPTION 'ordered node ids are required';
   END IF;
@@ -53,5 +64,5 @@ IS 'Atomically rewrites the complete display order for one showroom node parent.
 
 REVOKE ALL ON FUNCTION showroom.reorder_nodes(UUID, UUID[]) FROM PUBLIC;
 REVOKE ALL ON FUNCTION showroom.reorder_nodes(UUID, UUID[]) FROM anon;
+REVOKE ALL ON FUNCTION showroom.reorder_nodes(UUID, UUID[]) FROM service_role;
 GRANT EXECUTE ON FUNCTION showroom.reorder_nodes(UUID, UUID[]) TO authenticated;
-GRANT EXECUTE ON FUNCTION showroom.reorder_nodes(UUID, UUID[]) TO service_role;

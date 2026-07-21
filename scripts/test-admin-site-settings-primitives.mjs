@@ -9,7 +9,7 @@ const [page, form, formStyles, heroConfigurator, imageUploader, migration, fixtu
   read('src/components/admin/SiteSettingsForm.module.css'),
   read('src/components/admin/HeroConfigurator.tsx'),
   read('src/components/admin/ImageUploader.tsx'),
-  read('supabase/migrations/20260716153000_atomic_site_settings_save.sql'),
+  read('supabase/migrations/20260720074843_atomic_site_settings_save.sql'),
   read('src/app/test-fixtures/admin-site-settings/page.tsx'),
 ])
 
@@ -62,6 +62,7 @@ assert.equal((migration.match(/DELETE FROM showroom\.site_hero_media/gi) ?? []).
 assert.doesNotMatch(migration, /EXCEPTION\s+WHEN/i, 'the RPC must not swallow failures that should roll back the transaction')
 assert.match(migration, /REVOKE ALL ON FUNCTION showroom\.save_site_settings\(JSONB, JSONB\) FROM PUBLIC/i)
 assert.match(migration, /REVOKE ALL ON FUNCTION showroom\.save_site_settings\(JSONB, JSONB\) FROM anon/i)
+assert.match(migration, /REVOKE ALL ON FUNCTION showroom\.save_site_settings\(JSONB, JSONB\) FROM service_role/i)
 assert.match(migration, /GRANT EXECUTE ON FUNCTION showroom\.save_site_settings\(JSONB, JSONB\) TO authenticated/i)
 
 assert.match(fixture, /process\.env\.NODE_ENV === 'production'/, 'the fixture must be disabled in production')

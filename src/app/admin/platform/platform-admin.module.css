@@ -73,7 +73,7 @@
 }
 
 .cellLink {
-  min-height: 24px;
+  min-height: var(--mg-space-5);
   display: flex;
   align-items: center;
   color: inherit;
@@ -103,7 +103,7 @@
 .cellDate { color: var(--admin-text-muted); white-space: nowrap; }
 .cellName strong { color: var(--admin-text); }
 .cellPhone { white-space: nowrap; font-family: monospace; }
-.cellAddress { color: var(--admin-text-sub); max-width: 320px; }
+.cellAddress { color: var(--admin-text-sub); max-width: calc(var(--mg-layout-section) * 2 + var(--mg-space-8)); }
 .cellMedia { text-align: center; }
 
 .cellMedia svg {
@@ -119,7 +119,7 @@
 
 @media (min-width: 1180px) {
   .queueLayoutSelected {
-    grid-template-columns: minmax(0, 1fr) minmax(360px, 460px);
+    grid-template-columns: minmax(0, 1fr) minmax(calc(var(--mg-layout-section) * 2 + var(--mg-space-8) + var(--mg-space-6) + var(--mg-space-2)), calc(var(--mg-layout-section) * 3 + var(--mg-space-8) + var(--mg-space-3)));
     align-items: start;
   }
 }
@@ -174,7 +174,7 @@
 }
 
 .detailEmpty {
-  min-height: 220px;
+  min-height: calc(var(--mg-layout-section) + var(--mg-space-8) + var(--mg-space-5) + var(--mg-space-1));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,11 +213,11 @@
   flex-wrap: wrap;
   gap: var(--space-2);
   padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--admin-border);
+  border-bottom: var(--mg-border-width) solid var(--admin-border);
 }
 
 .detailStatusRow span {
-  min-height: 28px;
+  min-height: calc(var(--mg-space-5) + var(--mg-space-1));
   display: inline-flex;
   align-items: center;
   padding: 0 var(--space-2);
@@ -236,7 +236,7 @@
 
 .detailList div {
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-columns: calc(var(--mg-space-8) + var(--mg-space-5) + var(--mg-space-1)) minmax(0, 1fr);
   gap: var(--space-3);
 }
 
@@ -256,7 +256,7 @@
 
 .detailFooter {
   padding-top: var(--space-3);
-  border-top: 1px solid var(--admin-border);
+  border-top: var(--mg-border-width) solid var(--admin-border);
 }
 
 .queueActionStack {
@@ -307,7 +307,7 @@
 
 .mobileCard {
   background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   display: flex;

@@ -246,4 +246,5 @@ $$;
 
 REVOKE ALL ON FUNCTION showroom.save_site_settings(JSONB, JSONB) FROM PUBLIC;
 REVOKE ALL ON FUNCTION showroom.save_site_settings(JSONB, JSONB) FROM anon;
+REVOKE ALL ON FUNCTION showroom.save_site_settings(JSONB, JSONB) FROM service_role;
 GRANT EXECUTE ON FUNCTION showroom.save_site_settings(JSONB, JSONB) TO authenticated;

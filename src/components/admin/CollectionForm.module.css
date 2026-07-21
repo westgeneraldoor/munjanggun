@@ -18,7 +18,7 @@
   box-shadow: var(--admin-shadow-lg);
   padding: var(--space-6);
   width: 100%;
-  max-width: 500px;
+  max-width: calc(var(--mg-layout-section) * 3 + var(--mg-space-8) + var(--mg-space-7) + var(--mg-space-1));
   animation: modal-fade-in var(--transition-fast);
 }
 
@@ -49,7 +49,7 @@
 
 .input, .textarea, .select {
   background-color: var(--admin-surface);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-md);
   padding: var(--space-3);
   font-size: var(--text-base);
@@ -59,11 +59,11 @@
 }
 
 .input, .select {
-  height: 48px;
+  height: var(--mg-control-size-default);
 }
 
 .textarea {
-  min-height: 100px;
+  min-height: calc(var(--mg-space-8) + var(--mg-space-6) + var(--mg-space-1));
   resize: vertical;
 }
 
@@ -106,9 +106,9 @@
 }
 
 .cancelBtn {
-  height: 44px;
+  height: var(--mg-control-size-min);
   padding: 0 var(--space-6);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   background-color: var(--admin-surface);
   color: var(--admin-text);
   font-size: var(--text-sm);
@@ -123,7 +123,7 @@
 }
 
 .submitBtn {
-  height: 44px;
+  height: var(--mg-control-size-min);
   padding: 0 var(--space-6);
   border: none;
   background-color: var(--admin-accent);
@@ -147,10 +147,10 @@
 
 @media (min-width: 1024px) {
   .input, .select {
-    height: 40px;
+    height: var(--mg-control-size-min);
   }
   .cancelBtn, .submitBtn {
-    height: 36px;
+    height: var(--mg-control-size-min);
   }
 }
 

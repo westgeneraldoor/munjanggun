@@ -22,11 +22,12 @@ import { mergeContentAssetLabelsWithTags } from '../src/lib/content-assets/conte
 import { prepareBlogMediaForPublication } from '../src/lib/content-os/blog-media-publication.mjs'
 
 const actionsPath = new URL('../src/app/admin/platform/blog/[id]/actions.ts', import.meta.url)
-const migrationPath = new URL('../supabase/migrations/20260715090000_official_asset_gif_support.sql', import.meta.url)
-const hardeningMigrationPath = new URL('../supabase/migrations/20260715092000_official_asset_provenance_hardening.sql', import.meta.url)
-const privateDerivativeMigrationPath = new URL('../supabase/migrations/20260715100000_private_candidate_derivatives.sql', import.meta.url)
-const privateDerivativeFixMigrationPath = new URL('../supabase/migrations/20260715101000_fix_private_derivative_rpc_role_cast.sql', import.meta.url)
-const atomicPlacementMigrationPath = new URL('../supabase/migrations/20260720000313_atomic_official_asset_blog_placement.sql', import.meta.url)
+const migrationPath = new URL('../supabase/migrations/20260715090227_official_asset_gif_support.sql', import.meta.url)
+const hardeningMigrationPath = new URL('../supabase/migrations/20260715233310_official_asset_provenance_hardening.sql', import.meta.url)
+const privateDerivativeMigrationPath = new URL('../supabase/migrations/20260715235109_private_candidate_derivatives.sql', import.meta.url)
+const privateDerivativeFixMigrationPath = new URL('../supabase/migrations/20260715235349_fix_private_derivative_rpc_role_cast.sql', import.meta.url)
+const crashSafeDerivativeCleanupMigrationPath = new URL('../supabase/migrations/20260720084910_crash_safe_private_derivative_cleanup.sql', import.meta.url)
+const atomicPlacementMigrationPath = new URL('../supabase/migrations/20260720005052_atomic_official_asset_blog_placement.sql', import.meta.url)
 const commandPath = new URL('./register-official-brand-asset.mjs', import.meta.url)
 const rendererPath = new URL('../src/components/blog/BlogPostRenderer.tsx', import.meta.url)
 const assetClientPath = new URL('../src/app/admin/platform/assets/ContentAssetsClient.tsx', import.meta.url)
@@ -190,12 +191,13 @@ assert.equal(preparedJpeg.extension, 'webp')
 assert.equal(preparedJpeg.originalAnimationPreserved, false)
 assert.equal((await sharp(preparedJpeg.buffer).metadata()).format, 'webp')
 
-const [actionsSource, migrationSource, hardeningMigrationSource, privateDerivativeMigrationSource, privateDerivativeFixMigrationSource, atomicPlacementMigrationSource, commandSource, rendererSource, assetClientSource, assetActionsSource, blogEditorClientSource] = await Promise.all([
+const [actionsSource, migrationSource, hardeningMigrationSource, privateDerivativeMigrationSource, privateDerivativeFixMigrationSource, crashSafeDerivativeCleanupMigrationSource, atomicPlacementMigrationSource, commandSource, rendererSource, assetClientSource, assetActionsSource, blogEditorClientSource] = await Promise.all([
   readFile(actionsPath, 'utf8'),
   readFile(migrationPath, 'utf8'),
   readFile(hardeningMigrationPath, 'utf8'),
   readFile(privateDerivativeMigrationPath, 'utf8'),
   readFile(privateDerivativeFixMigrationPath, 'utf8'),
+  readFile(crashSafeDerivativeCleanupMigrationPath, 'utf8'),
   readFile(atomicPlacementMigrationPath, 'utf8'),
   readFile(commandPath, 'utf8'),
   readFile(rendererPath, 'utf8'),
@@ -226,6 +228,21 @@ assert.match(privateDerivativeMigrationSource, /auth\.role\(\)[\s\S]*service_rol
 assert.match(privateDerivativeMigrationSource, /content_asset_events[\s\S]*central_brand_derivatives_privatized/)
 assert.match(privateDerivativeFixMigrationSource, /asset_file\.file_role::TEXT = file_record\.file_role/)
 assert.match(privateDerivativeMigrationSource, /asset_file\.file_role = file_record\.file_role/)
+assert.match(crashSafeDerivativeCleanupMigrationSource, /p_cleanup_event_id UUID/)
+assert.match(crashSafeDerivativeCleanupMigrationSource, /central_brand_public_cleanup_pending/)
+assert.match(crashSafeDerivativeCleanupMigrationSource, /'public_paths', v_public_paths/)
+assert.match(crashSafeDerivativeCleanupMigrationSource, /INSERT INTO showroom\.content_asset_events \([\s\S]*?id,[\s\S]*?VALUES \([\s\S]*?p_cleanup_event_id,[\s\S]*?'central_brand_public_cleanup_pending'/)
+assert.match(crashSafeDerivativeCleanupMigrationSource, /DROP FUNCTION IF EXISTS showroom\.privatize_central_asset_derivatives\(UUID, UUID, TEXT, JSONB\)/)
+assert.match(crashSafeDerivativeCleanupMigrationSource, /GRANT EXECUTE ON FUNCTION showroom\.privatize_central_asset_derivatives\(UUID, UUID, TEXT, JSONB, UUID\) TO service_role/)
+const metadataUpdateInMigrationIndex = crashSafeDerivativeCleanupMigrationSource.indexOf('UPDATE showroom.content_asset_files')
+const durablePendingInMigrationIndex = crashSafeDerivativeCleanupMigrationSource.indexOf("'central_brand_public_cleanup_pending'")
+const migrationReturnIndex = crashSafeDerivativeCleanupMigrationSource.indexOf('RETURN total_updated')
+assert.ok(
+  metadataUpdateInMigrationIndex >= 0
+    && durablePendingInMigrationIndex > metadataUpdateInMigrationIndex
+    && migrationReturnIndex > durablePendingInMigrationIndex,
+  'metadata update and durable pending cleanup intent must commit in the same RPC transaction',
+)
 assert.doesNotMatch(migrationSource, /content-assets-public[\s\S]*image\/gif/)
 
 for (const requiredFlag of ['--brand-root', '--asset-id', '--actor-id', '--post-id', '--block-id']) {
@@ -252,7 +269,23 @@ assert.match(atomicPlacementMigrationSource, /INSERT INTO showroom\.content_asse
 assert.match(atomicPlacementMigrationSource, /INSERT INTO showroom\.blog_blocks/)
 assert.match(commandSource, /centralBrandSnapshot\(asset\)/)
 assert.match(commandSource, /privatizeExistingDerivatives/)
-assert.match(commandSource, /storage\.from\(PUBLIC_BUCKET\)[\s\S]*\.remove[\s\S]*\.rpc\('privatize_central_asset_derivatives'/)
+const privatizeStart = commandSource.indexOf('async function privatizeExistingDerivatives')
+const privatizeEnd = commandSource.indexOf('async function assertNoChecksumCollision', privatizeStart)
+const privatizeSource = commandSource.slice(privatizeStart, privatizeEnd)
+const metadataCommitIndex = privatizeSource.indexOf(".rpc('privatize_central_asset_derivatives'")
+const publicCleanupIndex = privatizeSource.indexOf('storage.from(PUBLIC_BUCKET).remove')
+const cleanupCompletedIndex = privatizeSource.indexOf("eventType: 'central_brand_public_cleanup_completed'")
+assert.ok(metadataCommitIndex >= 0 && publicCleanupIndex > metadataCommitIndex, 'metadata must switch to private before public objects are removed')
+assert.ok(cleanupCompletedIndex > publicCleanupIndex, 'cleanup completion must only be recorded after public object removal succeeds')
+assert.match(privatizeSource, /newlyUploaded[\s\S]*cleanupUploadedFiles/, 'new private orphans must be compensated when metadata commit fails')
+assert.match(privatizeSource, /const cleanupEventId = randomUUID\(\)/)
+assert.match(privatizeSource, /p_cleanup_event_id: cleanupEventId/)
+assert.match(commandSource, /hasPendingPublicDerivativeCleanup/)
+assert.match(privatizeSource, /metadataCommitted = true[\s\S]*Privatization transaction outcome is inconclusive; private Storage was retained/)
+assert.match(privatizeSource, /eventType: 'central_brand_public_cleanup_completed'[\s\S]*pendingEventId: cleanupEventId/)
+assert.doesNotMatch(privatizeSource, /eventType: 'central_brand_public_cleanup_pending'/, 'the pending event must be committed by the metadata RPC, not after Storage deletion fails')
+assert.match(commandSource, /reconcilePendingPublicDerivativeCleanup/, 'a later idempotent run must retry audited public cleanup')
+assert.match(commandSource, /central_brand_public_cleanup_completed/, 'successful retry must close the pending audit event')
 assert.match(commandSource, /bucket: PRIVATE_BUCKET, path: webPath/)
 assert.match(commandSource, /bucket: PRIVATE_BUCKET, path: thumbnailPath/)
 assert.match(commandSource, /cleanupCreatedAssetIfUnreferenced/)

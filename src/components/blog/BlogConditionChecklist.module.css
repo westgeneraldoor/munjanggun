@@ -1,16 +1,16 @@
 .checklist {
   min-width: 0;
-  scroll-margin-top: 88px;
+  scroll-margin-top: var(--mg-blog-space-hero);
   display: grid;
-  grid-template-columns: minmax(0, 0.86fr) minmax(280px, 1fr);
+  grid-template-columns: minmax(0, 0.86fr) minmax(var(--mg-blog-frame-card-narrow), 1fr);
   gap: var(--space-4);
-  margin: 0 0 clamp(28px, 5vw, 48px);
-  padding: clamp(18px, 3vw, 28px);
+  margin: 0 0 clamp(var(--mg-blog-space-comfortable), 5vw, var(--mg-space-7));
+  padding: clamp(var(--mg-blog-space-default), 3vw, var(--mg-blog-space-comfortable));
   color: var(--blog-body);
-  background: rgba(255, 252, 247, 0.86);
-  border: 1px solid var(--blog-line);
-  border-radius: 8px;
-  box-shadow: 0 18px 48px rgba(44, 34, 30, 0.08);
+  background: color-mix(in srgb, var(--mg-blog-reader-warm-glass-base) 86%, transparent);
+  border: var(--mg-border-width) solid var(--blog-line);
+  border-radius: var(--mg-radius-card);
+  box-shadow: var(--mg-blog-showroom-shadow-elevated);
 }
 
 .copy {
@@ -23,7 +23,7 @@
 .copy > span {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: var(--mg-blog-space-tight);
   width: fit-content;
   color: var(--blog-terracotta);
   font-size: var(--text-sm);
@@ -33,7 +33,7 @@
 .copy h2 {
   color: var(--blog-cocoa);
   font-family: var(--font-blog-display);
-  font-size: 24px;
+  font-size: var(--mg-font-size-state);
   font-weight: 850;
   line-height: 1.36;
   word-break: keep-all;
@@ -53,21 +53,21 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--mg-space-2);
 }
 
 .item {
   min-width: 0;
-  min-height: 44px;
+  min-height: var(--mg-control-size-min);
   display: grid;
-  grid-template-columns: 26px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: var(--mg-blog-space-comfortable) minmax(0, 1fr);
+  gap: var(--mg-blog-space-tight);
   align-items: center;
-  padding: 10px 12px;
+  padding: var(--mg-blog-space-tight) var(--mg-space-3);
   color: var(--blog-body);
-  background: #ffffff;
-  border: 1px solid var(--blog-line);
-  border-radius: 8px;
+  background: var(--mg-color-neutral-0);
+  border: var(--mg-border-width) solid var(--blog-line);
+  border-radius: var(--mg-radius-card);
   font-size: var(--text-sm);
   font-weight: 750;
   line-height: 1.45;
@@ -82,15 +82,15 @@
 
 .checkbox {
   position: relative;
-  width: 22px;
-  height: 22px;
+  width: var(--mg-blog-space-comfortable);
+  height: var(--mg-blog-space-comfortable);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: transparent;
   background: var(--blog-paper);
-  border: 1px solid var(--blog-line-strong);
-  border-radius: 6px;
+  border: var(--mg-border-width) solid var(--blog-line-strong);
+  border-radius: var(--mg-radius-chip);
 }
 
 .checkbox input {
@@ -101,7 +101,7 @@
 }
 
 .checkbox[data-checked="true"] {
-  color: #ffffff;
+  color: var(--mg-color-neutral-0);
   background: var(--blog-sage-text);
   border-color: var(--blog-sage-text);
 }
@@ -113,21 +113,21 @@
   justify-content: space-between;
   gap: var(--space-3);
   padding-top: var(--space-3);
-  border-top: 1px solid var(--blog-line);
+  border-top: var(--mg-border-width) solid var(--blog-line);
 }
 
 .result button {
   flex: 0 0 auto;
-  min-height: 44px;
+  min-height: var(--mg-control-size-min);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  padding: 0 15px;
-  color: #ffffff;
+  gap: var(--mg-blog-space-tight);
+  padding: 0 var(--mg-blog-space-default);
+  color: var(--mg-color-neutral-0);
   background: var(--blog-terracotta);
-  border: 1px solid var(--blog-terracotta);
-  border-radius: 8px;
+  border: var(--mg-border-width) solid var(--blog-terracotta);
+  border-radius: var(--mg-radius-card);
   font-size: var(--text-sm);
   font-weight: 850;
   cursor: pointer;
@@ -136,15 +136,15 @@
 
 .item:focus-within,
 .result button:focus-visible {
-  outline: 2px solid var(--blog-terracotta);
-  outline-offset: 3px;
+  outline: var(--mg-border-width-strong) solid var(--blog-terracotta);
+  outline-offset: var(--mg-focus-ring-offset);
 }
 
 .result button:hover,
 .result button:focus-visible {
   background: var(--blog-terracotta-dark);
   border-color: var(--blog-terracotta-dark);
-  transform: translateY(-1px);
+  transform: translateY(var(--mg-blog-offset-hairline));
 }
 
 @media (max-width: 720px) {

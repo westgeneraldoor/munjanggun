@@ -4,6 +4,12 @@ async function openBlog(page: Page) {
   await page.goto('/blog', { waitUntil: 'domcontentloaded' })
   await expect(page.getByTestId('blog-home-hero')).toBeVisible()
   await expect(page.getByTestId('blog-navigation')).toHaveAttribute('data-hydrated', 'true')
+
+  // Later assertions use exact programmatic scroll positions. A real wheel input
+  // closes the browser's initial LCP window before those synthetic jumps.
+  await page.mouse.move(1, 1)
+  await page.mouse.wheel(0, 1)
+  await page.mouse.wheel(0, -1)
 }
 
 test('blog home opens with a full-screen image hero and live navigation', async ({ page }) => {
@@ -276,6 +282,11 @@ test('condition composer opens recommendations and supports editing or restartin
 
   await page.getByTestId('blog-condition-choice-0-1').click()
   await expect(page.getByTestId('blog-condition-choice-1-1')).toBeVisible()
+  const backButton = page.getByRole('button', { name: '이전 질문으로 돌아가기' })
+  await expect(backButton).toBeEnabled()
+  const backButtonBox = await backButton.boundingBox()
+  expect(backButtonBox?.width).toBeGreaterThanOrEqual(44)
+  expect(backButtonBox?.height).toBeGreaterThanOrEqual(44)
   await expect(page.getByTestId('blog-condition-word-0')).toContainText('거실과 현관이 바로 이어져')
   await page.getByTestId('blog-condition-choice-1-1').click()
   await expect(page.getByTestId('blog-condition-choice-2-1')).toBeVisible()

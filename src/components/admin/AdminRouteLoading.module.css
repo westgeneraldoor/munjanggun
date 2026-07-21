@@ -9,8 +9,8 @@
 
 .srOnly {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: var(--mg-visually-hidden-size);
+  height: var(--mg-visually-hidden-size);
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
@@ -18,7 +18,7 @@
 }
 
 .headerAction {
-  width: 132px;
+  width: calc(var(--mg-layout-section) + var(--mg-space-1));
   min-height: var(--mg-control-size-default);
   display: block;
   border-radius: var(--mg-radius-pill);
@@ -38,7 +38,7 @@
 }
 
 .toolbar span {
-  width: 120px;
+  width: calc(var(--mg-space-8) + var(--mg-space-7) + var(--mg-space-2));
   min-height: var(--mg-control-size-min);
   border-radius: var(--mg-radius-card);
   background: var(--mg-surface-page-soft);

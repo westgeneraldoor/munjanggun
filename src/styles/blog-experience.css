@@ -24,6 +24,99 @@
   --mg-blog-status-success: var(--mg-status-success);
   --mg-blog-status-danger: var(--mg-status-error);
 
+  /* Shared component aliases consumed across independently scoped CSS Modules. */
+  --blog-cocoa: var(--mg-blog-ink);
+  --blog-terracotta: var(--mg-blog-accent);
+  --blog-terracotta-dark: var(--mg-blog-accent-strong);
+  --blog-cream: var(--mg-blog-canvas);
+  --blog-paper: var(--mg-blog-surface);
+  --blog-soft: var(--mg-blog-canvas-subtle);
+  --blog-almond: var(--mg-blog-surface-muted);
+  --blog-line: var(--mg-blog-border);
+  --blog-line-strong: var(--mg-blog-border-strong);
+  --blog-ink: var(--mg-blog-ink);
+  --blog-body: var(--mg-blog-body);
+  --blog-muted: var(--mg-blog-muted);
+  --blog-green: var(--mg-blog-status-success);
+  --blog-navy: var(--mg-blog-reader-notice);
+  --blog-caution: var(--mg-blog-status-danger);
+  --blog-sage-text: var(--mg-blog-reader-notice-text);
+  --blog-ochre: var(--mg-blog-reader-highlight);
+  --blog-warning-text: var(--mg-blog-reader-warning-text);
+  --blog-warning-bg: var(--mg-blog-reader-warning-surface);
+  --blog-warning-line: var(--mg-blog-reader-warning-border);
+  --mg-blog-thumbnail-aspect: 16 / 9;
+
+  /* Blog composition scale. Components consume roles, never arithmetic on brand primitives. */
+  --mg-blog-offset-hairline: calc(var(--mg-border-width) * -1);
+  --mg-blog-space-micro: var(--mg-space-1);
+  --mg-blog-space-tight: var(--mg-space-2);
+  --mg-blog-space-compact: var(--mg-space-3);
+  --mg-blog-space-default: var(--mg-space-4);
+  --mg-blog-space-comfortable: var(--mg-space-5);
+  --mg-blog-space-panel: var(--mg-space-6);
+  --mg-blog-space-section: var(--mg-space-7);
+  --mg-blog-space-hero: calc(var(--mg-space-8) + var(--mg-space-6));
+  --mg-blog-space-story: calc(var(--mg-layout-section) + var(--mg-space-8));
+
+  --mg-blog-type-micro: var(--mg-font-size-caption);
+  --mg-blog-type-label: var(--mg-font-size-label);
+  --mg-blog-type-body: var(--mg-font-size-body);
+  --mg-blog-type-body-lg: var(--mg-font-size-body-lg);
+  --mg-blog-type-card: var(--mg-font-size-card);
+  --mg-blog-type-heading: 30px;
+  --mg-blog-type-title: 38px;
+  --mg-blog-type-display: 54px;
+  --mg-blog-type-hero: 72px;
+
+  --mg-blog-control-min: var(--mg-control-size-min);
+  --mg-blog-control-comfortable: calc(var(--mg-control-size-default) + var(--mg-space-1));
+  --mg-blog-control-large: calc(var(--mg-control-size-default) + var(--mg-space-2));
+  --mg-blog-control-hero: var(--mg-layout-gutter);
+  --mg-blog-icon-compact: var(--mg-space-6);
+
+  --mg-blog-frame-marker: var(--mg-layout-section);
+  --mg-blog-frame-thumbnail: 160px;
+  --mg-blog-frame-card-narrow: 280px;
+  --mg-blog-topic-card-width: 290px;
+  --mg-blog-topic-card-mobile-max: 190px;
+  --mg-blog-frame-rail: 240px;
+  --mg-blog-frame-card: 320px;
+  --mg-blog-frame-compact: 360px;
+  --mg-blog-frame-panel: 420px;
+  --mg-blog-frame-media: 520px;
+  --mg-blog-frame-reading: 680px;
+  --mg-blog-frame-stage: 760px;
+  --mg-blog-frame-content: 880px;
+  --mg-blog-frame-wide: 940px;
+  --mg-blog-frame-shell: 1120px;
+  --mg-blog-frame-canvas: var(--mg-layout-max);
+  --mg-blog-frame-bleed: 1280px;
+
+  --mg-blog-blur-soft: var(--mg-space-2);
+  --mg-blog-blur-glass: var(--mg-space-5);
+  --mg-blog-word-slot-width: 3.6em;
+  --mg-blog-word-slot-height: 1.2em;
+  --mg-blog-type-inline-note: 0.54em;
+  --mg-blog-type-inline-mark: 0.5em;
+
+  /* Showroom palette roles retained where central neutral and ink scales cannot preserve the scene. */
+  --mg-blog-story-clay: #ad7566;
+  --mg-blog-story-sage: #6e7046;
+  --mg-blog-story-almond: #d4b889;
+  --mg-blog-story-earth: #9b7349;
+
+  /* Shared elevation roles. Component CSS never owns raw shadow recipes. */
+  --mg-blog-showroom-shadow-outlined: inset 0 0 0 var(--mg-border-width) var(--mg-blog-reader-chip-border), var(--mg-blog-reader-shadow-soft);
+  --mg-blog-showroom-shadow-elevated: 0 calc(var(--mg-space-4) + var(--mg-border-width-strong)) calc(var(--mg-space-7) + var(--mg-border-width-strong)) color-mix(in srgb, var(--mg-blog-reader-shadow-ink) 8%, transparent);
+  --mg-blog-showroom-shadow-strong: 0 calc(var(--mg-space-4) + var(--mg-border-width-strong)) calc(var(--mg-space-6) + var(--mg-space-2) + var(--mg-border-width-strong)) color-mix(in srgb, var(--mg-blog-reader-shadow-ink) 18%, transparent);
+  --mg-blog-showroom-shadow-hero: 0 calc(var(--mg-space-4) + var(--mg-border-width-strong)) calc(var(--mg-space-7) + var(--mg-space-2) - var(--mg-border-width-strong)) color-mix(in srgb, var(--mg-blog-ink) 24%, transparent);
+  --mg-blog-showroom-shadow-glass: inset 0 var(--mg-border-width) 0 color-mix(in srgb, var(--mg-blog-inverse) 90%, transparent), 0 calc(var(--mg-space-4) + var(--mg-space-1)) calc(var(--mg-space-7) + var(--mg-space-2)) color-mix(in srgb, var(--mg-blog-ink) 14%, transparent);
+  --mg-blog-showroom-shadow-modal: 0 calc(var(--mg-space-5) - var(--mg-border-width-strong)) calc(var(--mg-space-8) + var(--mg-space-2) - var(--mg-border-width-strong)) color-mix(in srgb, var(--mg-blog-reader-shadow-ink) 12%, transparent);
+  --mg-blog-showroom-shadow-compact: 0 calc(var(--mg-space-3) + var(--mg-border-width-strong)) calc(var(--mg-space-6) + var(--mg-border-width-strong)) color-mix(in srgb, var(--mg-blog-reader-shadow-ink) 12%, transparent);
+  --mg-blog-showroom-shadow-footer: 0 calc(-1 * (var(--mg-space-6) - var(--mg-border-width-strong))) calc(var(--mg-space-8) + var(--mg-space-4)) color-mix(in srgb, var(--mg-blog-ink) 18%, transparent);
+  --mg-blog-showroom-shadow-inset: inset 0 0 0 var(--mg-border-width) color-mix(in srgb, var(--mg-blog-inverse) 42%, transparent);
+
   /* Approved reader parity values; the showroom home does not consume these aliases. */
   --mg-blog-reader-notice: #5c7a62;
   --mg-blog-reader-notice-text: #3f5643;

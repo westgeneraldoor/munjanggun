@@ -8,7 +8,7 @@ const [nodeList, nodeListStyles, tokenPolicy, fixture, migration] = await Promis
   read('src/components/admin/NodeList.module.css'),
   read('scripts/ui-token-policy.config.mjs'),
   read('src/app/test-fixtures/admin-node-list/page.tsx'),
-  read('supabase/migrations/20260716093000_atomic_node_reorder.sql'),
+  read('supabase/migrations/20260720074812_atomic_node_reorder.sql'),
 ])
 
 for (const primitive of [
@@ -42,7 +42,9 @@ assert.match(migration, /SECURITY INVOKER/i, 'node reorder must preserve caller 
 assert.match(migration, /FOR UPDATE/i, 'node reorder must lock the complete sibling set')
 assert.match(migration, /current_node_ids IS DISTINCT FROM requested_node_ids/i, 'node reorder must reject partial or foreign node sets')
 assert.match(migration, /updated_count <> cardinality\(p_ordered_node_ids\)/i, 'node reorder must verify the affected row count')
+assert.match(migration, /FROM platform\.profiles[\s\S]*?profile\.id = auth\.uid\(\)[\s\S]*?administrator/i, 'node reorder must reject non-administrator callers before mutation')
 assert.match(migration, /REVOKE ALL ON FUNCTION showroom\.reorder_nodes\(UUID, UUID\[\]\) FROM PUBLIC/i, 'node reorder must not retain public execute privileges')
+assert.match(migration, /REVOKE ALL ON FUNCTION showroom\.reorder_nodes\(UUID, UUID\[\]\) FROM service_role/i, 'service-role callers must not bypass the administrator actor contract')
 assert.match(migration, /GRANT EXECUTE ON FUNCTION showroom\.reorder_nodes\(UUID, UUID\[\]\) TO authenticated/i, 'authenticated admin callers must receive explicit execute access')
 
 console.log('admin node-list primitive contract passed')

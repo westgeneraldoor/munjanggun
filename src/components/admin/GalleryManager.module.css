@@ -1,14 +1,14 @@
 .container {
   min-width: 0;
   padding: var(--space-3);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-md);
   background: var(--admin-bg);
 }
 
 .photosGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(var(--mg-layout-section) + var(--mg-space-8) + var(--mg-space-5) + var(--mg-space-1))), 1fr));
   gap: var(--space-4);
 }
 
@@ -17,11 +17,10 @@
   gap: var(--space-3);
   min-width: 0;
   padding: var(--space-3);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-md);
   background: var(--admin-surface);
 }
-
 .photoActions,
 .orderActions {
   display: flex;
@@ -35,10 +34,10 @@
 
 .addPhotoCard {
   display: flex;
-  min-height: 200px;
+  min-height: calc(var(--mg-layout-section) + var(--mg-space-8) + var(--mg-space-2));
   align-items: center;
   justify-content: center;
-  border: 2px dashed var(--admin-border);
+  border: var(--mg-border-width-strong) dashed var(--admin-border);
   border-radius: var(--radius-md);
   background: var(--admin-surface);
 }

@@ -13,10 +13,6 @@ async function openEditor(page: Page) {
   const loginResponse = await page.goto(`/api/dev/playwright-login?${loginParams}`, { waitUntil: 'domcontentloaded' })
   if (loginResponse && loginResponse.status() >= 500) {
     const errorBody = await loginResponse.json().catch(() => null) as { error?: string } | null
-    test.skip(
-      errorBody?.error === 'Dev Supabase login is not configured',
-      'Dev Supabase login is not configured in this environment.',
-    )
     expect(loginResponse.status(), `Dev administrator login failed: ${errorBody?.error ?? 'unknown error'}`).toBeLessThan(500)
   }
 

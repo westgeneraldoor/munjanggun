@@ -75,7 +75,7 @@ storage.objects policy remote application is not confirmed from this Codex sessi
 Confirm it with a DB owner or linked Supabase CLI before production publishing.
 ```
 
-## 2.1 HARDEN-00 Remote Storage Policy Result
+## 2.1 HARDEN-00 Remote Storage Policy Result (historical)
 
 Status as of 2026-06-25:
 
@@ -86,6 +86,8 @@ Applied by: Supabase MCP execute_sql
 Scope: storage.objects policies for Content OS media buckets only
 Result: passed
 ```
+
+아래 6-policy 결과는 2026-06-25 당시 증거다. 2026-07-20 현재 정책은 3.2와 14절을 따른다.
 
 Applied policies:
 
@@ -195,7 +197,6 @@ supabase/storage-policies/content_os_storage_policies.sql
 Expected policy names:
 
 ```text
-blog_media_public_select
 blog_media_admin_insert_public
 blog_media_admin_delete_public
 blog_media_private_admin_select
@@ -216,7 +217,6 @@ from pg_policies
 where schemaname = 'storage'
   and tablename = 'objects'
   and policyname in (
-    'blog_media_public_select',
     'blog_media_admin_insert_public',
     'blog_media_admin_delete_public',
     'blog_media_private_admin_select',
@@ -228,8 +228,9 @@ order by policyname;
 
 Pass criteria:
 
-- All 6 policies exist.
-- Public select is limited to `bucket_id = 'blog-media'`.
+- All 5 administrator/private policies exist.
+- `blog_media_public_select` does not exist; anon Data API object listing returns 0 rows.
+- A known object URL in public `blog-media` still returns HTTP 200.
 - Private bucket select/insert/delete require `platform_private.is_admin()`.
 - Public bucket insert/delete require `platform_private.is_admin()`.
 - No public update/upsert policy exists for `blog-media`.
@@ -646,13 +647,12 @@ Remote verification checklist:
 - [x] `content-assets-private` bucket exists and is private.
 - [x] `content-assets-public` bucket exists and is public.
 - [x] `content-assets-public` allows WebP derivatives only.
-- [x] Required `storage.objects` policies exist.
+- [x] Required five administrator/private `storage.objects` policies exist; public anon listing policy is absent.
 - [x] No `storage.objects` UPDATE policy exists for `content-assets-public`.
 
 Required storage policies:
 
 ```text
-content_assets_public_select
 content_assets_public_admin_insert
 content_assets_public_admin_delete
 content_assets_private_admin_select
@@ -662,10 +662,10 @@ content_assets_private_admin_delete
 
 Pass criteria:
 
-- Public reads are limited to public derivative objects and published blog asset metadata.
+- Anon Data API object listing is unavailable; a known public derivative URL remains directly deliverable.
 - Original files remain in `content-assets-private`.
 - Public overwrite/upsert is blocked by the absence of UPDATE policy.
-- Existing `blog-media` and `blog-media-private` policies are unchanged.
+- `blog_media_public_select` and `content_assets_public_select` were removed by the approved hardening migration; remaining administrator/private policies keep their prior boundary.
 - Existing Content OS publish flow is unchanged.
 
 Next PR boundary:
@@ -678,7 +678,7 @@ Next PR boundary:
 
 Migration:
 
-- `supabase/migrations/20260715090000_official_asset_gif_support.sql`
+- `supabase/migrations/20260715090227_official_asset_gif_support.sql`
 
 Required checks:
 
@@ -696,10 +696,27 @@ Required checks:
 - [x] GIF poster and thumbnail rows are private static WebP while the private original remains byte-identical GIF; only the validated blog publish path creates a new `blog-media` public object.
 - [x] Publication-path tests preserve `.gif`, `image/gif`, animation, alt, and caption for an approved GIF.
 - [x] The real Basic JPG and GIF import records include central asset/source/proof IDs, commit, checksum, and audit events.
-- [x] The current `reviewing` manuscript received a cover JPG, body JPG, and original GIF without exposing private bucket paths in the browser.
+- [x] The current `reviewing` manuscript has 27 blocks, 2 image blocks, and 3 active private media after audited detach of `mg-3panel-thumbnail-basic-001`; private paths remain hidden.
+- [x] The detached central asset and its 3 file rows remain preserved; no Storage object was deleted or promoted.
 - [x] A development-only public renderer regression proves the deterministic 2-frame GIF remains animated at desktop and 390px widths.
 - [ ] 실제 reviewing 원고의 production 발행. 이 원고와 실제 GIF는 검수 큐에 유지하며 merge·production 승인 전에는 공개하지 않는다.
 
 2026-07-20 evidence commands: `npm run test:official-brand-asset-import`, `npm run test:official-brand-asset-placement`, `npm run test:official-media-evidence-docs`, `npm run test:blog-public-gif-browser`, `npm run verify:blog-admin-cms`. Remote DB/storage state and the authenticated editor/preview were also checked directly; no production publish was performed.
 
 “Direct registration prohibited” means bypassing validation, authorization, audit, or publish promotion gates is prohibited. A validated server-only registration command is an approved ingestion path; arbitrary SQL inserts and unchecked Storage uploads are not.
+
+## 14. 2026-07-20 Integration Stabilization Record
+
+- Branch: `codex/platform-admin-blog-stabilization`; base: `v2-cms`; Draft PR number: pending until creation.
+- Current public delivery bucket remains:
+
+```text
+blog-media
+public: true
+allowed_mime_types: image/jpeg, image/png, image/webp, image/gif
+```
+
+- Aligned remote versions: `20260715090227`, `20260715233310`, `20260715235109`, `20260715235349`, `20260720005042`, `20260720005052`.
+- Newly applied remote versions: `20260720074812` reorder, `20260720074843` settings, `20260720074917` node, `20260720074955` storage + lease, `20260720075020` preview, `20260720075047` detach, `20260720075242` detach UUID fix, `20260720084910` crash-safe private derivative cleanup intent.
+- Verified boundary: known public URL HTTP 200, anon listing 0 rows, private signed URL HTTP 200; no production publish or public promotion.
+- Admin/blog recursive verifier covers 64 token-usage CSS files. Final result: raw color 0, raw shadow 0, unapproved raw layout 0, undefined custom properties 0, with 45 property/value/reason-scoped layout exceptions. The state-scope invariant remains required.

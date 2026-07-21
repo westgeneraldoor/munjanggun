@@ -1,7 +1,7 @@
 .form {
   display: grid;
   gap: var(--space-5);
-  width: min(100%, 880px);
+  width: min(100%, calc(var(--mg-layout-section) * 6 + var(--mg-space-8) + var(--mg-space-7)));
 }
 
 .section {
@@ -58,7 +58,7 @@
   gap: var(--space-3);
   min-width: 0;
   padding: var(--space-4);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-md);
   background: var(--mg-surface-sunken);
 }

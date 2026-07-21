@@ -11,6 +11,7 @@ const VARIABLE_USE_PATTERN = /var\(\s*(--[A-Za-z0-9_-]+)/g
 const RAW_LAYOUT_PROPERTIES = /^(?:--|margin(?:-.+)?$|padding(?:-.+)?$|gap$|row-gap$|column-gap$|inset(?:-.+)?$|top$|right$|bottom$|left$|border(?:-.+)?-radius$|border-radius$|box-shadow$|outline-offset$|scroll-margin(?:-.+)?$|scroll-padding(?:-.+)?$)/
 const STRICT_LAYOUT_PROPERTIES = /^(?:font-size|(?:min-|max-)?(?:width|height)|grid-template-(?:columns|rows)|border(?:-(?:top|right|bottom|left))?(?:-width)?|outline(?:-width)?|transform)$/
 const TOKENIZED_SHADOW_PATTERN = /^(?:none|var\(\s*--[A-Za-z0-9_-]+\s*\)|inherit|initial|unset|revert(?:-layer)?)$/
+const TOKEN_MULTIPLIER_PATTERN = /var\(\s*(--mg-[A-Za-z0-9_-]+)[^)]*\)\s*\*\s*(-?\d+(?:\.\d+)?)|(-?\d+(?:\.\d+)?)\s*\*\s*var\(\s*(--mg-[A-Za-z0-9_-]+)[^)]*\)/g
 
 function matchesEntry(value, entries = []) {
   return entries.some(entry => entry instanceof RegExp ? entry.test(value) : entry === value)
@@ -81,10 +82,38 @@ function findLayoutConstant(config, filePath, property, value) {
     ...(config.layoutConstants ?? []),
     ...(config.sharedLayoutConstants ?? []),
   ].find(item => (
-    (!item.file || item.file.replaceAll('\\', '/') === filePath)
+    validatesLayoutException(item)
+    && (
+      item.file?.replaceAll('\\', '/') === filePath
+      || (item.files ?? []).map(file => file.replaceAll('\\', '/')).includes(filePath)
+    )
     && item.property === property
     && item.value === value
   ))
+}
+
+function findUnsafeTokenMultipliers(value) {
+  const unsafe = []
+  let match
+  TOKEN_MULTIPLIER_PATTERN.lastIndex = 0
+  while ((match = TOKEN_MULTIPLIER_PATTERN.exec(value)) !== null) {
+    const token = match[1] ?? match[4]
+    const scalar = Number(match[2] ?? match[3])
+    const maximum = /--mg-(?:border-width(?:-strong)?|focus-ring-width)$/.test(token) ? 2 : 16
+    if (!Number.isFinite(scalar) || Math.abs(scalar) > maximum) {
+      unsafe.push(`${token} * ${scalar}`)
+    }
+  }
+  return unsafe
+}
+
+function validatesLayoutException(item) {
+  const files = [item.file, ...(item.files ?? [])].filter(Boolean)
+  return files.length > 0
+    && typeof item.property === 'string'
+    && typeof item.value === 'string'
+    && typeof item.reason === 'string'
+    && item.reason.trim().length > 0
 }
 
 async function listCssFiles(projectRoot, relativeDirectory) {
@@ -115,6 +144,15 @@ export function verifyUiTokenPolicy({ files, config }) {
   const generatedTokenNames = new Set()
   const diagnostics = []
   const usedLayoutConstants = new Set()
+
+  for (const item of [
+    ...(config.layoutConstants ?? []),
+    ...(config.sharedLayoutConstants ?? []),
+  ]) {
+    if (!validatesLayoutException(item)) {
+      diagnostics.push(`${item.file?.replaceAll('\\', '/') ?? '(shared)'}:1: layout exception ${item.name ?? '(unnamed)'} must declare file, property, value, and reason`)
+    }
+  }
 
   for (const file of normalizedFiles) {
     const source = stripCommentsKeepingLines(file.content)
@@ -189,6 +227,12 @@ export function verifyUiTokenPolicy({ files, config }) {
         }
       }
 
+      if (validatesRawLayout(strictLayoutFiles, file.path, property)) {
+        for (const unsafeMultiplier of findUnsafeTokenMultipliers(value)) {
+          diagnostics.push(`${file.path}:${line}: unsafe token multiplier ${unsafeMultiplier}`)
+        }
+      }
+
       DECLARATION_PATTERN.lastIndex = match.index + full.length
     }
 
@@ -259,9 +303,13 @@ export async function verifyConfiguredUiTokenPolicy({
 } = {}) {
   const configUrl = new URL(configModule, import.meta.url)
   const { default: config } = await import(configUrl.href)
-  const requiredFiles = (await Promise.all(
+  const discoveredRequiredFiles = (await Promise.all(
     (config.requiredCssDirectories ?? []).map(directory => listCssFiles(projectRoot, directory)),
   )).flat()
+  const requiredFiles = [...new Set([
+    ...discoveredRequiredFiles,
+    ...(config.requiredCssFiles ?? []),
+  ])]
   const configuredPolicyFiles = new Set(config.files.map(file => file.replaceAll('\\', '/')))
   const omittedFiles = requiredFiles.filter(file => !configuredPolicyFiles.has(file)).sort()
   if (omittedFiles.length) {
@@ -275,7 +323,18 @@ export async function verifyConfiguredUiTokenPolicy({
     path: relativePath,
     content: await readFile(path.join(projectRoot, relativePath), 'utf8'),
   })))
-  const result = verifyUiTokenPolicy({ files, config })
+  const discoveredStrictFiles = (await Promise.all(
+    (config.strictLayoutDirectories ?? []).map(directory => listCssFiles(projectRoot, directory)),
+  )).flat()
+  const resolvedConfig = {
+    ...config,
+    strictLayoutFiles: [...new Set([
+      ...(config.strictLayoutFiles ?? []),
+      ...discoveredStrictFiles,
+      ...(config.strictLayoutFilesRequired ?? []),
+    ])],
+  }
+  const result = verifyUiTokenPolicy({ files, config: resolvedConfig })
   if (result.diagnostics.length) {
     throw new Error(`UI token policy failed:\n${result.diagnostics.join('\n')}`)
   }

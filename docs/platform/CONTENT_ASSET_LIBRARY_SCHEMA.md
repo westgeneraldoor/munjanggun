@@ -1,20 +1,19 @@
 ---
 document_type: "Content Asset Library Schema"
-version: "1.0.0"
-status: "draft"
+version: "1.1.0"
+status: "implemented-current"
 created: "2026-06-25"
+updated: "2026-07-20"
 owner: "Codex PM"
 source_strategy: "docs/platform/CONTENT_ASSET_LIBRARY_STRATEGY.md"
 source_prd: "docs/platform/CONTENT_ASSET_LIBRARY_PRD.md"
 ---
 
-# CONTENT_ASSET_LIBRARY_SCHEMA - 사진보관함 DB/Storage 설계 초안
+# CONTENT_ASSET_LIBRARY_SCHEMA - 사진보관함 DB/Storage 구현 계약
 
 ## 0. 목적
 
-이 문서는 PR-08에서 구현할 사진보관함 DB, Storage, RLS, 변환 구조의 초안이다.
-
-이번 문서는 설계 문서이며 migration을 작성하지 않는다.
+이 문서는 PR-08에서 시작한 사진보관함 DB, Storage, RLS, 변환 구조와 이후 공식 자산 연결·분리 안정화의 현재 구현 계약이다. 1-7절은 원래 설계 결정을 보존하고, 8절 이후는 실제 migration과 운영 검증 결과를 기록한다.
 
 ## 1. 설계 방향
 
@@ -388,7 +387,7 @@ Central provenance is stored in `content_assets.labels.centralBrand` and repeate
 
 The validated server command may set an imported candidate as the cover with `--cover`, or insert a new image block after an existing block with `--insert-after-block-id`. Cover assignment refuses to replace a different existing cover. `showroom.attach_official_asset_to_reviewing_post(...)` locks the post and its blocks and performs media, usage, cover, descending order shifts, block, and audit writes in one service-role-only `SECURITY INVOKER` transaction. Any SQL failure rolls the whole placement back. Editor saves acquire a service-role-only lease against the same post before their first write; placement rejects an active lease, and placement updates the post timestamp so a stale editor payload cannot acquire a later lease. Leases do not auto-expire. A lease left by a server failure can only be released after 15 minutes by `scripts/reconcile-blog-editor-save-lease.mjs`, whose RPC requires an administrator, a 10-500 character reason, and writes `editor_save_lease_reconciled` to `blog_post_events`. Failed new imports, including failures inside initial asset creation, are cleaned up through `showroom.delete_unreferenced_official_asset(...)`, which locks the asset, refuses committed references, deletes DB metadata atomically, and only then returns paths for best-effort Storage removal. An inconclusive cleanup response never triggers Storage deletion. These flags are limited to `reviewing` posts and do not approve or publish the media.
 
-Storage contract after `20260715090000_official_asset_gif_support.sql`:
+Storage contract after `20260715090227_official_asset_gif_support.sql`:
 
 - `content-assets-private`: private JPEG/PNG/WebP/GIF/HEIC/HEIF originals plus central `candidate` static WebP web/poster and thumbnail derivatives, maximum 100MB; validated GIF imports are additionally limited to 20MB by application code. Candidate derivatives have no public URL.
 - `content-assets-public`: static WebP derivatives intentionally promoted for public delivery only, maximum 20MB. Central candidate import does not use this bucket.
@@ -398,3 +397,11 @@ Storage contract after `20260715090000_official_asset_gif_support.sql`:
 All central assets currently enter as candidates. `official_reviewed` maps only the privacy review; it does not set promotion consent or public approval. Candidate originals and derivatives remain private. When a blog post passes project approval and publish gates, the blog-media publication path creates a new public delivery object; it does not expose the content-asset candidate path. Public promotion still requires alt text, consent, post publish gates, and claim-freshness review when the central manifest requires it.
 
 The project enforces one row per central `assetId` and one central import per original SHA-256 with partial unique expression indexes. The command also checks original SHA-256 before insertion; byte-identical imports under a different project asset are rejected even under concurrent imports. A DB trigger makes `labels.centralBrand` immutable after creation, while ordinary metadata edits merge tag changes without erasing provenance. Active blog-media attachment, post usage, and block usage have matching uniqueness boundaries. Optional blog attachment is limited to a `reviewing` post, and block replacement is refused when it would overwrite another asset's auditable usage.
+
+## 10. 2026-07-20 hardening state
+
+Aligned remote versions are `20260715090227`, `20260715233310`, `20260715235109`, `20260715235349`, `20260720005042`, and `20260720005052`. Newly applied versions are `20260720074812`, `20260720074843`, `20260720074917`, `20260720074955`, `20260720075020`, `20260720075047`, `20260720075242`, and `20260720084910`. The final migration records the old public derivative paths and a cleanup event UUID in the same transaction that moves metadata to private Storage; object deletion closes that durable event afterward, so a process exit cannot orphan an undiscoverable public object.
+
+`20260720074955` removes bucket-wide anon `SELECT` policies for `blog-media` and `content-assets-public`, adds the `blog_editor_save_leases(actor_id)` index, and keeps leases service-role-only. Verified behavior is known public URL HTTP 200, anon listing 0 rows, and private signed URL HTTP 200.
+
+The detach RPC locks an unpublished `reviewing` post, requires exactly one active non-cover/non-body-linked private bridge and one post usage, removes only that usage, rejects the bridge, and writes audit events. The first post remains `reviewing`, `published_at = null`, with 27 blocks, 2 image blocks, and 3 active private media. Detaching `mg-3panel-thumbnail-basic-001` preserved its central asset and all 3 file rows; no publish, public promotion, or Storage deletion occurred.

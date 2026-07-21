@@ -2,7 +2,7 @@
   min-width: 0;
   display: inline-flex;
   align-items: baseline;
-  gap: 6px;
+  gap: calc(var(--mg-space-1) + var(--mg-border-width-strong));
   color: inherit;
   font-family: var(--mg-blog-wordmark-loaded), var(--mg-blog-font-wordmark);
   line-height: 1;
@@ -10,30 +10,30 @@
 }
 
 .brand {
-  font-size: 18px;
+  font-size: var(--mg-font-size-body-lg);
   font-weight: 900;
 }
 
 .blog {
-  font-size: 10px;
+  font-size: var(--mg-blog-wordmark-label-size);
   font-weight: 700;
   opacity: 0.62;
 }
 
 .compact .brand {
-  font-size: 16px;
+  font-size: var(--mg-font-size-body);
 }
 
 .compact .blog {
-  font-size: 9px;
+  font-size: var(--mg-blog-wordmark-label-compact-size);
 }
 
 @media (max-width: 430px) {
   .brand {
-    font-size: 15px;
+    font-size: var(--mg-blog-wordmark-mobile-brand-size);
   }
 
   .blog {
-    font-size: 8px;
+    font-size: var(--mg-blog-wordmark-mobile-label-size);
   }
 }

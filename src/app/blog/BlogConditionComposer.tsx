@@ -145,14 +145,16 @@ export default function BlogConditionComposer({ posts }: BlogConditionComposerPr
           data-testid="blog-condition-composer"
           data-complete={completedCount === STEPS.length ? 'true' : 'false'}
         >
-          <Image
-            src={BLOG_HOME_MEDIA.conditionComposer.src}
-            alt={BLOG_HOME_MEDIA.conditionComposer.alt}
-            fill
-            sizes="100vw"
-            className={styles.image}
-            style={{ objectPosition: focus }}
-          />
+          <div className={styles.imageFrame}>
+            <Image
+              src={BLOG_HOME_MEDIA.conditionComposer.src}
+              alt={BLOG_HOME_MEDIA.conditionComposer.alt}
+              fill
+              sizes="100vw"
+              className={styles.image}
+              style={{ objectPosition: focus }}
+            />
+          </div>
           <div className={styles.veil} aria-hidden="true" />
 
           <div className={styles.content}>

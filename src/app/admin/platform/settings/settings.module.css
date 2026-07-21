@@ -31,7 +31,7 @@
 .sectionTitle {
   margin-bottom: var(--space-4);
   padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--admin-border);
+  border-bottom: var(--mg-border-width) solid var(--admin-border);
   color: var(--admin-text);
   font-size: var(--text-base);
   font-weight: var(--font-semibold);
@@ -85,7 +85,7 @@
   align-items: center;
   min-height: calc(var(--space-20) + var(--space-6));
   padding: var(--space-3);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-md);
   background: var(--admin-surface);
 }
@@ -94,7 +94,7 @@
   width: calc(var(--space-16) + var(--space-3));
   height: calc(var(--space-16) + var(--space-3));
   overflow: hidden;
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-md);
   background: var(--admin-surface-elevated);
 }
@@ -188,7 +188,7 @@
   gap: var(--space-3);
   align-items: center;
   padding: var(--space-3);
-  border: 1px solid var(--admin-border);
+  border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-md);
 }
 
@@ -200,8 +200,8 @@
 
 .srOnly {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: var(--mg-visually-hidden-size);
+  height: var(--mg-visually-hidden-size);
   padding: 0;
   margin: var(--admin-sr-offset);
   overflow: hidden;
