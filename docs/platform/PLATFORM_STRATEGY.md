@@ -1,10 +1,9 @@
 ---
 document_type: "Platform Strategy"
-version: "1.0.0"
+version: "1.1.0"
 status: "canonical"
 created: "2026-05-29"
 priority: "above_prd"
-related_tasks: "docs/platform/PLATFORM_TASKS.md"
 related_development_strategy: "docs/platform/DEVELOPMENT_STRATEGY.md"
 related_prd: "docs/platform/PRD_PLATFORM_v1.0.md"
 related_audit: "docs/platform/PLATFORM_MIGRATION_AUDIT.md"
@@ -368,7 +367,7 @@ related_audit: "docs/platform/PLATFORM_MIGRATION_AUDIT.md"
 플랫폼 작업의 문서 우선순위는 다음과 같다.
 
 1. `docs/platform/PLATFORM_STRATEGY.md`
-2. `docs/platform/PLATFORM_TASKS.md`
+2. 사용자가 승인한 현재 목표와 해당 세션의 검증 가능한 작업 계획
 3. `docs/platform/DEVELOPMENT_STRATEGY.md`
 4. `docs/platform/CODEX_PROJECT_BOOTSTRAP.md`
 5. `docs/platform/PRD_PLATFORM_v1.0.md`
@@ -377,6 +376,8 @@ related_audit: "docs/platform/PLATFORM_MIGRATION_AUDIT.md"
 8. `docs/showroom/DESIGN_SYSTEM.md`
 9. `docs/showroom/PRD_v2.0.md`
 10. `docs/showroom/PRD_v1.1.md`
+
+영구 태스크 보드나 오더 파일은 두지 않는다. 완료 상태는 Git diff와 커밋, PR, 배포, DB 검증처럼 재확인할 수 있는 증거로 판정한다.
 11. `docs/showroom/PROJECT_BRIEF.md`
 
 `docs/platform/PLATFORM_STRATEGY.md`는 "왜 만드는가"를 정한다.

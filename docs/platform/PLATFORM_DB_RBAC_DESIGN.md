@@ -5,7 +5,6 @@ status: "ready_for_mvp_order"
 created: "2026-05-29"
 scope: "MVP-01 Kakao login + MVP-02 free visit estimate request/admin intake queue + MVP-03 assignment foundation"
 source_strategy: "docs/platform/PLATFORM_STRATEGY.md"
-source_tasks: "docs/platform/PLATFORM_TASKS.md"
 source_development_strategy: "docs/platform/DEVELOPMENT_STRATEGY.md"
 source_prd: "docs/platform/PRD_PLATFORM_v1.0.md"
 source_audit: "docs/platform/PLATFORM_MIGRATION_AUDIT.md"
@@ -35,7 +34,7 @@ source_audit: "docs/platform/PLATFORM_MIGRATION_AUDIT.md"
 우선순위는 다음과 같다.
 
 1. `docs/platform/PLATFORM_STRATEGY.md`
-2. `docs/platform/PLATFORM_TASKS.md`
+2. 사용자가 승인한 현재 목표와 해당 세션의 검증 가능한 작업 계획
 3. `docs/platform/DEVELOPMENT_STRATEGY.md`
 4. `docs/platform/CODEX_PROJECT_BOOTSTRAP.md`
 5. `docs/platform/PRD_PLATFORM_v1.0.md`

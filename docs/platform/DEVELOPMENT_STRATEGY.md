@@ -1,12 +1,10 @@
 ---
 document_type: "Development Strategy"
-version: "1.1.0"
+version: "1.2.0"
 status: "lightweight"
-last_updated: "2026-05-30"
+last_updated: "2026-07-21"
 owner: "Codex PM"
 source_strategy: "docs/platform/PLATFORM_STRATEGY.md"
-source_tasks: "docs/platform/PLATFORM_TASKS.md"
-source_order: "_order.md"
 related_team_operating_model: "docs/platform/TEAM_AGENT_OPERATING_MODEL.md"
 ---
 
@@ -34,7 +32,7 @@ related_team_operating_model: "docs/platform/TEAM_AGENT_OPERATING_MODEL.md"
 사용자와 대화
 → Codex가 결정 요약
 → 필요 문서만 가볍게 갱신
-→ Codex가 _order.md 작성
+→ 승인된 목표를 검증 가능한 작업 계획으로 구체화
 → Gemini가 구현 + 1차 검증
 → Codex가 diff/범위/위험 검수
 → 필요 시 Claude 감리 요청
@@ -46,7 +44,8 @@ related_team_operating_model: "docs/platform/TEAM_AGENT_OPERATING_MODEL.md"
 - 전략 문서는 Codex가 혼자 완성하지 않는다.
 - 중요한 방향은 사용자와 먼저 상의한다.
 - `PROJECT_TASKS.md`에는 플랫폼 세부 체크리스트를 다시 길게 넣지 않는다.
-- 현재 작업은 `_order.md`, 전체 순서는 `docs/platform/PLATFORM_TASKS.md`가 기준이다.
+- 현재 작업의 범위와 순서는 사용자가 승인한 목표와 해당 세션의 검증 가능한 계획이 기준이다.
+- 영구 태스크 보드, 오더 파일, 컨텍스트 인수인계 파일을 실행 조건으로 만들지 않는다.
 
 ## 2. Claude 사용 기준
 
@@ -80,7 +79,7 @@ Claude에게 맡기지 않는 일:
 | diff 검수 | Codex | 항상 |
 | 보안/RBAC 검수 | Codex | 항상, 필요 시 Claude 추가 |
 
-작업자는 `_order.md`의 작업 결과에 실행한 검증과 미확인 항목을 반드시 남긴다.
+작업자는 최종 보고에 실행한 검증과 미확인 항목을 반드시 남긴다.
 
 예:
 

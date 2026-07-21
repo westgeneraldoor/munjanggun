@@ -1,15 +1,13 @@
 ---
 document_type: "Agent Bootstrap"
-version: "1.0.0"
+version: "1.1.0"
 status: "canonical"
-last_updated: "2026-05-30"
+last_updated: "2026-07-21"
 source_strategy: "docs/platform/PLATFORM_STRATEGY.md"
-source_tasks: "docs/platform/PLATFORM_TASKS.md"
 source_development_strategy: "docs/platform/DEVELOPMENT_STRATEGY.md"
 source_prd: "docs/platform/PRD_PLATFORM_v1.0.md"
 source_audit: "docs/platform/PLATFORM_MIGRATION_AUDIT.md"
 supersedes_for_platform_work:
-  - "GEMINI.md legacy showroom-only brief"
   - "docs/showroom/PRD_v2.0.md showroom scope for platform features"
   - "docs/showroom/PRD_v1.1.md implementation scope for platform features"
 ---
@@ -20,7 +18,7 @@ supersedes_for_platform_work:
 
 코드를 작성하기 전에 아래 내용을 반드시 이해해야 한다.
 
-가장 먼저 `docs/platform/PLATFORM_STRATEGY.md`를 읽는다. 그 다음 `docs/platform/PLATFORM_TASKS.md`에서 현재 페이즈와 오더 순서를 확인하고, `docs/platform/DEVELOPMENT_STRATEGY.md`에서 역할 분담과 작업자 운영 방식을 확인한다.
+가장 먼저 `docs/platform/PLATFORM_STRATEGY.md`를 읽는다. 그 다음 사용자가 승인한 현재 목표와 해당 세션의 검증 가능한 작업 계획을 확인하고, `docs/platform/DEVELOPMENT_STRATEGY.md`에서 역할 분담과 작업자 운영 방식을 확인한다.
 
 이 프로젝트의 목적은 쇼핑몰 구축이 아니라 고객 여정 통합이다.
 

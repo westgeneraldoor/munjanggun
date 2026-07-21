@@ -301,3 +301,34 @@ The public showroom must also expose a minimal top-right auth entry: signed-out 
 ## Reason
 
 MVP-02 is not realistically testable if customers and reviewers cannot enter the new application flow from the visible public showroom. The entry point should match the actual customer journey before MVP-03 operational status work begins.
+
+## 2026-07-21 — 영구 실행 문서 폐기와 증거 기반 작업 계약
+
+### 결정
+
+- `_context.md`, `_order.md`, `GEMINI.md`, `docs/platform/PLATFORM_TASKS.md`를 활성 운영 체계에서 제거한다.
+- `PROJECT_TASKS.md`는 기존 V1/V2 쇼룸 구현의 역사 기록으로만 유지한다.
+- 플랫폼의 북극성은 `docs/platform/PLATFORM_STRATEGY.md`로 유지한다.
+- 구체적인 범위와 순서는 사용자가 승인한 현재 목표와 해당 세션의 검증 가능한 계획을 따른다.
+- 완료 여부는 Git diff·커밋·PR·배포·DB 검증처럼 다시 확인할 수 있는 증거로 판정한다.
+
+### 이유
+
+영구 태스크 보드, 오더 파일, 컨텍스트 인수인계 파일이 실제 저장소와 세션 상태보다 늦게 갱신되면서 다음 작업자가 오래된 방향을 활성 지시로 오해했다. 실행 상태를 여러 문서에 중복 기록하지 않고, 사용자 승인과 실제 시스템 증거를 직접 연결한다.
+
+### 영향
+
+과거 결정 로그와 감사 문서 안의 해당 파일 언급은 당시 상태 기록으로 보존한다. 신규 작업은 삭제된 파일을 복원하거나 갱신하는 것을 완료 조건으로 삼지 않는다.
+
+## 2026-07-21 — 플랫폼 CMS와 별도 블로그 운영 저장소 분리
+
+### 결정
+
+- 이 저장소의 `/blog`와 관리자 블로그 CMS는 `munjanggun` 프로젝트가 독립적으로 소유한다.
+- 중앙 `문장군_브랜드` 저장소는 브랜드 사실과 승인 자산의 상위 소스로 계속 사용한다.
+- 별도 블로그 운영 저장소의 원고, 주제 큐, 카테고리, 중복 판정, 발행 URL을 이 CMS와 연결하거나 동기화하지 않는다.
+- 이 CMS의 글 작성 근거와 중복·발행 상태는 중앙 브랜드 자료와 이 프로젝트 내부 CMS 데이터에서 확인한다.
+
+### 이유
+
+두 블로그는 운영 목적과 데이터 소유권이 서로 다르다. 이름이 비슷하다는 이유로 주제·발행 이력을 공유하면 CMS의 기준과 발행 상태가 오염된다.

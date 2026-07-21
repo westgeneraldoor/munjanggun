@@ -1,10 +1,9 @@
 ---
 document_type: "Platform Migration Audit"
-status: "submitted"
+status: "superseded-historical-audit"
 created: "2026-05-29"
 auditor: "Codex"
 canonical_prd: "docs/platform/PRD_PLATFORM_v1.0.md"
-canonical_tasks: "docs/platform/PLATFORM_TASKS.md"
 canonical_development_strategy: "docs/platform/DEVELOPMENT_STRATEGY.md"
 canonical_bootstrap: "docs/platform/CODEX_PROJECT_BOOTSTRAP.md"
 canonical_strategy: "docs/platform/PLATFORM_STRATEGY.md"
@@ -13,7 +12,7 @@ development_status: "minimum_design_then_mvp_build"
 
 # 문장군 플랫폼 전환 감사 보고서
 
-> 2026-05-30 업데이트: 이 감사 보고서는 전환 가능성과 승계/Legacy 판단의 근거 문서다. 실제 실행 순서와 최신 MVP 결정은 `docs/platform/PLATFORM_TASKS.md`, `docs/platform/DEVELOPMENT_STRATEGY.md`, `docs/platform/DECISION_LOG.md`가 우선한다. 최신 기준은 MVP-01 카카오 로그인, MVP-02 무료방문견적 신청 + 어드민 접수 큐, private `measurement-media` bucket이다.
+> 보존용 역사 감사 문서다. 현재 실행 순서나 활성 파일 목록의 정본이 아니다. 2026-07-21부터 실행 범위와 순서는 사용자가 승인한 현재 목표와 해당 세션의 검증 가능한 계획을 따르며, 이 문서 안의 `PLATFORM_TASKS.md`, `_order.md`, `_context.md`, `GEMINI.md` 언급은 당시 상태 기록으로만 읽는다.
 
 ## 0. 결론
 

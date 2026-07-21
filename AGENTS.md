@@ -12,9 +12,9 @@ The platform must feel like one product. Shared customer intake flows must reuse
 
 ## Team / Agent Operating Model
 
-Before planning or delegating platform work, read `docs/platform/PLATFORM_STRATEGY.md`, `docs/platform/PLATFORM_TASKS.md`, `docs/platform/DEVELOPMENT_STRATEGY.md`, and `docs/platform/TEAM_AGENT_OPERATING_MODEL.md`.
+Before planning or delegating platform work, read `docs/platform/PLATFORM_STRATEGY.md`, `docs/platform/DEVELOPMENT_STRATEGY.md`, and `docs/platform/TEAM_AGENT_OPERATING_MODEL.md`.
 
-Use Codex as the coordinating PM/tech lead. Use subagents for scoped research, implementation, review, and red-team checks when the work can be split safely. Keep `docs/platform/PLATFORM_STRATEGY.md` as the product north star and `docs/platform/PLATFORM_TASKS.md` as the execution order.
+Use Codex as the coordinating PM/tech lead. Use subagents for scoped research, implementation, review, and red-team checks when the work can be split safely. Keep `docs/platform/PLATFORM_STRATEGY.md` as the product north star. The concrete execution source is the user's current approved goal and the verifiable plan for that task; do not maintain a permanent task board, order file, or context handoff file.
 
 ## Munjanggun Brand Source
 
