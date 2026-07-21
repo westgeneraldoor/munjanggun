@@ -103,7 +103,13 @@ function responseWithCachePolicy(response: Response, noStore: boolean, appOrigin
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const pathname = new URL(request.url).pathname
+    const incomingUrl = new URL(request.url)
+    if (incomingUrl.hostname === 'www.munjanggun.com') {
+      incomingUrl.hostname = 'munjanggun.com'
+      return Response.redirect(incomingUrl.toString(), 308)
+    }
+
+    const pathname = incomingUrl.pathname
     const appPath = isAppPath(pathname)
     const targetOrigin = appPath ? env.APP_ORIGIN : env.HOME_ORIGIN
     const noStore = appPath && isPrivatePath(pathname)

@@ -8,6 +8,10 @@
     {
       "pattern": "munjanggun.com/*",
       "zone_name": "munjanggun.com"
+    },
+    {
+      "pattern": "www.munjanggun.com/*",
+      "zone_name": "munjanggun.com"
     }
   ],
   "vars": {
