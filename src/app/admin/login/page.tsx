@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { PlatformButton } from '@/components/platform/ui/PlatformButton'
+import { PlatformField } from '@/components/platform/ui/PlatformField'
+import { PlatformStatePanel } from '@/components/platform/ui/PlatformStatePanel'
 import styles from './login.module.css'
 
 export default function AdminLogin() {
@@ -39,39 +42,41 @@ export default function AdminLogin() {
         <p className={styles.subtitle}>계정 정보를 입력해주세요.</p>
         
         <form onSubmit={handleLogin} className={styles.form}>
-          <div className={styles.inputGroup}>
-            <label htmlFor="email" className={styles.label}>이메일</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={styles.input}
-              required
-              disabled={loading}
-              placeholder="admin@example.com"
-            />
-          </div>
-          
-          <div className={styles.inputGroup}>
-            <label htmlFor="password" className={styles.label}>비밀번호</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={styles.input}
-              required
-              disabled={loading}
-              placeholder="비밀번호를 입력하세요"
-            />
-          </div>
+          <PlatformField
+            id="email"
+            label="이메일"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+            disabled={loading}
+            autoComplete="email"
+            placeholder="admin@example.com"
+          />
 
-          {error && <p className={styles.error}>{error}</p>}
+          <PlatformField
+            id="password"
+            label="비밀번호"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+            disabled={loading}
+            autoComplete="current-password"
+            placeholder="비밀번호를 입력하세요"
+          />
 
-          <button type="submit" className={styles.button} disabled={loading}>
-            {loading ? '로그인 중...' : '로그인'}
-          </button>
+          {error ? <PlatformStatePanel className={styles.errorPanel} tone="error" title={error} /> : null}
+
+          <PlatformButton
+            type="submit"
+            className={styles.submitButton}
+            fullWidth
+            isLoading={loading}
+            loadingLabel="로그인 중…"
+          >
+            로그인
+          </PlatformButton>
         </form>
       </div>
     </div>

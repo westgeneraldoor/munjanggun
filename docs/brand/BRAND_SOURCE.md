@@ -1,8 +1,9 @@
 ---
 document_type: "Brand Source Reference"
-version: "1.0.0"
+version: "1.1.0"
 status: "active"
 created: "2026-06-25"
+last_updated: "2026-07-15"
 owner: "Codex PM"
 central_brand_root: "C:\\Users\\hjh\\안티그래비티\\문장군_브랜드"
 ---
@@ -110,3 +111,43 @@ evidence_ref: appsheet_case_2026_06_redacted_001
 - 중앙 업데이트 후보 발굴 자료
 
 새 콘텐츠를 작성할 때 `docs/platform/BRAND_CONTEXT.md`만 보고 발행하면 안 된다.
+
+## 7. 중앙 승인 자산의 프로젝트 재사용 계약
+
+중앙 브랜드 저장소의 product asset manifest가 가리키는 파일 중 `privacyStatus = official_reviewed`인 항목은 문장군 프로젝트가 검증된 서버 경로로 가져올 수 있는 공식 원본 소스다. 이 상태는 개인정보·OCR 재검수를 반복하지 않아도 된다는 뜻이지, 자동 공개 승인이라는 뜻은 아니다.
+
+프로젝트 재사용 시 다음을 모두 지킨다.
+
+- manifest의 `assetId`, `productId`, `sourceId`, `proofId`, `repositoryPath`, byte size, dimensions, GIF frame count, SHA-256을 실제 파일과 대조한다.
+- 중앙 저장소의 허용된 root 밖 경로, symlink 탈출, Git LFS pointer, MIME magic 불일치 파일은 거부한다.
+- `usageStatus`, `privacyStatus`, `claimRisk`, `externalPublish`, 중앙 commit을 프로젝트 provenance와 감사 이벤트에 보존한다.
+- 중앙 `candidate`는 프로젝트에서도 비공개 후보로 시작한다. `official_reviewed`를 `approved_public`이나 홍보 사용 동의로 바꾸지 않는다.
+- 가격·이벤트·스펙·운영 조건이 들어갈 수 있는 자산은 `claimRisk`와 `externalPublish`에 따라 최신성 검수를 별도로 통과해야 한다.
+
+금지되는 것은 서버측 등록 자체가 아니라 검증·권한·감사·발행 승격 경계를 우회한 등록이다.
+
+## 8. v5 토큰 스냅샷
+
+이 프로젝트는 중앙 토큰을 런타임 로컬 경로에서 직접 읽지 않는다. 중앙 디자인 v5의 아래 커밋을 결정론적 생성물로 고정한다.
+
+```text
+source commit: e6b6eb618e08b907307497d87f58995bd945531c
+source CSS: tokens/brand.css
+source JSON: tokens/brand.tokens.json
+generated CSS: src/styles/generated/brand.css
+generated JSON: src/styles/generated/brand.tokens.json
+manifest: src/styles/generated/brand.manifest.json
+```
+
+`brand.manifest.json`은 소스/생성 파일의 SHA-256과 고유 토큰 수를 기록한다. 오프라인 검증기는 이 가변 파일만 신뢰하지 않고, 코드에 고정된 커밋·경로·버전·토큰 수·소스/생성 SHA-256 계약과 manifest 전체가 일치하는지 먼저 확인한다. 절대 경로, 작업자, 생성 시각은 넣지 않는다. 중앙 저장소는 읽기 전용이며 동기화는 프로젝트 쪽 생성물만 갱신한다.
+
+2026-07-20 통합 검증에서 중앙 source는 clean worktree의 `e6b6eb618e08b907307497d87f58995bd945531c`(`e6b6eb6`), `DESIGN.md` v5.0, 고유 토큰 114개로 확인했다. `codex/platform-admin-blog-stabilization`은 `v2-cms`를 base로 프로젝트 생성물만 다루며 중앙 저장소를 수정하지 않았다. 통합 Draft PR은 [#73](https://github.com/westgeneraldoor/munjanggun/pull/73)이다.
+
+```text
+npm run sync:brand-tokens
+npm run verify:brand-tokens
+npm run check:brand-token-drift
+npm run verify:ui-token-policy
+```
+
+기본 중앙 경로 탐색은 Git common directory를 기준으로 하므로 linked worktree에서도 동작한다. 다른 중앙 체크아웃을 확인해야 할 때만 `MUNJANGGUN_BRAND_ROOT`를 명시한다. 명시한 경로가 잘못됐거나 없으면 실패하며, 기본 경로가 없는 환경의 drift 확인만 명확한 skip으로 처리한다.

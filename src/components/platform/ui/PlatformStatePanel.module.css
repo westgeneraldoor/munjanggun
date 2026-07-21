@@ -1,0 +1,67 @@
+.panel {
+  min-height: calc(var(--mg-control-size-default) * 4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mg-space-3);
+  padding: var(--mg-space-8);
+  color: var(--mg-text-body);
+  background: var(--mg-surface-card);
+  border: var(--mg-border-width) dashed var(--mg-border-subtle);
+  border-radius: var(--mg-radius-frame);
+  text-align: center;
+}
+
+.icon {
+  flex: 0 0 auto;
+  color: currentColor;
+}
+
+.copy {
+  min-width: 0;
+}
+
+.copy strong {
+  display: block;
+  color: var(--mg-text-primary);
+  font-size: var(--mg-font-size-body);
+}
+
+.copy p {
+  margin: var(--mg-space-1) 0 0;
+  font-size: var(--mg-font-size-label);
+  line-height: var(--mg-line-height-body);
+}
+
+.details {
+  font-size: var(--mg-font-size-label);
+  line-height: var(--mg-line-height-body);
+}
+
+.action {
+  flex: 0 0 auto;
+}
+
+.error {
+  color: var(--mg-status-error);
+  background: color-mix(in srgb, var(--mg-status-error) 5%, var(--mg-surface-card));
+  border-color: color-mix(in srgb, var(--mg-status-error) 28%, var(--mg-surface-card));
+}
+
+.success {
+  color: var(--mg-status-success);
+  background: color-mix(in srgb, var(--mg-status-success) 5%, var(--mg-surface-card));
+  border-color: color-mix(in srgb, var(--mg-status-success) 28%, var(--mg-surface-card));
+}
+
+.loading {
+  color: var(--mg-status-info);
+}
+
+@media (max-width: 639px) {
+  .panel {
+    align-items: stretch;
+    flex-direction: column;
+    padding: var(--mg-space-6);
+  }
+}

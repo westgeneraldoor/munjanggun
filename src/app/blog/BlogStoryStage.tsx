@@ -52,7 +52,7 @@ const STORY_ITEMS: StoryItem[] = [
     title: '사진 밖의 조건은 직접 확인합니다.',
     description: '사진으로 좁힌 선택을 무료 방문실측에서 구조와 옵션, 견적 조건까지 이어서 확인합니다.',
     actionLabel: '무료 방문실측 상담',
-    href: '/portal/measure/new',
+    href: '/measure',
     media: BLOG_HOME_MEDIA.consultation,
   },
 ]

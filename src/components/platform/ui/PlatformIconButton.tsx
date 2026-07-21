@@ -10,17 +10,17 @@ export type PlatformIconButtonProps = React.ButtonHTMLAttributes<HTMLButtonEleme
   variant?: PlatformIconButtonVariant
 }
 
-export function PlatformIconButton({
+export const PlatformIconButton = React.forwardRef<HTMLButtonElement, PlatformIconButtonProps>(function PlatformIconButton({
   variant = 'secondary',
   className,
   children,
   ...props
-}: PlatformIconButtonProps) {
+}, ref) {
   const classes = [styles.button, styles[variant], className ?? ''].filter(Boolean).join(' ')
 
   return (
-    <button {...props} className={classes}>
+    <button {...props} ref={ref} className={classes}>
       {children}
     </button>
   )
-}
+})

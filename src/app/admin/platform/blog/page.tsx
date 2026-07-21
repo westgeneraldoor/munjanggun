@@ -31,7 +31,6 @@ type BlogPostRow = Pick<
   | 'seo_title'
   | 'meta_description'
   | 'brand_check_result'
-  | 'last_fact_checked_at'
   | 'media_missing_reason'
   | 'updated_at'
   | 'created_at'
@@ -134,7 +133,7 @@ export default async function AdminPlatformBlogPage() {
 
   const { data: postsData, error: postsError } = await showroomAdmin
     .from('blog_posts')
-    .select('id, title, slug, status, category, primary_keyword, target_question, summary_answer, service_area, product_type, seo_title, meta_description, brand_check_result, last_fact_checked_at, media_missing_reason, updated_at, created_at')
+    .select('id, title, slug, status, category, primary_keyword, target_question, summary_answer, service_area, product_type, seo_title, meta_description, brand_check_result, media_missing_reason, updated_at, created_at')
     .order('updated_at', { ascending: false })
     .limit(200)
 
@@ -218,7 +217,6 @@ export default async function AdminPlatformBlogPage() {
         : null,
       risks: {
         forbiddenExpression: hasForbiddenExpression(post.brand_check_result),
-        evidenceNeeded: !post.last_fact_checked_at,
         mediaApprovalNeeded: needsMediaApproval || media.approvalGateIncomplete,
         altMissing: media.altMissing,
         ctaMissing: !ctaPostIds.has(post.id),

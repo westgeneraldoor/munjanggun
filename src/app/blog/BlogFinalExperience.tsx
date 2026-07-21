@@ -115,7 +115,7 @@ export default function BlogFinalExperience({ hasPosts, hasLatestPosts }: BlogFi
                   {state.description && <p>{state.description}</p>}
                   {index === 4 && (
                     <div className={styles.actions}>
-                      <Link href="/portal/measure/new" tabIndex={activeState === 4 && actionReady ? 0 : -1}>무료 방문실측 상담 <ArrowRight size={16} /></Link>
+                      <Link href="/measure" tabIndex={activeState === 4 && actionReady ? 0 : -1}>무료 방문실측 상담 <ArrowRight size={16} /></Link>
                       <a href="#blog-home" tabIndex={activeState === 4 && actionReady ? 0 : -1}>블로그 처음으로</a>
                     </div>
                   )}
@@ -138,7 +138,7 @@ export default function BlogFinalExperience({ hasPosts, hasLatestPosts }: BlogFi
           </div>
           <div className={styles.footerContact}>
             <p>중문과 도어가 고민될 때, 무료 방문실측으로 실제 공간부터 함께 확인합니다.</p>
-            <Link href="/portal/measure/new">무료 방문실측 상담 <ArrowRight size={15} /></Link>
+            <Link href="/measure">무료 방문실측 상담 <ArrowRight size={15} /></Link>
           </div>
         </div>
 
@@ -161,7 +161,7 @@ export default function BlogFinalExperience({ hasPosts, hasLatestPosts }: BlogFi
           </div>
           <div className={styles.footerColumn}>
             <span>SERVICE</span>
-            <Link href="/portal/measure/new">무료 방문실측</Link>
+            <Link href="/measure">무료 방문실측</Link>
             <Link href="/showroom">디지털 쇼룸</Link>
             <Link href="/portal">고객 포털</Link>
           </div>

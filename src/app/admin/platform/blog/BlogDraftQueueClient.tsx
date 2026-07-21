@@ -1,9 +1,21 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, FilePenLine, FilePlus2, Search, ShieldAlert } from 'lucide-react'
+import {
+  PlatformButton,
+  PlatformLinkButton,
+  PlatformList,
+  PlatformPageHeader,
+  PlatformPanel,
+  PlatformSegmentedControl,
+  PlatformStatePanel,
+  PlatformStatusBadge,
+  PlatformTable,
+  type PlatformStatusBadgeTone,
+} from '@/components/platform/ui'
 import type { BlogContentCategory, BlogMediaUsageStatus, BlogPostStatus } from '@/types/database'
 import styles from './blog-draft-queue.module.css'
 
@@ -39,7 +51,6 @@ export type BlogDraftQueueRow = {
   } | null
   risks: {
     forbiddenExpression: boolean
-    evidenceNeeded: boolean
     mediaApprovalNeeded: boolean
     altMissing: boolean
     ctaMissing: boolean
@@ -93,7 +104,6 @@ const RISK_LABELS: Array<{
   tone: 'danger' | 'warning' | 'info'
 }> = [
   { key: 'forbiddenExpression', label: '금지표현', tone: 'danger' },
-  { key: 'evidenceNeeded', label: '근거확인', tone: 'warning' },
   { key: 'mediaApprovalNeeded', label: '사진승인필요', tone: 'warning' },
   { key: 'altMissing', label: 'alt누락', tone: 'info' },
   { key: 'ctaMissing', label: 'CTA없음', tone: 'info' },
@@ -136,8 +146,12 @@ function matchesStatusFilter(row: BlogDraftQueueRow, filter: StatusFilter) {
   return row.status === filter
 }
 
-function getStatusBadgeClass(status: BlogPostStatus) {
-  return status === 'ai_draft' ? styles.status_reviewing : styles[`status_${status}`]
+function getStatusTone(status: BlogPostStatus): PlatformStatusBadgeTone {
+  if (status === 'ai_draft' || status === 'reviewing') return 'review'
+  if (status === 'needs_media') return 'danger'
+  if (status === 'ready') return 'success'
+  if (status === 'published') return 'info'
+  return 'neutral'
 }
 
 function RiskBadges({ row }: { row: BlogDraftQueueRow }) {
@@ -175,12 +189,12 @@ function SummaryPanel({
   onBack?: () => void
 }) {
   return (
-    <aside className={styles.detailPanel}>
+    <PlatformPanel as="aside" className={styles.detailPanel}>
       {onBack && (
-        <button type="button" className={styles.mobileBackButton} onClick={onBack}>
+        <PlatformButton type="button" variant="secondary" size="sm" onClick={onBack}>
           <ArrowLeft size={16} aria-hidden="true" />
           목록
-        </button>
+        </PlatformButton>
       )}
 
       <div className={styles.detailTop}>
@@ -189,9 +203,9 @@ function SummaryPanel({
           <h2>{row.title}</h2>
           <p>{row.slug}</p>
         </div>
-        <span className={`${styles.statusBadge} ${getStatusBadgeClass(row.status)}`}>
+        <PlatformStatusBadge tone={getStatusTone(row.status)}>
           {STATUS_LABEL[row.status]}
-        </span>
+        </PlatformStatusBadge>
       </div>
 
       <RiskBadges row={row} />
@@ -213,13 +227,13 @@ function SummaryPanel({
       </dl>
 
       <div className={styles.detailFooter}>
-        <Link href={`/admin/platform/blog/${row.id}`} className={styles.editorButton} prefetch={false}>
+        <PlatformLinkButton href={`/admin/platform/blog/${row.id}`} fullWidth prefetch={false}>
           <FilePenLine size={16} aria-hidden="true" />
           에디터 열기
-        </Link>
+        </PlatformLinkButton>
         <p>발행과 상태 변경은 이후 server action 검수 게이트에서 처리합니다.</p>
       </div>
-    </aside>
+    </PlatformPanel>
   )
 }
 
@@ -254,6 +268,11 @@ export default function BlogDraftQueueClient({
     router.push(`/admin/platform/blog/${row.id}`)
   }
 
+  const handleRowClick = (event: ReactMouseEvent<HTMLTableRowElement>, row: BlogDraftQueueRow) => {
+    if (event.target instanceof Element && event.target.closest('a,button,input,select,textarea')) return
+    openEditor(row)
+  }
+
   const updateStatus = (next: StatusFilter) => {
     setStatusFilter(next)
     resetSelection()
@@ -266,19 +285,18 @@ export default function BlogDraftQueueClient({
 
   return (
     <div className={styles.page}>
-      <header className={styles.pageHeader}>
-        <div>
-          <h1 className={styles.pageTitle}>블로그 콘텐츠 큐</h1>
-          <p className={styles.pageDesc}>
-            승인된 원고의 검수, 사진 연결, 미리보기, 발행 상태를 관리합니다. 검수 대상 {needsReviewCount}건과 위험 신호 {riskCount}개를 확인합니다.
-          </p>
-        </div>
-        <Link href="/admin/platform/blog/new" className={styles.intakeLink}>
-          <FilePlus2 size={16} aria-hidden="true" />
-          승인 원고 등록
-        </Link>
-      </header>
-      <section className={styles.filterStack} aria-label="블로그 콘텐츠 필터">
+      <PlatformPageHeader
+        className={styles.pageHeader}
+        title="블로그 콘텐츠 큐"
+        description={`승인된 원고의 검수, 사진 연결, 미리보기, 발행 상태를 관리합니다. 검수 대상 ${needsReviewCount}건과 위험 신호 ${riskCount}개를 확인합니다.`}
+        actions={(
+          <PlatformLinkButton href="/admin/platform/blog/new">
+            <FilePlus2 size={16} aria-hidden="true" />
+            승인 원고 등록
+          </PlatformLinkButton>
+        )}
+      />
+      <PlatformPanel as="section" variant="subtle" className={styles.filterStack} aria-label="블로그 콘텐츠 필터">
         <div className={styles.searchBox}>
           <Search size={16} aria-hidden="true" />
           <input
@@ -293,32 +311,20 @@ export default function BlogDraftQueueClient({
           />
         </div>
 
-        <nav className={styles.tabs} aria-label="상태 필터">
-          {STATUS_TABS.map(tab => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => updateStatus(tab.key)}
-              className={`${styles.tab} ${statusFilter === tab.key ? styles.tabActive : ''}`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+        <PlatformSegmentedControl
+          label="상태 필터"
+          items={STATUS_TABS.map(tab => ({ value: tab.key, label: tab.label }))}
+          value={statusFilter}
+          onChange={updateStatus}
+        />
 
-        <nav className={styles.tabs} aria-label="카테고리 필터">
-          {CATEGORY_TABS.map(tab => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => updateCategory(tab.key)}
-              className={`${styles.tab} ${categoryFilter === tab.key ? styles.tabActive : ''}`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </section>
+        <PlatformSegmentedControl
+          label="카테고리 필터"
+          items={CATEGORY_TABS.map(tab => ({ value: tab.key, label: tab.label }))}
+          value={categoryFilter}
+          onChange={updateCategory}
+        />
+      </PlatformPanel>
 
       {selectedRow && (
         <div className={styles.mobileDetailScreen}>
@@ -334,18 +340,25 @@ export default function BlogDraftQueueClient({
           </div>
 
           {loadError ? (
-            <div className={styles.errorState} role="alert">
-              <ShieldAlert size={20} aria-hidden="true" />
-              <p>{loadError}</p>
-            </div>
+            <PlatformStatePanel
+              tone="error"
+              title="콘텐츠 목록을 불러오지 못했습니다."
+              description={loadError}
+              icon={<ShieldAlert size={20} />}
+            />
           ) : filteredRows.length === 0 ? (
-            <div className={styles.empty}>
-              <p>조건에 맞는 원고가 없습니다.</p>
-            </div>
+            <PlatformStatePanel
+              title="조건에 맞는 원고가 없습니다."
+              description="검색어 또는 필터를 바꿔 다시 확인해 주세요."
+            />
           ) : (
             <>
-              <div className={styles.tableWrap}>
-                <table className={styles.table}>
+              <PlatformTable
+                containerClassName={styles.desktopTable}
+                className={styles.queueTable}
+                layout="fixed"
+                aria-label="블로그 콘텐츠 목록"
+              >
                   <thead>
                     <tr>
                       <th>제목</th>
@@ -362,27 +375,25 @@ export default function BlogDraftQueueClient({
                       <tr
                         key={row.id}
                         className={`${styles.row} ${row.id === selectedId ? styles.rowSelected : ''}`}
-                        onClick={() => openEditor(row)}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault()
-                            openEditor(row)
-                          }
-                        }}
-                        aria-label={`${row.title} 에디터 열기`}
-                        role="link"
-                        tabIndex={0}
+                        onClick={(event) => handleRowClick(event, row)}
                       >
                         <td className={styles.titleCell}>
-                          <span className={styles.stackCell}>
-                            <strong>{row.title}</strong>
-                            <small>{row.slug}</small>
-                          </span>
+                          <Link
+                            href={`/admin/platform/blog/${row.id}`}
+                            className={styles.titleLink}
+                            prefetch={false}
+                            aria-label={`${row.title} 에디터 열기`}
+                          >
+                            <span className={styles.stackCell}>
+                              <strong>{row.title}</strong>
+                              <small>{row.slug}</small>
+                            </span>
+                          </Link>
                         </td>
                         <td>
-                          <span className={`${styles.statusBadge} ${getStatusBadgeClass(row.status)}`}>
+                          <PlatformStatusBadge tone={getStatusTone(row.status)}>
                             {STATUS_LABEL[row.status]}
-                          </span>
+                          </PlatformStatusBadge>
                         </td>
                         <td>
                           <span className={styles.categoryPill}>{CATEGORY_LABEL[row.category]}</span>
@@ -406,10 +417,9 @@ export default function BlogDraftQueueClient({
                       </tr>
                     ))}
                   </tbody>
-                </table>
-              </div>
+              </PlatformTable>
 
-              <ul className={styles.mobileList}>
+              <PlatformList className={styles.mobileList} aria-label="블로그 콘텐츠 모바일 목록">
                 {filteredRows.map(row => (
                   <li key={row.id} className={styles.mobileCard}>
                     <Link
@@ -419,9 +429,9 @@ export default function BlogDraftQueueClient({
                       aria-label={`${row.title} 에디터 열기`}
                     >
                       <div className={styles.mobileCardTop}>
-                        <span className={`${styles.statusBadge} ${getStatusBadgeClass(row.status)}`}>
+                        <PlatformStatusBadge tone={getStatusTone(row.status)}>
                           {STATUS_LABEL[row.status]}
-                        </span>
+                        </PlatformStatusBadge>
                         <span className={styles.mobileDate}>{formatDateTime(row.updatedAt)}</span>
                       </div>
                       <strong>{row.title}</strong>
@@ -437,7 +447,7 @@ export default function BlogDraftQueueClient({
                     </Link>
                   </li>
                 ))}
-              </ul>
+              </PlatformList>
             </>
           )}
         </section>

@@ -167,6 +167,7 @@ export default function BlogNavigation({
           onClick={searchOpen ? closeSearch : openSearch}
           aria-label={searchOpen ? '블로그 검색 닫기' : '블로그 검색 열기'}
           aria-expanded={searchOpen}
+          aria-controls="blog-navigation-search-panel"
         >
           {searchOpen ? <X size={18} aria-hidden="true" /> : <Search size={18} aria-hidden="true" />}
           <span>{searchOpen ? '닫기' : '검색'}</span>
@@ -180,6 +181,7 @@ export default function BlogNavigation({
       </div>
 
       <div
+        id="blog-navigation-search-panel"
         className={styles.searchPanel}
         data-testid="blog-navigation-search"
         aria-hidden={!searchOpen}

@@ -1,31 +1,31 @@
 .section {
   min-width: 0;
-  padding: 130px 0 30px;
+  padding: var(--mg-blog-layout-section) 0 var(--mg-blog-space-panel);
   color: var(--mg-blog-ink);
   background: var(--mg-blog-canvas);
-  scroll-margin-top: 96px;
+  scroll-margin-top: var(--mg-blog-space-hero);
 }
 
 .heading {
-  width: min(1180px, calc(100% - var(--mg-blog-layout-gutter)));
+  width: min(var(--mg-blog-frame-canvas), calc(100% - var(--mg-blog-layout-gutter)));
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 28px;
+  gap: var(--mg-blog-space-comfortable);
   align-items: end;
-  margin: 0 auto 42px;
+  margin: 0 auto var(--mg-blog-space-section);
 }
 
 .heading > div:first-child > span {
   color: var(--mg-blog-muted);
-  font-size: 13px;
+  font-size: var(--mg-font-size-label);
   font-weight: 800;
 }
 
 .heading h2 {
-  max-width: 880px;
-  margin-top: 10px;
+  max-width: var(--mg-blog-frame-content);
+  margin-top: var(--mg-blog-space-tight);
   font-family: var(--font-blog-display);
-  font-size: 64px;
+  font-size: var(--mg-space-8);
   font-weight: 800;
   line-height: 1.04;
   word-break: keep-all;
@@ -34,10 +34,10 @@
 }
 
 .heading p {
-  max-width: 640px;
-  margin-top: 20px;
+  max-width: var(--mg-blog-frame-reading);
+  margin-top: var(--mg-blog-space-comfortable);
   color: var(--mg-blog-muted);
-  font-size: 16px;
+  font-size: var(--mg-font-size-body);
   line-height: 1.68;
   word-break: keep-all;
   text-wrap: pretty;
@@ -45,12 +45,12 @@
 
 .controls {
   display: flex;
-  gap: 8px;
+  gap: var(--mg-space-2);
 }
 
 .controls button {
-  width: 54px;
-  height: 54px;
+  width: var(--mg-blog-control-large);
+  height: var(--mg-blog-control-large);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -72,8 +72,8 @@
 .rail {
   min-width: 0;
   display: flex;
-  gap: 24px;
-  padding: 30px max(calc((100vw - 290px) / 2), calc((100vw - 1180px) / 2));
+  gap: var(--mg-space-5);
+  padding: var(--mg-blog-space-panel) max(calc((100vw - var(--mg-blog-topic-card-width)) / 2), calc((100vw - var(--mg-blog-frame-canvas)) / 2));
   overflow-x: auto;
   overflow-y: hidden;
   cursor: grab;
@@ -93,11 +93,11 @@
 
 .card {
   position: relative;
-  flex: 0 0 290px;
-  height: 500px;
+  flex: 0 0 var(--mg-blog-topic-card-width);
+  height: var(--mg-blog-frame-media);
   overflow: hidden;
   color: var(--mg-blog-inverse);
-  background: #20201f;
+  background: var(--mg-color-ink-850);
   border-radius: var(--mg-blog-radius-card);
   isolation: isolate;
   opacity: 0.62;
@@ -107,8 +107,8 @@
 }
 
 .cardActive {
-  flex-basis: 500px;
-  height: 500px;
+  flex-basis: var(--mg-blog-frame-media);
+  height: var(--mg-blog-frame-media);
   opacity: 1;
   transform: scale(1);
 }
@@ -168,49 +168,49 @@
 .overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(10, 10, 10, 0.04) 24%, rgba(10, 10, 10, 0.84) 100%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--mg-blog-ink) 4%, transparent) 24%, color-mix(in srgb, var(--mg-blog-ink) 84%, transparent) 100%);
 }
 
 .cardTop,
 .cardCopy {
   position: absolute;
   z-index: 2;
-  right: 24px;
-  left: 24px;
+  right: var(--mg-space-5);
+  left: var(--mg-space-5);
 }
 
 .cardTop {
-  top: 22px;
+  top: var(--mg-blog-space-comfortable);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  font-size: 12px;
+  gap: var(--mg-space-3);
+  font-size: var(--mg-font-size-caption);
   font-weight: 850;
 }
 
 .category {
-  padding: 7px 10px;
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 16px;
-  font-size: 11px;
-  backdrop-filter: blur(12px);
+  padding: var(--mg-blog-space-tight) var(--mg-blog-space-tight);
+  background: color-mix(in srgb, var(--mg-blog-inverse) 16%, transparent);
+  border: var(--mg-border-width) solid color-mix(in srgb, var(--mg-blog-inverse) 28%, transparent);
+  border-radius: var(--mg-space-4);
+  font-size: var(--mg-blog-type-micro);
+  backdrop-filter: blur(var(--mg-space-3));
 }
 
 .play {
-  width: 42px;
-  height: 42px;
+  width: var(--mg-blog-control-min);
+  height: var(--mg-blog-control-min);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #171717;
-  background: rgba(255, 255, 255, 0.9);
+  color: var(--mg-color-ink-900);
+  background: color-mix(in srgb, var(--mg-blog-inverse) 90%, transparent);
   border-radius: 50%;
 }
 
 .cardCopy {
-  bottom: 34px;
+  bottom: var(--mg-blog-space-panel);
 }
 
 .eyebrow,
@@ -223,67 +223,67 @@
 }
 
 .eyebrow {
-  color: rgba(255, 255, 255, 0.68);
-  font-size: 12px;
+  color: color-mix(in srgb, var(--mg-blog-inverse) 68%, transparent);
+  font-size: var(--mg-font-size-caption);
   font-weight: 800;
 }
 
 .cardCopy strong {
   display: block;
-  max-width: 400px;
+  max-width: var(--mg-blog-frame-panel);
   font-family: var(--font-blog-display);
-  font-size: 30px;
+  font-size: var(--mg-blog-type-heading);
   font-weight: 800;
   line-height: 1.13;
   word-break: keep-all;
 }
 
 .description {
-  color: rgba(255, 255, 255, 0.76);
-  font-size: 14px;
+  color: color-mix(in srgb, var(--mg-blog-inverse) 76%, transparent);
+  font-size: var(--mg-blog-type-label);
   line-height: 1.6;
   word-break: keep-all;
 }
 
 .cardActive .eyebrow {
-  max-height: 22px;
-  margin-bottom: 8px;
+  max-height: var(--mg-blog-space-comfortable);
+  margin-bottom: var(--mg-space-2);
   opacity: 1;
 }
 
 .cardActive .description {
-  max-height: 80px;
-  margin-top: 13px;
+  max-height: var(--mg-blog-space-hero);
+  margin-top: var(--mg-blog-space-compact);
   opacity: 1;
 }
 
 .cardAction {
   position: absolute;
   z-index: 4;
-  left: 24px;
-  bottom: 24px;
+  left: var(--mg-space-5);
+  bottom: var(--mg-space-5);
   min-height: var(--mg-blog-control-size);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  max-width: calc(100% - 48px);
-  padding: 0 14px;
+  gap: var(--mg-blog-space-tight);
+  max-width: calc(100% - var(--mg-space-7));
+  padding: 0 var(--mg-blog-space-compact);
   color: var(--mg-blog-ink);
   background: var(--mg-blog-surface);
   border: 0;
   border-radius: var(--mg-blog-radius-floating);
-  font-size: 12px;
+  font-size: var(--mg-font-size-caption);
   font-weight: 850;
   white-space: nowrap;
   opacity: 0;
-  transform: translateY(14px);
+  transform: translateY(var(--mg-blog-space-compact));
   pointer-events: none;
   transition: opacity 320ms ease, transform 420ms cubic-bezier(0.16, 0.84, 0.2, 1);
 }
 
 .cardActive .cardCopy {
-  bottom: 92px;
+  bottom: var(--mg-blog-space-hero);
 }
 
 .cardActive .cardAction {
@@ -293,22 +293,22 @@
 }
 
 .railFooter {
-  width: min(1180px, calc(100% - var(--mg-blog-layout-gutter)));
+  width: min(var(--mg-blog-frame-canvas), calc(100% - var(--mg-blog-layout-gutter)));
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 18px;
-  margin: 24px auto 0;
+  gap: var(--mg-blog-space-default);
+  margin: var(--mg-space-5) auto 0;
   color: var(--mg-blog-muted);
-  font-size: 12px;
+  font-size: var(--mg-font-size-caption);
   font-weight: 800;
 }
 
 .progressTrack {
-  height: 2px;
+  height: var(--mg-border-width-strong);
   overflow: hidden;
-  background: #dfdfda;
-  border-radius: 1px;
+  background: var(--mg-color-neutral-300);
+  border-radius: var(--mg-border-width);
 }
 
 .progressTrack > span {
@@ -322,27 +322,27 @@
 .cardSelect:focus-visible,
 .cardAction:focus-visible,
 .controls button:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: -4px;
+  outline: var(--mg-border-width-strong) solid currentColor;
+  outline-offset: calc(var(--mg-space-1) * -1);
 }
 
 @media (max-width: 760px) {
   .section {
-    padding-top: 92px;
+    padding-top: var(--mg-blog-space-hero);
   }
 
   .heading {
-    width: calc(100% - 32px);
+    width: calc(100% - var(--mg-space-6));
     grid-template-columns: minmax(0, 1fr);
-    margin-bottom: 30px;
+    margin-bottom: var(--mg-blog-space-panel);
   }
 
   .heading h2 {
-    font-size: 42px;
+    font-size: var(--mg-blog-type-title);
   }
 
   .heading p {
-    font-size: 15px;
+    font-size: var(--mg-blog-type-body);
   }
 
   .controls {
@@ -350,16 +350,16 @@
   }
 
   .rail {
-    --mobile-card-size: clamp(360px, 88vw, 410px);
-    gap: 8px;
-    padding: 24px max(12px, calc((100vw - var(--mobile-card-size)) / 2)) 30px;
+    --mobile-card-size: clamp(var(--mg-blog-frame-compact), 88vw, var(--mg-blog-frame-panel));
+    gap: var(--mg-space-2);
+    padding: var(--mg-space-5) max(var(--mg-space-3), calc((100vw - var(--mobile-card-size)) / 2)) var(--mg-blog-space-panel);
     scroll-snap-type: x proximity;
   }
 
   .card {
-    flex-basis: clamp(158px, 43vw, 190px);
+    flex-basis: clamp(var(--mg-blog-frame-thumbnail), 43vw, var(--mg-blog-topic-card-mobile-max));
     height: var(--mobile-card-size);
-    border-radius: 20px;
+    border-radius: var(--mg-blog-radius-floating);
     scroll-snap-align: center;
     opacity: 0.5;
     transform: none;
@@ -388,11 +388,11 @@
   }
 
   .cardCopy strong {
-    font-size: 25px;
+    font-size: var(--mg-blog-type-heading);
   }
 
   .railFooter {
-    width: calc(100% - 32px);
+    width: calc(100% - var(--mg-space-6));
     grid-template-columns: minmax(0, 1fr) auto;
   }
 

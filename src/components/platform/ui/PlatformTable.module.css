@@ -1,0 +1,42 @@
+.container {
+  min-width: 0;
+  overflow-x: auto;
+  background: var(--mg-surface-card);
+  border: var(--mg-border-width) solid var(--mg-border-subtle);
+  border-radius: var(--mg-radius-lg);
+  box-shadow: var(--mg-shadow-card);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--mg-text-primary);
+  font-family: var(--mg-font-body);
+  font-size: var(--mg-font-size-label);
+}
+
+.fixed {
+  table-layout: fixed;
+}
+
+.auto {
+  table-layout: auto;
+}
+
+.table th {
+  padding: var(--mg-space-3) var(--mg-space-4);
+  color: var(--mg-text-muted);
+  background: var(--mg-surface-sunken);
+  border-bottom: var(--mg-border-width) solid var(--mg-border-subtle);
+  font-size: var(--mg-font-size-caption);
+  font-weight: var(--mg-font-weight-label);
+  text-align: start;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: var(--mg-space-3) var(--mg-space-4);
+  color: var(--mg-text-primary);
+  border-bottom: var(--mg-border-width) solid var(--mg-border-subtle);
+  vertical-align: middle;
+}

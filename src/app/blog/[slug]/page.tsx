@@ -105,7 +105,7 @@ export default async function BlogPostPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildJsonLd(presentation)) }}
       />
-      <BlogPostRenderer data={data} mode="public" searchPosts={searchPosts} />
+      <BlogPostRenderer data={data} surface="public-page" searchPosts={searchPosts} />
     </>
   )
 }

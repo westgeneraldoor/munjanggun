@@ -794,6 +794,12 @@ export interface Database {
       }
     }
     Functions: {
+      get_preview_payload: {
+        Args: {
+          p_token: string
+        }
+        Returns: Json
+      }
       register_approved_manuscript: {
         Args: {
           p_post: Json

@@ -1,9 +1,15 @@
 'use client'
 
-import { useState, useTransition, type FormEvent } from 'react'
-import Link from 'next/link'
+import { useState, useTransition, type ChangeEvent, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowDown, ArrowLeft, ArrowUp, FilePlus2, Plus, Trash2 } from 'lucide-react'
+import { PlatformButton } from '@/components/platform/ui/PlatformButton'
+import { PlatformEditorSection } from '@/components/platform/ui/PlatformEditorSection'
+import { PlatformField } from '@/components/platform/ui/PlatformField'
+import { PlatformIconButton } from '@/components/platform/ui/PlatformIconButton'
+import { PlatformLinkButton } from '@/components/platform/ui/PlatformLinkButton'
+import { PlatformSelect } from '@/components/platform/ui/PlatformSelect'
+import { PlatformToolbar } from '@/components/platform/ui/PlatformToolbar'
 import { createApprovedManuscript } from '../manuscript-actions'
 import type {
   ApprovedManuscriptBlockType,
@@ -17,14 +23,6 @@ type EditableBlock = {
   headingLevel: 2 | 3
   text: string
   answer: string
-}
-
-type EditableEvidence = {
-  id: number
-  reference: string
-  status: 'vetted' | 'publishable'
-  claimType: string
-  checkedAt: string
 }
 
 const CATEGORY_OPTIONS: Array<{ value: ApprovedManuscriptCategory; label: string }> = [
@@ -43,22 +41,8 @@ const BLOCK_OPTIONS: Array<{ value: ApprovedManuscriptBlockType; label: string }
   { value: 'cta', label: 'CTA' },
 ]
 
-const CLAIM_TYPE_OPTIONS = [
-  { value: 'scope', label: '범위·구조·현장 판단 (scope)' },
-  { value: 'price', label: '가격 (price)' },
-  { value: 'discount', label: '할인 (discount)' },
-  { value: 'installment', label: '할부 (installment)' },
-  { value: 'review_count', label: '리뷰 수 (review_count)' },
-  { value: 'review', label: '리뷰 (review)' },
-  { value: 'schedule', label: '일정 (schedule)' },
-  { value: 'as', label: 'A/S (as)' },
-  { value: 'warranty', label: '보증 (warranty)' },
-  { value: 'travel_fee', label: '출장비 (travel_fee)' },
-  { value: 'service_area', label: '서비스 지역 (service_area)' },
-  { value: 'event', label: '이벤트 (event)' },
-] as const
-
-const VOLATILE_CLAIM_TYPES = new Set<string>(CLAIM_TYPE_OPTIONS.slice(1).map(option => option.value))
+const BLOCK_SELECT_OPTIONS = BLOCK_OPTIONS.map(option => ({ ...option, label: `${option.label} 블록` }))
+const HEADING_LEVEL_OPTIONS = [{ value: '2', label: 'H2' }, { value: '3', label: 'H3' }]
 
 function makeBlock(id: number, type: ApprovedManuscriptBlockType): EditableBlock {
   return {
@@ -68,10 +52,6 @@ function makeBlock(id: number, type: ApprovedManuscriptBlockType): EditableBlock
     text: '',
     answer: '',
   }
-}
-
-function makeEvidence(id: number): EditableEvidence {
-  return { id, reference: '', status: 'vetted', claimType: 'scope', checkedAt: '' }
 }
 
 function splitLines(value: string) {
@@ -103,25 +83,10 @@ export default function ApprovedManuscriptIntakeClient() {
   const [relatedQuestions, setRelatedQuestions] = useState('')
   const [serviceArea, setServiceArea] = useState('')
   const [productType, setProductType] = useState('')
-  const [nextEvidenceId, setNextEvidenceId] = useState(2)
-  const [evidenceRows, setEvidenceRows] = useState<EditableEvidence[]>([makeEvidence(1)])
   const [nextBlockId, setNextBlockId] = useState(2)
   const [blockTypeToAdd, setBlockTypeToAdd] = useState<ApprovedManuscriptBlockType>('paragraph')
   const [blocks, setBlocks] = useState<EditableBlock[]>([makeBlock(1, 'paragraph')])
   const [feedback, setFeedback] = useState('')
-
-  const updateEvidence = (id: number, update: Partial<EditableEvidence>) => {
-    setEvidenceRows(current => current.map(row => (row.id === id ? { ...row, ...update } : row)))
-  }
-
-  const addEvidence = () => {
-    setEvidenceRows(current => [...current, makeEvidence(nextEvidenceId)])
-    setNextEvidenceId(current => current + 1)
-  }
-
-  const removeEvidence = (id: number) => {
-    setEvidenceRows(current => (current.length > 1 ? current.filter(row => row.id !== id) : current))
-  }
 
   const updateBlock = (id: number, update: Partial<EditableBlock>) => {
     setBlocks(current => current.map(block => (block.id === id ? { ...block, ...update } : block)))
@@ -168,12 +133,6 @@ export default function ApprovedManuscriptIntakeClient() {
           relatedQuestions: splitLines(relatedQuestions),
           serviceArea,
           productType,
-          sourceEvidence: evidenceRows.map(row => ({
-            claim_id: row.reference,
-            status: row.status,
-            claim_type: row.claimType,
-            checked_at: row.checkedAt,
-          })),
           blocks: blocks.map(block => ({
             type: block.type,
             headingLevel: block.type === 'heading' ? block.headingLevel : null,
@@ -202,157 +161,74 @@ export default function ApprovedManuscriptIntakeClient() {
           <h1>승인 원고 등록</h1>
           <p>외부에서 완성한 원고를 검토중 상태로 등록합니다. 사진 연결과 발행은 기존 에디터에서 이어서 처리합니다.</p>
         </div>
-        <Link href="/admin/platform/blog" className={styles.queueLink}>
+        <PlatformLinkButton href="/admin/platform/blog" variant="secondary" size="sm" className={styles.queueLink}>
           <ArrowLeft size={16} aria-hidden="true" />
           콘텐츠 큐로 돌아가기
-        </Link>
+        </PlatformLinkButton>
       </header>
 
       <form className={styles.form} onSubmit={handleSubmit}>
-        <fieldset className={styles.section} disabled={isPending}>
-          <legend>기본 정보</legend>
+        <PlatformEditorSection title="기본 정보" disabled={isPending}>
           <div className={styles.fieldGrid}>
-            <label className={styles.field}>
-              <span>제목</span>
-              <input value={title} onChange={event => setTitle(event.target.value)} required />
-            </label>
-            <label className={styles.field}>
-              <span>slug</span>
-              <input
-                value={slug}
-                onChange={event => setSlug(event.target.value)}
-                pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-                placeholder="english-lowercase-slug"
-                required
-              />
-              <small>영문 소문자, 숫자, 하이픈만 사용합니다.</small>
-            </label>
-            <label className={styles.field}>
-              <span>카테고리</span>
-              <select value={category} onChange={event => setCategory(event.target.value as ApprovedManuscriptCategory)}>
-                {CATEGORY_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-            </label>
-            <label className={styles.field}>
-              <span>핵심 키워드</span>
-              <input value={primaryKeyword} onChange={event => setPrimaryKeyword(event.target.value)} />
-            </label>
-            <label className={`${styles.field} ${styles.fieldWide}`}>
-              <span>요약</span>
-              <textarea value={excerpt} onChange={event => setExcerpt(event.target.value)} rows={3} required />
-            </label>
+            <PlatformField label="제목" value={title} onChange={event => setTitle(event.target.value)} required />
+            <PlatformField
+              label="slug"
+              value={slug}
+              onChange={event => setSlug(event.target.value)}
+              pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+              placeholder="english-lowercase-slug"
+              hint="영문 소문자, 숫자, 하이픈만 사용합니다."
+              required
+            />
+            <PlatformSelect
+              label="카테고리"
+              value={category}
+              onChange={event => setCategory(event.target.value as ApprovedManuscriptCategory)}
+              options={CATEGORY_OPTIONS}
+            />
+            <PlatformField label="핵심 키워드" value={primaryKeyword} onChange={event => setPrimaryKeyword(event.target.value)} />
+            <PlatformField className={styles.fieldWide} label="요약" multiline value={excerpt} onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setExcerpt(event.target.value)} rows={3} required />
           </div>
-        </fieldset>
+        </PlatformEditorSection>
 
-        <fieldset className={styles.section} disabled={isPending}>
-          <legend>검색·질문 정보</legend>
+        <PlatformEditorSection title="검색·질문 정보" disabled={isPending}>
           <div className={styles.fieldGrid}>
-            <label className={`${styles.field} ${styles.fieldWide}`}>
-              <span>SEO 제목</span>
-              <input value={seoTitle} onChange={event => setSeoTitle(event.target.value)} required />
-            </label>
-            <label className={`${styles.field} ${styles.fieldWide}`}>
-              <span>메타 설명</span>
-              <textarea value={metaDescription} onChange={event => setMetaDescription(event.target.value)} rows={3} required />
-            </label>
-            <label className={`${styles.field} ${styles.fieldWide}`}>
-              <span>대상 질문</span>
-              <input value={targetQuestion} onChange={event => setTargetQuestion(event.target.value)} required />
-            </label>
-            <label className={`${styles.field} ${styles.fieldWide}`}>
-              <span>요약 답변</span>
-              <textarea value={summaryAnswer} onChange={event => setSummaryAnswer(event.target.value)} rows={3} required />
-            </label>
-            <label className={`${styles.field} ${styles.fieldWide}`}>
-              <span>관련 질문</span>
-              <textarea
-                value={relatedQuestions}
-                onChange={event => setRelatedQuestions(event.target.value)}
-                rows={3}
-                placeholder="질문 하나를 한 줄에 입력하세요."
-              />
-            </label>
-            <label className={styles.field}>
-              <span>서비스 지역</span>
-              <input value={serviceArea} onChange={event => setServiceArea(event.target.value)} />
-            </label>
-            <label className={styles.field}>
-              <span>제품군</span>
-              <input value={productType} onChange={event => setProductType(event.target.value)} />
-            </label>
+            <PlatformField className={styles.fieldWide} label="SEO 제목" value={seoTitle} onChange={event => setSeoTitle(event.target.value)} required />
+            <PlatformField className={styles.fieldWide} label="메타 설명" multiline value={metaDescription} onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setMetaDescription(event.target.value)} rows={3} required />
+            <PlatformField className={styles.fieldWide} label="대상 질문" value={targetQuestion} onChange={event => setTargetQuestion(event.target.value)} required />
+            <PlatformField className={styles.fieldWide} label="요약 답변" multiline value={summaryAnswer} onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setSummaryAnswer(event.target.value)} rows={3} required />
+            <PlatformField
+              className={styles.fieldWide}
+              label="관련 질문"
+              multiline
+              value={relatedQuestions}
+              onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setRelatedQuestions(event.target.value)}
+              rows={3}
+              placeholder="질문 하나를 한 줄에 입력하세요."
+            />
+            <PlatformField label="서비스 지역" value={serviceArea} onChange={event => setServiceArea(event.target.value)} />
+            <PlatformField label="제품군" value={productType} onChange={event => setProductType(event.target.value)} />
           </div>
-        </fieldset>
+        </PlatformEditorSection>
 
-        <fieldset className={styles.section} disabled={isPending}>
-          <legend>근거</legend>
-          <p className={styles.sectionHint}>원고에 사용한 근거를 모두 입력합니다. 확인이 끝난 vetted 또는 publishable 근거만 등록할 수 있으며, 가격·리뷰·일정처럼 변하는 근거는 확인일이 필수입니다.</p>
-          {evidenceRows.map((row, index) => (
-            <div className={styles.fieldGrid} key={row.id}>
-              <label className={styles.field}>
-                <span>근거 ID {index + 1}</span>
-                <input value={row.reference} onChange={event => updateEvidence(row.id, { reference: event.target.value })} required />
-              </label>
-              <label className={styles.field}>
-                <span>근거 상태</span>
-                <select value={row.status} onChange={event => updateEvidence(row.id, { status: event.target.value as EditableEvidence['status'] })}>
-                  <option value="vetted">vetted</option>
-                  <option value="publishable">publishable</option>
-                </select>
-              </label>
-              <label className={styles.field}>
-                <span>근거 유형</span>
-                <select value={row.claimType} onChange={event => updateEvidence(row.id, { claimType: event.target.value })}>
-                  {CLAIM_TYPE_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </label>
-              <label className={styles.field}>
-                <span>확인일{VOLATILE_CLAIM_TYPES.has(row.claimType) ? ' (필수)' : ''}</span>
-                <input
-                  type="date"
-                  value={row.checkedAt}
-                  onChange={event => updateEvidence(row.id, { checkedAt: event.target.value })}
-                  required={VOLATILE_CLAIM_TYPES.has(row.claimType)}
-                />
-              </label>
-              <button
-                type="button"
-                className={styles.secondaryButton}
-                onClick={() => removeEvidence(row.id)}
-                disabled={evidenceRows.length === 1}
-                aria-label={`${index + 1}번 근거 삭제`}
-              >
-                <Trash2 size={16} aria-hidden="true" />
-                근거 삭제
-              </button>
-            </div>
-          ))}
-          <button type="button" className={styles.secondaryButton} onClick={addEvidence}>
-            <Plus size={16} aria-hidden="true" />
-            근거 추가
-          </button>
-        </fieldset>
-
-        <fieldset className={styles.section} disabled={isPending}>
-          <legend>본문 블록</legend>
-          <p className={styles.sectionHint}>이미지 블록은 여기서 등록하지 않습니다. 원고 등록 뒤 기존 에디터에서 승인된 사진을 연결하세요.</p>
+        <PlatformEditorSection
+          title="본문 블록"
+          description="이미지 블록은 여기서 등록하지 않습니다. 원고 등록 뒤 기존 에디터에서 승인된 사진을 연결하세요."
+          disabled={isPending}
+        >
 
           <div className={styles.blockControls}>
-            <label className={styles.compactField}>
-              <span className={styles.srOnly}>추가할 블록 유형</span>
-              <select value={blockTypeToAdd} onChange={event => setBlockTypeToAdd(event.target.value as ApprovedManuscriptBlockType)}>
-                {BLOCK_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>{option.label} 블록</option>
-                ))}
-              </select>
-            </label>
-            <button type="button" className={styles.secondaryButton} onClick={addBlock}>
+            <PlatformSelect
+              label="추가할 블록 유형"
+              containerClassName={styles.compactField}
+              value={blockTypeToAdd}
+              onChange={event => setBlockTypeToAdd(event.target.value as ApprovedManuscriptBlockType)}
+              options={BLOCK_SELECT_OPTIONS}
+            />
+            <PlatformButton type="button" variant="secondary" className={styles.addBlockButton} onClick={addBlock}>
               <Plus size={16} aria-hidden="true" />
               블록 추가
-            </button>
+            </PlatformButton>
           </div>
 
           <ol className={styles.blockList}>
@@ -360,82 +236,74 @@ export default function ApprovedManuscriptIntakeClient() {
               <li key={block.id} className={styles.blockCard}>
                 <div className={styles.blockHeader}>
                   <strong>{index + 1}. {BLOCK_OPTIONS.find(option => option.value === block.type)?.label} 블록</strong>
-                  <div className={styles.blockActions}>
-                    <button
+                  <PlatformToolbar label={`${index + 1}번 블록 작업`} className={styles.blockActions}>
+                    <PlatformIconButton
                       type="button"
-                      className={styles.iconButton}
                       onClick={() => moveBlock(block.id, -1)}
                       disabled={index === 0}
                       aria-label={`${index + 1}번 블록 위로 이동`}
                     >
                       <ArrowUp size={16} aria-hidden="true" />
-                    </button>
-                    <button
+                    </PlatformIconButton>
+                    <PlatformIconButton
                       type="button"
-                      className={styles.iconButton}
                       onClick={() => moveBlock(block.id, 1)}
                       disabled={index === blocks.length - 1}
                       aria-label={`${index + 1}번 블록 아래로 이동`}
                     >
                       <ArrowDown size={16} aria-hidden="true" />
-                    </button>
-                    <button
+                    </PlatformIconButton>
+                    <PlatformIconButton
                       type="button"
-                      className={styles.iconButton}
+                      variant="danger"
                       onClick={() => removeBlock(block.id)}
                       disabled={blocks.length === 1}
                       aria-label={`${index + 1}번 블록 삭제`}
                     >
                       <Trash2 size={16} aria-hidden="true" />
-                    </button>
-                  </div>
+                    </PlatformIconButton>
+                  </PlatformToolbar>
                 </div>
 
                 {block.type === 'heading' && (
-                  <label className={styles.field}>
-                    <span>제목 수준</span>
-                    <select
-                      value={block.headingLevel}
-                      onChange={event => updateBlock(block.id, { headingLevel: Number(event.target.value) as 2 | 3 })}
-                    >
-                      <option value={2}>H2</option>
-                      <option value={3}>H3</option>
-                    </select>
-                  </label>
+                  <PlatformSelect
+                    label="제목 수준"
+                    value={String(block.headingLevel)}
+                    onChange={event => updateBlock(block.id, { headingLevel: Number(event.target.value) as 2 | 3 })}
+                    options={HEADING_LEVEL_OPTIONS}
+                  />
                 )}
 
-                <label className={styles.field}>
-                  <span>{blockTextLabel(block.type)}</span>
-                  <textarea
-                    value={block.text}
-                    onChange={event => updateBlock(block.id, { text: event.target.value })}
-                    rows={block.type === 'paragraph' ? 5 : 3}
-                    required
-                  />
-                </label>
+                <PlatformField
+                  label={blockTextLabel(block.type)}
+                  multiline
+                  value={block.text}
+                  onChange={(event: ChangeEvent<HTMLTextAreaElement>) => updateBlock(block.id, { text: event.target.value })}
+                  rows={block.type === 'paragraph' ? 5 : 3}
+                  required
+                />
 
                 {block.type === 'qa' && (
-                  <label className={styles.field}>
-                    <span>답변</span>
-                    <textarea
-                      value={block.answer}
-                      onChange={event => updateBlock(block.id, { answer: event.target.value })}
-                      rows={4}
-                      required
-                    />
-                  </label>
+                  <PlatformField
+                    label="답변"
+                    multiline
+                    value={block.answer}
+                    onChange={(event: ChangeEvent<HTMLTextAreaElement>) => updateBlock(block.id, { answer: event.target.value })}
+                    rows={4}
+                    required
+                  />
                 )}
               </li>
             ))}
           </ol>
-        </fieldset>
+        </PlatformEditorSection>
 
         <div className={styles.submitRow}>
           <p className={styles.feedback} aria-live="polite">{feedback}</p>
-          <button type="submit" className={styles.primaryButton} disabled={isPending}>
+          <PlatformButton type="submit" className={styles.submitButton} disabled={isPending} isLoading={isPending} loadingLabel="등록 중…">
             <FilePlus2 size={17} aria-hidden="true" />
-            {isPending ? '등록 중…' : '승인 원고 등록'}
-          </button>
+            승인 원고 등록
+          </PlatformButton>
         </div>
       </form>
     </main>

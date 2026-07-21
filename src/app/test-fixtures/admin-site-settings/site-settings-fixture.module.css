@@ -1,0 +1,5 @@
+.page {
+  min-height: 100vh;
+  padding: var(--mg-layout-gutter);
+  background: var(--mg-surface-page);
+}

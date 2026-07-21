@@ -3,7 +3,7 @@ import { absoluteUrl, getSiteUrl } from '@/lib/content-os/site-url'
 
 export const revalidate = 3600
 
-const privatePaths = ['/admin/', '/api/', '/preview/', '/drafts/', '/private/']
+const privatePaths = ['/admin/', '/api/', '/preview/', '/drafts/', '/private/', '/test-fixtures/']
 
 export default function robots(): MetadataRoute.Robots {
   const siteHost = new URL(getSiteUrl()).host

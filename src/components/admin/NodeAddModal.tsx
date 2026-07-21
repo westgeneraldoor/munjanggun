@@ -1,10 +1,15 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
+import React, { useState } from 'react'
 import { createShowroomClient } from '@/lib/supabase/client'
 import { logError } from '@/lib/logger'
 import { generateSlug, validateSlug } from '@/lib/utils'
+import {
+  PlatformButton,
+  PlatformField,
+  PlatformModal,
+  PlatformSelect,
+} from '@/components/platform/ui'
 import styles from './NodeAddModal.module.css'
 
 interface NodeAddModalProps {
@@ -16,37 +21,34 @@ interface NodeAddModalProps {
 }
 
 export default function NodeAddModal({ isOpen, onClose, onSuccess, parentId, displayOrder }: NodeAddModalProps) {
+  if (!isOpen) return null
+
+  return (
+    <NodeAddModalContent
+      onClose={onClose}
+      onSuccess={onSuccess}
+      parentId={parentId}
+      displayOrder={displayOrder}
+    />
+  )
+}
+
+function NodeAddModalContent({ onClose, onSuccess, parentId, displayOrder }: Omit<NodeAddModalProps, 'isOpen'>) {
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
-  const [type, setType] = useState('listing')
+  const [type, setType] = useState(parentId === null ? 'listing' : 'detail')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const supabase = createShowroomClient()
 
-  // slug 자동 생성 로직
-  useEffect(() => {
-    if (name) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSlug(generateSlug(name))
-    } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSlug('')
-    }
-  }, [name])
+  const handleClose = () => {
+    setName('')
+    setSlug('')
+    setType(parentId === null ? 'listing' : 'detail')
+    onClose()
+  }
 
-  // 모달 열릴 때 초기화
-  useEffect(() => {
-    if (isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setName('')
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSlug('')
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setType(parentId === null ? 'listing' : 'detail')
-    }
-  }, [isOpen, parentId])
-
-  if (!isOpen) return null
+  const slugValidation = slug ? validateSlug(slug) : { valid: true }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -88,7 +90,7 @@ export default function NodeAddModal({ isOpen, onClose, onSuccess, parentId, dis
       }
       
       onSuccess()
-      onClose()
+      handleClose()
     } catch (err: unknown) {
       logError('노드 추가 실패:', err)
       if ((err as { code?: string })?.code !== '23505') {
@@ -100,82 +102,71 @@ export default function NodeAddModal({ isOpen, onClose, onSuccess, parentId, dis
   }
 
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal} role="dialog" aria-modal="true">
-        <div className={styles.header}>
-          <h2 className={styles.title}>{parentId === null ? '탭(최상위 노드) 추가' : '자식 노드 추가'}</h2>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="닫기">
-            <X size={20} />
-          </button>
-        </div>
-        
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.formGroup}>
-            <label htmlFor="name" className={styles.label}>이름 *</label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={styles.input}
-              placeholder="예: 싱크대, 올리브그린"
-              required
-              disabled={isSubmitting}
-            />
-          </div>
+    <PlatformModal
+      isOpen
+      title={parentId === null ? '탭(최상위 노드) 추가' : '자식 노드 추가'}
+      onClose={handleClose}
+      showCloseButton
+      closeDisabled={isSubmitting}
+      footer={(
+        <>
+          <PlatformButton type="button" variant="secondary" onClick={handleClose} disabled={isSubmitting}>
+            취소
+          </PlatformButton>
+          <PlatformButton
+            type="submit"
+            form="node-add-form"
+            isLoading={isSubmitting}
+            loadingLabel="추가 중"
+            disabled={!slug || !slugValidation.valid}
+          >
+            추가하기
+          </PlatformButton>
+        </>
+      )}
+    >
+      <form id="node-add-form" onSubmit={handleSubmit} className={styles.form}>
+        <PlatformField
+          id="node-name"
+          label="이름 *"
+          type="text"
+          value={name}
+          onChange={event => {
+            setName(event.target.value)
+            setSlug(generateSlug(event.target.value))
+          }}
+          placeholder="예: 싱크대, 올리브그린"
+          required
+          disabled={isSubmitting}
+          data-modal-initial-focus
+        />
 
-          <div className={styles.formGroup}>
-            <label htmlFor="slug" className={styles.label}>URL 슬러그 *</label>
-            <input
-              id="slug"
-              type="text"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              className={`${styles.input} ${slug && !validateSlug(slug).valid ? styles.inputError : ''}`}
-              placeholder="예: modern, classic-goshi"
-              required
-              disabled={isSubmitting}
-            />
-            {slug && !validateSlug(slug).valid && (
-              <p className={styles.slugWarning}>{validateSlug(slug).message || '영문 slug를 직접 입력해주세요'}</p>
-            )}
-          </div>
+        <PlatformField
+          id="node-slug"
+          label="URL 슬러그 *"
+          type="text"
+          value={slug}
+          onChange={event => setSlug(event.target.value)}
+          placeholder="예: modern, classic-goshi"
+          required
+          disabled={isSubmitting}
+          error={slug && !slugValidation.valid ? slugValidation.message || '영문 slug를 직접 입력해주세요' : undefined}
+        />
 
-          {parentId !== null && (
-            <div className={styles.formGroup}>
-              <label htmlFor="type" className={styles.label}>노드 타입 *</label>
-              <select
-                id="type"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className={styles.select}
-                disabled={isSubmitting}
-              >
-                <option value="detail">상세 (Detail) - 갤러리/사진 포함</option>
-                <option value="listing">목록 (Listing) - 하위 카테고리용</option>
-              </select>
-            </div>
-          )}
-
-          <div className={styles.actions}>
-            <button 
-              type="button" 
-              className={styles.cancelBtn} 
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
-              취소
-            </button>
-            <button 
-              type="submit" 
-              className={styles.submitBtn}
-              disabled={isSubmitting || (slug ? !validateSlug(slug).valid : true)}
-            >
-              {isSubmitting ? '추가 중...' : '추가하기'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {parentId !== null ? (
+          <PlatformSelect
+            id="node-type"
+            label="노드 타입 *"
+            value={type}
+            onChange={event => setType(event.target.value)}
+            disabled={isSubmitting}
+            options={[
+              { value: 'detail', label: '상세 (Detail) - 갤러리/사진 포함' },
+              { value: 'listing', label: '목록 (Listing) - 하위 카테고리용' },
+            ]}
+          />
+        ) : null}
+      </form>
+    </PlatformModal>
   )
 }

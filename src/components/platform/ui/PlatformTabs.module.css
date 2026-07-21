@@ -1,0 +1,57 @@
+.tabList {
+  min-width: 0;
+  display: flex;
+  gap: var(--mg-space-1);
+  padding: var(--mg-space-1);
+  background: var(--mg-surface-card);
+  border: var(--mg-border-width) solid var(--mg-border-subtle);
+  border-radius: var(--mg-radius-lg);
+  box-shadow: var(--mg-shadow-card);
+}
+
+.tab {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: var(--mg-control-size-min);
+  padding-inline: var(--mg-space-3);
+  color: var(--mg-text-body);
+  background: transparent;
+  border: var(--mg-border-width) solid transparent;
+  border-radius: var(--mg-radius-md);
+  font-family: var(--mg-font-body);
+  font-size: var(--mg-current-label);
+  font-weight: var(--mg-font-weight-label);
+  cursor: pointer;
+  transition: background-color var(--mg-dur-micro) var(--mg-ease-cinema), border-color var(--mg-dur-micro) var(--mg-ease-cinema), color var(--mg-dur-micro) var(--mg-ease-cinema);
+}
+
+.tab:hover:not(:disabled) {
+  color: var(--mg-text-primary);
+  background: var(--mg-admin-accent-surface);
+  border-color: var(--mg-admin-accent-border);
+}
+
+.tab[aria-selected='true'],
+.tab[aria-selected='true']:hover {
+  color: var(--mg-admin-accent-text);
+  background: var(--mg-admin-accent-surface);
+  border-color: var(--mg-admin-accent-border);
+}
+
+.tab:focus-visible {
+  outline: var(--mg-focus-ring-width) solid var(--mg-focus-ring);
+  outline-offset: var(--mg-focus-ring-offset);
+}
+
+.tab:disabled {
+  color: var(--mg-disabled-text);
+  background: var(--mg-disabled-surface);
+  border-color: var(--mg-border-subtle);
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab {
+    transition: none;
+  }
+}

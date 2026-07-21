@@ -1,0 +1,5 @@
+.page {
+  min-height: 100dvh;
+  color: var(--mg-text-primary);
+  background: var(--mg-surface-page);
+}

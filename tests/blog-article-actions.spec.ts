@@ -58,7 +58,19 @@ test('blog article offers lightweight reader actions', async ({ page }) => {
 
   const questionLink = actions.getByRole('link', { name: /무료 방문실측 상담/ })
   await expect(questionLink).toBeVisible()
-  await expect(questionLink).toHaveAttribute('href', /\/portal\/measure\/new\?source=blog-question&post=/)
+  const encodedPostSlug = new URL(page.url()).pathname.split('/').filter(Boolean).at(-1)
+  const currentPostSlug = encodedPostSlug ? decodeURIComponent(encodedPostSlug) : null
+  expect(currentPostSlug).toBeTruthy()
+  await expect(questionLink).toHaveAttribute(
+    'href',
+    `/portal/measure/new?source=blog-question&post=${encodeURIComponent(currentPostSlug!)}`,
+  )
+
+  const genericCtaHrefs = await page.locator('aside[class*="ctaBlock"] a').evaluateAll(anchors => (
+    anchors.map(anchor => anchor.getAttribute('href'))
+  ))
+  expect(genericCtaHrefs.length).toBeGreaterThan(0)
+  expect([...new Set(genericCtaHrefs)]).toEqual(['/measure'])
 
   await expect(page.getByTestId('blog-question-panel')).toBeVisible()
   await expect(page.getByTestId('blog-question-panel')).toContainText('비공개 질문')
@@ -187,11 +199,11 @@ test('blog article exposes a mobile bottom action bar', async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(1)
 
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
-  const finalCta = page.locator('aside a[href="/portal/measure/new"]').last()
+  const finalCta = page.locator('aside a[href="/measure"]').last()
   await expect(finalCta).toBeVisible()
   const geometry = await page.evaluate(() => {
     const bar = document.querySelector('[data-testid="blog-mobile-bottom-actions"]')
-    const cta = [...document.querySelectorAll('aside a[href="/portal/measure/new"]')].at(-1)
+    const cta = [...document.querySelectorAll('aside a[href="/measure"]')].at(-1)
     const barBox = bar?.getBoundingClientRect()
     const ctaBox = cta?.getBoundingClientRect()
 

@@ -1,12 +1,12 @@
 .button {
-  min-height: var(--mg-button-height);
+  min-height: var(--mg-control-size-min);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--mg-space-xs);
-  padding: 0 20px;
-  border: 1px solid transparent;
-  border-radius: var(--mg-radius-md);
+  gap: var(--mg-space-2);
+  padding: 0 var(--mg-space-5);
+  border: var(--mg-border-width) solid transparent;
+  border-radius: var(--mg-button-radius);
   font-family: var(--mg-font-body);
   font-size: var(--mg-current-body);
   font-weight: var(--mg-font-weight-strong);
@@ -14,12 +14,19 @@
   letter-spacing: var(--mg-letter-spacing);
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+  transition: background-color var(--mg-dur-micro) var(--mg-ease-cinema), border-color var(--mg-dur-micro) var(--mg-ease-cinema), color var(--mg-dur-micro) var(--mg-ease-cinema), transform var(--mg-dur-micro) var(--mg-ease-cinema), box-shadow var(--mg-dur-micro) var(--mg-ease-cinema);
 }
 
 .button:focus-visible {
-  outline: 2px solid var(--mg-focus-ring);
-  outline-offset: 3px;
+  outline: var(--mg-focus-ring-width) solid var(--mg-focus-ring);
+  outline-offset: var(--mg-focus-ring-offset);
+}
+
+.content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mg-space-2);
 }
 
 .button:active:not(:disabled) {
@@ -42,7 +49,7 @@
 .primary:hover:not(:disabled) {
   background: var(--mg-action-primary-hover);
   border-color: var(--mg-action-primary-hover);
-  transform: translateY(-1px);
+  transform: translateY(var(--mg-motion-offset-hover));
 }
 
 .primary:active:not(:disabled) {
@@ -127,11 +134,22 @@
 }
 
 .sm {
-  min-height: var(--mg-button-height-sm);
-  padding: 0 14px;
+  min-height: var(--mg-control-size-min);
+  padding: 0 var(--mg-space-3);
   font-size: var(--mg-current-label);
 }
 
 .fullWidth {
   width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+
+  .button:hover:not(:disabled),
+  .button:active:not(:disabled) {
+    transform: none;
+  }
 }

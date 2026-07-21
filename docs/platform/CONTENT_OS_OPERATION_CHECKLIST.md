@@ -3,6 +3,7 @@ document_type: "Content OS Operation Checklist"
 version: "1.0.0"
 status: "ops-ready-draft"
 created: "2026-06-25"
+updated: "2026-07-20"
 owner: "Codex PM"
 source_prd: "docs/platform/CONTENT_OS_PRD.md"
 source_schema: "docs/platform/CONTENT_OS_SCHEMA.md"
@@ -31,7 +32,7 @@ admin content queue
 -> media approval
 -> preview
 -> publish server action
--> public WebP promotion
+-> public publish promotion (static WebP or original GIF)
 -> /blog and /blog/[slug]
 -> sitemap / robots / metadata / JSON-LD
 ```
@@ -55,9 +56,9 @@ Excluded:
 - Admin AI draft generation is not a product feature; the CMS starts from an approved external manuscript.
 - Search Console API automation.
 
-## 2. Current Verification Status
+## 2. Initial Verification Status (historical)
 
-As of 2026-06-25 in the Codex local session:
+This section preserves the initial 2026-06-25 Codex session result. Its temporary remote-confirmation limitation was resolved by the later evidence in 2.1 and 13.
 
 - `npm run lint`: passed with existing non-Content-OS admin warnings.
 - `npm run build`: passed.
@@ -67,14 +68,14 @@ As of 2026-06-25 in the Codex local session:
 - `npx supabase --version` failed with a transient npm network `ECONNRESET`.
 - Service-role REST access to the `storage` schema was blocked because only `public`, `colorbook`, `showroom`, and `platform` schemas are exposed through the Data API.
 
-Conclusion:
+Historical conclusion at that time:
 
 ```text
 storage.objects policy remote application is not confirmed from this Codex session.
 Confirm it with a DB owner or linked Supabase CLI before production publishing.
 ```
 
-## 2.1 HARDEN-00 Remote Storage Policy Result
+## 2.1 HARDEN-00 Remote Storage Policy Result (historical)
 
 Status as of 2026-06-25:
 
@@ -85,6 +86,8 @@ Applied by: Supabase MCP execute_sql
 Scope: storage.objects policies for Content OS media buckets only
 Result: passed
 ```
+
+아래 6-policy 결과는 2026-06-25 당시 증거다. 2026-07-20 현재 정책은 3.2와 14절을 따른다.
 
 Applied policies:
 
@@ -154,11 +157,11 @@ Confirm the target Supabase project has these buckets:
 ```text
 blog-media-private
 public: false
-allowed_mime_types: image/jpeg, image/png, image/webp, image/heic, image/heif
+allowed_mime_types: image/jpeg, image/png, image/webp, image/gif, image/heic, image/heif
 
 blog-media
 public: true
-allowed_mime_types: image/jpeg, image/png, image/webp
+allowed_mime_types: image/jpeg, image/png, image/webp, image/gif
 ```
 
 SQL:
@@ -194,7 +197,6 @@ supabase/storage-policies/content_os_storage_policies.sql
 Expected policy names:
 
 ```text
-blog_media_public_select
 blog_media_admin_insert_public
 blog_media_admin_delete_public
 blog_media_private_admin_select
@@ -215,7 +217,6 @@ from pg_policies
 where schemaname = 'storage'
   and tablename = 'objects'
   and policyname in (
-    'blog_media_public_select',
     'blog_media_admin_insert_public',
     'blog_media_admin_delete_public',
     'blog_media_private_admin_select',
@@ -227,8 +228,9 @@ order by policyname;
 
 Pass criteria:
 
-- All 6 policies exist.
-- Public select is limited to `bucket_id = 'blog-media'`.
+- All 5 administrator/private policies exist.
+- `blog_media_public_select` does not exist; anon Data API object listing returns 0 rows.
+- A known object URL in public `blog-media` still returns HTTP 200.
 - Private bucket select/insert/delete require `platform_private.is_admin()`.
 - Public bucket insert/delete require `platform_private.is_admin()`.
 - No public update/upsert policy exists for `blog-media`.
@@ -263,8 +265,6 @@ Checklist:
 - [ ] Confirm meta description is 50-180 characters.
 - [ ] Confirm target question is present.
 - [ ] Confirm summary answer is present.
-- [ ] Confirm last fact checked date is present.
-- [ ] Confirm source evidence exists.
 - [ ] Confirm brand check has no blocker or forbidden expression.
 - [ ] Add at least one paragraph block.
 - [ ] Add at least one CTA block.
@@ -323,7 +323,7 @@ Checklist:
 - [ ] Confirm `blog_posts.status = published`.
 - [ ] Confirm `blog_posts.published_at` is set.
 - [ ] Confirm `blog_posts.published_by` is set.
-- [ ] Confirm used approved media is converted to WebP.
+- [ ] JPG·PNG·WebP는 정적 WebP 파생본으로 승격되고, GIF는 원본 `.gif`와 `image/gif`를 보존하는지 확인한다.
 - [ ] Confirm `blog_media.usage_status = published`.
 - [ ] Confirm `blog_media.public_bucket = blog-media`.
 - [ ] Confirm `blog_media.public_object_path` is set.
@@ -387,7 +387,7 @@ Checklist:
 - [ ] Public HTML does not include `brand_check_result`.
 - [ ] Public HTML does not include `blog-media-private`.
 - [ ] Public HTML does not include private object paths.
-- [ ] Cover image uses public WebP URL.
+- [ ] Cover image uses the validated public WebP derivative or approved original GIF URL.
 - [ ] 390px mobile viewport has no horizontal overflow.
 
 Recommended command:
@@ -647,13 +647,12 @@ Remote verification checklist:
 - [x] `content-assets-private` bucket exists and is private.
 - [x] `content-assets-public` bucket exists and is public.
 - [x] `content-assets-public` allows WebP derivatives only.
-- [x] Required `storage.objects` policies exist.
+- [x] Required five administrator/private `storage.objects` policies exist; public anon listing policy is absent.
 - [x] No `storage.objects` UPDATE policy exists for `content-assets-public`.
 
 Required storage policies:
 
 ```text
-content_assets_public_select
 content_assets_public_admin_insert
 content_assets_public_admin_delete
 content_assets_private_admin_select
@@ -663,10 +662,10 @@ content_assets_private_admin_delete
 
 Pass criteria:
 
-- Public reads are limited to public derivative objects and published blog asset metadata.
+- Anon Data API object listing is unavailable; a known public derivative URL remains directly deliverable.
 - Original files remain in `content-assets-private`.
 - Public overwrite/upsert is blocked by the absence of UPDATE policy.
-- Existing `blog-media` and `blog-media-private` policies are unchanged.
+- `blog_media_public_select` and `content_assets_public_select` were removed by the approved hardening migration; remaining administrator/private policies keep their prior boundary.
 - Existing Content OS publish flow is unchanged.
 
 Next PR boundary:
@@ -674,3 +673,50 @@ Next PR boundary:
 - PR-09 may implement the operator-facing photo library and multi-upload flow.
 - PR-09 must keep operator language simple: photo library, upload, select, description, category, tag.
 - PR-09 must not expose bucket names, object paths, private/public states, or transform internals in the UI.
+
+## 13. Official central asset import and GIF verification
+
+Migration:
+
+- `supabase/migrations/20260715090227_official_asset_gif_support.sql`
+
+Required checks:
+
+- [x] The migration was applied through the approved migration path; bucket settings were not edited ad hoc.
+- [x] `content-assets-private`, `blog-media-private`, and `blog-media` allow `image/gif`.
+- [x] `content-assets-public` remains WebP-only.
+- [x] The Codex command accepts only manifest `assetId` values under the canonical central root.
+- [x] The central worktree is clean and both the selected manifest and original are tracked by, and byte-identical to, HEAD.
+- [x] `CODEX_AUDIT_ACTOR_ID` matches the supplied administrator actor and any post attachment targets a `reviewing` post.
+- [x] MIME magic, size, dimensions, GIF frames, SHA-256, LFS pointer, privacy status, claim risk, and duplicate checksum checks pass before upload.
+- [x] A central candidate's original, static WebP poster/web, and thumbnail remain in `content-assets-private`, have no public URL, and keep `promotion_consent_checked = false`.
+- [x] `official_reviewed` candidate is not automatic public approval: it stays private until project promotion consent and media approval. Unresolved claim risk is rejected again by both media approval and final publish server gates.
+- [x] Asset metadata edits preserve `labels.centralBrand`; the DB trigger rejects provenance changes and central ID/SHA indexes reject concurrent duplicates.
+- [x] The administrator upload path and Codex import path call the same original-image validation module.
+- [x] GIF poster and thumbnail rows are private static WebP while the private original remains byte-identical GIF; only the validated blog publish path creates a new `blog-media` public object.
+- [x] Publication-path tests preserve `.gif`, `image/gif`, animation, alt, and caption for an approved GIF.
+- [x] The real Basic JPG and GIF import records include central asset/source/proof IDs, commit, checksum, and audit events.
+- [x] The current `reviewing` manuscript has 27 blocks, 2 image blocks, and 3 active private media after audited detach of `mg-3panel-thumbnail-basic-001`; private paths remain hidden.
+- [x] The detached central asset and its 3 file rows remain preserved; no Storage object was deleted or promoted.
+- [x] A development-only public renderer regression proves the deterministic 2-frame GIF remains animated at desktop and 390px widths.
+- [ ] 실제 reviewing 원고의 production 발행. 이 원고와 실제 GIF는 검수 큐에 유지하며 merge·production 승인 전에는 공개하지 않는다.
+
+2026-07-20 evidence commands: `npm run test:official-brand-asset-import`, `npm run test:official-brand-asset-placement`, `npm run test:official-media-evidence-docs`, `npm run test:blog-public-gif-browser`, `npm run verify:blog-admin-cms`. Remote DB/storage state and the authenticated editor/preview were also checked directly; no production publish was performed.
+
+“Direct registration prohibited” means bypassing validation, authorization, audit, or publish promotion gates is prohibited. A validated server-only registration command is an approved ingestion path; arbitrary SQL inserts and unchecked Storage uploads are not.
+
+## 14. 2026-07-20 Integration Stabilization Record
+
+- Branch: `codex/platform-admin-blog-stabilization`; base: `v2-cms`; integration Draft PR: [#73](https://github.com/westgeneraldoor/munjanggun/pull/73).
+- Current public delivery bucket remains:
+
+```text
+blog-media
+public: true
+allowed_mime_types: image/jpeg, image/png, image/webp, image/gif
+```
+
+- Aligned remote versions: `20260715090227`, `20260715233310`, `20260715235109`, `20260715235349`, `20260720005042`, `20260720005052`.
+- Newly applied remote versions: `20260720074812` reorder, `20260720074843` settings, `20260720074917` node, `20260720074955` storage + lease, `20260720075020` preview, `20260720075047` detach, `20260720075242` detach UUID fix, `20260720084910` crash-safe private derivative cleanup intent.
+- Verified boundary: known public URL HTTP 200, anon listing 0 rows, private signed URL HTTP 200; no production publish or public promotion.
+- Admin/blog recursive verifier covers 64 token-usage CSS files. Final result: raw color 0, raw shadow 0, unapproved raw layout 0, undefined custom properties 0, with 45 property/value/reason-scoped layout exceptions. The state-scope invariant remains required.

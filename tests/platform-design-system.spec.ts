@@ -13,9 +13,9 @@ test('Munjanggun semantic theme tokens are available globally', async ({ page })
   })
 
   expect(tokens).toEqual({
-    primaryAction: '#b35d43',
-    cardSurface: '#fffcf7',
-    focusRing: '#b35d43',
+    primaryAction: '#171717',
+    cardSurface: '#fff',
+    focusRing: '#3d5b4b',
   })
 })
 
@@ -57,15 +57,15 @@ test('theme scopes override semantic component tokens', async ({ page }) => {
   })
 
   expect(scopedTokens.portal).toMatchObject({
-    page: '#f5efe6',
-    card: '#fffcf7',
-    action: '#b35d43',
-    text: '#171512',
+    page: '#f7f7f4',
+    card: '#ffffff',
+    action: '#171717',
+    text: '#171717',
   })
   expect(scopedTokens.admin).toMatchObject({
     page: '#f8f8fa',
     card: '#ffffff',
-    action: '#c4a265',
+    action: '#171717',
     text: '#111114',
   })
   expect(scopedTokens.showroom).toMatchObject({
@@ -138,9 +138,10 @@ test('blog launch home has image-led hero without mobile overflow', async ({ pag
   await page.setViewportSize({ width: 390, height: 900 })
   await page.goto('/blog')
 
-  await expect(page.getByRole('heading', { name: '중문과 도어를 고르기 전, 집에서 먼저 확인할 이야기.' })).toBeVisible()
-  await expect(page.getByRole('link', { name: '무료방문 실측견적 안내' })).toHaveAttribute('href', '/measure')
-  await expect(page.locator('img[src="/images/blog-launch/blog-hero-entryway.png"]')).toBeVisible()
+  const hero = page.getByTestId('blog-home-hero')
+  await expect(hero.getByRole('heading', { name: '문 하나가, 집의 흐름을 바꿉니다.' })).toBeVisible()
+  await expect(hero.getByRole('link', { name: '무료 방문실측 상담' })).toHaveAttribute('href', '/measure')
+  await expect(hero.getByRole('img', { name: '햇빛이 드는 밝은 거실과 공간을 나누는 슬림 중문' })).toBeVisible()
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(1)

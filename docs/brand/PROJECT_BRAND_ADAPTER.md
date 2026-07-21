@@ -1,9 +1,9 @@
 ---
 document_type: "Project Brand Adapter"
-version: "1.1.0"
+version: "1.2.1"
 status: "active"
 created: "2026-06-25"
-last_updated: "2026-07-14"
+last_updated: "2026-07-20"
 owner: "Codex PM"
 source_brand_reference: "docs/brand/BRAND_SOURCE.md"
 central_brand_root: "C:\\Users\\hjh\\안티그래비티\\문장군_브랜드"
@@ -69,16 +69,21 @@ central_brand_root: "C:\\Users\\hjh\\안티그래비티\\문장군_브랜드"
 
 ### 디자인
 
-중앙 `DESIGN.md` v4.0의 `동네 온기 (Neighborhood Warmth)`를 기본 디자인 기준으로 삼는다. 기본 브랜드 화면은 클레이·세이지·오커·아이보리 토큰과 Pretendard 단일 서체를 사용하고, 폐기된 v3 네이비/세리프 체계를 새 화면에 되살리지 않는다.
+중앙 `DESIGN.md` v5.0의 `Editorial Showroom`을 기본 디자인 기준으로 삼는다. Ink를 주요 정보 위계와 CTA에, Forest를 상담·도움·선택 상태와 포커스에 사용한다. 큰 한글 display는 Tmoney RoundWind ExtraBold, 본문과 UI는 Pretendard를 사용한다. 과거 v3/v4 팔레트 이름을 새 canonical 토큰처럼 늘리지 않는다.
+
+프로젝트는 중앙 저장소의 토큰 파일을 런타임에 직접 참조하지 않는다. 중앙 커밋 `e6b6eb618e08b907307497d87f58995bd945531c`의 `tokens/brand.css`와 `tokens/brand.tokens.json`을 `src/styles/generated/`에 생성하고, 코드에 고정된 manifest 전체 계약과 SHA-256/114개 고유 토큰 계약으로 검증한다. primary 정보·CTA는 Ink 900/700을, 상담·도움·선택 상태와 focus ring은 Forest를 사용한다. Tmoney RoundWind는 큰 한글 display에만 쓰며, 과거 팔레트 별칭은 호환 범위를 넘어 새 canonical 토큰으로 취급하지 않는다. `src/app/globals.css`의 import 순서는 생성 CSS → 얇은 프로젝트 어댑터 → 블로그 scoped experience다.
+
+`src/styles/munjanggun-brand.css`는 중앙 canonical 토큰을 재선언하는 두 번째 정본이 아니다. 기존 화면이 아직 소비하는 별칭과 `portal`, `showroom-dark`, `admin`의 명시적 route scope만 둔다. 새 raw token은 `scripts/ui-token-policy.config.mjs`의 좁은 allowlist와 이름 있는 예외 없이 추가하지 않는다.
 
 현재 공개 `/blog`에는 별도로 승인된 이미지 쇼룸 어댑터가 있다. 이 예외는 `docs/design/BLOG_EXPERIENCE_SYSTEM.md`와 아래 범위로 제한한다.
 
-- 블로그 전용 시각 토큰은 `[data-mg-theme="blog"]` 안에서만 사용한다.
+- 블로그 전용 시각 토큰은 `[data-mg-theme="blog"]` 안에서만 사용하고 중앙 v5 primitive/semantic 토큰에 연결한다.
 - `/blog` 홈은 `data-mg-blog-experience="showroom"`으로 이미지 쇼룸 override를 명시한다.
 - `/blog/[slug]`는 같은 semantic vocabulary의 reader 기본값을 사용한다.
 - Tmoney RoundWind는 블로그의 큰 한글 display에만, Pretendard는 본문과 UI에 사용한다.
 - 블로그 어댑터를 포털·무료방문실측·마이페이지·A/S·플랫폼 어드민의 자동 재설계 기준으로 확장하지 않는다.
-- `src/styles/munjanggun-brand.css`의 중앙 호환 토큰을 블로그 작업이 무심코 바꾸지 않는다.
+- `src/styles/generated/brand.css`는 생성물로만 갱신하고, 블로그 작업이 직접 수정하지 않는다.
+- `/blog` 홈의 승인된 DOM, 섹션 순서, gutter, section spacing, radius와 breakpoint geometry는 토큰 연결 작업에서 바꾸지 않는다.
 
 기존 `docs/showroom/DESIGN_SYSTEM.md`의 다크 미니멀 갤러리 규칙도 쇼룸/컬러북 경험에만 적용한다. 빨간 가격 강조와 할인 전단지식 UI는 모든 범위에서 금지한다.
 
@@ -97,12 +102,12 @@ Codex 외부 원고 작성
 -> 사진 승인
 -> 관리자 미리보기
 -> 발행 server action
--> public WebP 승격
+-> public WebP 또는 승인된 원본 GIF 승격
 -> 공개 /blog, /blog/[slug]
 -> sitemap / robots / metadata / JSON-LD
 ```
 
-승인 원고 등록은 인증된 관리자만 사용할 수 있다. 제목, slug, SEO/AEO 필드, 본문 블록, 검증된 근거를 받아 글·블록·등록 이력을 원자적으로 저장하고 새 글 상태를 반드시 `reviewing`으로 명시한다. 이 경계에는 AI 호출, 모델 설정, OpenAI 키가 없다. 왼쪽 메뉴의 고정 명칭은 `블로그 콘텐츠`다.
+승인 원고 등록은 인증된 관리자만 사용할 수 있다. 제목, slug, SEO/AEO 필드, 본문 블록을 받아 글·블록·등록 이력을 원자적으로 저장하고, 서버가 내부 provenance를 자동 기록하며 새 글 상태를 반드시 `reviewing`으로 명시한다. 이 경계에는 AI 호출, 모델 설정, OpenAI 키가 없다. 왼쪽 메뉴의 고정 명칭은 `블로그 콘텐츠`다.
 
 블로그 글은 다음 구조를 권장한다.
 
@@ -203,7 +208,7 @@ Codex 외부 원고 작성
 
 - Content OS DB/RLS/Storage 구조
 - Supabase bucket policy
-- publish server action과 WebP 승격 로직
+- publish server action과 WebP/원본 GIF 승격 로직
 - `/admin/platform/blog` UX
 - `/blog`, `/blog/[slug]` 렌더링 방식
 - sitemap/robots/generateMetadata/JSON-LD 구현 기준
@@ -238,3 +243,31 @@ Codex 외부 원고 작성
 6. 사진이 필요한 문단과 승인 상태를 분리했는가?
 7. 공개 발행 전 검수 게이트를 통과할 수 있는가?
 ```
+
+## 9. 중앙 공식 자산 등록과 GIF 계약
+
+`privacyStatus = official_reviewed` 중앙 자산은 이 프로젝트 사진보관함의 공식 원본 소스다. Codex와 관리자 UI는 같은 MIME·용량·dimensions·SHA-256 검증 코어를 사용한다.
+
+Codex 등록은 사람용 파일 선택창을 대신 조작하지 않는다. 서버 전용 명령이 중앙 manifest의 `assetId`를 받아 원본 검증, private Storage 업로드, 정적 WebP poster/thumbnail 생성, 사진보관함 메타데이터·감사 이벤트 생성, 선택적인 `blog_media`·본문 image block 연결을 수행한다. 중앙 저장소는 clean 상태여야 하고 선택한 manifest와 원본은 모두 현재 HEAD에 tracked되어 실제 bytes가 HEAD와 같아야 한다. service-role 또는 Supabase secret key는 이 서버 명령과 서버 런타임에서만 사용한다. 감사 actor는 서버 allowlist `CODEX_AUDIT_ACTOR_ID`와 일치하는 administrator만 허용한다.
+
+`scripts/register-official-brand-asset.mjs`의 `--cover`는 다른 대표사진이 없는 `reviewing` 글에만 대표사진을 지정한다. `--insert-after-block-id`는 지정한 기존 본문 블록 뒤에 image block을 만들고, 뒤 블록을 높은 순번부터 이동해 `(post_id, display_order)` 고유 계약을 보존한다. 이 연결은 service-role 전용 `showroom.attach_official_asset_to_reviewing_post(...)`가 글과 블록을 잠근 단일 DB 트랜잭션에서 media·usage·cover·순번·block·감사 이벤트를 함께 처리하므로 중간 실패는 전부 롤백된다. 관리자 편집기 저장은 같은 글의 server-side lease를 먼저 획득하므로 본문 저장 중 자동 배치는 거부되고, 자동 배치가 먼저 끝났다면 오래된 편집기 저장이 거부된다. lease는 자동 만료로 안전 경계를 약화하지 않으며 정상 저장의 `finally`에서 해제한다. 서버 장애로 15분 이상 남은 lease는 `scripts/reconcile-blog-editor-save-lease.mjs`가 관리자 allowlist·사유·감사 이벤트를 강제하는 RPC로만 조정한다. 연결 실패 뒤 새 자산 정리는 자산 행 잠금과 참조 확인·메타데이터 삭제를 하나의 RPC로 수행한 뒤 반환된 경로와 업로드 직후 알고 있는 경로만 Storage에서 지운다. 응답 유실 등 결과를 확인할 수 없는 경우에는 Storage를 건드리지 않는다. 이미 같은 media가 본문에 연결된 재실행은 중복 블록을 만들지 않는다.
+
+등록 직후 상태는 다음과 같다.
+
+- `official_reviewed`는 `privacy_checked = true`로 매핑할 수 있다.
+- 중앙의 모든 `candidate`는 `promotion_consent_checked = false`인 비공개 후보로 시작한다.
+- `claimRisk` 또는 `externalPublish`가 추가 확인을 요구하면 공개 승격을 막는다.
+- 글 연결은 `reviewing` 원고에만 허용하고, 중앙 `assetId` 중복은 DB unique index로도 막는다.
+- 공개 발행은 기존 관리자 승인과 publish server action만 수행한다.
+
+GIF는 private 원본 애니메이션을 그대로 보존하고 poster와 thumbnail만 정적 WebP로 만든다. 공개 승격이 승인된 GIF는 원본 GIF bytes와 `image/gif` MIME을 `blog-media`에 새 경로, `upsert: false`로 복사해 브라우저에서 애니메이션을 재생한다. alt가 없거나 용량 제한을 넘거나 주장 검수가 끝나지 않은 GIF는 공개하지 않는다.
+
+따라서 문서의 “직접 등록 금지”는 “검증·권한·감사 경계를 우회한 등록 금지”로 해석한다. 임의 SQL insert, `storage.objects` 직접 조작, 검증 없는 Storage 업로드는 금지한다.
+
+### 2026-07-20 통합 검증 상태
+
+- 중앙 source는 clean `e6b6eb618e08b907307497d87f58995bd945531c`(`e6b6eb6`), `DESIGN.md` v5.0, 고유 토큰 114개 계약이다.
+- 통합 브랜치는 `codex/platform-admin-blog-stabilization`, base는 `v2-cms`이며 통합 Draft PR은 [#73](https://github.com/westgeneraldoor/munjanggun/pull/73)이다.
+- 첫 원고는 `reviewing`, `published_at = null`, 27개 블록, image block 2개, active private media 3개다.
+- `mg-3panel-thumbnail-basic-001`은 글 연결만 감사 detach했고 중앙 asset과 file row 3개는 보존했다.
+- anon 목록은 0건, 알려진 public URL은 HTTP 200, private signed URL은 HTTP 200이다. 실제 발행과 public promotion은 수행하지 않았다.

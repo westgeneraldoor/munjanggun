@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Settings, LogOut, Menu, X, FolderTree, ClipboardList, Sliders, Newspaper, Images } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { PlatformIconButton } from '@/components/platform/ui'
 import styles from './AdminSidebar.module.css'
 
 export default function AdminSidebar() {
@@ -12,7 +13,69 @@ export default function AdminSidebar() {
   const [pendingPath, setPendingPath] = useState<string | null>(null)
   const pathname = usePathname()
   const router = useRouter()
-  const toggleSidebar = () => setIsOpen(!isOpen)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const sidebarRef = useRef<HTMLElement>(null)
+
+  const openSidebar = () => {
+    setIsOpen(true)
+  }
+
+  const closeSidebar = () => {
+    setIsOpen(false)
+    requestAnimationFrame(() => menuButtonRef.current?.focus())
+  }
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    let focusFrame = requestAnimationFrame(() => {
+      focusFrame = requestAnimationFrame(() => closeButtonRef.current?.focus({ preventScroll: true }))
+    })
+    const mobileViewport = window.matchMedia('(max-width: 1023px)')
+    const mainContent = document.querySelector<HTMLElement>('main')
+    const mainWasInert = mainContent?.inert ?? false
+    if (mainContent) mainContent.inert = true
+
+    const handleViewportChange = (event: MediaQueryListEvent) => {
+      if (!event.matches) setIsOpen(false)
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false)
+        requestAnimationFrame(() => menuButtonRef.current?.focus())
+        return
+      }
+
+      if (event.key === 'Tab' && sidebarRef.current) {
+        const focusable = Array.from(sidebarRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ))
+        if (focusable.length === 0) return
+
+        const first = focusable[0]
+        const last = focusable[focusable.length - 1]
+        const active = document.activeElement
+
+        if (event.shiftKey && (active === first || !sidebarRef.current.contains(active))) {
+          event.preventDefault()
+          last.focus()
+        } else if (!event.shiftKey && (active === last || !sidebarRef.current.contains(active))) {
+          event.preventDefault()
+          first.focus()
+        }
+      }
+    }
+    mobileViewport.addEventListener('change', handleViewportChange)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      cancelAnimationFrame(focusFrame)
+      mobileViewport.removeEventListener('change', handleViewportChange)
+      document.removeEventListener('keydown', handleKeyDown)
+      if (mainContent) mainContent.inert = mainWasInert
+    }
+  }, [isOpen])
 
   // Do not show sidebar on login page
   if (pathname === '/admin/login') {
@@ -40,23 +103,44 @@ export default function AdminSidebar() {
       {/* Mobile Top Bar */}
       <header className={styles.mobileHeader}>
         <div className={styles.mobileHeaderTitle}>문장군 관리자</div>
-        <button onClick={toggleSidebar} className={styles.menuButton} aria-label="메뉴 열기">
+        <PlatformIconButton
+          ref={menuButtonRef}
+          variant="ghost"
+          onClick={openSidebar}
+          className={styles.menuButton}
+          aria-label="메뉴 열기"
+          aria-expanded={isOpen}
+          aria-controls="admin-sidebar"
+        >
           <Menu size={24} />
-        </button>
+        </PlatformIconButton>
       </header>
 
       {/* Overlay */}
       {isOpen && (
-        <div className={styles.overlay} onClick={() => setIsOpen(false)} />
+        <div className={styles.overlay} onClick={closeSidebar} />
       )}
 
       {/* Sidebar */}
-      <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
+      <aside
+        ref={sidebarRef}
+        id="admin-sidebar"
+        className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}
+        role={isOpen ? 'dialog' : undefined}
+        aria-modal={isOpen || undefined}
+        aria-label="관리자 메뉴"
+      >
         <div className={styles.sidebarHeader}>
           <div className={styles.sidebarTitle}>문장군 관리자</div>
-          <button onClick={() => setIsOpen(false)} className={styles.closeButton} aria-label="메뉴 닫기">
+          <PlatformIconButton
+            ref={closeButtonRef}
+            variant="ghost"
+            onClick={closeSidebar}
+            className={styles.closeButton}
+            aria-label="메뉴 닫기"
+          >
             <X size={24} />
-          </button>
+          </PlatformIconButton>
         </div>
 
         <nav className={styles.nav}>
@@ -74,6 +158,7 @@ export default function AdminSidebar() {
                   <Link
                     href={item.path}
                     className={`${styles.navItem} ${isActive || isPending ? styles.active : ''} ${isPending ? styles.pending : ''}`}
+                    aria-current={isActive ? 'page' : undefined}
                     onClick={() => {
                       setPendingPath(item.path)
                       setIsOpen(false)

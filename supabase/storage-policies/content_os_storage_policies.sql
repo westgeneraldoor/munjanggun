@@ -8,12 +8,9 @@
 -- - No UPDATE policy is defined for blog-media.
 -- - Upload code must use new object paths instead of upsert.
 
+-- Public object URLs remain readable because blog-media is a public bucket.
+-- Do not grant bucket-wide anon SELECT, which exposes the object listing API.
 DROP POLICY IF EXISTS blog_media_public_select ON storage.objects;
-CREATE POLICY blog_media_public_select
-ON storage.objects
-FOR SELECT
-TO anon
-USING (bucket_id = 'blog-media');
 
 DROP POLICY IF EXISTS blog_media_admin_insert_public ON storage.objects;
 CREATE POLICY blog_media_admin_insert_public

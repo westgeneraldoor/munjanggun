@@ -87,10 +87,6 @@ function summarizeBrandCheck(value: Json) {
   }
 }
 
-function summarizeSourceEvidence(value: Json) {
-  return isJsonArray(value) ? value.length : 0
-}
-
 function mediaStatusCount(media: BlogMedia[]) {
   return media.reduce<Record<BlogMediaUsageStatus, number>>((acc, item) => {
     acc[item.usage_status] += 1
@@ -105,7 +101,6 @@ function mediaStatusCount(media: BlogMedia[]) {
 
 function toEditorPost(post: BlogPost, media: BlogMedia[], blocks: BlogBlock[]): BlogEditorPost {
   const brandCheck = summarizeBrandCheck(post.brand_check_result)
-  const sourceEvidenceCount = summarizeSourceEvidence(post.source_evidence)
   const statusCounts = mediaStatusCount(media)
   const publicReadyMedia = media.filter(item => item.usage_status === 'approved' || item.usage_status === 'published')
 
@@ -126,13 +121,11 @@ function toEditorPost(post: BlogPost, media: BlogMedia[], blocks: BlogBlock[]): 
     serviceArea: post.service_area,
     productType: post.product_type,
     aiCitationReady: post.ai_citation_ready,
-    lastFactCheckedAt: post.last_fact_checked_at,
     mediaMissingReason: post.media_missing_reason,
     publishedAt: post.published_at,
     createdAt: post.created_at,
     updatedAt: post.updated_at,
     gateSummary: {
-      sourceEvidenceCount,
       brandCheck,
       blockCount: blocks.length,
       ctaCount: blocks.filter(block => block.type === 'cta').length,
@@ -158,22 +151,7 @@ function toEditorBlock(block: BlogBlock): BlogEditorBlock {
   }
 }
 
-async function createPrivatePreviewUrl(
-  showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
-  item: BlogMedia,
-) {
-  if (!item.private_bucket || !item.private_object_path) return null
-
-  const { data, error } = await showroomAdmin.storage
-    .from(item.private_bucket)
-    .createSignedUrl(item.private_object_path, 300)
-
-  if (error || !data?.signedUrl) return null
-
-  return data.signedUrl
-}
-
-function toEditorMedia(item: BlogMedia, signedPreviewUrl: string | null): BlogEditorMedia {
+function toEditorMedia(item: BlogMedia): BlogEditorMedia {
   return {
     id: item.id,
     sourceType: item.source_type,
@@ -184,8 +162,8 @@ function toEditorMedia(item: BlogMedia, signedPreviewUrl: string | null): BlogEd
     privacyChecked: item.privacy_checked,
     promotionConsentChecked: item.promotion_consent_checked,
     usedAsCover: item.used_as_cover,
-    publicUrl: item.public_url,
-    signedPreviewUrl,
+    publicUrl: null,
+    signedPreviewUrl: `/admin/platform/blog/media/${item.id}`,
     hasPrivateObject: Boolean(item.private_bucket && item.private_object_path),
     hasPublicObject: Boolean(item.public_bucket && item.public_object_path),
     approvedAt: item.approved_at,
@@ -270,7 +248,7 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
   ] = await Promise.all([
     showroomAdmin
       .from('blog_posts')
-      .select('id, title, slug, excerpt, seo_title, meta_description, canonical_url, status, category, primary_keyword, target_question, summary_answer, related_questions, service_area, product_type, source_evidence, brand_check_result, ai_citation_ready, last_fact_checked_at, media_missing_reason, published_at, created_at, updated_at')
+      .select('id, title, slug, excerpt, seo_title, meta_description, canonical_url, status, category, primary_keyword, target_question, summary_answer, related_questions, service_area, product_type, brand_check_result, ai_citation_ready, media_missing_reason, published_at, created_at, updated_at')
       .eq('id', id)
       .single(),
     showroomAdmin
@@ -342,7 +320,6 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
     : [{ data: [] }, { data: [] }]
   const contentAssetFiles = (assetFileResult.data ?? []) as ContentAssetFile[]
   const contentAssetTagLinks = (assetTagLinkResult.data ?? []) as ContentAssetTagLink[]
-  const mediaPreviewUrls = await Promise.all(media.map(item => createPrivatePreviewUrl(showroomAdmin, item)))
   const filesByAsset = contentAssetFiles.reduce<Record<string, ContentAssetFile[]>>((acc, file) => {
     acc[file.asset_id] = [...(acc[file.asset_id] ?? []), file]
     return acc
@@ -379,7 +356,7 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
     <BlogEditorClient
       initialPost={toEditorPost(post, media, blocks)}
       initialBlocks={blocks.map(toEditorBlock)}
-      media={media.map((item, index) => toEditorMedia(item, mediaPreviewUrls[index] ?? null))}
+      media={media.map(toEditorMedia)}
       events={events.map(toEditorEvent)}
       initialQuestions={articleQuestions.map(toEditorQuestion)}
       contentAssets={contentAssetPickerItems}

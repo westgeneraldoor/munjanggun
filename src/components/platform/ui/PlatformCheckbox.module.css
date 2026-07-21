@@ -1,0 +1,39 @@
+.root {
+  min-width: 0;
+  min-height: var(--mg-control-size-min);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mg-space-2);
+  padding-block: var(--mg-space-2);
+  color: var(--mg-text-body);
+  font-family: var(--mg-font-body);
+  font-size: var(--mg-font-size-label);
+  line-height: var(--mg-line-height-body);
+  cursor: pointer;
+}
+
+.control {
+  flex: 0 0 auto;
+  inline-size: var(--mg-space-5);
+  block-size: var(--mg-space-5);
+  margin: 0;
+  accent-color: var(--mg-action-primary);
+  cursor: pointer;
+}
+
+.control:focus-visible {
+  outline: var(--mg-focus-ring-width) solid var(--mg-focus-ring);
+  outline-offset: var(--mg-focus-ring-offset);
+}
+
+.control:disabled,
+.control:disabled + .label {
+  color: var(--mg-disabled-text);
+  cursor: not-allowed;
+}
+
+.label {
+  min-width: 0;
+  padding-block: calc(var(--mg-space-1) / 2);
+  overflow-wrap: anywhere;
+}

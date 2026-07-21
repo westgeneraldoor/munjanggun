@@ -1,86 +1,118 @@
 import { notFound } from 'next/navigation'
 import { createShowroomClient } from '@/lib/supabase/server'
 import NodeForm from '@/components/admin/NodeForm'
-import { ChevronLeft } from 'lucide-react'
-import Link from 'next/link'
-import { Database } from '@/types/database'
+import {
+  PlatformLinkButton,
+  PlatformPageHeader,
+  PlatformPanel,
+  PlatformStatePanel,
+} from '@/components/platform/ui'
+import { logError } from '@/lib/logger'
+import styles from './page.module.css'
 
 export const dynamic = 'force-dynamic'
 
 export default async function NodeEditPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params
   const supabase = await createShowroomClient()
-  const showroomDb = supabase.schema('showroom')
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const { data: profile, error: profileError } = user
+    ? await supabase
+        .schema('platform')
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+    : { data: null, error: null }
 
-  // 1. Fetch node data
+  const accessError = userError ?? profileError
+  const isAdministrator = profile?.role === 'administrator'
+
+  if (accessError) {
+    logError('Failed to verify node editor access:', accessError)
+  }
+
+  if (!user || accessError || !isAdministrator) {
+    return (
+      <div className={styles.container}>
+        <PlatformPageHeader title="노드 편집" />
+        <PlatformPanel>
+          <PlatformStatePanel
+            tone="error"
+            title="노드 편집에 접근할 수 없습니다"
+            description="관리자 권한을 확인할 수 없어 편집 폼을 열지 않았습니다."
+            action={<PlatformLinkButton href="/admin/nodes" variant="secondary">노드 목록</PlatformLinkButton>}
+          />
+        </PlatformPanel>
+      </div>
+    )
+  }
+
+  const showroomDb = supabase.schema('showroom')
   const { data: node, error: nodeError } = await showroomDb
     .from('nodes')
     .select('*')
     .eq('id', id)
-    .single()
+    .maybeSingle()
 
-  if (nodeError || !node) {
-    notFound()
+  if (nodeError) {
+    logError('Failed to load node:', nodeError)
+    return (
+      <div className={styles.container}>
+        <PlatformPageHeader title="노드 편집" />
+        <PlatformPanel>
+          <PlatformStatePanel
+            tone="error"
+            title="노드를 불러오지 못했습니다"
+            description="기존 데이터를 보호하기 위해 편집 폼을 열지 않았습니다."
+            action={<PlatformLinkButton href={`/admin/nodes/${id}`} variant="secondary">다시 시도</PlatformLinkButton>}
+          />
+        </PlatformPanel>
+      </div>
+    )
   }
 
-  // 2. Fetch hero_media if listing
-  let heroMedia: Database['showroom']['Tables']['hero_media']['Row'][] = []
-  if (node.type === 'listing') {
-    const { data: media } = await showroomDb
-      .from('hero_media')
-      .select('*')
-      .eq('node_id', id)
-      .order('display_order', { ascending: true })
-    if (media) heroMedia = media
+  if (!node) notFound()
+
+  const [heroResult, galleryResult, childResult] = await Promise.all([
+    showroomDb.from('hero_media').select('*').eq('node_id', id).order('display_order', { ascending: true }),
+    showroomDb.from('gallery_photos').select('*').eq('node_id', id).order('display_order', { ascending: true }),
+    showroomDb.from('nodes').select('*', { count: 'exact', head: true }).eq('parent_id', id),
+  ])
+
+  const { data: heroMedia, error: heroMediaError } = heroResult
+  const { data: galleryPhotos, error: galleryPhotosError } = galleryResult
+  const { count: childCount, error: childCountError } = childResult
+  const loadError = heroMediaError ?? galleryPhotosError ?? childCountError
+
+  if (loadError) {
+    logError('Failed to load node editor dependencies:', loadError)
   }
-
-  // 3. Fetch gallery_photos if detail
-  let galleryPhotos: Database['showroom']['Tables']['gallery_photos']['Row'][] = []
-  if (node.type === 'detail') {
-    const { data: photos } = await showroomDb
-      .from('gallery_photos')
-      .select('*')
-      .eq('node_id', id)
-      .order('display_order', { ascending: true })
-    if (photos) galleryPhotos = photos
-  }
-
-  // 4. Fetch child count for type conversion protection
-  const { count } = await showroomDb
-    .from('nodes')
-    .select('*', { count: 'exact', head: true })
-    .eq('parent_id', id)
-
-  const childCount = count || 0
 
   return (
-    <div style={{ padding: 'var(--space-6)', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginBottom: 'var(--space-6)' }}>
-        <Link 
-          href="/admin/nodes" 
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            color: 'var(--admin-text-sub)',
-            textDecoration: 'none',
-            fontSize: 'var(--text-sm)',
-            fontWeight: 'var(--font-medium)'
-          }}
-        >
-          <ChevronLeft size={16} style={{ marginRight: '4px' }} />
-          돌아가기
-        </Link>
-        <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 'var(--font-bold)', color: 'var(--admin-text)', margin: 0 }}>
-          노드 편집: {node.name}
-        </h1>
-      </div>
-
-      <NodeForm 
-        node={node} 
-        heroMedia={heroMedia} 
-        galleryPhotos={galleryPhotos} 
-        childCount={childCount} 
+    <div className={styles.container}>
+      <PlatformPageHeader
+        title={`노드 편집: ${node.name}`}
+        description="쇼룸 노드의 공개 상태와 콘텐츠, 미디어를 한 번에 저장합니다."
+        actions={<PlatformLinkButton href="/admin/nodes" variant="secondary">노드 목록</PlatformLinkButton>}
       />
+      {loadError ? (
+        <PlatformPanel>
+          <PlatformStatePanel
+            tone="error"
+            title="노드 편집 데이터를 불러오지 못했습니다"
+            description="미디어나 하위 항목을 빈 값으로 덮어쓰지 않도록 편집 폼을 열지 않았습니다."
+            action={<PlatformLinkButton href={`/admin/nodes/${id}`} variant="secondary">다시 시도</PlatformLinkButton>}
+          />
+        </PlatformPanel>
+      ) : (
+        <NodeForm
+          node={node}
+          heroMedia={heroMedia ?? []}
+          galleryPhotos={galleryPhotos ?? []}
+          childCount={childCount ?? 0}
+        />
+      )}
     </div>
   )
 }

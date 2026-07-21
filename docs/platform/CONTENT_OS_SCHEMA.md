@@ -114,12 +114,12 @@ MVP에서는 enum보다 text/check 또는 lookup 테이블을 우선 검토한�
 | `related_questions` | jsonb | no | 관련 질문 배열 |
 | `service_area` | text | no | 지역 |
 | `product_type` | text | no | 중문/ABS도어/현관문/몰딩 등 |
-| `source_evidence` | jsonb | no | 근거 자료 목록 |
+| `source_evidence` | jsonb | no | 서버가 자동 기록하는 비공개 provenance 목록. 관리자 입력·발행 gate에 사용하지 않음 |
 | `brand_check_result` | jsonb | no | 금지표현/사실관계 체크 결과 |
 | `ai_model` | text | no | 레거시 생성 메타데이터. 현재 CMS는 기록하거나 사용하지 않음 |
 | `source_prompt` | text | no | 레거시 생성 입력 요약. 현재 CMS는 기록하거나 사용하지 않음 |
 | `ai_citation_ready` | boolean | yes | AI 답변 친화 필드 충족 여부 |
-| `last_fact_checked_at` | timestamptz | no | 사실 확인일 |
+| `last_fact_checked_at` | timestamptz | no | 레거시 사실 확인 메타데이터. 현재 CMS UI·발행 gate에서는 사용하지 않음 |
 | `created_by` | uuid | no | 생성자 |
 | `reviewed_by` | uuid | no | 검수자 |
 | `published_by` | uuid | no | 발행자 |
@@ -352,7 +352,6 @@ archived -> reviewing
 - 본문 블록
 - CTA 블록 또는 CTA 설정
 - 금지표현 없음
-- last_fact_checked_at
 
 `published` 필수 조건:
 

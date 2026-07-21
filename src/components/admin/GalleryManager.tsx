@@ -1,11 +1,13 @@
 'use client'
 
 import React from 'react'
-import { ArrowUp, ArrowDown, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react'
+import { PlatformField, PlatformIconButton } from '@/components/platform/ui'
 import ImageUploader from './ImageUploader'
 import styles from './GalleryManager.module.css'
+import type { UploadStateChange } from './useUploadPendingTracker'
 
-interface GalleryPhoto {
+export interface GalleryPhoto {
   id?: string
   image_url: string
   caption: string | null
@@ -16,134 +18,85 @@ interface GalleryManagerProps {
   photos: GalleryPhoto[]
   onPhotosChange: React.Dispatch<React.SetStateAction<GalleryPhoto[]>>
   nodeSlug: string
+  onUploadStateChange?: UploadStateChange
+  disabled?: boolean
 }
 
-export default function GalleryManager({ photos, onPhotosChange, nodeSlug }: GalleryManagerProps) {
+export default function GalleryManager({ photos, onPhotosChange, nodeSlug, onUploadStateChange, disabled = false }: GalleryManagerProps) {
+  const normalizeOrder = (items: GalleryPhoto[]) => items.map((photo, index) => ({ ...photo, display_order: index }))
   const handlePhotoUpload = (url: string) => {
-    onPhotosChange(prev => [
-      ...prev,
-      {
-        image_url: url,
-        caption: null,
-        display_order: prev.length
-      }
-    ])
+    onPhotosChange(previous => [...previous, { image_url: url, caption: null, display_order: previous.length }])
   }
-
   const handleRemovePhoto = (index: number) => {
-    onPhotosChange(prev => prev.filter((_, i) => i !== index).map((p, i) => ({ ...p, display_order: i })))
+    onPhotosChange(previous => normalizeOrder(previous.filter((_, itemIndex) => itemIndex !== index)))
   }
-
-  const handleMoveUp = (index: number) => {
-    if (index === 0) return
-    onPhotosChange(prev => {
-      const newPhotos = [...prev]
-      const temp = newPhotos[index - 1]
-      newPhotos[index - 1] = { ...newPhotos[index], display_order: index - 1 }
-      newPhotos[index] = { ...temp, display_order: index }
-      return newPhotos
+  const handleMove = (index: number, direction: -1 | 1) => {
+    onPhotosChange(previous => {
+      const target = index + direction
+      if (target < 0 || target >= previous.length) return previous
+      const next = [...previous]
+      ;[next[index], next[target]] = [next[target], next[index]]
+      return normalizeOrder(next)
     })
   }
-
-  const handleMoveDown = (index: number) => {
-    if (index === photos.length - 1) return
-    onPhotosChange(prev => {
-      if (index === prev.length - 1) return prev
-      const newPhotos = [...prev]
-      const temp = newPhotos[index + 1]
-      newPhotos[index + 1] = { ...newPhotos[index], display_order: index + 1 }
-      newPhotos[index] = { ...temp, display_order: index }
-      return newPhotos
-    })
-  }
-
   const handleCaptionChange = (index: number, caption: string) => {
-    onPhotosChange(prev => {
-      const newPhotos = [...prev]
-      newPhotos[index] = { ...newPhotos[index], caption: caption || null }
-      return newPhotos
-    })
+    onPhotosChange(previous => previous.map((photo, itemIndex) => itemIndex === index ? { ...photo, caption: caption || null } : photo))
   }
 
   return (
     <div className={styles.container}>
       <div className={styles.photosGrid}>
         {photos.map((photo, index) => (
-          <div key={index} className={styles.photoItem}>
+          <article key={photo.id ?? `${photo.image_url}-${index}`} className={styles.photoItem}>
             <ImageUploader
               folderPath={`photos/${nodeSlug || 'temp'}`}
-              onUploadComplete={(url) => {
-                onPhotosChange(prev => {
-                  const newPhotos = [...prev]
-                  newPhotos[index] = { ...newPhotos[index], image_url: url }
-                  return newPhotos
-                })
+              onUploadComplete={url => {
+                onPhotosChange(previous => previous.map((item, itemIndex) => itemIndex === index ? { ...item, image_url: url } : item))
               }}
               currentImageUrl={photo.image_url}
               onDelete={() => handleRemovePhoto(index)}
+              onUploadStateChange={onUploadStateChange}
+              disabled={disabled}
             />
-            <input 
-              type="text" 
-              className={styles.input} 
-              placeholder="사진 설명 (선택)" 
+            <PlatformField
+              label={`사진 ${index + 1} 설명 (선택)`}
               value={photo.caption || ''}
-              onChange={(e) => handleCaptionChange(index, e.target.value)}
+              placeholder="사진 설명"
+              onChange={event => handleCaptionChange(index, event.target.value)}
             />
             <div className={styles.photoActions}>
               <div className={styles.orderActions}>
-                <button
-                  type="button"
-                  className={styles.actionBtn}
-                  onClick={() => handleMoveUp(index)}
-                  disabled={index === 0}
-                  title="위로 이동"
-                >
-                  <ArrowUp size={16} />
-                </button>
-                <button
-                  type="button"
-                  className={styles.actionBtn}
-                  onClick={() => handleMoveDown(index)}
-                  disabled={index === photos.length - 1}
-                  title="아래로 이동"
-                >
-                  <ArrowDown size={16} />
-                </button>
+                <PlatformIconButton type="button" variant="secondary" onClick={() => handleMove(index, -1)} disabled={disabled || index === 0} aria-label={`사진 ${index + 1} 위로 이동`}>
+                  <ArrowUp size={18} aria-hidden="true" />
+                </PlatformIconButton>
+                <PlatformIconButton type="button" variant="secondary" onClick={() => handleMove(index, 1)} disabled={disabled || index === photos.length - 1} aria-label={`사진 ${index + 1} 아래로 이동`}>
+                  <ArrowDown size={18} aria-hidden="true" />
+                </PlatformIconButton>
               </div>
-              <button
-                type="button"
-                className={`${styles.actionBtn} ${styles.deleteBtn}`}
-                onClick={() => handleRemovePhoto(index)}
-                title="삭제"
-              >
-                <Trash2 size={16} />
-              </button>
+              <PlatformIconButton type="button" variant="danger" onClick={() => handleRemovePhoto(index)} disabled={disabled} aria-label={`사진 ${index + 1} 삭제`}>
+                <Trash2 size={18} aria-hidden="true" />
+              </PlatformIconButton>
             </div>
-          </div>
+          </article>
         ))}
-        
         <div className={styles.addPhotoCard}>
           <ImageUploader
             folderPath={`photos/${nodeSlug || 'temp'}`}
             onUploadComplete={handlePhotoUpload}
-            multiple={true}
+            multiple
             compressionMaxDimension={1000}
             compressionQuality={0.7}
-            onMultiUploadComplete={(urls) => {
-              onPhotosChange(prev => [
-                ...prev,
-                ...urls.map((url, i) => ({
-                  image_url: url,
-                  caption: null,
-                  display_order: prev.length + i
-                }))
+            onMultiUploadComplete={urls => {
+              onPhotosChange(previous => [
+                ...previous,
+                ...urls.map((url, index) => ({ image_url: url, caption: null, display_order: previous.length + index })),
               ])
             }}
             onUploadReplace={(oldUrl, newUrl) => {
-              onPhotosChange(prev => prev.map(p =>
-                p.image_url === oldUrl ? { ...p, image_url: newUrl } : p
-              ))
+              onPhotosChange(previous => previous.map(photo => photo.image_url === oldUrl ? { ...photo, image_url: newUrl } : photo))
             }}
+            onUploadStateChange={onUploadStateChange}
+            disabled={disabled}
           />
         </div>
       </div>

@@ -1,0 +1,13 @@
+.container {
+  display: grid;
+  gap: var(--space-6);
+  width: min(100%, calc(var(--mg-layout-max) + var(--mg-space-4) + var(--mg-space-1)));
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: var(--space-6);
+  }
+}

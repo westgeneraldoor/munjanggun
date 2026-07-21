@@ -5,17 +5,25 @@
 import { useEffect, useMemo, useRef, useState, useTransition, type ChangeEvent, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  AlertCircle,
   CheckCircle2,
   ImageIcon,
   Images,
-  Loader2,
   Plus,
-  Save,
-  Search,
   UploadCloud,
   X,
 } from 'lucide-react'
+import {
+  PlatformButton,
+  PlatformCheckbox,
+  PlatformField,
+  PlatformIconButton,
+  PlatformPageHeader,
+  PlatformPanel,
+  PlatformSegmentedControl,
+  PlatformSelect,
+  PlatformStatePanel,
+  PlatformStatusBadge,
+} from '@/components/platform/ui'
 import { updateContentAsset, uploadContentAssets, type UploadContentAssetsResult } from './actions'
 import styles from './assets.module.css'
 
@@ -163,7 +171,7 @@ function uploadId(file: File) {
   return `${file.name}-${file.size}-${file.lastModified}`
 }
 
-function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
+function UploadPanel() {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [selectedUploads, setSelectedUploads] = useState<SelectedUpload[]>([])
@@ -240,13 +248,13 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
         setPromotionConsentChecked(false)
         form.reset()
         router.refresh()
-        onUploaded()
       }
     })
   }
 
   return (
-    <form className={styles.uploadPanel} onSubmit={handleSubmit}>
+    <PlatformPanel className={styles.uploadPanel}>
+      <form className={styles.uploadForm} onSubmit={handleSubmit}>
       <div className={styles.uploadDrop}>
         <UploadCloud aria-hidden="true" size={24} />
         <div>
@@ -256,7 +264,7 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
         <input
           type="file"
           name="files"
-          accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+          accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif"
           multiple
           onChange={handleFileChange}
           disabled={isPending}
@@ -276,23 +284,20 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
                   <img src={item.previewUrl} alt={item.title || item.file.name} />
                 </div>
                 <div className={styles.selectedPreviewBody}>
-                  <label>
-                    사진 이름
-                    <input
-                      value={item.title}
-                      onChange={event => updateSelectedUpload(item.id, { title: event.target.value })}
-                      placeholder="예: 현관 중문 설치 후"
-                    />
-                  </label>
-                  <label>
-                    짧은 설명
-                    <textarea
-                      value={item.description}
-                      onChange={event => updateSelectedUpload(item.id, { description: event.target.value })}
-                      rows={2}
-                      placeholder="예: 좁은 현관에 맞춘 3연동 중문"
-                    />
-                  </label>
+                  <PlatformField
+                    label="사진 이름"
+                    value={item.title}
+                    onChange={(event: ChangeEvent<HTMLInputElement>) => updateSelectedUpload(item.id, { title: event.target.value })}
+                    placeholder="예: 현관 중문 설치 후"
+                  />
+                  <PlatformField
+                    label="짧은 설명"
+                    multiline
+                    value={item.description}
+                    onChange={(event: ChangeEvent<HTMLTextAreaElement>) => updateSelectedUpload(item.id, { description: event.target.value })}
+                    rows={2}
+                    placeholder="예: 좁은 현관에 맞춘 3연동 중문"
+                  />
                   <small>{formatBytes(item.file.size)}</small>
                 </div>
               </li>
@@ -307,55 +312,33 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
           <small>분류, 태그, 제품군, 공간, 지역, 사용 목적은 나중에 수정해도 됩니다.</small>
         </summary>
         <div className={styles.uploadFields}>
-          <label>
-            분류
-            <input name="category" placeholder="예: 중문, 현관, 시공후" />
-          </label>
-          <label>
-            태그
-            <input name="tags" placeholder="예: 3연동, 화이트, 좁은현관" />
-          </label>
-          <label>
-            제품군
-            <input name="productType" placeholder="예: 중문" />
-          </label>
-          <label>
-            공간
-            <input name="spaceType" placeholder="예: 현관" />
-          </label>
-          <label>
-            지역
-            <input name="region" placeholder="예: 동탄" />
-          </label>
-          <label>
-            사용 목적
-            <input name="usagePurpose" placeholder="예: 블로그, 상담자료" />
-          </label>
+          <PlatformField label="분류" name="category" placeholder="예: 중문, 현관, 시공후" />
+          <PlatformField label="태그" name="tags" placeholder="예: 3연동, 화이트, 좁은현관" />
+          <PlatformField label="제품군" name="productType" placeholder="예: 중문" />
+          <PlatformField label="공간" name="spaceType" placeholder="예: 현관" />
+          <PlatformField label="지역" name="region" placeholder="예: 동탄" />
+          <PlatformField label="사용 목적" name="usagePurpose" placeholder="예: 블로그, 상담자료" />
         </div>
       </details>
 
       <fieldset className={styles.uploadReview}>
         <legend>사진 사용 전 확인</legend>
-        <label>
-          <input
-            type="checkbox"
-            name="privacyChecked"
-            checked={privacyChecked}
-            onChange={event => setPrivacyChecked(event.target.checked)}
-            disabled={isPending}
-          />
+        <PlatformCheckbox
+          name="privacyChecked"
+          checked={privacyChecked}
+          onChange={event => setPrivacyChecked(event.target.checked)}
+          disabled={isPending}
+        >
           고객 정보·주소·연락처 등 민감정보가 보이지 않는지 확인했습니다.
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            name="promotionConsentChecked"
-            checked={promotionConsentChecked}
-            onChange={event => setPromotionConsentChecked(event.target.checked)}
-            disabled={isPending}
-          />
+        </PlatformCheckbox>
+        <PlatformCheckbox
+          name="promotionConsentChecked"
+          checked={promotionConsentChecked}
+          onChange={event => setPromotionConsentChecked(event.target.checked)}
+          disabled={isPending}
+        >
           블로그·홍보용으로 사용할 수 있는 사진인지 확인했습니다.
-        </label>
+        </PlatformCheckbox>
       </fieldset>
 
       {isPending || uploadProgress > 0 ? (
@@ -372,20 +355,29 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
       ) : null}
 
       <div className={styles.uploadActions}>
-        <button type="submit" className={styles.primaryButton} disabled={isPending || selectedUploads.length === 0 || isOverLimit || !privacyChecked || !promotionConsentChecked}>
-          {isPending ? <Loader2 aria-hidden="true" size={16} className={styles.spin} /> : <UploadCloud aria-hidden="true" size={16} />}
+        <PlatformButton
+          type="submit"
+          isLoading={isPending}
+          loadingLabel="사진 보관 중…"
+          disabled={selectedUploads.length === 0 || isOverLimit || !privacyChecked || !promotionConsentChecked}
+        >
+          <UploadCloud aria-hidden="true" size={16} />
           사진 보관
-        </button>
+        </PlatformButton>
       </div>
 
       {result ? (
-        <div className={result.ok ? styles.resultSuccess : styles.resultError} role="status">
-          <strong>{result.message}</strong>
+        <div className={styles.resultGroup}>
+          <PlatformStatePanel
+            tone={result.ok ? 'success' : 'error'}
+            title={result.message}
+            description={result.items.length > 0 ? `${result.items.length}개 파일의 처리 결과를 확인해 주세요.` : undefined}
+          />
           {result.items.length > 0 ? (
-            <ul>
+            <ul className={styles.resultItems} aria-label="파일별 업로드 결과">
               {result.items.map((item, index) => (
                 <li key={`${item.fileName}-${index}`}>
-                  {item.ok ? <CheckCircle2 aria-hidden="true" size={14} /> : <AlertCircle aria-hidden="true" size={14} />}
+                  {item.ok ? <CheckCircle2 aria-hidden="true" size={14} /> : <X aria-hidden="true" size={14} />}
                   <span>{fileTitle(item.fileName)}: {item.message}</span>
                 </li>
               ))}
@@ -393,7 +385,8 @@ function UploadPanel({ onUploaded }: { onUploaded: () => void }) {
           ) : null}
         </div>
       ) : null}
-    </form>
+      </form>
+    </PlatformPanel>
   )
 }
 
@@ -429,13 +422,13 @@ function AssetDetailPanel({
 }) {
   const router = useRouter()
   const [form, setForm] = useState<DetailForm>(() => itemToForm(item))
-  const [message, setMessage] = useState<string | null>(null)
+  const [feedback, setFeedback] = useState<{ ok: boolean; message: string } | null>(null)
   const [isPending, startTransition] = useTransition()
   const image = item.web?.url ?? item.thumbnail?.url
 
   function setField<K extends keyof DetailForm>(key: K, value: DetailForm[K]) {
     setForm(current => ({ ...current, [key]: value }))
-    setMessage(null)
+    setFeedback(null)
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -454,23 +447,29 @@ function AssetDetailPanel({
         privacyChecked: form.privacyChecked,
         promotionConsentChecked: form.promotionConsentChecked,
       })
-      setMessage(result.message)
+      setFeedback({ ok: result.ok, message: result.message })
       if (result.ok) router.refresh()
     })
   }
 
   return (
-    <aside className={styles.detailPanel} aria-label="사진 상세 정보">
+    <PlatformPanel as="aside" className={styles.detailPanel} aria-label="사진 상세 정보">
       {onClose ? (
-        <button
-          type="button"
-          className={`${styles.secondaryButton} ${styles.detailCloseButton}`}
-          onClick={onClose}
-          aria-label="사진 상세 닫기"
-        >
-          <X aria-hidden="true" size={16} />
-          {mode === 'mobile' ? '목록으로' : '상세 닫기'}
-        </button>
+        mode === 'mobile' ? (
+          <PlatformButton type="button" variant="secondary" fullWidth autoFocus onClick={onClose}>
+            <X aria-hidden="true" size={16} />
+            목록으로
+          </PlatformButton>
+        ) : (
+          <PlatformIconButton
+            type="button"
+            className={styles.detailCloseButton}
+            onClick={onClose}
+            aria-label="사진 상세 닫기"
+          >
+            <X aria-hidden="true" size={16} />
+          </PlatformIconButton>
+        )
       ) : null}
 
       <div className={styles.detailPreview}>
@@ -484,60 +483,40 @@ function AssetDetailPanel({
       </div>
 
       <div className={styles.detailMeta}>
-          <span>업로드 {formatDateTime(item.createdAt)}</span>
-          <span>사용 {item.usedCount}회</span>
-          <span>{formatBytes(item.web?.sizeBytes ?? item.thumbnail?.sizeBytes)}</span>
-        </div>
+        <span className={styles.detailMetaItem}>업로드 {formatDateTime(item.createdAt)}</span>
+        <span className={styles.detailMetaItem}>사용 {item.usedCount}회</span>
+        <span className={styles.detailMetaItem}>{formatBytes(item.web?.sizeBytes ?? item.thumbnail?.sizeBytes)}</span>
+        <PlatformStatusBadge tone={item.privacyChecked && item.promotionConsentChecked ? 'success' : 'warning'}>
+          {item.privacyChecked && item.promotionConsentChecked ? '검수 완료' : '검수 필요'}
+        </PlatformStatusBadge>
+      </div>
 
       <form className={styles.detailForm} onSubmit={handleSubmit}>
-        <label>
-          사진명
-          <input value={form.title} onChange={event => setField('title', event.target.value)} />
-        </label>
-        <label>
-          사진 설명
-          <textarea rows={4} value={form.description} onChange={event => setField('description', event.target.value)} />
-        </label>
+        <PlatformField label="사진명" value={form.title} onChange={(event: ChangeEvent<HTMLInputElement>) => setField('title', event.target.value)} />
+        <PlatformField label="사진 설명" multiline rows={4} value={form.description} onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setField('description', event.target.value)} />
         <details className={styles.optionalFields}>
           <summary>
             <span>선택 정보</span>
             <small>분류, 태그, 제품군, 공간, 지역, 사용 목적은 필요할 때만 채우면 됩니다.</small>
           </summary>
           <div className={styles.detailGrid}>
-            <label>
-              분류
-              <input value={form.category} onChange={event => setField('category', event.target.value)} />
-            </label>
-            <label>
-              태그
-              <input value={form.tags} onChange={event => setField('tags', event.target.value)} />
-            </label>
-            <label>
-              제품군
-              <input value={form.productType} onChange={event => setField('productType', event.target.value)} />
-            </label>
-            <label>
-              공간
-              <input value={form.spaceType} onChange={event => setField('spaceType', event.target.value)} />
-            </label>
-            <label>
-              지역
-              <input value={form.region} onChange={event => setField('region', event.target.value)} />
-            </label>
-            <label>
-              사용 목적
-              <input value={form.usagePurpose} onChange={event => setField('usagePurpose', event.target.value)} />
-            </label>
+            <PlatformField label="분류" value={form.category} onChange={(event: ChangeEvent<HTMLInputElement>) => setField('category', event.target.value)} />
+            <PlatformField label="태그" value={form.tags} onChange={(event: ChangeEvent<HTMLInputElement>) => setField('tags', event.target.value)} />
+            <PlatformField label="제품군" value={form.productType} onChange={(event: ChangeEvent<HTMLInputElement>) => setField('productType', event.target.value)} />
+            <PlatformField label="공간" value={form.spaceType} onChange={(event: ChangeEvent<HTMLInputElement>) => setField('spaceType', event.target.value)} />
+            <PlatformField label="지역" value={form.region} onChange={(event: ChangeEvent<HTMLInputElement>) => setField('region', event.target.value)} />
+            <PlatformField label="사용 목적" value={form.usagePurpose} onChange={(event: ChangeEvent<HTMLInputElement>) => setField('usagePurpose', event.target.value)} />
           </div>
         </details>
 
-        <button type="submit" className={styles.primaryButton} disabled={isPending}>
-          {isPending ? <Loader2 aria-hidden="true" size={16} className={styles.spin} /> : <Save aria-hidden="true" size={16} />}
-          저장
-        </button>
-        {message ? <p className={styles.saveMessage}>{message}</p> : null}
+        <PlatformButton type="submit" isLoading={isPending} loadingLabel="저장 중…">저장</PlatformButton>
+        {feedback ? (
+          <p className={styles.saveMessage} role="status" aria-live="polite" data-tone={feedback.ok ? 'success' : 'error'}>
+            {feedback.message}
+          </p>
+        ) : null}
       </form>
-    </aside>
+    </PlatformPanel>
   )
 }
 
@@ -562,6 +541,7 @@ export default function ContentAssetsClient({
   const [tagFilter, setTagFilter] = useState('')
   const [selectedId, setSelectedId] = useState('')
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
+  const returnFocusRef = useRef<HTMLButtonElement | null>(null)
 
   const filteredItems = useMemo(() => {
     return initialItems.filter(item => {
@@ -585,49 +565,48 @@ export default function ContentAssetsClient({
     usagePurpose: optionValues(initialItems, 'usagePurpose'),
   }), [initialItems])
 
-  function chooseItem(id: string) {
+  function chooseItem(id: string, trigger: HTMLButtonElement) {
     const isClosingCurrent = selectedId === id
+    returnFocusRef.current = trigger
     setSelectedId(isClosingCurrent ? '' : id)
     setMobileDetailOpen(!isClosingCurrent)
   }
 
   function closeDetail() {
+    const returnTarget = returnFocusRef.current
     setSelectedId('')
     setMobileDetailOpen(false)
+    window.requestAnimationFrame(() => returnTarget?.focus())
   }
 
   return (
     <div className={styles.page}>
-      <header className={styles.pageHeader}>
-        <div>
-          <p className={styles.kicker}>문장군 콘텐츠 자산</p>
-          <h1>사진보관함</h1>
-          <p>블로그, 상담자료, 시공 콘텐츠에 다시 사용할 사진을 한곳에 정리합니다.</p>
-        </div>
-        <button type="button" className={styles.primaryButton} onClick={() => setUploadOpen(current => !current)}>
-          <Plus aria-hidden="true" size={16} />
-          사진 추가
-        </button>
-      </header>
+      <PlatformPageHeader
+        className={styles.pageHeader}
+        title="사진보관함"
+        description="블로그, 상담자료, 시공 콘텐츠에 다시 사용할 사진을 한곳에 정리합니다."
+        actions={(
+          <PlatformButton type="button" onClick={() => setUploadOpen(current => !current)} aria-expanded={uploadOpen}>
+            <Plus aria-hidden="true" size={16} />
+            {uploadOpen ? '사진 추가 닫기' : '사진 추가'}
+          </PlatformButton>
+        )}
+      />
 
-      {uploadOpen ? <UploadPanel onUploaded={() => setUploadOpen(false)} /> : null}
+      {uploadOpen ? <UploadPanel /> : null}
 
       {loadError ? (
-        <div className={styles.errorState} role="alert">
-          <AlertCircle aria-hidden="true" size={18} />
-          {loadError}
-        </div>
+        <PlatformStatePanel tone="error" title="사진보관함을 불러오지 못했습니다." description={loadError} />
       ) : null}
 
-      <section className={styles.toolbar} aria-label="사진 검색과 필터">
-        <label className={styles.searchBox}>
-          <Search aria-hidden="true" size={16} />
-          <input
-            value={search}
-            onChange={event => setSearch(event.target.value)}
-            placeholder="사진명, 설명, 태그로 검색"
-          />
-        </label>
+      <PlatformPanel as="section" className={styles.toolbar} aria-label="사진 검색과 필터">
+        <PlatformField
+          type="search"
+          label="사진 검색"
+          value={search}
+          onChange={event => setSearch(event.target.value)}
+          placeholder="사진명, 설명, 태그로 검색"
+        />
         <details className={styles.filterDetails}>
           <summary>
             <span>상세 필터</span>
@@ -635,41 +614,29 @@ export default function ContentAssetsClient({
           </summary>
           <div className={styles.filterGrid}>
             {(Object.keys(FILTER_LABELS) as FilterKey[]).map(key => (
-              <label key={key}>
-                <span>{FILTER_LABELS[key]}</span>
-                <select
-                  value={filters[key]}
-                  onChange={event => setFilters(current => ({ ...current, [key]: event.target.value }))}
-                >
-                  <option value="">전체</option>
-                  {options[key].map(value => <option key={value} value={value}>{value}</option>)}
-                </select>
-              </label>
+              <PlatformSelect
+                key={key}
+                label={FILTER_LABELS[key]}
+                value={filters[key]}
+                onChange={event => setFilters(current => ({ ...current, [key]: event.target.value }))}
+                options={[
+                  { value: '', label: '전체' },
+                  ...options[key].map(value => ({ value, label: value })),
+                ]}
+              />
             ))}
           </div>
           {tagOptions.length > 0 ? (
-            <div className={styles.tagFilters} aria-label="태그 필터">
-              <button
-                type="button"
-                className={!tagFilter ? styles.tagActive : styles.tagButton}
-                onClick={() => setTagFilter('')}
-              >
-                전체 태그
-              </button>
-              {tagOptions.map(tag => (
-                <button
-                  key={tag.id}
-                  type="button"
-                  className={tagFilter === tag.name ? styles.tagActive : styles.tagButton}
-                  onClick={() => setTagFilter(tag.name)}
-                >
-                  {tag.name}
-                </button>
-              ))}
-            </div>
+            <PlatformSegmentedControl
+              className={styles.tagFilters}
+              label="태그 필터"
+              value={tagFilter}
+              onChange={setTagFilter}
+              items={[{ value: '', label: '전체 태그' }, ...tagOptions.map(tag => ({ value: tag.name, label: tag.name }))]}
+            />
           ) : null}
         </details>
-      </section>
+      </PlatformPanel>
 
       {mobileDetailOpen && selectedItem ? (
         <div className={styles.mobileDetail}>
@@ -684,13 +651,14 @@ export default function ContentAssetsClient({
             <span>최근 업로드 순</span>
           </div>
 
-          {filteredItems.length === 0 ? (
-            <div className={styles.emptyState}>
-              <Images aria-hidden="true" size={24} />
-              <strong>아직 조건에 맞는 사진이 없습니다.</strong>
-              <span>사진을 추가하거나 검색 조건을 줄여보세요.</span>
-            </div>
-          ) : (
+          {filteredItems.length === 0 && !loadError ? (
+            <PlatformStatePanel
+              tone="empty"
+              icon={<Images size={24} />}
+              title="아직 조건에 맞는 사진이 없습니다."
+              description="사진을 추가하거나 검색 조건을 줄여보세요."
+            />
+          ) : filteredItems.length > 0 ? (
             <div className={styles.assetGrid}>
               {filteredItems.map((item, index) => {
                 const isSelected = selectedItem?.id === item.id
@@ -699,7 +667,8 @@ export default function ContentAssetsClient({
                     type="button"
                     key={item.id}
                     className={`${styles.assetCard} ${isSelected ? styles.assetCardSelected : ''}`}
-                    onClick={() => chooseItem(item.id)}
+                    onClick={event => chooseItem(item.id, event.currentTarget)}
+                    aria-pressed={isSelected}
                   >
                     <div className={styles.cardThumb}>
                       <AssetThumbnail item={item} />
@@ -713,7 +682,7 @@ export default function ContentAssetsClient({
                 )
               })}
             </div>
-          )}
+          ) : null}
         </section>
 
         {selectedItem ? (

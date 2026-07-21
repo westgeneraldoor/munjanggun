@@ -1,0 +1,97 @@
+.control {
+  min-height: var(--mg-control-size-default);
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mg-space-3);
+  padding: var(--mg-space-2);
+  color: var(--mg-text-primary);
+  background: transparent;
+  border: var(--mg-border-width) solid transparent;
+  border-radius: var(--mg-radius-card);
+  cursor: pointer;
+  text-align: left;
+}
+
+.control:hover:not(:disabled) {
+  background: var(--mg-action-secondary-hover);
+  border-color: var(--mg-border-subtle);
+}
+
+.control:focus-visible {
+  outline: var(--mg-focus-ring-width) solid var(--mg-focus-ring);
+  outline-offset: var(--mg-focus-ring-offset);
+}
+
+.control:disabled {
+  color: var(--mg-disabled-text);
+  cursor: not-allowed;
+}
+
+.copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mg-space-1);
+}
+
+.label {
+  font-size: var(--mg-current-label);
+  font-weight: var(--mg-font-weight-label);
+  line-height: var(--mg-line-height-label);
+}
+
+.description {
+  color: var(--mg-text-muted);
+  font-size: var(--mg-current-caption);
+  line-height: var(--mg-line-height-caption);
+}
+
+.track {
+  position: relative;
+  flex: 0 0 auto;
+  inline-size: var(--mg-control-size-default);
+  block-size: calc(var(--mg-space-3) * 2);
+  background: var(--mg-disabled-surface);
+  border: var(--mg-border-width) solid var(--mg-border-strong);
+  border-radius: var(--mg-radius-frame);
+  transition: background-color var(--mg-dur-micro) var(--mg-ease-cinema), border-color var(--mg-dur-micro) var(--mg-ease-cinema);
+}
+
+.thumb {
+  position: absolute;
+  inset-block-start: var(--mg-space-1);
+  inset-inline-start: var(--mg-space-1);
+  inline-size: calc(var(--mg-space-2) * 2);
+  block-size: calc(var(--mg-space-2) * 2);
+  background: var(--mg-surface-card);
+  border-radius: var(--mg-radius-frame);
+  box-shadow: var(--mg-shadow-card);
+  transition: inset-inline-start var(--mg-dur-micro) var(--mg-ease-cinema);
+}
+
+.control[aria-checked="true"] .track {
+  background: var(--mg-action-primary);
+  border-color: var(--mg-action-primary);
+}
+
+.control[aria-checked="true"] .thumb {
+  inset-inline-start: calc(100% - var(--mg-space-1) - (var(--mg-space-2) * 2));
+}
+
+.control:disabled .track {
+  background: var(--mg-disabled-surface);
+  border-color: var(--mg-border-subtle);
+}
+
+.control:disabled .thumb {
+  background: var(--mg-disabled-text);
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track,
+  .thumb {
+    transition: none;
+  }
+}

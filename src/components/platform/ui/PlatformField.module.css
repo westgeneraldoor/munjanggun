@@ -16,20 +16,20 @@
 .control {
   width: 100%;
   min-height: var(--mg-form-field-height);
-  padding: 12px 14px;
+  padding: var(--mg-space-3) var(--mg-space-4);
   color: var(--mg-text-primary);
   background: var(--mg-surface-card);
-  border: 1px solid var(--mg-border-subtle);
+  border: var(--mg-border-width) solid var(--mg-border-subtle);
   border-radius: var(--mg-radius-md);
   font-family: var(--mg-font-body);
   font-size: var(--mg-current-body);
   line-height: var(--mg-line-height-body);
   outline: none;
-  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  transition: border-color var(--mg-dur-micro) var(--mg-ease-cinema), box-shadow var(--mg-dur-micro) var(--mg-ease-cinema), background-color var(--mg-dur-micro) var(--mg-ease-cinema);
 }
 
 textarea.control {
-  min-height: 132px;
+  min-height: calc(var(--mg-control-size-min) * 3);
   resize: vertical;
 }
 
@@ -39,7 +39,7 @@ textarea.control {
 
 .control:focus-visible {
   border-color: var(--mg-focus-ring);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--mg-focus-ring) 12%, transparent);
+  box-shadow: var(--mg-focus-shadow-soft);
 }
 
 .control:disabled {
@@ -58,6 +58,12 @@ textarea.control {
   font-family: var(--mg-font-body);
   font-size: var(--mg-current-caption);
   line-height: var(--mg-line-height-caption);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control {
+    transition: none;
+  }
 }
 
 .hint {

@@ -1,6 +1,16 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, useTransition, type ChangeEvent, type FormEvent, type RefObject } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  type ChangeEvent,
+  type ComponentProps,
+  type FormEvent,
+  type RefObject,
+} from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -24,6 +34,15 @@ import {
   UploadCloud,
   XCircle,
 } from 'lucide-react'
+import BlogPostRenderer from '@/components/blog/BlogPostRenderer'
+import { PlatformCheckbox } from '@/components/platform/ui/PlatformCheckbox'
+import { PlatformChip } from '@/components/platform/ui/PlatformChip'
+import { PlatformModal } from '@/components/platform/ui/PlatformModal'
+import { PlatformPreviewFrame } from '@/components/platform/ui/PlatformPreviewFrame'
+import { PlatformStatePanel } from '@/components/platform/ui/PlatformStatePanel'
+import { PlatformStatusBadge, type PlatformStatusBadgeTone } from '@/components/platform/ui/PlatformStatusBadge'
+import { PlatformTabPanel } from '@/components/platform/ui/PlatformTabPanel'
+import { PlatformTabs } from '@/components/platform/ui/PlatformTabs'
 import type {
   BlogBlockType,
   BlogContentCategory,
@@ -32,7 +51,7 @@ import type {
   BlogPostStatus,
   BlogQuestionStatus,
 } from '@/types/database'
-import { normalizeGuideBoxBlock, normalizeLinkButtonBlock } from '@/lib/content-os/blog-body-blocks'
+import { buildBlogEditorPreviewData, createStableEditorSignature } from '@/lib/content-os/blog-editor-preview'
 import {
   attachContentAssetToBlogMedia,
   publishBlogPost,
@@ -62,13 +81,11 @@ export type BlogEditorPost = {
   serviceArea: string | null
   productType: string | null
   aiCitationReady: boolean
-  lastFactCheckedAt: string | null
   mediaMissingReason: string | null
   publishedAt: string | null
   createdAt: string
   updatedAt: string
   gateSummary: {
-    sourceEvidenceCount: number
     brandCheck: {
       hasResult: boolean
       forbiddenExpression: boolean
@@ -174,6 +191,11 @@ type AssetPickerTarget =
   | { type: 'replace'; clientId: string }
   | { type: 'insertBefore'; clientId: string }
 type EditorMode = 'write' | 'seo'
+
+const EDITOR_MODE_TABS: ReadonlyArray<{ value: EditorMode; label: string }> = [
+  { value: 'write', label: '작성란' },
+  { value: 'seo', label: 'SEO/AEO' },
+]
 type PickerUploadItem = {
   id: string
   file: File
@@ -214,8 +236,12 @@ const STATUS_ACTION_LABEL: Record<BlogPostStatus, string> = {
   archived: '보관으로',
 }
 
-function getStatusBadgeClass(status: BlogPostStatus) {
-  return status === 'ai_draft' ? styles.status_reviewing : styles[`status_${status}`]
+function getPostStatusTone(status: BlogPostStatus): PlatformStatusBadgeTone {
+  if (status === 'needs_media') return 'danger'
+  if (status === 'ready') return 'success'
+  if (status === 'published') return 'info'
+  if (status === 'archived') return 'neutral'
+  return 'review'
 }
 
 const QUESTION_STATUS_LABEL: Record<BlogQuestionStatus, string> = {
@@ -224,6 +250,13 @@ const QUESTION_STATUS_LABEL: Record<BlogQuestionStatus, string> = {
   approved: '승인됨',
   rejected: '반려',
   archived: '보관',
+}
+
+function getQuestionStatusTone(status: BlogQuestionStatus): PlatformStatusBadgeTone {
+  if (status === 'approved') return 'success'
+  if (status === 'rejected') return 'danger'
+  if (status === 'archived') return 'neutral'
+  return 'review'
 }
 
 const BLOCK_LABEL: Record<BlogBlockType, string> = {
@@ -289,16 +322,27 @@ function formatDateTime(value: string | null) {
   }).format(new Date(value))
 }
 
-function toDateTimeLocal(value: string | null) {
-  if (!value) return ''
-  const date = new Date(value)
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-  return local.toISOString().slice(0, 16)
-}
-
-function fromDateTimeLocal(value: string) {
-  if (!value) return null
-  return new Date(value).toISOString()
+function EditorStateMessage({
+  ok,
+  text,
+  issues,
+}: {
+  ok: boolean
+  text: string
+  issues?: string[]
+}) {
+  return (
+    <PlatformStatePanel
+      className={styles.editorStateMessage}
+      tone={ok ? 'success' : 'error'}
+      title={text}
+      details={issues && issues.length > 0 ? (
+        <ul className={styles.publishIssues}>
+          {issues.map(issue => <li key={issue}>{issue}</li>)}
+        </ul>
+      ) : undefined}
+    />
+  )
 }
 
 function createBlock(type: BlogBlockType, options: { mediaId?: string | null; photoSlotLabel?: string } = {}): EditableBlock {
@@ -339,17 +383,6 @@ function createBlock(type: BlogBlockType, options: { mediaId?: string | null; ph
   }
 
   return base
-}
-
-function cleanQaQuestion(value: string | null | undefined) {
-  return (value ?? '')
-    .replace(/^(\s*(?:Q|질문)\s*[.:：)]\s*)+/i, '')
-    .split(/\s+(?:A|답변)\s*[.:：)]\s*/i)[0]
-    ?.trim() ?? ''
-}
-
-function cleanQaAnswer(value: string | null | undefined) {
-  return (value ?? '').replace(/^(\s*(?:A|답변)\s*[.:：)]\s*)+/i, '').trim()
 }
 
 function Field({
@@ -402,9 +435,9 @@ function ReaderQuestionPanel({
             return (
               <article key={question.id} className={styles.readerQuestionCard}>
                 <div className={styles.readerQuestionHeader}>
-                  <span className={`${styles.questionStatus} ${styles[`questionStatus_${question.status}`]}`}>
+                  <PlatformStatusBadge tone={getQuestionStatusTone(question.status)}>
                     {QUESTION_STATUS_LABEL[question.status]}
-                  </span>
+                  </PlatformStatusBadge>
                   <time dateTime={question.createdAt}>{formatDateTime(question.createdAt)}</time>
                 </div>
                 <details className={styles.readerQuestionOriginal}>
@@ -644,19 +677,23 @@ function ContentAssetPicker({
   if (!open) return null
 
   return (
-    <div className={styles.assetPickerOverlay} role="dialog" aria-modal="true" aria-labelledby="asset-picker-title">
-      <div className={styles.assetPicker}>
-        <div className={styles.assetPickerHeader}>
-          <div>
-            <span>사진보관함</span>
-            <h2 id="asset-picker-title">본문에 넣을 사진 선택</h2>
-          </div>
-          <button type="button" onClick={onClose} aria-label="사진보관함 닫기" className={styles.iconOnlyButton}>
-            <XCircle size={18} aria-hidden="true" />
-          </button>
-        </div>
-
-        <button type="button" className={styles.assetPickerUploadToggle} onClick={() => setUploadOpen(current => !current)}>
+    <PlatformModal
+      isOpen={open}
+      title="본문에 넣을 사진 선택"
+      onClose={onClose}
+      size="wide"
+      showCloseButton
+      closeLabel="사진보관함 닫기"
+      closeDisabled={pending || isUploadPending}
+      className={styles.assetPickerModal}
+    >
+      <div className={styles.assetPickerContent}>
+        <button
+          type="button"
+          className={styles.assetPickerUploadToggle}
+          onClick={() => setUploadOpen(current => !current)}
+          data-modal-initial-focus
+        >
           <Plus size={15} aria-hidden="true" />
           {uploadOpen ? '사진 추가 닫기' : '이 글에서 바로 사진 추가'}
         </button>
@@ -670,7 +707,7 @@ function ContentAssetPicker({
               <input
                 type="file"
                 name="files"
-                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif"
                 multiple
                 onChange={handleUploadFiles}
                 disabled={isUploadPending}
@@ -703,26 +740,22 @@ function ContentAssetPicker({
             ) : null}
             <fieldset className={styles.assetUploadReview}>
               <legend>사진 사용 전 확인</legend>
-              <label>
-                <input
-                  type="checkbox"
-                  name="privacyChecked"
-                  checked={privacyChecked}
-                  onChange={event => setPrivacyChecked(event.target.checked)}
-                  disabled={isUploadPending}
-                />
+              <PlatformCheckbox
+                name="privacyChecked"
+                checked={privacyChecked}
+                onChange={event => setPrivacyChecked(event.target.checked)}
+                disabled={isUploadPending}
+              >
                 고객 정보·주소·연락처 등 민감정보가 보이지 않는지 확인했습니다.
-              </label>
-              <label>
-                <input
-                  type="checkbox"
-                  name="promotionConsentChecked"
-                  checked={promotionConsentChecked}
-                  onChange={event => setPromotionConsentChecked(event.target.checked)}
-                  disabled={isUploadPending}
-                />
+              </PlatformCheckbox>
+              <PlatformCheckbox
+                name="promotionConsentChecked"
+                checked={promotionConsentChecked}
+                onChange={event => setPromotionConsentChecked(event.target.checked)}
+                disabled={isUploadPending}
+              >
                 블로그·홍보용으로 사용할 수 있는 사진인지 확인했습니다.
-              </label>
+              </PlatformCheckbox>
             </fieldset>
             {isUploadPending || uploadProgress > 0 ? (
               <div className={styles.assetUploadProgress} role="status" aria-live="polite">
@@ -734,9 +767,7 @@ function ContentAssetPicker({
               </div>
             ) : null}
             {uploadResult ? (
-              <div className={`${styles.saveMessage} ${uploadResult.ok ? styles.saveOk : styles.saveError}`} role="status">
-                {uploadResult.message}
-              </div>
+              <EditorStateMessage ok={uploadResult.ok} text={uploadResult.message} />
             ) : null}
             <button type="submit" className={styles.primaryButton} disabled={isUploadPending || uploadItems.length === 0 || isUploadOverLimit || !privacyChecked || !promotionConsentChecked}>
               {isUploadPending ? '사진 보관 중' : '사진 보관'}
@@ -795,15 +826,21 @@ function ContentAssetPicker({
                     ) : (
                       <ImageIcon size={24} aria-hidden="true" />
                     )}
-                    {selected ? <span className={styles.assetPickerCheck}>선택</span> : null}
+                    {selected ? (
+                      <PlatformChip tone="selected" className={styles.assetPickerSelectionChip} aria-hidden="true">
+                        선택
+                      </PlatformChip>
+                    ) : null}
                   </div>
                   <div className={styles.assetPickerCardBody}>
                     <strong>{displayAssetTitle(item, index)}</strong>
-                    <span>{item.description || '설명을 추가해 주세요.'}</span>
+                    <span className={styles.assetPickerDescription}>{item.description || '설명을 추가해 주세요.'}</span>
                     <time dateTime={item.createdAt}>{formatAssetDateTime(item.createdAt)}</time>
                     <div className={styles.assetPickerBadges}>
-                      {item.category ? <small>{item.category}</small> : null}
-                      {ready ? <small>사용 가능</small> : <small>정보 필요</small>}
+                      {item.category ? <PlatformChip>{item.category}</PlatformChip> : null}
+                      <PlatformStatusBadge tone={ready ? 'success' : 'warning'}>
+                        {ready ? '사용 가능' : '정보 필요'}
+                      </PlatformStatusBadge>
                     </div>
                   </div>
                 </button>
@@ -813,9 +850,7 @@ function ContentAssetPicker({
         )}
 
         {message ? (
-          <div className={`${styles.saveMessage} ${message.ok ? styles.saveOk : styles.saveError}`} role="status">
-            {message.text}
-          </div>
+          <EditorStateMessage ok={message.ok} text={message.text} />
         ) : null}
 
         <div className={styles.assetPickerFooter}>
@@ -839,7 +874,7 @@ function ContentAssetPicker({
           </button>
         </div>
       </div>
-    </div>
+    </PlatformModal>
   )
 }
 
@@ -948,137 +983,8 @@ function ImageBlockDetails({
         설명 적용
       </button>
       {message && (
-        <div className={`${styles.saveMessage} ${message.ok ? styles.saveOk : styles.saveError}`} role="status">
-          {message.text}
-        </div>
+        <EditorStateMessage ok={message.ok} text={message.text} />
       )}
-    </div>
-  )
-}
-
-function EditorMobilePreview({
-  post,
-  blocks,
-  media,
-  relatedQuestions,
-}: {
-  post: EditablePost
-  blocks: EditableBlock[]
-  media: BlogEditorMedia[]
-  relatedQuestions: string[]
-}) {
-  const mediaById = new Map(media.map(item => [item.id, item]))
-  const cover = media.find(item => item.usedAsCover && (item.signedPreviewUrl || item.publicUrl)) ?? null
-  const coverUrl = cover?.signedPreviewUrl ?? cover?.publicUrl ?? null
-
-  return (
-    <div className={styles.mobilePreviewShell} aria-label="모바일 미리보기">
-      <div className={styles.mobilePreviewChrome}>
-        <span />
-      </div>
-      <article className={styles.mobilePreviewArticle}>
-        <div className={styles.mobilePreviewMeta}>
-          <span>{CATEGORY_OPTIONS.find(option => option.value === post.category)?.label ?? '블로그'}</span>
-          {post.primaryKeyword && <span>{post.primaryKeyword}</span>}
-        </div>
-        <h2>{post.title || '제목 없는 원고'}</h2>
-        {coverUrl && (
-          <figure className={styles.mobilePreviewCover}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={coverUrl} alt={cover?.altText || cover?.sourceLabel || '대표사진'} />
-          </figure>
-        )}
-        {post.summaryAnswer && <p className={styles.mobilePreviewLead}>{post.summaryAnswer}</p>}
-        {post.excerpt && <p className={styles.mobilePreviewExcerpt}>{post.excerpt}</p>}
-        <div className={styles.mobilePreviewBlocks}>
-          {blocks.length === 0 ? (
-            <p className={styles.mobilePreviewEmpty}>본문을 작성하면 여기에 바로 보입니다.</p>
-          ) : blocks.map(block => {
-            if (block.type === 'heading') {
-              return <h3 key={block.clientId}>{block.text || '소제목'}</h3>
-            }
-            if (block.type === 'paragraph') {
-              return <p key={block.clientId}>{block.text || '문단 내용'}</p>
-            }
-            if (block.type === 'image') {
-              const item = block.mediaId ? mediaById.get(block.mediaId) : null
-              const imageUrl = item?.signedPreviewUrl ?? item?.publicUrl ?? null
-              return (
-                <figure key={block.clientId}>
-                  {imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={imageUrl} alt={item?.altText || item?.sourceLabel || '본문 사진'} />
-                  ) : (
-                    <div className={styles.mobilePreviewImageEmpty}>사진 없음</div>
-                  )}
-                  {item?.caption && <figcaption>{item.caption}</figcaption>}
-                </figure>
-              )
-            }
-            if (block.type === 'link_button') {
-              const link = normalizeLinkButtonBlock(block)
-              if (!link) return null
-
-              return (
-                <div key={block.clientId} className={styles.mobilePreviewLinkButton}>
-                  <span>이어 확인하기</span>
-                  {link.description && <p>{link.description}</p>}
-                  <em>
-                    {link.label}
-                    <ArrowRight size={14} aria-hidden="true" />
-                  </em>
-                </div>
-              )
-            }
-            if (block.type === 'guide_box') {
-              const guide = normalizeGuideBoxBlock(block)
-              if (!guide) return null
-
-              return (
-                <div key={block.clientId} className={`${styles.mobilePreviewGuideBox} ${styles[`mobilePreviewGuide_${guide.tone}`]}`}>
-                  <span>{guide.label}</span>
-                  {guide.title && <strong>{guide.title}</strong>}
-                  <p>{guide.body}</p>
-                </div>
-              )
-            }
-            if (block.type === 'qa') {
-              const question = cleanQaQuestion(block.text)
-              const answer = cleanQaAnswer(block.metadata.answer)
-
-              return (
-                <div key={block.clientId} className={styles.mobilePreviewQa}>
-                  <strong>Q. {question || '질문'}</strong>
-                  <p>{answer || '답변'}</p>
-                </div>
-              )
-            }
-            if (block.type === 'cta') {
-              return (
-                <div key={block.clientId} className={styles.mobilePreviewCta}>
-                  <div>
-                    <span>무료 방문 실측견적 상담</span>
-                    <strong>{block.text || '우리 집에 맞는 문과 시공 조건을 먼저 확인해보세요.'}</strong>
-                  </div>
-                  <em>
-                    상담 신청
-                    <ArrowRight size={14} aria-hidden="true" />
-                  </em>
-                </div>
-              )
-            }
-            return null
-          })}
-        </div>
-        {relatedQuestions.length > 0 && (
-          <section className={styles.mobilePreviewRelated}>
-            <strong>함께 확인할 질문</strong>
-            <ul>
-              {relatedQuestions.map(question => <li key={question}>{question}</li>)}
-            </ul>
-          </section>
-        )}
-      </article>
     </div>
   )
 }
@@ -1127,7 +1033,7 @@ function BlockEditor({
     <article className={`${styles.blockCard} ${styles[`blockCard_${block.type}`]}`} data-block-type={block.type} data-block-client-id={block.clientId}>
       <div className={styles.blockTop}>
         <div className={styles.blockIdentity}>
-          <span className={styles.blockType}>{BLOCK_LABEL[block.type]}</span>
+          <PlatformChip tone="accent">{BLOCK_LABEL[block.type]}</PlatformChip>
           <strong>본문 #{index + 1}</strong>
         </div>
         <div className={styles.iconActions} aria-label="블록 위치 및 삭제">
@@ -1310,11 +1216,9 @@ export default function BlogEditorClient({
     serviceArea: initialPost.serviceArea,
     productType: initialPost.productType,
     aiCitationReady: initialPost.aiCitationReady,
-    lastFactCheckedAt: initialPost.lastFactCheckedAt,
     mediaMissingReason: initialPost.mediaMissingReason,
   })
   const [relatedText, setRelatedText] = useState(initialPost.relatedQuestions.join('\n'))
-  const [factCheckedLocal, setFactCheckedLocal] = useState(toDateTimeLocal(initialPost.lastFactCheckedAt))
   const [blocks, setBlocks] = useState<EditableBlock[]>(initialBlocks.map(block => ({
     ...block,
     clientId: block.id,
@@ -1327,15 +1231,16 @@ export default function BlogEditorClient({
   const [assetPickerTarget, setAssetPickerTarget] = useState<AssetPickerTarget | null>(null)
   const [assetPickerMessage, setAssetPickerMessage] = useState<{ ok: boolean; text: string } | null>(null)
   const [editorMode, setEditorMode] = useState<EditorMode>('write')
+  const [discardDialogOpen, setDiscardDialogOpen] = useState(false)
   const titleRef = useRef<HTMLInputElement>(null)
   const slugRef = useRef<HTMLInputElement>(null)
   const summaryAnswerRef = useRef<HTMLTextAreaElement>(null)
   const metaDescriptionRef = useRef<HTMLTextAreaElement>(null)
   const targetQuestionRef = useRef<HTMLTextAreaElement>(null)
-  const factCheckedRef = useRef<HTMLInputElement>(null)
   const coverPickerRef = useRef<HTMLDivElement>(null)
   const blockToolbarRef = useRef<HTMLDivElement>(null)
   const blockListRef = useRef<HTMLDivElement>(null)
+  const previewLinkRef = useRef<HTMLAnchorElement>(null)
 
   const isPublished = post.status === 'published'
   const statusActions = useMemo<Array<{ status: BlogPostStatus; label: string; icon: 'review' | 'media' | 'ready' }>>(() => {
@@ -1370,6 +1275,16 @@ export default function BlogEditorClient({
     () => relatedText.split('\n').map(item => item.trim()).filter(Boolean),
     [relatedText],
   )
+  const previewData = useMemo(() => buildBlogEditorPreviewData({
+    post: {
+      ...post,
+      relatedQuestions: relatedQuestionsForPreview,
+      publishedAt: initialPost.publishedAt,
+      updatedAt: initialPost.updatedAt,
+    },
+    blocks,
+    media: selectableMedia,
+  }), [blocks, initialPost.publishedAt, initialPost.updatedAt, post, relatedQuestionsForPreview, selectableMedia])
   const coverMedia = selectableMedia.find(item => item.usedAsCover) ?? null
   const coverMediaUrl = coverMedia?.signedPreviewUrl ?? coverMedia?.publicUrl ?? null
 
@@ -1478,12 +1393,6 @@ export default function BlogEditorClient({
       label: 'SEO',
       detail: !post.metaDescription?.trim() ? '메타 설명' : !post.targetQuestion?.trim() ? '타깃 질문' : undefined,
     },
-    {
-      key: 'fact',
-      ok: Boolean(factCheckedLocal && initialPost.gateSummary.sourceEvidenceCount > 0),
-      label: '근거',
-      detail: !factCheckedLocal ? '사실 확인일' : `${initialPost.gateSummary.sourceEvidenceCount}개`,
-    },
   ]
 
   const jumpGateItem = (key: string) => {
@@ -1516,9 +1425,6 @@ export default function BlogEditorClient({
     if (key === 'seo') {
       jumpToSeoField(post.metaDescription?.trim() ? targetQuestionRef : metaDescriptionRef)
       return
-    }
-    if (key === 'fact') {
-      jumpToSeoField(factCheckedRef)
     }
   }
 
@@ -1598,6 +1504,7 @@ export default function BlogEditorClient({
 
   const buildPayload = (): SaveBlogEditorPayload => ({
     postId: post.id,
+    expectedUpdatedAt: initialPost.updatedAt,
     post: {
       title: post.title,
       slug: post.slug,
@@ -1613,7 +1520,6 @@ export default function BlogEditorClient({
       serviceArea: emptyToNull(post.serviceArea ?? ''),
       productType: emptyToNull(post.productType ?? ''),
       aiCitationReady: post.aiCitationReady,
-      lastFactCheckedAt: fromDateTimeLocal(factCheckedLocal),
       mediaMissingReason: emptyToNull(post.mediaMissingReason ?? ''),
     },
     blocks: blocks.map(block => ({
@@ -1626,7 +1532,7 @@ export default function BlogEditorClient({
     })),
   })
 
-  const savedEditorFingerprint = JSON.stringify({
+  const initialEditorSignature = createStableEditorSignature({
     postId: initialPost.id,
     post: {
       title: initialPost.title,
@@ -1643,7 +1549,6 @@ export default function BlogEditorClient({
       serviceArea: emptyToNull(initialPost.serviceArea ?? ''),
       productType: emptyToNull(initialPost.productType ?? ''),
       aiCitationReady: initialPost.aiCitationReady,
-      lastFactCheckedAt: fromDateTimeLocal(toDateTimeLocal(initialPost.lastFactCheckedAt)),
       mediaMissingReason: emptyToNull(initialPost.mediaMissingReason ?? ''),
     },
     blocks: initialBlocks.map(block => ({
@@ -1655,7 +1560,37 @@ export default function BlogEditorClient({
       metadata: block.metadata,
     })),
   })
-  const hasUnsavedEditorChanges = JSON.stringify(buildPayload()) !== savedEditorFingerprint
+  const [savedEditorSignature, setSavedEditorSignature] = useState(initialEditorSignature)
+  const currentEditorSignature = createStableEditorSignature(buildPayload())
+  const hasUnsavedEditorChanges = currentEditorSignature !== savedEditorSignature
+
+  useEffect(() => {
+    if (!hasUnsavedEditorChanges) return
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [hasUnsavedEditorChanges])
+
+  const closeDiscardDialog = () => {
+    setDiscardDialogOpen(false)
+  }
+
+  const handlePreviewNavigate: NonNullable<ComponentProps<typeof Link>['onNavigate']> = (event) => {
+    if (!hasUnsavedEditorChanges) return
+    event.preventDefault()
+    setDiscardDialogOpen(true)
+  }
+
+  const confirmDiscardAndPreview = () => {
+    setSavedEditorSignature(currentEditorSignature)
+    setDiscardDialogOpen(false)
+    router.push(`/admin/platform/blog/${post.id}/preview`)
+  }
 
   const handleSave = () => {
     setSaveMessage(null)
@@ -1664,6 +1599,7 @@ export default function BlogEditorClient({
       const result = await saveBlogEditor(buildPayload())
       setSaveMessage({ ok: result.ok, text: result.message })
       if (result.ok) {
+        setSavedEditorSignature(currentEditorSignature)
         router.refresh()
       }
     })
@@ -1874,12 +1810,17 @@ export default function BlogEditorClient({
         </Link>
         <div className={styles.titleRow}>
           <div>
-            <span className={`${styles.statusBadge} ${getStatusBadgeClass(post.status)}`}>{STATUS_LABEL[post.status]}</span>
-            <h1>{post.title || '제목 없는 원고'}</h1>
+            <PlatformStatusBadge tone={getPostStatusTone(post.status)}>{STATUS_LABEL[post.status]}</PlatformStatusBadge>
+            <h1 data-testid="blog-editor-title">{post.title || '제목 없는 원고'}</h1>
             <p>{post.slug}</p>
           </div>
           <div className={styles.headerActions}>
-            <Link href={`/admin/platform/blog/${post.id}/preview`} className={styles.previewButton}>
+            <Link
+              ref={previewLinkRef}
+              href={`/admin/platform/blog/${post.id}/preview`}
+              className={styles.previewButton}
+              onNavigate={handlePreviewNavigate}
+            >
               <Eye size={16} aria-hidden="true" />
               미리보기
             </Link>
@@ -1913,24 +1854,13 @@ export default function BlogEditorClient({
           </div>
         </div>
         <div className={styles.editorWorkbenchBar}>
-          <div className={styles.editorModeTabs} aria-label="편집 모드">
-            <button
-              type="button"
-              className={editorMode === 'write' ? styles.editorModeActive : ''}
-              aria-pressed={editorMode === 'write'}
-              onClick={() => setEditorMode('write')}
-            >
-              작성란
-            </button>
-            <button
-              type="button"
-              className={editorMode === 'seo' ? styles.editorModeActive : ''}
-              aria-pressed={editorMode === 'seo'}
-              onClick={() => setEditorMode('seo')}
-            >
-              SEO/AEO
-            </button>
-          </div>
+          <PlatformTabs
+            id="blog-editor-mode"
+            label="편집 모드"
+            items={EDITOR_MODE_TABS}
+            value={editorMode}
+            onChange={setEditorMode}
+          />
           <section className={styles.gateBarPanel} aria-label="발행 전 검수">
             <span className={styles.gateBarLabel}>검수</span>
             <ul className={styles.gateList}>
@@ -1941,29 +1871,13 @@ export default function BlogEditorClient({
           </section>
         </div>
         {saveMessage && (
-          <div className={`${styles.saveMessage} ${saveMessage.ok ? styles.saveOk : styles.saveError}`} role="status">
-            {saveMessage.text}
-          </div>
+          <EditorStateMessage ok={saveMessage.ok} text={saveMessage.text} />
         )}
         {statusMessage && (
-          <div className={`${styles.saveMessage} ${statusMessage.ok ? styles.saveOk : styles.saveError}`} role="status">
-            <p>{statusMessage.text}</p>
-            {statusMessage.issues && statusMessage.issues.length > 0 && (
-              <ul className={styles.publishIssues}>
-                {statusMessage.issues.map(issue => <li key={issue}>{issue}</li>)}
-              </ul>
-            )}
-          </div>
+          <EditorStateMessage ok={statusMessage.ok} text={statusMessage.text} issues={statusMessage.issues} />
         )}
         {publishMessage && (
-          <div className={`${styles.saveMessage} ${publishMessage.ok ? styles.saveOk : styles.saveError}`} role="status">
-            <p>{publishMessage.text}</p>
-            {publishMessage.issues && publishMessage.issues.length > 0 && (
-              <ul className={styles.publishIssues}>
-                {publishMessage.issues.map(issue => <li key={issue}>{issue}</li>)}
-              </ul>
-            )}
-          </div>
+          <EditorStateMessage ok={publishMessage.ok} text={publishMessage.text} issues={publishMessage.issues} />
         )}
         {isPublished && (
           <div className={styles.lockNotice} role="status">
@@ -1987,9 +1901,13 @@ export default function BlogEditorClient({
 
       <div className={styles.editorLayout}>
         <main className={styles.mainEditor}>
-          {editorMode === 'write' && (
-          <>
-          <section className={styles.panel}>
+          <PlatformTabPanel
+            tabsId="blog-editor-mode"
+            value="write"
+            active={editorMode === 'write'}
+            className={styles.editorModePanel}
+          >
+          <section className={styles.panel} data-testid="blog-basic-information">
             <div className={styles.panelTitle}>
               <FileText size={17} aria-hidden="true" />
               <h2>기본 정보</h2>
@@ -2114,10 +2032,14 @@ export default function BlogEditorClient({
               )}
             </div>
           </section>
-          </>
-          )}
+          </PlatformTabPanel>
 
-          {editorMode === 'seo' && (
+          <PlatformTabPanel
+            tabsId="blog-editor-mode"
+            value="seo"
+            active={editorMode === 'seo'}
+            className={styles.editorModePanel}
+          >
           <section className={`${styles.panel} ${styles.seoPanel}`}>
             <h2>SEO/AEO</h2>
             <div className={styles.formStack}>
@@ -2150,9 +2072,6 @@ export default function BlogEditorClient({
                   <input value={post.productType ?? ''} onChange={event => updatePost('productType', event.target.value)} />
                 </Field>
               </div>
-              <Field label="사실 확인일">
-                <input ref={factCheckedRef} type="datetime-local" value={factCheckedLocal} onChange={event => setFactCheckedLocal(event.target.value)} />
-              </Field>
             </div>
 
             <details className={styles.activityDetails}>
@@ -2172,15 +2091,36 @@ export default function BlogEditorClient({
               )}
             </details>
           </section>
-          )}
+          </PlatformTabPanel>
         </main>
 
         <aside className={styles.sidePanel} aria-label="모바일 미리보기">
           <div className={styles.mobilePreviewDock}>
-            <EditorMobilePreview post={post} blocks={blocks} media={selectableMedia} relatedQuestions={relatedQuestionsForPreview} />
+            <PlatformPreviewFrame
+              label="390px 모바일 미리보기"
+              className={styles.mobilePreviewFrame}
+              data-testid="blog-editor-preview-frame"
+            >
+              <BlogPostRenderer data={previewData} surface="embedded-preview" />
+            </PlatformPreviewFrame>
           </div>
         </aside>
       </div>
+      <PlatformModal
+        isOpen={discardDialogOpen}
+        title="저장하지 않은 변경 사항"
+        description="미리보기는 마지막으로 저장된 내용을 엽니다. 현재 변경 사항을 버리고 계속할까요?"
+        onClose={closeDiscardDialog}
+        closeOnBackdrop={false}
+        footer={(
+          <div className={styles.discardDialogActions}>
+            <button data-modal-initial-focus type="button" onClick={closeDiscardDialog}>계속 편집</button>
+            <button type="button" className={styles.discardConfirmButton} onClick={confirmDiscardAndPreview}>
+              변경 사항 버리고 미리보기
+            </button>
+          </div>
+        )}
+      />
     </div>
   )
 }

@@ -35,6 +35,19 @@ function isLocalRequest(url: URL) {
   return url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '::1'
 }
 
+function getLocalRedirectOrigin(request: NextRequest, requestUrl: URL) {
+  const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim()
+  const requestHost = forwardedHost || request.headers.get('host')
+  if (!requestHost) return requestUrl.origin
+
+  try {
+    const candidate = new URL(`${requestUrl.protocol}//${requestHost}`)
+    return isLocalRequest(candidate) ? candidate.origin : requestUrl.origin
+  } catch {
+    return requestUrl.origin
+  }
+}
+
 function getSafeNext(rawNext: string | null, role: string) {
   const fallback = role === 'administrator' ? '/admin/platform/settings' : '/portal'
   if (!rawNext) return fallback
@@ -162,7 +175,7 @@ export async function GET(request: NextRequest) {
 
   const role = requestedRole as PlaywrightRole
   const nextPath = getSafeNext(url.searchParams.get('next'), role)
-  const redirectTo = new URL(nextPath, url.origin)
+  const redirectTo = new URL(nextPath, getLocalRedirectOrigin(request, url))
   const response = NextResponse.redirect(redirectTo)
 
   try {

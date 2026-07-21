@@ -1,20 +1,28 @@
 .button {
-  width: 42px;
-  height: 42px;
+  width: var(--mg-control-size-min);
+  height: var(--mg-control-size-min);
+  min-width: var(--mg-control-size-min);
+  min-height: var(--mg-control-size-min);
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--mg-text-body);
-  border: 1px solid transparent;
-  border-radius: var(--mg-radius-md);
+  border: var(--mg-border-width) solid transparent;
+  border-radius: var(--mg-radius-card);
   cursor: pointer;
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+  transition: background-color var(--mg-dur-micro) var(--mg-ease-cinema), border-color var(--mg-dur-micro) var(--mg-ease-cinema), color var(--mg-dur-micro) var(--mg-ease-cinema), box-shadow var(--mg-dur-micro) var(--mg-ease-cinema);
 }
 
 .button:focus-visible {
-  outline: 2px solid var(--mg-focus-ring);
-  outline-offset: 3px;
+  outline: var(--mg-focus-ring-width) solid var(--mg-focus-ring);
+  outline-offset: var(--mg-focus-ring-offset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
 }
 
 .button:disabled {

@@ -242,9 +242,9 @@ MVP에서는 단일 HTML 본문보다 블록 구조를 우선한다. 사진을 �
 - `related_questions`
 - `service_area`
 - `product_type`
-- `source_evidence`
+- `source_evidence` (서버 자동 내부 provenance)
 - `brand_check_result`
-- `last_fact_checked_at`
+- `last_fact_checked_at` (레거시 호환 필드, 현재 UI·발행 gate 미사용)
 - `ai_citation_ready`
 - `created_by`
 - `reviewed_by`
@@ -280,7 +280,7 @@ MVP에서는 단일 HTML 본문보다 블록 구조를 우선한다. 사진을 �
 
 - 경로: `/admin/platform/blog/new`
 - 권한: 인증된 관리자만 사용
-- 입력: 제목, slug, SEO/AEO 필드, 본문 블록, 추적 가능한 근거
+- 입력: 제목, slug, SEO/AEO 필드, 본문 블록. 내부 provenance는 서버가 자동 기록한다.
 - 저장: 글, 순서가 있는 블록, `manuscript_registered` 감사 이벤트를 단일 RPC 트랜잭션으로 저장
 - 시작 상태: 항상 `reviewing`
 - 권한 경계: RPC 실행은 `service_role`만 허용하고 `PUBLIC`, `anon`, `authenticated`에는 허용하지 않음
@@ -344,7 +344,6 @@ MVP에서는 단일 HTML 본문보다 블록 구조를 우선한다. 사진을 �
 - 핵심 키워드
 - 사용 사진 수
 - 금지표현 경고 수
-- 근거 확인 필요 여부
 - 생성일/수정일
 
 ### 에디터
@@ -375,7 +374,6 @@ MVP에서는 단일 HTML 본문보다 블록 구조를 우선한다. 사진을 �
 - 대표 이미지 또는 사진 부족 사유 확인
 - 이미지 alt 입력
 - 금지표현 없음
-- 사실관계 확인일 입력
 - CTA 선택
 - 미리보기 확인
 

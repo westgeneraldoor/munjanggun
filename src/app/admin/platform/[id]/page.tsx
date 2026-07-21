@@ -46,7 +46,7 @@ export default async function AdminPlatformDetailPage({ params }: Props) {
 
   const { data: media } = await adminClient
     .from('measurement_media')
-    .select('id, object_path, media_type, file_name, file_size')
+    .select('id, media_type, file_name, file_size')
     .eq('request_id', id)
     .order('created_at', { ascending: true })
 
@@ -54,7 +54,7 @@ export default async function AdminPlatformDetailPage({ params }: Props) {
     <DetailClient
       requestId={id}
       request={request}
-      media={(media ?? []) as { id: string; object_path: string; media_type: 'image' | 'video'; file_name: string; file_size: number }[]}
+      media={(media ?? []) as { id: string; media_type: 'image' | 'video'; file_name: string; file_size: number }[]}
     />
   )
 }

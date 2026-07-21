@@ -1,8 +1,19 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import Link from 'next/link'
+import { useMemo, useRef, useState } from 'react'
 import { ArrowDownAZ, ArrowLeft, ArrowUpAZ, Settings } from 'lucide-react'
+import {
+  PlatformButton,
+  PlatformLinkButton,
+  PlatformList,
+  PlatformPageHeader,
+  PlatformPanel,
+  PlatformSegmentedControl,
+  PlatformStatePanel,
+  PlatformStatusBadge,
+  PlatformTable,
+  type PlatformStatusBadgeTone,
+} from '@/components/platform/ui'
 import { CustomerRequestStatus, QueueSourceType, QueueWorkStatus } from '@/types/database'
 import UnifiedQueueActions from './UnifiedQueueActions'
 import styles from './platform-admin.module.css'
@@ -36,17 +47,17 @@ type WorkFilter = 'all' | 'needs' | 'done'
 type SortKey = 'receivedAt' | 'customerName' | 'sourceType' | 'queueStatus' | 'customerStatus'
 type SortDir = 'asc' | 'desc'
 
-const TYPE_TABS: Array<{ key: TypeFilter; label: string }> = [
-  { key: 'all', label: '전체' },
-  { key: 'measurement', label: '무료실측' },
-  { key: 'as', label: 'A/S' },
-  { key: 'payment', label: '결제' },
+const TYPE_TABS: Array<{ value: TypeFilter; label: string }> = [
+  { value: 'all', label: '전체' },
+  { value: 'measurement', label: '무료실측' },
+  { value: 'as', label: 'A/S' },
+  { value: 'payment', label: '결제' },
 ]
 
-const WORK_TABS: Array<{ key: WorkFilter; label: string }> = [
-  { key: 'all', label: '전체' },
-  { key: 'needs', label: '확인필요' },
-  { key: 'done', label: '확인완료' },
+const WORK_TABS: Array<{ value: WorkFilter; label: string }> = [
+  { value: 'all', label: '전체' },
+  { value: 'needs', label: '확인필요' },
+  { value: 'done', label: '확인완료' },
 ]
 
 const QUEUE_STATUS_LABEL: Record<QueueWorkStatus, string> = {
@@ -68,6 +79,12 @@ const CUSTOMER_STATUS_LABEL: Record<CustomerRequestStatus, string> = {
 }
 
 const NEEDS_STATUSES = new Set<QueueWorkStatus>(['new_received', 'change_received', 'cancel_received'])
+
+function queueStatusTone(status: QueueWorkStatus): PlatformStatusBadgeTone {
+  if (NEEDS_STATUSES.has(status)) return 'warning'
+  if (status === 'cancel_done') return 'neutral'
+  return 'success'
+}
 
 function formatDateTime(value: string) {
   const date = new Date(new Date(value).getTime() + 9 * 60 * 60 * 1000)
@@ -122,22 +139,22 @@ function DetailPanel({
   onCompleted: (key: string, next: { customerStatus: CustomerRequestStatus; queueStatus: QueueWorkStatus }) => void
 }) {
   return (
-    <aside className={styles.detailPanel}>
+    <PlatformPanel as="aside" className={styles.detailPanel} aria-label="접수 상세">
       {onBack && (
-        <button type="button" className={styles.mobileBackButton} onClick={onBack}>
+        <PlatformButton type="button" variant="secondary" fullWidth autoFocus onClick={onBack}>
           <ArrowLeft size={16} aria-hidden="true" />
           목록
-        </button>
+        </PlatformButton>
       )}
       <div className={styles.detailTop}>
         <div>
-          <span className={styles.sourcePill}>{row.sourceLabel}</span>
+          <PlatformStatusBadge tone="info">{row.sourceLabel}</PlatformStatusBadge>
           <h2>{row.customerName}</h2>
           <p>{row.phone}</p>
         </div>
-        <span className={`${styles.queueBadge} ${styles[`q_${row.queueStatus}`]}`}>
+        <PlatformStatusBadge tone={queueStatusTone(row.queueStatus)}>
           {QUEUE_STATUS_LABEL[row.queueStatus]}
-        </span>
+        </PlatformStatusBadge>
       </div>
 
       <div className={styles.detailStatusRow}>
@@ -195,7 +212,7 @@ function DetailPanel({
           })}
         />
       </div>
-    </aside>
+    </PlatformPanel>
   )
 }
 
@@ -206,6 +223,9 @@ export default function AdminQueueClient({ initialRows }: { initialRows: QueueRo
   const [sort, setSort] = useState<SortKey>('receivedAt')
   const [dir, setDir] = useState<SortDir>('desc')
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const returnFocusRef = useRef<HTMLButtonElement | null>(null)
+  const queueSummaryRef = useRef<HTMLDivElement | null>(null)
 
   const filteredRows = useMemo(() => {
     const filtered = rows
@@ -226,18 +246,28 @@ export default function AdminQueueClient({ initialRows }: { initialRows: QueueRo
     setDir('desc')
   }
 
-  const selectRow = (key: string) => {
+  const selectRow = (key: string, trigger: HTMLButtonElement) => {
+    returnFocusRef.current = trigger
+    setStatusMessage(null)
     setSelectedKey(prev => (prev === key ? null : key))
+  }
+
+  const closeDetail = () => {
+    const returnTarget = returnFocusRef.current
+    setSelectedKey(null)
+    requestAnimationFrame(() => returnTarget?.focus())
   }
 
   const updateTypeFilter = (next: TypeFilter) => {
     setTypeFilter(next)
     setSelectedKey(null)
+    setStatusMessage(null)
   }
 
   const updateWorkFilter = (next: WorkFilter) => {
     setWorkFilter(next)
     setSelectedKey(null)
+    setStatusMessage(null)
   }
 
   const handleCompleted = (key: string, next: { customerStatus: CustomerRequestStatus; queueStatus: QueueWorkStatus }) => {
@@ -251,6 +281,11 @@ export default function AdminQueueClient({ initialRows }: { initialRows: QueueRo
       }
       : row
     ))
+    const summaryTarget = queueSummaryRef.current
+    returnFocusRef.current = null
+    setSelectedKey(null)
+    setStatusMessage('처리 상태를 저장했습니다.')
+    requestAnimationFrame(() => summaryTarget?.focus())
   }
 
   const sortIcon = (key: SortKey) => {
@@ -260,74 +295,53 @@ export default function AdminQueueClient({ initialRows }: { initialRows: QueueRo
 
   return (
     <div className={styles.page}>
-      <div className={styles.pageHeader}>
-        <div className={styles.headerTitleRow}>
-          <div>
-            <h1 className={styles.pageTitle}>통합 접수 큐</h1>
-            <p className={styles.pageDesc}>확인필요 {needsCount}건을 빠르게 확인하고 처리합니다.</p>
-          </div>
-          <Link href="/admin/platform/settings" className={styles.settingsBtn}>
+      <PlatformPageHeader
+        title="통합 접수 큐"
+        description={`확인필요 ${needsCount}건을 빠르게 확인하고 처리합니다.`}
+        actions={(
+          <PlatformLinkButton href="/admin/platform/settings" variant="secondary" size="sm">
             <Settings size={15} strokeWidth={1.8} />
             견적 설정
-          </Link>
-        </div>
-      </div>
+          </PlatformLinkButton>
+        )}
+      />
 
-      <div className={styles.filterStack}>
-        <nav className={styles.tabs} aria-label="접수 종류">
-          {TYPE_TABS.map(tab => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => updateTypeFilter(tab.key)}
-              className={`${styles.tab} ${typeFilter === tab.key ? styles.tabActive : ''}`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-        <nav className={styles.tabs} aria-label="확인 상태">
-          {WORK_TABS.map(tab => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => updateWorkFilter(tab.key)}
-              className={`${styles.tab} ${workFilter === tab.key ? styles.tabActive : ''}`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      <PlatformPanel as="section" variant="subtle" className={styles.filterStack} aria-label="접수 필터">
+        <PlatformSegmentedControl label="접수 종류" items={TYPE_TABS} value={typeFilter} onChange={updateTypeFilter} />
+        <PlatformSegmentedControl label="확인 상태" items={WORK_TABS} value={workFilter} onChange={updateWorkFilter} />
+      </PlatformPanel>
 
       {selectedRow && (
         <div className={styles.mobileDetailScreen}>
-          <DetailPanel row={selectedRow} onBack={() => setSelectedKey(null)} onCompleted={handleCompleted} />
+          <DetailPanel row={selectedRow} onBack={closeDetail} onCompleted={handleCompleted} />
         </div>
       )}
 
       <div className={`${styles.queueLayout} ${selectedRow ? styles.queueLayoutSelected : ''}`}>
         <section className={styles.queueListPanel}>
-          <div className={styles.queueSummary}>
+          <div ref={queueSummaryRef} className={styles.queueSummary} tabIndex={-1} data-queue-summary>
             <strong>{filteredRows.length}건</strong>
-            <span>{workFilter === 'needs' ? '확인이 필요한 접수만 보고 있습니다.' : '목록 행을 누르면 상세가 열립니다.'}</span>
+            <span role="status" aria-live="polite" data-queue-status>
+              {statusMessage ?? (workFilter === 'needs' ? '확인이 필요한 접수만 보고 있습니다.' : '목록 행을 누르면 상세가 열립니다.')}
+            </span>
           </div>
 
           {filteredRows.length === 0 ? (
-            <div className={styles.empty}>
-              <p>해당 조건의 접수 건이 없습니다.</p>
-            </div>
+            <PlatformStatePanel title="해당 조건의 접수 건이 없습니다." />
           ) : (
             <>
-              <div className={styles.tableWrap}>
-                <table className={styles.table}>
+              <PlatformTable
+                containerClassName={styles.desktopTable}
+                className={styles.queueTable}
+                aria-label="통합 접수 목록"
+              >
                   <thead>
                     <tr>
-                      <th><button type="button" onClick={() => updateSort('receivedAt')}>접수일시 {sortIcon('receivedAt')}</button></th>
-                      <th><button type="button" onClick={() => updateSort('sourceType')}>종류 {sortIcon('sourceType')}</button></th>
-                      <th><button type="button" onClick={() => updateSort('customerName')}>고객/연락처 {sortIcon('customerName')}</button></th>
+                      <th aria-sort={sort === 'receivedAt' ? (dir === 'asc' ? 'ascending' : 'descending') : 'none'}><button type="button" onClick={() => updateSort('receivedAt')}>접수일시 {sortIcon('receivedAt')}</button></th>
+                      <th aria-sort={sort === 'sourceType' ? (dir === 'asc' ? 'ascending' : 'descending') : 'none'}><button type="button" onClick={() => updateSort('sourceType')}>종류 {sortIcon('sourceType')}</button></th>
+                      <th aria-sort={sort === 'customerName' ? (dir === 'asc' ? 'ascending' : 'descending') : 'none'}><button type="button" onClick={() => updateSort('customerName')}>고객/연락처 {sortIcon('customerName')}</button></th>
                       <th>주소/요약</th>
-                      <th><button type="button" onClick={() => updateSort('queueStatus')}>상태 {sortIcon('queueStatus')}</button></th>
+                      <th aria-sort={sort === 'queueStatus' ? (dir === 'asc' ? 'ascending' : 'descending') : 'none'}><button type="button" onClick={() => updateSort('queueStatus')}>상태 {sortIcon('queueStatus')}</button></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -335,17 +349,27 @@ export default function AdminQueueClient({ initialRows }: { initialRows: QueueRo
                       <tr
                         key={row.key}
                         className={`${styles.row} ${row.key === selectedKey ? styles.rowSelected : ''}`}
-                        onClick={() => selectRow(row.key)}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault()
-                            selectRow(row.key)
-                          }
+                        onClick={(event) => {
+                          if ((event.target as HTMLElement).closest('button')) return
+                          const trigger = event.currentTarget.querySelector<HTMLButtonElement>('button[data-queue-select="desktop"]')
+                          if (trigger) selectRow(row.key, trigger)
                         }}
-                        tabIndex={0}
                       >
-                        <td className={styles.cellDate}>{formatDateTime(row.receivedAt)}</td>
-                        <td><span className={styles.sourcePill}>{row.sourceLabel}</span></td>
+                        <td className={styles.cellDate}>
+                          <PlatformButton
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className={styles.rowSelectButton}
+                            data-queue-select="desktop"
+                            aria-pressed={row.key === selectedKey}
+                            aria-label={`${formatDateTime(row.receivedAt)} 접수 상세 ${row.key === selectedKey ? '닫기' : '열기'}`}
+                            onClick={(event) => selectRow(row.key, event.currentTarget)}
+                          >
+                            {formatDateTime(row.receivedAt)}
+                          </PlatformButton>
+                        </td>
+                        <td><PlatformStatusBadge tone="info">{row.sourceLabel}</PlatformStatusBadge></td>
                         <td className={styles.cellName}>
                           <span className={styles.stackCell}>
                             <strong>{row.customerName}</strong>
@@ -363,26 +387,33 @@ export default function AdminQueueClient({ initialRows }: { initialRows: QueueRo
                         </td>
                         <td>
                           <span className={styles.stackCell}>
-                            <span className={`${styles.queueBadge} ${styles[`q_${row.queueStatus}`]}`}>
+                            <PlatformStatusBadge tone={queueStatusTone(row.queueStatus)}>
                               {QUEUE_STATUS_LABEL[row.queueStatus]}
-                            </span>
+                            </PlatformStatusBadge>
                             <small>{CUSTOMER_STATUS_LABEL[row.customerStatus]}</small>
                           </span>
                         </td>
                       </tr>
                     ))}
                   </tbody>
-                </table>
-              </div>
+              </PlatformTable>
 
-              <ul className={styles.mobileList}>
+              <PlatformList className={styles.mobileList} aria-label="통합 접수 모바일 목록">
                 {filteredRows.map(row => (
                   <li key={row.key} className={styles.mobileCard}>
-                    <button type="button" onClick={() => selectRow(row.key)} className={styles.mobileCardLink}>
+                    <PlatformButton
+                      type="button"
+                      variant="ghost"
+                      fullWidth
+                      data-queue-select="mobile"
+                      aria-pressed={row.key === selectedKey}
+                      onClick={(event) => selectRow(row.key, event.currentTarget)}
+                      className={styles.mobileCardLink}
+                    >
                       <div className={styles.mobileCardTop}>
-                        <span className={`${styles.queueBadge} ${styles[`q_${row.queueStatus}`]}`}>
+                        <PlatformStatusBadge tone={queueStatusTone(row.queueStatus)}>
                           {QUEUE_STATUS_LABEL[row.queueStatus]}
-                        </span>
+                        </PlatformStatusBadge>
                         <span className={styles.mobileDate}>{formatDateTime(row.receivedAt)}</span>
                       </div>
                       <div className={styles.mobileCardName}>{row.sourceLabel} / {row.customerName} / {row.phone}</div>
@@ -392,10 +423,10 @@ export default function AdminQueueClient({ initialRows }: { initialRows: QueueRo
                         <span>{CUSTOMER_STATUS_LABEL[row.customerStatus]}</span>
                         <span>첨부: {row.hasMedia ? '있음' : '없음'}</span>
                       </div>
-                    </button>
+                    </PlatformButton>
                   </li>
                 ))}
-              </ul>
+              </PlatformList>
             </>
           )}
         </section>

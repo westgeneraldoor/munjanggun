@@ -227,6 +227,7 @@ export default function PublicUserMenu({
           onClick={() => setMenuOpen(!open)}
           aria-haspopup="menu"
           aria-expanded={open}
+          aria-controls="public-user-menu"
           aria-label="계정 메뉴 열기"
           id="public-user-menu-toggle"
         >
@@ -273,6 +274,7 @@ export default function PublicUserMenu({
         onClick={() => setMenuOpen(!open)}
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-controls="public-user-menu"
         id="public-user-menu-trigger"
       >
         <UserRound size={18} aria-hidden="true" />

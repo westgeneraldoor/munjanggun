@@ -30,7 +30,19 @@ function hasSupabasePublicEnv() {
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  const isAdminRoute = pathname.startsWith('/admin')
+  const isProductionTestFixture =
+    process.env.NODE_ENV === 'production' &&
+    (pathname === '/test-fixtures' || pathname.startsWith('/test-fixtures/'))
+
+  if (isProductionTestFixture) {
+    return new NextResponse('Not Found', {
+      status: 404,
+      headers: { 'X-Robots-Tag': 'noindex, nofollow' },
+    })
+  }
+
+  const isAdminPrivateMediaRoute = pathname.startsWith('/admin/platform/blog/media/')
+  const isAdminRoute = pathname.startsWith('/admin') && !isAdminPrivateMediaRoute
   const isAdminLoginRoute = pathname === '/admin/login'
   const isManagerRoute = pathname.startsWith('/manager')
   const isPortalRoute = pathname.startsWith('/portal')
@@ -163,7 +175,7 @@ export async function proxy(request: NextRequest) {
     }
 
     // 4.3 역할(Role) 기반 가드 및 레거시 어드민 허용 정책
-    const isAdminPlatformRoute = pathname.startsWith('/admin/platform')
+    const isAdminPlatformRoute = isAdminRoute && pathname.startsWith('/admin/platform')
 
     // A. 신규 플랫폼 어드민 경로 (/admin/platform): administrator만 허용
     if (isAdminPlatformRoute && userRole !== 'administrator') {
@@ -190,6 +202,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/test-fixtures/:path*',
     /*
      * Match all request paths except for the ones starting with:
      * - _next/static (static files)

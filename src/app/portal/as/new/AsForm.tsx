@@ -442,7 +442,7 @@ export default function AsForm({ userId }: Props) {
                 </button>
                 <p>최대 {MAX_FILE_COUNT}개, 파일 1개당 {MAX_FILE_SIZE_MB}MB 이하</p>
               </div>
-              {fileError && <p className={styles.errorText}>{fileError}</p>}
+              {fileError && <p className={styles.errorText} role="alert">{fileError}</p>}
               {files.length > 0 && (
                 <ul className={styles.fileList}>
                   {files.map((item, index) => (
@@ -474,7 +474,7 @@ export default function AsForm({ userId }: Props) {
                 <input id="as-privacy" type="checkbox" checked={privacy} onChange={event => setPrivacy(event.target.checked)} />
                 <span>접수 내용 확인과 안내 연락을 위한 개인정보 수집 및 이용에 동의합니다.</span>
               </label>
-              {submitError && <p className={styles.errorText}>{submitError}</p>}
+              {submitError && <p className={styles.errorText} role="alert">{submitError}</p>}
             </div>
           )}
 

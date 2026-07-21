@@ -1,69 +1,40 @@
 # 프로젝트 컨텍스트
 
-마지막 업데이트: 2026-06-10
-현재 오더: n8n/AppSheet 견적·결제 흐름 지도화
+마지막 업데이트: 2026-07-21
 
-## 현재 상태
+현재 오더: Admin·CMS·Blog 통합 안정화 및 단일 Draft PR 완성
 
-브랜치 `platform-v1`에서 MVP-02는 개발/로컬검수/Preview 배포까지 완료됐다. Production `https://munjanggun.vercel.app`에는 아직 반영되지 않았고, 검수는 Preview 또는 branch alias에서 진행한다.
+## 작업 기준
 
-최신 커밋:
+- 저장소: `munjanggun`
+- 통합 브랜치: `codex/platform-admin-blog-stabilization`
+- base: `v2-cms`
+- 구현 위치: dedicated linked worktree `platform-admin-blog-stabilization`
+- 제품 북극성: `docs/platform/PLATFORM_STRATEGY.md`
+- 실행 순서: `docs/platform/PLATFORM_TASKS.md`
+- UI 계약: `docs/platform/PLATFORM_UI_CONSTITUTION.md`
+- 브랜드 정본: 중앙 브랜드 `e6b6eb6`, DESIGN v5.0, 고유 토큰 114개
 
-- `4eda6cf` docs: MVP-02 closeout 상태 정리
-- `ce691aa` MVP-02 플랫폼 UI 헌법과 견적 설정 정리
-- `cf92854` MVP-02 고객 접수 화면과 관리자 이동감 정렬
-- `7ef451d` MVP-02 접수 UX와 큐 반응성 개선
+## 확인된 현재 상태
 
-최신 Preview:
+- 실제 첫 원고는 `reviewing`, `published_at = null`이다.
+- 본문은 27블록, image block 2개, active private media 3개다.
+- active media의 public 노출은 0이고 promotion consent는 승인하지 않았다.
+- 미사용 공식 자산은 글 연결만 감사 detach했으며 asset record와 file row 3개를 보존했다.
+- Preview token·draft showroom 권한 보정 migration `20260721013710`과 공식 자산 공개 파생 경계 migration `20260721015552`를 원격에 적용했고 로컬 version/name과 맞췄다.
+- 신규 target migration 정합은 확인했지만, 저장소 전체의 과거 local/remote migration history 차이는 상속 상태로 남아 있어 빈 DB fresh-reset 재현성과 동일한 의미로 보고하지 않는다.
+- public cleanup 미해결 감사 이벤트는 0건이다.
+- Admin·Blog UI verifier는 CSS 64개와 명명·허용된 layout 예외 37개를 검사하며 현재 정책 위반은 0건이다.
+- 통합 Draft PR [#73](https://github.com/westgeneraldoor/munjanggun/pull/73)은 생성됐고 superseded PR과 clean worktree 정리는 끝났다.
+- 이번 보정 diff는 non-browser 35/35, 실제 환경 Playwright 81건 일괄 통과와 timeout 2건 직렬 재실행 통과(총 83건 커버), 공개 Blog 집중 회귀 23/23을 확인했다.
+- DB/RLS, UI·접근성·Production route, 원고 불변성·migration ledger·전체 diff 독립 재검수의 미해결 finding은 0건이다.
+- 보정 커밋의 동일 Secretless workflow는 push와 pull_request 이벤트에서 각각 통과했고, Vercel Preview에서 `/test-fixtures/**` 대상 10개 route가 모두 `404`와 `X-Robots-Tag: noindex, nofollow`를 반환했다.
+- Vercel Preview 공개 Blog는 1440×900과 390×844에서 오류 overlay·깨진 이미지·가로 overflow가 없었고, 모바일 reduced-motion과 첫 키보드 focus를 확인했다. 비로그인 `/admin`은 `/admin/login`으로 이동한다.
 
-- Preview URL: `https://munjanggun-by4o5srwi-westgeneraldoors-projects.vercel.app`
-- Branch alias: `https://munjanggun-git-platform-v1-westgeneraldoors-projects.vercel.app`
+## 전달 경계
 
-## 최근 완료
+GitHub CI는 비밀값 없는 정적·단위·타입·lint·build 검증만 맡는다. Supabase 인증이 필요한 전체 Playwright와 원격 DB 검증은 로컬 및 Vercel Preview 증거로 분리한다. 실제 발행, merge, Ready 전환, production 배포는 이 오더에 포함하지 않는다.
 
-- 무료방문 실측견적 상담 guided intake
-- 고객 마이페이지 최근 무료견적/A/S 표시
-- 고객 수정요청/취소요청
-- A/S 접수
-- 무료실측 + A/S 통합 접수 큐
-- 어드민 확인필요/확인완료 필터
-- 견적 접수 운영설정
-- 공통 고객 접수 프레임/로딩/완료 동선 정렬
-- 플랫폼 UI 헌법 `docs/platform/PLATFORM_UI_CONSTITUTION.md` 추가
-- MVP-02 closeout 문서 정리 및 Preview READY 확인
+## 다음 단계
 
-## 새 결정
-
-MVP-03/04/05로 바로 진입하지 않는다.
-
-기존 운영에는 이미 `AppSheet -> n8n -> HTML 견적서 생성 -> 솔라피 알림톡 발송 -> 고객 상세 견적서 확인` 흐름이 있다. 영업부 담당자는 AppSheet에 견적, 시공, 스펙을 등록하고 `견적서 보내기` 액션을 누를 뿐, 생성된 견적서 링크를 직접 다루지 않는다.
-
-따라서 플랫폼이 견적서 작성 화면을 바로 만들면 영업부 이중 입력이 생길 수 있다. 결제도 플랫폼 결제만 있는 것이 아니라 네이버 결제, 일반/계좌 결제, 향후 플랫폼 결제가 공존한다.
-
-다음 작업은 구현이 아니라 아래 흐름을 지도화하는 것이다.
-
-1. 현재 AppSheet 견적 등록 데이터 구조 파악
-2. n8n 워크플로우가 받는 payload 파악
-3. 기존 HTML 견적서와 솔라피 알림톡 생성 흐름 파악
-4. 네이버 결제 / 일반 결제 / 플랫폼 결제 / 계약금·잔금 분기 정의
-5. 플랫폼이 끼어들 정확한 지점 결정
-6. n8n MCP 또는 API/Webhook 연동 방식 판단
-
-## 운영 원칙
-
-- AppSheet는 당분간 운영 원장이다.
-- n8n은 버리지 않는다. 오히려 AI와 더 유기적으로 쓰기 위한 핵심 자동화 계층으로 본다.
-- 플랫폼은 무조건 결제 시스템이 아니라, 인스타 유입 고객의 접수, 견적 확인, 결제 방식 안내, 결제/입금 확인, 마이페이지 보관을 담당하는 고객 허브가 되어야 한다.
-- 결제 구현보다 먼저 결제 분기와 기존 자동화 흐름을 정리한다.
-
-## 다음 오더
-
-`_order.md`의 `n8n/AppSheet 견적·결제 흐름 지도화`를 진행한다.
-
-## 핵심 기준
-
-- 플랫폼 기준 문서: `docs/platform/PLATFORM_TASKS.md`
-- UI 헌법: `docs/platform/PLATFORM_UI_CONSTITUTION.md`
-- 장기 결정: `docs/platform/DECISION_LOG.md`
-- 기존 쇼룸은 Public Experience로 유지한다.
-- `/admin`은 기존 쇼룸 CMS, 플랫폼 어드민은 `/admin/platform`이다.
+구현·원격 DB·검증·독립 재검수·Draft PR CI와 Preview QA는 완료했다. 다음 중앙 통제 세션에서 이 증거를 재검수한 뒤 Draft → Ready 여부를 판단한다. 이 오더에서는 Ready 전환 자체를 수행하지 않는다.

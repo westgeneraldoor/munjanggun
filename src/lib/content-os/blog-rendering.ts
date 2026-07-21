@@ -4,6 +4,7 @@ import { createPublicShowroomClient, hasPublicShowroomEnv } from '@/lib/supabase
 import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
 import type { BlogBlockType, BlogContentCategory, BlogMediaUsageStatus, BlogPostStatus, Database, Json } from '@/types/database'
 import { buildBlogContentGraph, type BlogContentGraphRelatedPost, type BlogContentGraphSection } from './blog-content-graph'
+import { BLOG_ADMIN_PREVIEW_MEDIA_STATUSES } from './blog-editor-preview'
 
 type BlogPostRow = Database['showroom']['Tables']['blog_posts']['Row']
 type BlogPostRenderProjection = Pick<
@@ -136,9 +137,6 @@ const PREVIEW_MEDIA_SELECT = [
   'id',
   'post_id',
   'usage_status',
-  'private_bucket',
-  'private_object_path',
-  'public_url',
   'alt_text',
   'caption',
   'source_label',
@@ -215,19 +213,8 @@ function toPublicRenderMedia(media: BlogMediaRow): BlogRenderMedia {
   }
 }
 
-async function toPreviewRenderMedia(
-  showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
-  media: BlogMediaRow,
-): Promise<BlogRenderMedia> {
-  let url = media.public_url
-
-  if (!url && media.private_bucket && media.private_object_path) {
-    const { data } = await showroomAdmin.storage
-      .from(media.private_bucket)
-      .createSignedUrl(media.private_object_path, 300)
-
-    url = data?.signedUrl ?? null
-  }
+function toPreviewRenderMedia(media: BlogMediaRow): BlogRenderMedia {
+  const url = `/admin/platform/blog/media/${media.id}`
 
   return {
     id: media.id,
@@ -339,14 +326,15 @@ export async function getAdminPreviewBlogPost(postId: string): Promise<BlogRende
       .select(BLOCK_SELECT)
       .eq('post_id', post.id)
       .order('display_order', { ascending: true }),
-    showroomAdmin
-      .from('blog_media')
-      .select(PREVIEW_MEDIA_SELECT)
-      .eq('post_id', post.id)
-      .in('usage_status', ['approved', 'published']),
+      // Saved and embedded admin previews intentionally share this visibility policy.
+      showroomAdmin
+        .from('blog_media')
+        .select(PREVIEW_MEDIA_SELECT)
+        .eq('post_id', post.id)
+        .in('usage_status', [...BLOG_ADMIN_PREVIEW_MEDIA_STATUSES]),
   ])
 
-  const media = await Promise.all(((mediaResult.data ?? []) as unknown as BlogMediaRow[]).map(item => toPreviewRenderMedia(showroomAdmin, item)))
+  const media = ((mediaResult.data ?? []) as unknown as BlogMediaRow[]).map(toPreviewRenderMedia)
 
   return {
     post: toRenderPost(post),

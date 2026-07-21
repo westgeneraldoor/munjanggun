@@ -34,7 +34,7 @@ related:
 - 콘텐츠 초안은 Codex가 문장군_브랜드와 문장군블로그를 근거로 외부 작성한다.
 - 관리자 화면은 승인된 원고의 CMS 관리 표면이다.
 - 현행 인계 흐름은 `Codex 완성 원고 → 승인 원고 등록 → reviewing 콘텐츠 큐 → 사진·검수 → 미리보기 → 발행`이다.
-- 인증된 관리자는 승인 원고 등록에서 메타데이터, 본문 블록, 근거를 구조화해 `reviewing`으로 등록한 뒤 기존 큐·에디터에서 사진과 검수를 진행한다.
+- 인증된 관리자는 승인 원고 등록에서 메타데이터와 본문 블록을 입력해 `reviewing`으로 등록한 뒤 기존 큐·에디터에서 사진과 검수를 진행한다.
 - Codex는 글을 작성하기 전에 문장군_브랜드에서 브랜드 사실, 금지표현, 현장 판단 기준을 확인하고, 문장군블로그에서 네이버 글, 카테고리, 중복 주제, 검색 성과, 발행 운영 기록을 확인한다.
 - `/admin/platform/blog`에서는 AI 초안 생성이나 비밀값 설정을 제공하지 않는다. 큐, 편집, 사진 연결, 미리보기, 발행 이력 관리만 수행한다.
 - 글은 제품명보다 고객 질문에서 시작한다.
@@ -80,11 +80,12 @@ related:
 - `related_questions`
 - `service_area`
 - `product_type`
-- `source_evidence`
+
+`source_evidence`는 사람이 작성하는 원고 필드가 아니다. 승인 원고 등록 서버가 `source_id`, `source_kind`, `recorded_at`, `visibility=internal`을 자동 기록하는 내부 provenance다. 관리자와 Codex 호출자는 근거를 입력하거나 수정하지 않으며, 이 값은 큐 경고나 발행 gate, 공개 렌더링에 사용하지 않는다.
 
 ### 수요일: 승인 원고 등록과 브랜드·사실 검수
 
-완성 원고는 `/admin/platform/blog/new`에서 승인 원고로 등록한다. 등록 시 제목, slug, SEO/AEO 필드, 본문 블록, `source_evidence`를 빠짐없이 입력하고, 새 글이 `reviewing` 콘텐츠 큐에 들어갔는지 확인한다. 이 화면은 AI 키, 모델, 설정을 요구하지 않는다.
+완성 원고는 `/admin/platform/blog/new`에서 승인 원고로 등록한다. 등록 시 제목, slug, SEO/AEO 필드와 본문 블록을 입력하고, 새 글이 `reviewing` 콘텐츠 큐에 들어갔는지 확인한다. `source_evidence`는 서버가 자동 생성하므로 관리자 화면에서 근거를 입력하지 않는다. 이 화면은 AI 키, 모델, 설정을 요구하지 않는다.
 
 검수자는 아래를 확인한다.
 
@@ -99,6 +100,10 @@ related:
 ### 목요일: 사진과 본문 연결
 
 사진은 글을 꾸미는 장식이 아니라 판단 근거다.
+
+중앙 브랜드 manifest에서 `privacyStatus = official_reviewed`로 승인된 자산은 문장군의 공식 원본 소스다. 관리자는 사진보관함 UI를 사용하고, Codex는 사람용 파일 선택창 대신 `scripts/register-official-brand-asset.mjs` 서버 명령으로 같은 작업을 수행할 수 있다. 관리자 UI와 Codex 서버 명령은 같은 원본 검증 모듈을 사용하며, service-role은 서버 밖으로 노출하지 않는다.
+
+이 명령은 중앙 `assetId`와 허용 경로, Git HEAD 일치, 개인정보·주장 검수 상태, MIME magic, 용량, 크기, GIF frame count, SHA-256 중복, 감사 actor를 검증한 뒤에만 비공개 Storage와 메타데이터·감사 이력·선택한 `reviewing` 글 연결을 처리한다. 금지되는 것은 서버측 등록 자체가 아니라 검증·권한·감사·발행 승격 경계를 우회한 등록이다. 임의 SQL 삽입이나 검증 없는 Storage 업로드는 운영 경로가 아니다.
 
 사진 확인 순서:
 
@@ -117,7 +122,6 @@ related:
 - `target_question`과 `summary_answer`가 있다.
 - 본문 블록과 CTA가 있다.
 - 금지표현이 없다.
-- 사실 확인일이 있다.
 - 공개 이미지 alt가 있다.
 - 미리보기에서 모바일 390px 좌우 overflow가 없다.
 - `/blog/[slug]`의 metadata, canonical, JSON-LD가 본문 내용과 어긋나지 않는다.
@@ -159,7 +163,7 @@ URL Inspection 결과:
 - 중복 주제가 쌓이지 않았는가?
 - 고객 화면에 내부 용어가 새어 나가지 않았는가?
 
-수정이 필요한 글은 새 글처럼 다시 발행하지 않는다. 기존 글을 업데이트하고, 수정일과 사실 확인일을 갱신한다.
+수정이 필요한 글은 새 글처럼 다시 발행하지 않는다. 기존 글을 업데이트하고 변경 이력을 남긴다.
 
 ## 4. 카테고리별 템플릿
 
