@@ -40,13 +40,13 @@ munjanggun/
 │   ├── lib/            # Supabase 클라이언트, 유틸리티, 로거
 │   └── types/          # 데이터베이스 및 전역 타입 정의
 ├── docs/
-│   ├── platform/       # 플랫폼 전략, 태스크, PRD, DB/RBAC, 감사, 브랜드 맥락
+│   ├── platform/       # 플랫폼 전략, PRD, DB/RBAC, 감사, 브랜드 맥락
 │   ├── showroom/       # 기존 V2 쇼룸 PRD, 디자인 시스템, 브리프
 │   └── archive/        # 과거 감사, 출시 점검, 아카이브
 └── public/             # 정적 에셋
 ```
 
-플랫폼 제작 일정은 `docs/platform/PLATFORM_TASKS.md`를 기준으로 확인합니다.
+플랫폼의 북극성은 `docs/platform/PLATFORM_STRATEGY.md`이며, 구체적인 실행 범위와 순서는 사용자가 승인한 현재 목표와 해당 작업 계획을 기준으로 확인합니다.
 
 ---
 

@@ -10,7 +10,6 @@
 
 ## Platform
 
-- `docs/platform/PLATFORM_TASKS.md` — 플랫폼 제작 일정, 페이즈, 오더 순서
 - `docs/platform/PLATFORM_STRATEGY.md` — 왜 이 플랫폼을 만드는지
 - `docs/platform/DEVELOPMENT_STRATEGY.md` — Codex/Gemini/Claude/GPT 역할 분담과 개발 운영 방식
 - `docs/platform/TEAM_AGENT_OPERATING_MODEL.md` — Codex 총괄 아래 서브에이전트 팀 편성, 역할, 검수/에스컬레이션 기준
@@ -27,6 +26,8 @@
 - `docs/platform/PRD_PLATFORM_v1.0.md` — 플랫폼 제품 범위
 - `docs/platform/CODEX_PROJECT_BOOTSTRAP.md` — 작업 에이전트 부트스트랩
 - `docs/platform/DECISION_LOG.md` — 플랫폼 결정 기록
+
+구체적인 작업 범위와 순서는 별도 영구 태스크 문서가 아니라 사용자가 승인한 현재 목표와 해당 작업의 검증 가능한 계획을 따른다.
 
 ## Showroom
 

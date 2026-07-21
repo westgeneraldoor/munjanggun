@@ -6,7 +6,6 @@ created: "2026-07-01"
 owner: "Codex PM"
 related:
   - "docs/platform/PLATFORM_STRATEGY.md"
-  - "docs/platform/PLATFORM_TASKS.md"
   - "docs/platform/PLATFORM_UI_CONSTITUTION.md"
   - "docs/platform/BLOG_CONTENT_OPERATING_ROUTINE.md"
   - "docs/brand/BRAND_SOURCE.md"

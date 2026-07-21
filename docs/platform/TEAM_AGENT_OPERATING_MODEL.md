@@ -1,11 +1,10 @@
 ---
 document_type: "Team Agent Operating Model"
-version: "1.0.0"
+version: "1.1.0"
 status: "active"
-last_updated: "2026-06-24"
+last_updated: "2026-07-21"
 owner: "Codex PM"
 source_strategy: "docs/platform/PLATFORM_STRATEGY.md"
-source_tasks: "docs/platform/PLATFORM_TASKS.md"
 source_development_strategy: "docs/platform/DEVELOPMENT_STRATEGY.md"
 source_bootstrap: "docs/platform/CODEX_PROJECT_BOOTSTRAP.md"
 source_ui_constitution: "docs/platform/PLATFORM_UI_CONSTITUTION.md"
@@ -24,7 +23,7 @@ source_ui_constitution: "docs/platform/PLATFORM_UI_CONSTITUTION.md"
 - Codex는 단독 작업자가 아니라 총괄 PM/테크리드다.
 - 서브에이전트는 리서치, 구현, 검수, 레드팀을 맡는 팀원이다.
 - 프로젝트 판단은 항상 `docs/platform/PLATFORM_STRATEGY.md`를 우선한다.
-- 실제 실행 순서는 `docs/platform/PLATFORM_TASKS.md`를 따른다.
+- 실제 실행 범위와 순서는 사용자가 승인한 현재 목표와 해당 세션의 검증 가능한 계획을 따른다.
 - 플랫폼 UI 작업 전에는 `docs/platform/PLATFORM_UI_CONSTITUTION.md`를 읽고 따른다.
 
 ## 1. 프로젝트 이해
@@ -209,7 +208,7 @@ Codex PM은 서브에이전트 결과를 그대로 받아쓰지 않는다. 결�
 
 | 작업 성격 | 먼저 읽을 문서 |
 |---|---|
-| 플랫폼 기능/방향 | `docs/platform/PLATFORM_STRATEGY.md`, `docs/platform/PLATFORM_TASKS.md` |
+| 플랫폼 기능/방향 | `docs/platform/PLATFORM_STRATEGY.md`, 현재 사용자 승인 목표와 작업 계획 |
 | 에이전트 운영/역할 분담 | `docs/platform/DEVELOPMENT_STRATEGY.md`, 이 문서 |
 | 고객 포털/고객 접수/플랫폼 어드민 UI | `docs/platform/PLATFORM_UI_CONSTITUTION.md` |
 | Auth/RBAC/Storage | `docs/platform/PLATFORM_DB_RBAC_DESIGN.md` |

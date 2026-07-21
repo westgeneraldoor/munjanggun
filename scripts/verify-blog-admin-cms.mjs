@@ -372,8 +372,11 @@ assert.match(editor, /제목 없는 원고/)
 assert.match(editorPage, /블로그 콘텐츠 편집/)
 assert.match(editorLoading, /블로그 콘텐츠 편집/)
 assert.equal(publicSafety.includes("../src/app/admin/platform/blog/actions.ts"), false, 'public safety check must not depend on removed AI action')
-assert.match(routine, /콘텐츠 초안은 Codex가 문장군_브랜드와 문장군블로그를 근거로 외부 작성한다\./)
+assert.match(routine, /콘텐츠 초안은 Codex가 중앙 문장군 브랜드 자료와 이 프로젝트의 CMS 데이터·발행 이력을 근거로 외부 작성한다\./)
 assert.match(routine, /관리자 화면은 승인된 원고의 CMS 관리 표면이다\./)
+for (const doc of cmsDocs) {
+  assert.doesNotMatch(doc, /문장군블로그/, 'platform CMS docs must not connect to the separate blog operations repository')
+}
 
 const currentReadinessSections = extractNamedCurrentSections(readiness)
 const currentReadinessText = currentReadinessSections.map((section) => section.body).join('\n')

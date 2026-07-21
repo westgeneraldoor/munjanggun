@@ -2,8 +2,9 @@
 📅 마지막 업데이트: 2026-05-30
 
 
-> 플랫폼 제작 일정의 기준은 `docs/platform/PLATFORM_TASKS.md`다.
-> V1/V2 히스토리는 `docs/archive/showroom/`와 아래 쇼룸 Phase 기록에 보관한다.
+> 이 문서는 기존 V1/V2 쇼룸 구현의 역사 기록이다. 현재 플랫폼 실행 순서를 관리하지 않는다.
+> 현재 작업은 사용자가 승인한 목표와 해당 세션의 검증 가능한 계획을 따른다.
+> V1/V2 추가 자료는 `docs/archive/showroom/`에 보관한다.
 
 ## V2 Phase 0: 기반 설정 ✅
 - [x] Git 브랜치 `v2-cms` 생성 (main 보호) ✅ 오더 #015
