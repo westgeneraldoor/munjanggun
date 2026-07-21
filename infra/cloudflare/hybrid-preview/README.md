@@ -45,8 +45,9 @@ Do not change Supabase redirect URLs as part of this Worker deployment.
 `munjanggun.com -> munjanggun-home.pages.dev` DNS record and attaches a Worker
 Route on `munjanggun.com/*`. The root and unmatched paths still fetch the Pages
 site, while the application paths use Vercel. A companion route redirects
-`www.munjanggun.com/*` to the same path on the apex domain. Removing those two
-Worker Routes restores the previous direct Pages behavior without a DNS change.
+`www.munjanggun.com/*` to the same HTTPS path on the apex domain, and HTTP apex
+requests are upgraded to HTTPS. Removing those two Worker Routes restores the
+previous direct Pages behavior without a DNS change.
 
 ```powershell
 npx wrangler deploy --config infra/cloudflare/hybrid-preview/wrangler.production.jsonc

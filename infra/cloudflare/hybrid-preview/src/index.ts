@@ -104,7 +104,11 @@ function responseWithCachePolicy(response: Response, noStore: boolean, appOrigin
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const incomingUrl = new URL(request.url)
-    if (incomingUrl.hostname === 'www.munjanggun.com') {
+    const shouldCanonicalize =
+      incomingUrl.protocol !== 'https:' || incomingUrl.hostname === 'www.munjanggun.com'
+
+    if (shouldCanonicalize) {
+      incomingUrl.protocol = 'https:'
       incomingUrl.hostname = 'munjanggun.com'
       return Response.redirect(incomingUrl.toString(), 308)
     }
