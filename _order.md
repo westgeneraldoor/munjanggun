@@ -6,7 +6,7 @@
 
 base: `v2-cms`
 
-상태: Draft PR #73 후속 보정 구현·원격 DB 적용 완료, 전체 재검증·독립 재검수 중
+상태: Draft PR #73 후속 보정·원격 DB·전체 검증·독립 재검수 완료, 중앙 통제 세션의 Draft 재검수 대기
 
 ## 목표
 
@@ -26,15 +26,15 @@ base: `v2-cms`
 - 일반 authenticated의 Preview token·draft showroom 접근 차단과 anon 공개 범위 유지
 - 공식 자산·usage·공개 파생 파일을 정확한 published media 계약으로 제한
 - Production `/test-fixtures/**` 중앙 404 경계와 Secretless CI 회귀검증 추가
+- non-browser 35/35, 실제 환경 Playwright 81건 일괄 + timeout 2건 직렬 재실행, 공개 Blog 집중 회귀 23/23 통과
+- RLS 역할 행렬 5/5와 공식 자산 공개 경계 12/12 통과, 독립 재검수 미해결 finding 0건
+- 동일 Secretless workflow의 push/pull_request 2개 이벤트 실행 통과와 Vercel Preview 10/10 fixture 404 확인
+- Preview 공개 Blog desktop/mobile·reduced-motion·keyboard focus와 비로그인 Admin redirect 확인
 
-## 남은 실행 순서
+## 다음 승인 순서
 
-1. 신규 RLS 역할 행렬과 전체 non-browser·타입·lint·build·인증 Playwright를 다시 실행한다.
-2. DB/RLS, UI/accessibility/Production route, 원고 불변성, migration ledger, 전체 diff를 독립 재검수한다.
-3. 보정 변경을 커밋하고 기존 원격 브랜치에 push한다.
-4. Draft PR #73의 동일 Secretless workflow push/pull_request 실행과 Vercel Preview를 확인한다.
-5. Preview 공개 Blog·인증 경계와 `/test-fixtures/**` 전체 404를 실제 환경에서 재검수한다.
-6. 재검수 결과를 근거로 다음 승인 단계인 Draft → Ready 판단을 요청한다. 이 오더에서는 Ready 전환하지 않는다.
+1. 중앙 통제 세션에서 이 오더의 DB·CI·Preview·독립 재검수 증거를 확인한다.
+2. 재검수 결과를 근거로 다음 승인 단계인 Draft → Ready 여부를 판단한다. 이 오더에서는 Ready 전환하지 않는다.
 
 ## 금지
 
