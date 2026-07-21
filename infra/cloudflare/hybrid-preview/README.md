@@ -38,3 +38,15 @@ https://hybrid-preview.munjanggun.com/auth/callback
 ```
 
 Do not change Supabase redirect URLs as part of this Worker deployment.
+
+## Production route
+
+`wrangler.production.jsonc` keeps the existing proxied
+`munjanggun.com -> munjanggun-home.pages.dev` DNS record and attaches a Worker
+Route on `munjanggun.com/*`. The root and unmatched paths still fetch the Pages
+site, while the application paths use Vercel. Removing that single Worker Route
+restores the previous direct Pages behavior without a DNS change.
+
+```powershell
+npx wrangler deploy --config infra/cloudflare/hybrid-preview/wrangler.production.jsonc
+```
