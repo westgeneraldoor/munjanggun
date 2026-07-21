@@ -141,7 +141,7 @@ manifest: src/styles/generated/brand.manifest.json
 
 `brand.manifest.json`은 소스/생성 파일의 SHA-256과 고유 토큰 수를 기록한다. 오프라인 검증기는 이 가변 파일만 신뢰하지 않고, 코드에 고정된 커밋·경로·버전·토큰 수·소스/생성 SHA-256 계약과 manifest 전체가 일치하는지 먼저 확인한다. 절대 경로, 작업자, 생성 시각은 넣지 않는다. 중앙 저장소는 읽기 전용이며 동기화는 프로젝트 쪽 생성물만 갱신한다.
 
-2026-07-20 통합 검증에서 중앙 source는 clean worktree의 `e6b6eb618e08b907307497d87f58995bd945531c`(`e6b6eb6`), `DESIGN.md` v5.0, 고유 토큰 114개로 확인했다. `codex/platform-admin-blog-stabilization`은 `v2-cms`를 base로 프로젝트 생성물만 다루며 중앙 저장소를 수정하지 않았다. Draft PR 번호는 생성 후 기록할 pending 값이다.
+2026-07-20 통합 검증에서 중앙 source는 clean worktree의 `e6b6eb618e08b907307497d87f58995bd945531c`(`e6b6eb6`), `DESIGN.md` v5.0, 고유 토큰 114개로 확인했다. `codex/platform-admin-blog-stabilization`은 `v2-cms`를 base로 프로젝트 생성물만 다루며 중앙 저장소를 수정하지 않았다. 통합 Draft PR은 [#73](https://github.com/westgeneraldoor/munjanggun/pull/73)이다.
 
 ```text
 npm run sync:brand-tokens

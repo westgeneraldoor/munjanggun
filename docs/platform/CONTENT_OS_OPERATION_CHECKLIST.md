@@ -707,7 +707,7 @@ Required checks:
 
 ## 14. 2026-07-20 Integration Stabilization Record
 
-- Branch: `codex/platform-admin-blog-stabilization`; base: `v2-cms`; Draft PR number: pending until creation.
+- Branch: `codex/platform-admin-blog-stabilization`; base: `v2-cms`; integration Draft PR: [#73](https://github.com/westgeneraldoor/munjanggun/pull/73).
 - Current public delivery bucket remains:
 
 ```text

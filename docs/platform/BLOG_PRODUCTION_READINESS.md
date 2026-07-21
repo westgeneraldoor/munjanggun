@@ -58,7 +58,7 @@ Codex 완성 원고 → 승인 원고 등록 → reviewing 콘텐츠 큐 → 사
 ### 3.1 2026-07-20 통합 증거
 
 - 중앙 source는 clean `e6b6eb618e08b907307497d87f58995bd945531c`(`e6b6eb6`), `DESIGN.md` v5.0, 고유 토큰 114개다. 중앙 저장소는 수정하지 않았다.
-- 통합 브랜치는 `codex/platform-admin-blog-stabilization`, base는 `v2-cms`다. Draft PR 번호는 생성 후 기록할 pending 값이다.
+- 통합 브랜치는 `codex/platform-admin-blog-stabilization`, base는 `v2-cms`다. 통합 Draft PR은 [#73](https://github.com/westgeneraldoor/munjanggun/pull/73)이다.
 - 첫 원고는 `reviewing`, `published_at = null`, 27개 블록, image block 2개, active private media 3개다. `mg-3panel-thumbnail-basic-001`은 감사 detach했으며 중앙 asset과 file row 3개는 보존했다.
 - 실제 발행과 public promotion은 수행하지 않았다.
 

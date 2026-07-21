@@ -44,7 +44,7 @@ source_development_strategy: "docs/platform/DEVELOPMENT_STRATEGY.md"
 
 블로그 운영 모델은 확정됐다. Codex가 중앙 브랜드와 블로그 운영 본진을 근거로 완성 원고를 외부에서 작성하고, CMS는 등록·편집·사진 연결·미리보기·발행·이력을 담당한다. 관리자 AI 초안 생성, OpenAI 키, 모델 설정은 다시 도입하지 않는다.
 
-현재 통합 기준점은 `v2-cms`를 base로 한 `codex/platform-admin-blog-stabilization`이다. Draft PR 번호는 생성 후 기록하며 아직 확정하지 않는다. Production 배포·공개 글 발행·미디어 공개 승격은 이번 완료 사실에 포함하지 않는다. 어드민·블로그 최종 검증기는 state-scope invariant를 유지하며, 최종 실행 전에는 통과 개수를 임의로 적지 않는다.
+현재 통합 기준점은 `v2-cms`를 base로 한 `codex/platform-admin-blog-stabilization`이며 통합 Draft PR은 [#73](https://github.com/westgeneraldoor/munjanggun/pull/73)이다. Production 배포·공개 글 발행·미디어 공개 승격은 이번 완료 사실에 포함하지 않는다. 어드민·블로그 최종 검증기는 state-scope invariant를 유지하며, 최종 실행 전에는 통과 개수를 임의로 적지 않는다.
 
 ## 크리티컬 패스
 

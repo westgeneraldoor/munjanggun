@@ -267,7 +267,7 @@ GIF는 private 원본 애니메이션을 그대로 보존하고 poster와 thumbn
 ### 2026-07-20 통합 검증 상태
 
 - 중앙 source는 clean `e6b6eb618e08b907307497d87f58995bd945531c`(`e6b6eb6`), `DESIGN.md` v5.0, 고유 토큰 114개 계약이다.
-- 통합 브랜치는 `codex/platform-admin-blog-stabilization`, base는 `v2-cms`이며 Draft PR 번호는 pending이다.
+- 통합 브랜치는 `codex/platform-admin-blog-stabilization`, base는 `v2-cms`이며 통합 Draft PR은 [#73](https://github.com/westgeneraldoor/munjanggun/pull/73)이다.
 - 첫 원고는 `reviewing`, `published_at = null`, 27개 블록, image block 2개, active private media 3개다.
 - `mg-3panel-thumbnail-basic-001`은 글 연결만 감사 detach했고 중앙 asset과 file row 3개는 보존했다.
 - anon 목록은 0건, 알려진 public URL은 HTTP 200, private signed URL은 HTTP 200이다. 실제 발행과 public promotion은 수행하지 않았다.
