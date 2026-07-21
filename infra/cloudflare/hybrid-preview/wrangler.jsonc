@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
+  "name": "munjanggun-hybrid-preview",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-21",
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "hybrid-preview.munjanggun.com",
+      "custom_domain": true
+    }
+  ],
+  "vars": {
+    "HOME_ORIGIN": "https://munjanggun-home.pages.dev",
+    "APP_ORIGIN": "https://preview.munjanggun.com",
+    "PUBLIC_ORIGIN": "https://hybrid-preview.munjanggun.com"
+  }
+}
