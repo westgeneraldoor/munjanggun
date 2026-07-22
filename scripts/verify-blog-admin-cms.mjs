@@ -200,6 +200,7 @@ const approvedManuscriptDomain = await readWorkspaceFile('src/lib/content-os/app
 const adminSidebar = await readWorkspaceFile('src/components/admin/AdminSidebar.tsx')
 const editor = await readWorkspaceFile('src/app/admin/platform/blog/[id]/BlogEditorClient.tsx')
 const editorActions = await readWorkspaceFile('src/app/admin/platform/blog/[id]/actions.ts')
+const blogStatusTransitions = await readWorkspaceFile('src/lib/content-os/blog-status-transitions.ts')
 const editorPage = await readWorkspaceFile('src/app/admin/platform/blog/[id]/page.tsx')
 const editorLoading = await readWorkspaceFile('src/app/admin/platform/blog/[id]/loading.tsx')
 const publicSafety = await readWorkspaceFile('scripts/verify-blog-public-safety.mjs')
@@ -347,7 +348,18 @@ assert.equal(queue.includes("{ key: 'ai_draft'"), false, 'legacy ai_draft must n
 assert.match(queue, /function getVisibleStatus\(status: BlogPostStatus\): Exclude<StatusFilter, 'all'>/)
 assert.match(queue, /if \(status === 'published'\) return 'published'[\s\S]*?return 'draft'/)
 assert.match(editor, /ai_draft: '초안'/)
-assert.match(editorActions, /ai_draft: \['reviewing'\]/)
+assert.match(editorActions, /isAllowedManualBlogStatusTransition/)
+for (const transition of [
+  "ai_draft: ['reviewing']",
+  "reviewing: ['needs_media', 'ready']",
+  "needs_media: ['reviewing', 'ready']",
+  "ready: ['reviewing', 'needs_media']",
+  "published: ['archived']",
+  "archived: ['reviewing']",
+]) {
+  assert.ok(blogStatusTransitions.includes(transition), `manual transition matrix must include ${transition}`)
+}
+assert.match(blogStatusTransitions, /toStatus === 'published'/, 'manual status changes must never publish')
 
 assert.match(queue, /<Link[\s\S]*?href=\{`\/admin\/platform\/blog\/\$\{row\.id\}`\}[\s\S]*?에디터 열기/)
 assert.doesNotMatch(queue, /<tr[^>]*\bonClick=/, 'queue rows themselves must not change state on click')
