@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const migration = await readFile(
-  path.join(projectRoot, 'supabase/migrations/20260722015610_blog_likes_and_recent_views.sql'),
+  path.join(projectRoot, 'supabase/migrations/20260722044841_20260722015610_blog_likes_and_recent_views.sql'),
   'utf8',
 )
 const readerRoute = await readFile(
