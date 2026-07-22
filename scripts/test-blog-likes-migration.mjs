@@ -8,6 +8,10 @@ const migration = await readFile(
   path.join(projectRoot, 'supabase/migrations/20260722044841_20260722015610_blog_likes_and_recent_views.sql'),
   'utf8',
 )
+const recentViewsPostIndexMigration = await readFile(
+  path.join(projectRoot, 'supabase/migrations/20260722052726_blog_article_recent_views_post_index.sql'),
+  'utf8',
+)
 const readerRoute = await readFile(
   path.join(projectRoot, 'src/app/api/blog/posts/[slug]/reader/route.ts'),
   'utf8',
@@ -35,6 +39,11 @@ assert.match(migration, /ON CONFLICT \(user_id, post_id\) DO NOTHING/i)
 assert.match(migration, /blog_article_likes_user_post_unique UNIQUE \(user_id, post_id\)/i)
 assert.match(migration, /blog_article_recent_views_user_post_unique UNIQUE \(user_id, post_id\)/i)
 assert.match(migration, /blog_article_recent_views_user_last_viewed_idx/i)
+assert.match(
+  recentViewsPostIndexMigration,
+  /CREATE INDEX IF NOT EXISTS blog_article_recent_views_post_id_idx\s+ON platform\.blog_article_recent_views \(post_id\)/i,
+  'the recent-view post foreign key needs a covering index for joined post lookups',
+)
 assert.match(migration, /CREATE OR REPLACE FUNCTION platform_private\.is_published_blog_post/i)
 assert.match(migration, /SECURITY DEFINER/i)
 assert.match(migration, /SET search_path = pg_catalog/i)
