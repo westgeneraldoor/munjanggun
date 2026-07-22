@@ -166,7 +166,7 @@ export async function proxy(request: NextRequest) {
     }
     if (isAdminLoginRoute) {
       if (userRole === 'administrator') {
-        return NextResponse.redirect(new URL('/admin/nodes', request.url))
+        return NextResponse.redirect(new URL('/admin/platform', request.url))
       }
       if (userRole === 'sales_manager') {
         return NextResponse.redirect(new URL('/manager', request.url))

@@ -246,7 +246,7 @@
 
 .selectorHeader h3 {
   margin-top: var(--mg-blog-space-micro);
-  font-family: var(--font-blog-display);
+  font-family: var(--mg-font-body);
   font-size: var(--mg-font-size-state);
   line-height: 1.25;
 }
@@ -374,7 +374,7 @@
 
 .resultTitle h3 {
   margin-top: var(--mg-blog-space-micro);
-  font-family: var(--font-blog-display);
+  font-family: var(--mg-font-body);
   font-size: var(--mg-blog-type-heading);
   line-height: 1.25;
 }

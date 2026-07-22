@@ -113,6 +113,14 @@
   padding-top: var(--space-2);
 }
 
+.editorModeTabs {
+  border-radius: var(--radius-lg);
+}
+
+.editorModeTabs > :global(button[role='tab']) {
+  border-radius: var(--radius-md);
+}
+
 .editorLayout {
   display: block;
 }

@@ -49,7 +49,7 @@ function getLocalRedirectOrigin(request: NextRequest, requestUrl: URL) {
 }
 
 function getSafeNext(rawNext: string | null, role: string) {
-  const fallback = role === 'administrator' ? '/admin/platform/settings' : '/portal'
+  const fallback = role === 'administrator' ? '/admin/platform' : '/portal'
   if (!rawNext) return fallback
   if (!rawNext.startsWith('/') || rawNext.startsWith('//')) return fallback
   return rawNext

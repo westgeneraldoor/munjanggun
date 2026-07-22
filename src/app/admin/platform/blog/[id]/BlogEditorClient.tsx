@@ -17,7 +17,6 @@ import {
   AlertTriangle,
   ArrowDown,
   ArrowLeft,
-  ArrowRight,
   ArrowUp,
   CheckCircle2,
   Eye,
@@ -57,7 +56,6 @@ import {
   publishBlogPost,
   saveBlogEditor,
   updateBlogMedia,
-  updateBlogPostStatus,
   type ContentAssetBlogMedia,
   type SaveBlogEditorPayload,
 } from './actions'
@@ -219,26 +217,15 @@ const CATEGORY_OPTIONS: Array<{ value: BlogContentCategory; label: string }> = [
 ]
 
 const STATUS_LABEL: Record<BlogPostStatus, string> = {
-  ai_draft: '검토 필요',
-  reviewing: '검토중',
-  needs_media: '사진필요',
-  ready: '발행대기',
-  published: '발행완료',
+  ai_draft: '초안',
+  reviewing: '초안',
+  needs_media: '초안',
+  ready: '초안',
+  published: '발행',
   archived: '보관',
 }
 
-const STATUS_ACTION_LABEL: Record<BlogPostStatus, string> = {
-  ai_draft: '검토 필요',
-  reviewing: '검토중으로',
-  needs_media: '사진필요로',
-  ready: '발행대기로',
-  published: '발행완료',
-  archived: '보관으로',
-}
-
 function getPostStatusTone(status: BlogPostStatus): PlatformStatusBadgeTone {
-  if (status === 'needs_media') return 'danger'
-  if (status === 'ready') return 'success'
   if (status === 'published') return 'info'
   if (status === 'archived') return 'neutral'
   return 'review'
@@ -1224,7 +1211,6 @@ export default function BlogEditorClient({
     clientId: block.id,
   })))
   const [saveMessage, setSaveMessage] = useState<{ ok: boolean; text: string } | null>(null)
-  const [statusMessage, setStatusMessage] = useState<{ ok: boolean; text: string; issues?: string[] } | null>(null)
   const [publishMessage, setPublishMessage] = useState<{ ok: boolean; text: string; issues?: string[] } | null>(null)
   const [editorMedia, setEditorMedia] = useState<BlogEditorMedia[]>(media)
   const [readerQuestions, setReaderQuestions] = useState<BlogEditorQuestion[]>(initialQuestions)
@@ -1243,33 +1229,6 @@ export default function BlogEditorClient({
   const previewLinkRef = useRef<HTMLAnchorElement>(null)
 
   const isPublished = post.status === 'published'
-  const statusActions = useMemo<Array<{ status: BlogPostStatus; label: string; icon: 'review' | 'media' | 'ready' }>>(() => {
-    if (post.status === 'ai_draft') {
-      return [{ status: 'reviewing', label: '검토 시작', icon: 'review' }]
-    }
-    if (post.status === 'reviewing') {
-      return [
-        { status: 'needs_media', label: '사진 필요', icon: 'media' },
-        { status: 'ready', label: '발행대기', icon: 'ready' },
-      ]
-    }
-    if (post.status === 'needs_media') {
-      return [
-        { status: 'reviewing', label: '검토중', icon: 'review' },
-        { status: 'ready', label: '발행대기', icon: 'ready' },
-      ]
-    }
-    if (post.status === 'ready') {
-      return [
-        { status: 'reviewing', label: '검토중', icon: 'review' },
-        { status: 'needs_media', label: '사진 필요', icon: 'media' },
-      ]
-    }
-    if (post.status === 'archived') {
-      return [{ status: 'reviewing', label: '검토 재개', icon: 'review' }]
-    }
-    return []
-  }, [post.status])
   const selectableMedia = useMemo(() => editorMedia.filter(item => item.usageStatus !== 'rejected'), [editorMedia])
   const relatedQuestionsForPreview = useMemo(
     () => relatedText.split('\n').map(item => item.trim()).filter(Boolean),
@@ -1594,7 +1553,6 @@ export default function BlogEditorClient({
 
   const handleSave = () => {
     setSaveMessage(null)
-    setStatusMessage(null)
     startTransition(async () => {
       const result = await saveBlogEditor(buildPayload())
       setSaveMessage({ ok: result.ok, text: result.message })
@@ -1607,7 +1565,6 @@ export default function BlogEditorClient({
 
   const handlePublish = () => {
     setPublishMessage(null)
-    setStatusMessage(null)
     if (hasUnsavedEditorChanges) {
       setPublishMessage({ ok: false, text: '먼저 저장한 뒤 발행해주세요.', issues: ['발행 검수는 저장된 글을 기준으로 실행됩니다.'] })
       return
@@ -1616,23 +1573,6 @@ export default function BlogEditorClient({
       const result = await publishBlogPost(post.id)
       setPublishMessage({ ok: result.ok, text: result.message, issues: result.issues })
       if (result.ok) {
-        router.refresh()
-      }
-    })
-  }
-
-  const handleStatusChange = (nextStatus: BlogPostStatus) => {
-    setStatusMessage(null)
-    setPublishMessage(null)
-    if (hasUnsavedEditorChanges) {
-      setStatusMessage({ ok: false, text: '먼저 저장한 뒤 상태를 변경해주세요.', issues: ['상태 검수는 저장된 글을 기준으로 실행됩니다.'] })
-      return
-    }
-    startTransition(async () => {
-      const result = await updateBlogPostStatus(post.id, nextStatus)
-      setStatusMessage({ ok: result.ok, text: result.message, issues: result.issues })
-      if (result.ok && result.status) {
-        setPost(prev => ({ ...prev, status: result.status as BlogPostStatus }))
         router.refresh()
       }
     })
@@ -1824,32 +1764,19 @@ export default function BlogEditorClient({
               <Eye size={16} aria-hidden="true" />
               미리보기
             </Link>
-            {statusActions.map(action => (
-              <button
-                key={action.status}
-                type="button"
-                onClick={() => handleStatusChange(action.status)}
-                disabled={isPending || hasUnsavedEditorChanges}
-                className={styles.previewButton}
-                title={hasUnsavedEditorChanges ? '먼저 저장한 뒤 상태를 변경할 수 있습니다.' : `저장된 내용 기준으로 ${STATUS_ACTION_LABEL[action.status]} 변경합니다.`}
-              >
-                {action.icon === 'ready' ? <CheckCircle2 size={16} aria-hidden="true" /> : action.icon === 'media' ? <ImageIcon size={16} aria-hidden="true" /> : <ArrowRight size={16} aria-hidden="true" />}
-                {action.label}
-              </button>
-            ))}
             <button type="button" onClick={handleSave} disabled={isPending || isPublished} className={styles.primaryButton}>
               <Save size={16} aria-hidden="true" />
-              {isPending ? '저장 중' : '저장'}
+              {isPending ? '임시저장 중' : '임시저장'}
             </button>
             <button
               type="button"
               onClick={handlePublish}
-              disabled={isPending || isPublished || post.status !== 'ready' || hasUnsavedEditorChanges}
+              disabled={isPending || isPublished || hasUnsavedEditorChanges}
               className={styles.publishButton}
               data-testid="publish-blog-post"
             >
               <Rocket size={16} aria-hidden="true" />
-              {isPublished ? '발행완료' : hasUnsavedEditorChanges ? '저장 필요' : post.status !== 'ready' ? '발행대기 필요' : isPending ? '발행 중' : '발행'}
+              {isPublished ? '발행 완료' : hasUnsavedEditorChanges ? '임시저장 필요' : isPending ? '발행 중' : '발행'}
             </button>
           </div>
         </div>
@@ -1860,6 +1787,7 @@ export default function BlogEditorClient({
             items={EDITOR_MODE_TABS}
             value={editorMode}
             onChange={setEditorMode}
+            className={styles.editorModeTabs}
           />
           <section className={styles.gateBarPanel} aria-label="발행 전 검수">
             <span className={styles.gateBarLabel}>검수</span>
@@ -1872,9 +1800,6 @@ export default function BlogEditorClient({
         </div>
         {saveMessage && (
           <EditorStateMessage ok={saveMessage.ok} text={saveMessage.text} />
-        )}
-        {statusMessage && (
-          <EditorStateMessage ok={statusMessage.ok} text={statusMessage.text} issues={statusMessage.issues} />
         )}
         {publishMessage && (
           <EditorStateMessage ok={publishMessage.ok} text={publishMessage.text} issues={publishMessage.issues} />

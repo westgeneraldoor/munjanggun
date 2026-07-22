@@ -36,6 +36,13 @@ assert.match(queue, /closest\(["']a,button,input,select,textarea["']\)/)
 assert.match(queue, /\.sort\(\(a, b\) => String\(b\.updatedAt\)\.localeCompare/)
 assert.match(queue, /router\.push\(`\/admin\/platform\/blog\/\$\{row\.id\}`\)/)
 assert.doesNotMatch(queueCss, /\.(?:tableWrap|table)\b/)
+assert.match(queue, /type StatusFilter = 'all' \| 'draft' \| 'published' \| 'archived'/)
+assert.match(queue, /if \(status === 'published'\) return 'published'/)
+assert.match(queue, /if \(status === 'archived'\) return 'archived'/)
+assert.match(queue, /return 'draft'/)
+assert.doesNotMatch(queue, /label: '검토 필요'|label: '검토중'|label: '사진필요'|label: '발행대기'|label: '발행완료'/)
+assert.doesNotMatch(queue, /<th>질문\/키워드<\/th>|<th>지역\/제품군<\/th>|<th>위험<\/th>/)
+assert.doesNotMatch(queue, /styles\.(?:mobileSlug|mobileQuestion|mobileMeta)|<RiskBadges/)
 
 for (const cssFile of ['PlatformTable.module.css', 'PlatformList.module.css']) {
   assert.match(tokenPolicy, new RegExp(cssFile.replace('.', '\\.')), `${cssFile} must be governed by the raw-token policy`)

@@ -57,16 +57,13 @@ export type BlogDraftQueueRow = {
   }
 }
 
-type StatusFilter = 'all' | 'needs_review' | Exclude<BlogPostStatus, 'ai_draft'>
+type StatusFilter = 'all' | 'draft' | 'published' | 'archived'
 type CategoryFilter = 'all' | BlogContentCategory
 
 const STATUS_TABS: Array<{ key: StatusFilter; label: string }> = [
   { key: 'all', label: '전체' },
-  { key: 'needs_review', label: '검토 필요' },
-  { key: 'reviewing', label: '검토중' },
-  { key: 'needs_media', label: '사진필요' },
-  { key: 'ready', label: '발행대기' },
-  { key: 'published', label: '발행완료' },
+  { key: 'draft', label: '초안' },
+  { key: 'published', label: '발행' },
   { key: 'archived', label: '보관' },
 ]
 
@@ -80,15 +77,6 @@ const CATEGORY_TABS: Array<{ key: CategoryFilter; label: string }> = [
   { key: 'area_guide', label: '지역안내' },
 ]
 
-const STATUS_LABEL: Record<BlogPostStatus, string> = {
-  ai_draft: '검토 필요',
-  reviewing: '검토중',
-  needs_media: '사진필요',
-  ready: '발행대기',
-  published: '발행완료',
-  archived: '보관',
-}
-
 const CATEGORY_LABEL: Record<BlogContentCategory, string> = {
   case_study: '시공사례',
   product_guide: '제품가이드',
@@ -97,17 +85,6 @@ const CATEGORY_LABEL: Record<BlogContentCategory, string> = {
   price_guide: '가격/견적',
   area_guide: '지역안내',
 }
-
-const RISK_LABELS: Array<{
-  key: keyof BlogDraftQueueRow['risks']
-  label: string
-  tone: 'danger' | 'warning' | 'info'
-}> = [
-  { key: 'forbiddenExpression', label: '금지표현', tone: 'danger' },
-  { key: 'mediaApprovalNeeded', label: '사진승인필요', tone: 'warning' },
-  { key: 'altMissing', label: 'alt누락', tone: 'info' },
-  { key: 'ctaMissing', label: 'CTA없음', tone: 'info' },
-]
 
 function formatDateTime(value: string) {
   const formatter = new Intl.DateTimeFormat('ko-KR', {
@@ -126,59 +103,24 @@ function normalize(value: string | null | undefined) {
 }
 
 function getSearchHaystack(row: BlogDraftQueueRow) {
-  return [
-    row.title,
-    row.slug,
-    row.targetQuestion,
-    row.primaryKeyword,
-    row.serviceArea,
-    row.productType,
-  ].map(normalize).join(' ')
+  return normalize(row.title)
 }
 
-function getRiskCount(row: BlogDraftQueueRow) {
-  return RISK_LABELS.filter(risk => row.risks[risk.key]).length
+function getVisibleStatus(status: BlogPostStatus): Exclude<StatusFilter, 'all'> {
+  if (status === 'published') return 'published'
+  if (status === 'archived') return 'archived'
+  return 'draft'
 }
 
 function matchesStatusFilter(row: BlogDraftQueueRow, filter: StatusFilter) {
   if (filter === 'all') return true
-  if (filter === 'needs_review') return row.status === 'ai_draft' || row.status === 'reviewing'
-  return row.status === filter
+  return getVisibleStatus(row.status) === filter
 }
 
 function getStatusTone(status: BlogPostStatus): PlatformStatusBadgeTone {
-  if (status === 'ai_draft' || status === 'reviewing') return 'review'
-  if (status === 'needs_media') return 'danger'
-  if (status === 'ready') return 'success'
-  if (status === 'published') return 'info'
+  if (getVisibleStatus(status) === 'draft') return 'review'
+  if (getVisibleStatus(status) === 'published') return 'info'
   return 'neutral'
-}
-
-function RiskBadges({ row }: { row: BlogDraftQueueRow }) {
-  const activeRisks = RISK_LABELS.filter(risk => row.risks[risk.key])
-
-  if (activeRisks.length === 0) {
-    return <span className={styles.safeBadge}>위험 없음</span>
-  }
-
-  return (
-    <div className={styles.riskBadges} aria-label="위험 배지">
-      {activeRisks.map(risk => (
-        <span key={risk.key} className={`${styles.riskBadge} ${styles[`risk_${risk.tone}`]}`}>
-          {risk.label}
-        </span>
-      ))}
-    </div>
-  )
-}
-
-function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
-  return (
-    <div className={styles.infoRow}>
-      <dt>{label}</dt>
-      <dd>{value?.trim() || '-'}</dd>
-    </div>
-  )
 }
 
 function SummaryPanel({
@@ -201,37 +143,19 @@ function SummaryPanel({
         <div>
           <span className={styles.categoryPill}>{CATEGORY_LABEL[row.category]}</span>
           <h2>{row.title}</h2>
-          <p>{row.slug}</p>
+          <p>수정일 {formatDateTime(row.updatedAt)}</p>
         </div>
         <PlatformStatusBadge tone={getStatusTone(row.status)}>
-          {STATUS_LABEL[row.status]}
+          {STATUS_TABS.find(tab => tab.key === getVisibleStatus(row.status))?.label}
         </PlatformStatusBadge>
       </div>
-
-      <RiskBadges row={row} />
-
-      <dl className={styles.detailList}>
-        <InfoRow label="타깃 질문" value={row.targetQuestion} />
-        <InfoRow label="요약 답변" value={row.summaryAnswer} />
-        <InfoRow label="핵심 키워드" value={row.primaryKeyword} />
-        <InfoRow label="지역/제품군" value={[row.serviceArea, row.productType].filter(Boolean).join(' / ')} />
-        <InfoRow label="SEO title" value={row.seoTitle ? '입력됨' : '미입력'} />
-        <InfoRow label="Meta" value={row.metaDescription ? '입력됨' : '미입력'} />
-        <InfoRow
-          label="사진 상태"
-          value={`${row.mediaSummary.total}장 · 후보 ${row.mediaSummary.byStatus.candidate} · 승인 ${row.mediaSummary.byStatus.approved} · 공개 ${row.mediaSummary.byStatus.published}`}
-        />
-        <InfoRow label="대표 사진" value={row.mediaSummary.coverReady ? '준비됨' : row.mediaMissingReason || '확인 필요'} />
-        <InfoRow label="최근 이벤트" value={row.latestEvent ? `${row.latestEvent.type} · ${formatDateTime(row.latestEvent.createdAt)}` : '이벤트 없음'} />
-        <InfoRow label="수정일" value={formatDateTime(row.updatedAt)} />
-      </dl>
 
       <div className={styles.detailFooter}>
         <PlatformLinkButton href={`/admin/platform/blog/${row.id}`} fullWidth prefetch={false}>
           <FilePenLine size={16} aria-hidden="true" />
           에디터 열기
         </PlatformLinkButton>
-        <p>발행과 상태 변경은 이후 server action 검수 게이트에서 처리합니다.</p>
+        <p>원고의 세부 정보와 발행 전 확인은 에디터에서 진행합니다.</p>
       </div>
     </PlatformPanel>
   )
@@ -259,9 +183,6 @@ export default function BlogDraftQueueClient({
   }, [categoryFilter, initialRows, search, statusFilter])
 
   const selectedRow = selectedId ? filteredRows.find(row => row.id === selectedId) ?? null : null
-  const needsReviewCount = initialRows.filter(row => row.status !== 'published' && row.status !== 'archived').length
-  const riskCount = initialRows.reduce((sum, row) => sum + getRiskCount(row), 0)
-
   const resetSelection = () => setSelectedId(null)
 
   const openEditor = (row: BlogDraftQueueRow) => {
@@ -288,7 +209,7 @@ export default function BlogDraftQueueClient({
       <PlatformPageHeader
         className={styles.pageHeader}
         title="블로그 콘텐츠 큐"
-        description={`승인된 원고의 검수, 사진 연결, 미리보기, 발행 상태를 관리합니다. 검수 대상 ${needsReviewCount}건과 위험 신호 ${riskCount}개를 확인합니다.`}
+        description="원고를 찾아 열고, 필요한 내용을 편집합니다."
         actions={(
           <PlatformLinkButton href="/admin/platform/blog/new">
             <FilePlus2 size={16} aria-hidden="true" />
@@ -306,7 +227,7 @@ export default function BlogDraftQueueClient({
               setSearch(event.target.value)
               resetSelection()
             }}
-            placeholder="제목, slug, 질문, 키워드, 지역, 제품군 검색"
+            placeholder="제목 검색"
             aria-label="콘텐츠 검색"
           />
         </div>
@@ -364,9 +285,6 @@ export default function BlogDraftQueueClient({
                       <th>제목</th>
                       <th>상태</th>
                       <th>카테고리</th>
-                      <th>질문/키워드</th>
-                      <th>지역/제품군</th>
-                      <th>위험</th>
                       <th>수정일</th>
                     </tr>
                   </thead>
@@ -384,34 +302,16 @@ export default function BlogDraftQueueClient({
                             prefetch={false}
                             aria-label={`${row.title} 에디터 열기`}
                           >
-                            <span className={styles.stackCell}>
-                              <strong>{row.title}</strong>
-                              <small>{row.slug}</small>
-                            </span>
+                            <strong>{row.title}</strong>
                           </Link>
                         </td>
                         <td>
                           <PlatformStatusBadge tone={getStatusTone(row.status)}>
-                            {STATUS_LABEL[row.status]}
+                            {STATUS_TABS.find(tab => tab.key === getVisibleStatus(row.status))?.label}
                           </PlatformStatusBadge>
                         </td>
                         <td>
                           <span className={styles.categoryPill}>{CATEGORY_LABEL[row.category]}</span>
-                        </td>
-                        <td className={styles.metaCell}>
-                          <span className={styles.stackCell}>
-                            <span>{row.targetQuestion || '-'}</span>
-                            <small>{row.primaryKeyword || '-'}</small>
-                          </span>
-                        </td>
-                        <td className={styles.metaCell}>
-                          <span className={styles.stackCell}>
-                            <span>{row.serviceArea || '-'}</span>
-                            <small>{row.productType || '-'}</small>
-                          </span>
-                        </td>
-                        <td className={styles.riskCell}>
-                          <RiskBadges row={row} />
                         </td>
                         <td className={styles.dateCell}>{formatDateTime(row.updatedAt)}</td>
                       </tr>
@@ -430,20 +330,12 @@ export default function BlogDraftQueueClient({
                     >
                       <div className={styles.mobileCardTop}>
                         <PlatformStatusBadge tone={getStatusTone(row.status)}>
-                          {STATUS_LABEL[row.status]}
+                          {STATUS_TABS.find(tab => tab.key === getVisibleStatus(row.status))?.label}
                         </PlatformStatusBadge>
                         <span className={styles.mobileDate}>{formatDateTime(row.updatedAt)}</span>
                       </div>
                       <strong>{row.title}</strong>
-                      <span className={styles.mobileSlug}>{row.slug}</span>
-                      <span className={styles.mobileQuestion}>{row.targetQuestion || '타깃 질문 없음'}</span>
-                      <div className={styles.mobileMeta}>
-                        <span>{CATEGORY_LABEL[row.category]}</span>
-                        <span>{row.primaryKeyword || '키워드 없음'}</span>
-                        <span>{row.serviceArea || '지역 없음'}</span>
-                        <span>{row.productType || '제품군 없음'}</span>
-                      </div>
-                      <RiskBadges row={row} />
+                      <span className={styles.mobileCategory}>{CATEGORY_LABEL[row.category]}</span>
                     </Link>
                   </li>
                 ))}

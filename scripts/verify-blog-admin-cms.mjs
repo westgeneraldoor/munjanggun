@@ -333,11 +333,20 @@ assert.equal(queuePage.includes('getBlogAiDraftConfigView'), false, 'queue page 
 assert.equal(queuePage.includes('aiDraftConfig'), false, 'queue page must not pass AI configuration to the client')
 assert.equal(packageJson.scripts['verify:blog-ai-draft-schema'], undefined, 'AI draft schema verification script must be removed')
 
-assert.match(queue, /type StatusFilter = 'all' \| 'needs_review' \| Exclude<BlogPostStatus, 'ai_draft'>/)
-assert.match(queue, /\{ key: 'needs_review', label: '검토 필요' \}/)
+assert.match(queue, /type StatusFilter = 'all' \| 'draft' \| 'published' \| 'archived'/)
+for (const tab of [
+  "{ key: 'all', label: '전체' }",
+  "{ key: 'draft', label: '초안' }",
+  "{ key: 'published', label: '발행' }",
+  "{ key: 'archived', label: '보관' }",
+]) {
+  assert.ok(queue.includes(tab), `queue must expose the simplified ${tab} filter`)
+}
+assert.equal(queue.includes("{ key: 'needs_review'"), false, 'queue must not expose a separate needs_review filter')
 assert.equal(queue.includes("{ key: 'ai_draft'"), false, 'legacy ai_draft must not be a visible filter')
-assert.match(queue, /ai_draft: '검토 필요'/)
-assert.match(editor, /ai_draft: '검토 필요'/)
+assert.match(queue, /function getVisibleStatus\(status: BlogPostStatus\): Exclude<StatusFilter, 'all'>/)
+assert.match(queue, /if \(status === 'published'\) return 'published'[\s\S]*?return 'draft'/)
+assert.match(editor, /ai_draft: '초안'/)
 assert.match(editorActions, /ai_draft: \['reviewing'\]/)
 
 assert.match(queue, /<PlatformLinkButton href=\{`\/admin\/platform\/blog\/\$\{row\.id\}`\}/)

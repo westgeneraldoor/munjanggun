@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Bookmark, CheckCircle2, HelpCircle, MessageCircleQuestion, MoreHorizontal, Ruler, Share2, ThumbsUp } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { Heart, HelpCircle, MessageCircleQuestion, Ruler, Share2 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import styles from './BlogArticleActions.module.css'
 
 type BlogArticleActionsProps = {
@@ -11,27 +11,20 @@ type BlogArticleActionsProps = {
 }
 
 type ShareStatus = 'idle' | 'copied' | 'shared' | 'failed'
-type ReaderStatus = 'idle' | 'saved' | 'removed' | 'questionSaved' | 'loginRequired' | 'failed'
+type ReaderStatus = 'idle' | 'liked' | 'likeRemoved' | 'questionSaved' | 'loginRequired' | 'failed'
 
 type ReaderPayload = {
   counts: {
-    helpful: number
+    likes: number
   }
   viewer: null | {
     isAuthenticated: true
-    helpful: boolean
-    saved: boolean
+    liked: boolean
     privateQuestionCount: number
   }
 }
 
-const HELPFUL_STORAGE_PREFIX = 'munjanggun:blog-helpful:'
-const HELPFUL_CHANGE_EVENT = 'munjanggun:blog-helpful-change'
 const QUESTION_DRAFT_STORAGE_PREFIX = 'munjanggun:blog-question-draft:'
-
-function getHelpfulStorageKey(postSlug: string) {
-  return `${HELPFUL_STORAGE_PREFIX}${postSlug}`
-}
 
 function getQuestionDraftStorageKey(postSlug: string) {
   return `${QUESTION_DRAFT_STORAGE_PREFIX}${postSlug}`
@@ -68,80 +61,25 @@ async function copyTextToClipboard(text: string) {
   }
 }
 
-function subscribeToHelpfulChange(onStoreChange: () => void) {
-  window.addEventListener('storage', onStoreChange)
-  window.addEventListener(HELPFUL_CHANGE_EVENT, onStoreChange)
-
-  return () => {
-    window.removeEventListener('storage', onStoreChange)
-    window.removeEventListener(HELPFUL_CHANGE_EVENT, onStoreChange)
-  }
-}
-
-function readHelpfulSnapshot(postSlug: string) {
-  try {
-    return window.localStorage.getItem(getHelpfulStorageKey(postSlug)) === 'true'
-  } catch {
-    return false
-  }
-}
-
 export default function BlogArticleActions({ postSlug, postTitle }: BlogArticleActionsProps) {
   const [shareStatus, setShareStatus] = useState<ShareStatus>('idle')
   const [readerStatus, setReaderStatus] = useState<ReaderStatus>('idle')
   const [readerPayload, setReaderPayload] = useState<ReaderPayload>({
-    counts: { helpful: 0 },
+    counts: { likes: 0 },
     viewer: null,
   })
   const [readerLoaded, setReaderLoaded] = useState(false)
   const [readerBusy, setReaderBusy] = useState(false)
-  const [moreOpen, setMoreOpen] = useState(false)
   const [questionDraft, setQuestionDraft] = useState('')
   const [questionSaved, setQuestionSaved] = useState(false)
-  const moreButtonRef = useRef<HTMLButtonElement>(null)
-  const moreMenuRef = useRef<HTMLDivElement>(null)
   const questionPanelRef = useRef<HTMLDivElement>(null)
   const questionTextareaRef = useRef<HTMLTextAreaElement>(null)
   const questionDraftEditedRef = useRef(false)
-  const getHelpfulSnapshot = useCallback(() => readHelpfulSnapshot(postSlug), [postSlug])
-  const localHelpful = useSyncExternalStore(subscribeToHelpfulChange, getHelpfulSnapshot, () => false)
-  const isHelpful = readerPayload.viewer?.helpful ?? localHelpful
-  const isSaved = readerPayload.viewer?.saved ?? false
+  const isLiked = readerPayload.viewer?.liked ?? false
   const questionHref = `/portal/measure/new?source=blog-question&post=${encodeURIComponent(postSlug)}`
   const questionAnchorHref = '#blog-question-panel'
   const readerEndpoint = `/api/blog/posts/${encodeURIComponent(postSlug)}/reader`
-
-  const closeMobileMoreMenu = useCallback((restoreFocus = false) => {
-    setMoreOpen(false)
-    if (restoreFocus) {
-      window.requestAnimationFrame(() => moreButtonRef.current?.focus())
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!moreOpen) return
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key !== 'Escape') return
-      event.preventDefault()
-      closeMobileMoreMenu(true)
-    }
-
-    function handlePointerDown(event: PointerEvent) {
-      const target = event.target
-      if (!(target instanceof Node)) return
-      if (moreMenuRef.current?.contains(target) || moreButtonRef.current?.contains(target)) return
-      closeMobileMoreMenu(false)
-    }
-
-    document.addEventListener('keydown', handleKeyDown)
-    document.addEventListener('pointerdown', handlePointerDown)
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown)
-      document.removeEventListener('pointerdown', handlePointerDown)
-    }
-  }, [closeMobileMoreMenu, moreOpen])
+  const readerViewEndpoint = `${readerEndpoint}/view`
 
   useEffect(() => {
     questionDraftEditedRef.current = false
@@ -182,6 +120,20 @@ export default function BlogArticleActions({ postSlug, postTitle }: BlogArticleA
     }
   }, [readerEndpoint])
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void fetch(readerViewEndpoint, {
+        method: 'POST',
+        credentials: 'same-origin',
+        keepalive: true,
+      }).catch(() => {
+        // Reading history is best-effort and must not disrupt article reading.
+      })
+    }, 5_000)
+
+    return () => window.clearTimeout(timer)
+  }, [readerViewEndpoint])
+
   async function shareArticle() {
     const url = getCurrentArticleUrl()
 
@@ -206,7 +158,7 @@ export default function BlogArticleActions({ postSlug, postTitle }: BlogArticleA
     }
   }
 
-  async function patchReaderAction(body: { helpful?: boolean; saved?: boolean }) {
+  async function patchReaderAction(body: { liked: boolean }) {
     const response = await fetch(readerEndpoint, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -226,52 +178,15 @@ export default function BlogArticleActions({ postSlug, postTitle }: BlogArticleA
     return payload
   }
 
-  async function markHelpful() {
-    setReaderStatus('idle')
-
-    if (readerLoaded) {
-      setReaderBusy(true)
-      try {
-        const nextHelpful = !isHelpful
-        const payload = await patchReaderAction({ helpful: nextHelpful })
-        if (!payload) {
-          if (nextHelpful) {
-            try {
-              window.localStorage.setItem(getHelpfulStorageKey(postSlug), 'true')
-            } catch {
-              // The visible acknowledgement still helps even when storage is unavailable.
-            }
-            window.dispatchEvent(new Event(HELPFUL_CHANGE_EVENT))
-            setReaderStatus('idle')
-          }
-          return
-        }
-        setReaderStatus(nextHelpful ? 'saved' : 'removed')
-      } catch {
-        setReaderStatus('failed')
-      } finally {
-        setReaderBusy(false)
-      }
-      return
-    }
-
-    try {
-      window.localStorage.setItem(getHelpfulStorageKey(postSlug), 'true')
-    } catch {
-      // The visible acknowledgement still helps even when storage is unavailable.
-    }
-    window.dispatchEvent(new Event(HELPFUL_CHANGE_EVENT))
-  }
-
-  async function toggleSavedArticle() {
+  async function toggleLike() {
     setReaderStatus('idle')
 
     setReaderBusy(true)
     try {
-      const nextSaved = !isSaved
-      const payload = await patchReaderAction({ saved: nextSaved })
+      const nextLiked = !isLiked
+      const payload = await patchReaderAction({ liked: nextLiked })
       if (!payload) return
-      setReaderStatus(nextSaved ? 'saved' : 'removed')
+      setReaderStatus(nextLiked ? 'liked' : 'likeRemoved')
     } catch {
       setReaderStatus('failed')
     } finally {
@@ -338,16 +253,10 @@ export default function BlogArticleActions({ postSlug, postTitle }: BlogArticleA
   }
 
   function focusQuestionPanel() {
-    closeMobileMoreMenu(false)
     window.requestAnimationFrame(() => {
       questionPanelRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
       questionTextareaRef.current?.focus()
     })
-  }
-
-  async function shareFromMobileMenu() {
-    await shareArticle()
-    closeMobileMoreMenu(true)
   }
 
   const shareMessage =
@@ -374,25 +283,15 @@ export default function BlogArticleActions({ postSlug, postTitle }: BlogArticleA
         </button>
         <button
           type="button"
-          className={`${styles.secondaryButton} ${isHelpful ? styles.activeButton : ''}`}
-          onClick={markHelpful}
-          aria-pressed={isHelpful}
-          disabled={readerBusy}
-          data-testid="blog-helpful-action"
+          className={`${styles.secondaryButton} ${isLiked ? styles.activeButton : ''}`}
+          onClick={toggleLike}
+          aria-label="좋아요"
+          aria-pressed={isLiked}
+          disabled={!readerLoaded || readerBusy}
+          data-testid="blog-like-action"
         >
-          {isHelpful ? <CheckCircle2 size={17} aria-hidden="true" /> : <ThumbsUp size={17} aria-hidden="true" />}
-          도움돼요
-        </button>
-        <button
-          type="button"
-          className={`${styles.secondaryButton} ${isSaved ? styles.activeButton : ''}`}
-          onClick={toggleSavedArticle}
-          aria-pressed={isSaved}
-          disabled={readerBusy}
-          data-testid="blog-save-action"
-        >
-          {isSaved ? <CheckCircle2 size={17} aria-hidden="true" /> : <Bookmark size={17} aria-hidden="true" />}
-          저장
+          <Heart size={17} aria-hidden="true" fill={isLiked ? 'currentColor' : 'none'} />
+          좋아요
         </button>
         <Link href={questionHref} className={styles.primaryLink} onClick={saveQuestionDraft} data-testid="blog-question-intake-desktop">
           <MessageCircleQuestion size={17} aria-hidden="true" />
@@ -442,25 +341,25 @@ export default function BlogArticleActions({ postSlug, postTitle }: BlogArticleA
 
       <div className={styles.status} role="status" aria-live="polite">
         {shareMessage && <span>{shareMessage}</span>}
-        {isHelpful && <span>도움 표시를 저장했어요.</span>}
-        {isSaved && <span>마이페이지에 저장했어요.</span>}
+        {readerStatus === 'liked' && <span>좋아요를 표시했어요.</span>}
+        {readerStatus === 'likeRemoved' && <span>좋아요를 취소했어요.</span>}
         {questionSaved && <span>질문 메모를 현재 탭에 임시 저장했어요.</span>}
         {readerStatus === 'questionSaved' && <span>비공개 질문을 마이페이지에 저장했어요.</span>}
-        {readerStatus === 'loginRequired' && <span>로그인하면 저장과 비공개 질문을 마이페이지에 남길 수 있어요.</span>}
-        {readerStatus === 'failed' && <span>지금은 저장하지 못했어요. 잠시 후 다시 시도해 주세요.</span>}
+        {readerStatus === 'loginRequired' && <span>로그인하면 좋아요와 비공개 질문을 마이페이지에 남길 수 있어요.</span>}
+        {readerStatus === 'failed' && <span>지금은 좋아요를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.</span>}
       </div>
       <nav className={styles.mobileBar} aria-label="블로그 글 하단 빠른 작업" data-testid="blog-mobile-bottom-actions">
         <button
           type="button"
-          className={`${styles.mobileAction} ${isHelpful ? styles.mobileActionActive : ''}`}
-          onClick={markHelpful}
-          aria-label="모바일 도움돼요"
-          aria-pressed={isHelpful}
-          disabled={readerBusy}
-          data-testid="blog-mobile-helpful"
+          className={`${styles.mobileAction} ${isLiked ? styles.mobileActionActive : ''}`}
+          onClick={toggleLike}
+          aria-label="좋아요"
+          aria-pressed={isLiked}
+          disabled={!readerLoaded || readerBusy}
+          data-testid="blog-mobile-like"
         >
-          {isHelpful ? <CheckCircle2 size={18} aria-hidden="true" /> : <ThumbsUp size={18} aria-hidden="true" />}
-          <span>도움돼요</span>
+          <Heart size={18} aria-hidden="true" fill={isLiked ? 'currentColor' : 'none'} />
+          <span>좋아요</span>
         </button>
         <Link href={questionAnchorHref} className={styles.mobileAction} onClick={focusQuestionPanel} aria-label="모바일 질문하기" data-testid="blog-mobile-question">
           <HelpCircle size={18} aria-hidden="true" />
@@ -470,33 +369,7 @@ export default function BlogArticleActions({ postSlug, postTitle }: BlogArticleA
           <Ruler size={18} aria-hidden="true" />
           <span>무료 실측</span>
         </Link>
-        <button
-          ref={moreButtonRef}
-          type="button"
-          className={styles.mobileAction}
-          onClick={() => setMoreOpen(open => !open)}
-          aria-label="모바일 더보기"
-          aria-expanded={moreOpen}
-          aria-controls="blog-mobile-more-actions"
-          data-testid="blog-mobile-more"
-        >
-          <MoreHorizontal size={19} aria-hidden="true" />
-          <span>더보기</span>
-        </button>
       </nav>
-
-      {moreOpen && (
-        <div ref={moreMenuRef} className={styles.mobileMoreMenu} id="blog-mobile-more-actions" data-testid="blog-mobile-more-actions">
-          <button type="button" onClick={toggleSavedArticle} aria-label="모바일 저장하기" aria-pressed={isSaved} disabled={readerBusy} data-testid="blog-mobile-save">
-            {isSaved ? <CheckCircle2 size={17} aria-hidden="true" /> : <Bookmark size={17} aria-hidden="true" />}
-            저장하기
-          </button>
-          <button type="button" onClick={shareFromMobileMenu} aria-label="모바일 공유하기" data-testid="blog-mobile-share">
-            <Share2 size={17} aria-hidden="true" />
-            공유하기
-          </button>
-        </div>
-      )}
     </section>
   )
 }

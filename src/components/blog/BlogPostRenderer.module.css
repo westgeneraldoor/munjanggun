@@ -193,7 +193,7 @@
 .question {
   margin-top: var(--space-5);
   color: var(--blog-terracotta-dark);
-  font-family: var(--font-blog-display);
+  font-family: var(--mg-font-body);
   font-size: var(--mg-blog-reader-font-question);
   font-weight: 800;
   line-height: 1.42;
@@ -416,7 +416,7 @@
 .qaQuestion h2,
 .relatedQuestions h2 {
   color: var(--blog-cocoa);
-  font-family: var(--font-blog-display);
+  font-family: var(--mg-font-body);
   font-size: var(--mg-blog-reader-font-question);
   font-weight: 800;
   line-height: 1.35;
@@ -490,7 +490,7 @@
 
 .guideBox > strong {
   color: var(--blog-cocoa);
-  font-family: var(--font-blog-display);
+  font-family: var(--mg-font-body);
   font-size: var(--mg-blog-reader-font-card-comfortable);
   font-weight: 850;
   line-height: 1.36;
@@ -655,7 +655,7 @@
 
 .contentGraphSectionHeader h3 {
   color: var(--blog-cocoa);
-  font-family: var(--font-blog-display);
+  font-family: var(--mg-font-body);
   font-size: var(--mg-blog-reader-font-card-comfortable);
   font-weight: 850;
   line-height: 1.34;

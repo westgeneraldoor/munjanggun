@@ -942,6 +942,75 @@ export interface Database {
         }
         Relationships: []
       }
+      blog_article_likes: {
+        Row: {
+          id: string
+          user_id: string
+          post_id: string
+          post_slug: string
+          post_title_snapshot: string
+          post_excerpt_snapshot: string | null
+          post_published_at_snapshot: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          post_id: string
+          post_slug: string
+          post_title_snapshot: string
+          post_excerpt_snapshot?: string | null
+          post_published_at_snapshot?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          post_id?: string
+          post_slug?: string
+          post_title_snapshot?: string
+          post_excerpt_snapshot?: string | null
+          post_published_at_snapshot?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      blog_article_recent_views: {
+        Row: {
+          id: string
+          user_id: string
+          post_id: string
+          post_slug: string
+          post_title_snapshot: string
+          post_excerpt_snapshot: string | null
+          post_published_at_snapshot: string | null
+          created_at: string
+          last_viewed_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          post_id: string
+          post_slug: string
+          post_title_snapshot: string
+          post_excerpt_snapshot?: string | null
+          post_published_at_snapshot?: string | null
+          created_at?: string
+          last_viewed_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          post_id?: string
+          post_slug?: string
+          post_title_snapshot?: string
+          post_excerpt_snapshot?: string | null
+          post_published_at_snapshot?: string | null
+          created_at?: string
+          last_viewed_at?: string
+        }
+        Relationships: []
+      }
       blog_article_questions: {
         Row: {
           id: string

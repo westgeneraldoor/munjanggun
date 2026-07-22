@@ -9,7 +9,7 @@ test('public blog renderer preserves and displays the animated GIF original', as
   await page.route('**/api/blog/posts/public-gif-regression/reader', route => route.fulfill({
     status: 200,
     contentType: 'application/json',
-    body: JSON.stringify({ counts: { helpful: 0 }, viewer: null }),
+    body: JSON.stringify({ counts: { likes: 0 }, viewer: null }),
   }))
   await page.setViewportSize({ width: 1366, height: 900 })
   await page.emulateMedia({ reducedMotion: 'reduce' })

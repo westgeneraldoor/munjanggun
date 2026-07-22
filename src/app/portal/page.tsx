@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  ArrowRight,
-  ClipboardList,
+  ChevronDown,
+  Pencil,
   Ruler,
+  UserRound,
   Wrench,
   X,
 } from 'lucide-react'
@@ -16,21 +17,21 @@ import {
   type CustomerBlogActivityPost,
   type CustomerBlogActivityQuestion,
 } from '@/components/platform/customer/CustomerCollectionPanel'
-import { CustomerTopNav } from '@/components/platform/customer/CustomerTopNav'
 import { CustomerRequestStatus, QueueSourceType } from '@/types/database'
 import { logError } from '@/lib/logger'
 import styles from './portal.module.css'
 
 interface UserProfile {
-  email?: string
-  displayName?: string
-  role?: string
+  id: string
+  email: string
+  displayName: string
+  phone: string
+  role: string
 }
 
 interface RecentMeasurementRequest {
   id: string
   customer_status: CustomerRequestStatus
-  queue_status: string
   customer_action_note: string | null
   address: string
   created_at: string
@@ -41,7 +42,6 @@ interface RecentMeasurementRequest {
 interface RecentAsRequest {
   id: string
   customer_status: CustomerRequestStatus
-  queue_status: string
   customer_action_note: string | null
   issue_type: string
   address: string | null
@@ -90,12 +90,11 @@ function formatDate(value: string) {
   })
 }
 
-function canRequestChange(status: CustomerRequestStatus) {
-  return status !== 'cancel_pending' && status !== 'cancel_confirmed'
-}
-
-function canRequestCancel(status: CustomerRequestStatus) {
-  return status !== 'cancel_pending' && status !== 'cancel_confirmed'
+function formatPhone(raw: string) {
+  const digits = raw.replace(/\D/g, '').slice(0, 11)
+  if (digits.length <= 3) return digits
+  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`
+  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
 }
 
 function normalizeDisplayName(value: string | null | undefined, role: string | undefined) {
@@ -106,15 +105,30 @@ function normalizeDisplayName(value: string | null | undefined, role: string | u
   return trimmed
 }
 
+function canRequestChange(status: CustomerRequestStatus) {
+  return status !== 'cancel_pending' && status !== 'cancel_confirmed'
+}
+
+function canRequestCancel(status: CustomerRequestStatus) {
+  return status !== 'cancel_pending' && status !== 'cancel_confirmed'
+}
+
 export default function PortalPage() {
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [recentMeasurements, setRecentMeasurements] = useState<RecentMeasurementRequest[]>([])
   const [recentAsRequests, setRecentAsRequests] = useState<RecentAsRequest[]>([])
-  const [savedPosts, setSavedPosts] = useState<CustomerBlogActivityPost[]>([])
-  const [helpfulPosts, setHelpfulPosts] = useState<CustomerBlogActivityPost[]>([])
+  const [likedPosts, setLikedPosts] = useState<CustomerBlogActivityPost[]>([])
+  const [recentViewedPosts, setRecentViewedPosts] = useState<CustomerBlogActivityPost[]>([])
   const [blogQuestions, setBlogQuestions] = useState<CustomerBlogActivityQuestion[]>([])
+  const [activityCounts, setActivityCounts] = useState({ likes: 0, questions: 0, recent: 0 })
   const [loading, setLoading] = useState(true)
+  const [accountOpen, setAccountOpen] = useState(false)
+  const [editingProfile, setEditingProfile] = useState(false)
+  const [profileDraft, setProfileDraft] = useState({ displayName: '', phone: '' })
+  const [profileBusy, setProfileBusy] = useState(false)
+  const [profileError, setProfileError] = useState<string | null>(null)
+  const [profileNotice, setProfileNotice] = useState<string | null>(null)
   const [actionTarget, setActionTarget] = useState<ActionTarget | null>(null)
   const [actionMemo, setActionMemo] = useState('')
   const [actionBusy, setActionBusy] = useState(false)
@@ -147,102 +161,96 @@ export default function PortalPage() {
         return
       }
 
-      const { data, error: profileError } = await supabase
+      const { data: profileData, error: profileFetchError } = await supabase
         .from('profiles')
-        .select('display_name, email, role')
+        .select('display_name, phone, email, role')
         .eq('id', user.id)
         .maybeSingle()
 
-      if (profileError) {
-        logError('Fetch user profile error', profileError)
-      }
+      if (profileFetchError) logError('Fetch portal profile error', profileFetchError)
 
-      const dbProfile = data as {
+      const dbProfile = profileData as {
         display_name: string | null
+        phone: string | null
         email: string | null
         role: 'customer' | 'sales_manager' | 'administrator'
       } | null
 
-      setProfile({
-        email: dbProfile?.email || user.email,
+      const nextProfile = {
+        id: user.id,
+        email: dbProfile?.email || user.email || '',
         displayName: normalizeDisplayName(
           dbProfile?.display_name || user.user_metadata?.full_name || user.user_metadata?.name,
           dbProfile?.role || 'customer'
         ),
+        phone: dbProfile?.phone || '',
         role: dbProfile?.role || 'customer',
-      })
+      }
+      setProfile(nextProfile)
+      setProfileDraft({ displayName: nextProfile.displayName, phone: nextProfile.phone })
 
-      const [measureResult, asResult, savedResult, helpfulResult, questionsResult] = await Promise.all([
+      const [measureResult, asResult, likesResult, questionsResult, recentResult] = await Promise.all([
         supabase
           .from('measurement_requests')
-          .select('id, customer_status, queue_status, customer_action_note, address, created_at, interest_category, interest_categories')
+          .select('id, customer_status, customer_action_note, address, created_at, interest_category, interest_categories')
           .eq('customer_id', user.id)
           .order('created_at', { ascending: false })
           .limit(6),
         supabase
           .from('as_requests')
-          .select('id, customer_status, queue_status, customer_action_note, issue_type, address, created_at')
+          .select('id, customer_status, customer_action_note, issue_type, address, created_at')
           .eq('customer_id', user.id)
           .order('created_at', { ascending: false })
           .limit(6),
         supabase
-          .from('blog_article_saves')
-          .select('id, post_slug, post_title_snapshot, created_at')
+          .from('blog_article_likes')
+          .select('id, post_slug, post_title_snapshot, created_at', { count: 'exact' })
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
-          .limit(3),
-        supabase
-          .from('blog_article_helpful_votes')
-          .select('id, post_slug, post_title_snapshot, created_at')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(3),
+          .limit(5),
         supabase
           .from('blog_article_questions')
-          .select('id, post_slug, post_title_snapshot, status, created_at')
+          .select('id, post_slug, post_title_snapshot, status, created_at', { count: 'exact' })
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
-          .limit(3),
+          .limit(5),
+        supabase
+          .from('blog_article_recent_views')
+          .select('id, post_slug, post_title_snapshot, last_viewed_at', { count: 'exact' })
+          .eq('user_id', user.id)
+          .order('last_viewed_at', { ascending: false })
+          .limit(5),
       ])
 
-      if (measureResult.error) {
-        logError('Fetch measurement requests error', measureResult.error)
-      } else {
-        setRecentMeasurements((measureResult.data ?? []) as RecentMeasurementRequest[])
-      }
+      if (measureResult.error) logError('Fetch measurement requests error', measureResult.error)
+      else setRecentMeasurements((measureResult.data ?? []) as RecentMeasurementRequest[])
 
-      if (asResult.error) {
-        logError('Fetch AS requests error', asResult.error)
-      } else {
-        setRecentAsRequests((asResult.data ?? []) as RecentAsRequest[])
-      }
+      if (asResult.error) logError('Fetch AS requests error', asResult.error)
+      else setRecentAsRequests((asResult.data ?? []) as RecentAsRequest[])
 
-      if (savedResult.error) {
-        logError('Fetch saved blog posts error', savedResult.error)
-      } else {
-        setSavedPosts((savedResult.data ?? []) as CustomerBlogActivityPost[])
-      }
+      if (likesResult.error) logError('Fetch liked blog posts error', likesResult.error)
+      else setLikedPosts((likesResult.data ?? []) as CustomerBlogActivityPost[])
 
-      if (helpfulResult.error) {
-        logError('Fetch helpful blog posts error', helpfulResult.error)
-      } else {
-        setHelpfulPosts((helpfulResult.data ?? []) as CustomerBlogActivityPost[])
-      }
+      if (questionsResult.error) logError('Fetch blog questions error', questionsResult.error)
+      else setBlogQuestions((questionsResult.data ?? []) as CustomerBlogActivityQuestion[])
 
-      if (questionsResult.error) {
-        logError('Fetch blog questions error', questionsResult.error)
-      } else {
-        setBlogQuestions((questionsResult.data ?? []) as CustomerBlogActivityQuestion[])
-      }
-    } catch (err) {
-      logError('Fetch user unexpected error', err)
+      if (recentResult.error) logError('Fetch recent blog views error', recentResult.error)
+      else setRecentViewedPosts((recentResult.data ?? []) as CustomerBlogActivityPost[])
+
+      setActivityCounts({
+        likes: likesResult.count ?? 0,
+        questions: questionsResult.count ?? 0,
+        recent: recentResult.count ?? 0,
+      })
+    } catch (error) {
+      logError('Fetch portal unexpected error', error)
     } finally {
       setLoading(false)
     }
   }, [router, supabase])
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- authenticated portal data is initialized after mount.
     void fetchUser()
   }, [fetchUser])
 
@@ -251,11 +259,66 @@ export default function PortalPage() {
 
     try {
       const { error } = await supabase.auth.signOut()
-      if (error) logError('Signout error', error)
+      if (error) logError('Portal signout error', error)
       router.push('/blog')
       router.refresh()
-    } catch (err) {
-      logError('Signout unexpected error', err)
+    } catch (error) {
+      logError('Portal signout unexpected error', error)
+    }
+  }
+
+  const startProfileEdit = () => {
+    if (!profile) return
+    setProfileDraft({ displayName: profile.displayName, phone: profile.phone })
+    setProfileError(null)
+    setProfileNotice(null)
+    setEditingProfile(true)
+  }
+
+  const saveProfile = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!supabase || !profile || profileBusy) return
+
+    const displayName = profileDraft.displayName.trim()
+    const phone = formatPhone(profileDraft.phone)
+
+    if (displayName.length < 1 || displayName.length > 50) {
+      setProfileError('이름은 1~50자로 입력해 주세요.')
+      return
+    }
+
+    if (phone && !/^01\d-\d{3,4}-\d{4}$/.test(phone)) {
+      setProfileError('전화번호를 010-0000-0000 형식으로 확인해 주세요.')
+      return
+    }
+
+    setProfileBusy(true)
+    setProfileError(null)
+    setProfileNotice(null)
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ display_name: displayName, phone: phone || null })
+        .eq('id', profile.id)
+        .select('display_name, phone')
+        .single()
+
+      if (error) throw error
+
+      setProfile(current => current ? {
+        ...current,
+        displayName: data.display_name || displayName,
+        phone: data.phone || '',
+      } : current)
+      setProfileDraft({ displayName: data.display_name || displayName, phone: data.phone || '' })
+      setEditingProfile(false)
+      setProfileNotice('나의 정보를 수정했어요.')
+    } catch (error) {
+      logError('Save portal profile error', error)
+      setProfileError('지금은 정보를 수정하지 못했어요. 잠시 후 다시 시도해 주세요.')
+    } finally {
+      setProfileBusy(false)
     }
   }
 
@@ -271,7 +334,7 @@ export default function PortalPage() {
     setActionError(null)
 
     try {
-      const res = await fetch('/api/platform/customer-request-action', {
+      const response = await fetch('/api/platform/customer-request-action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -282,8 +345,8 @@ export default function PortalPage() {
         }),
       })
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => null)
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
         throw new Error(data?.error || '요청을 저장하지 못했습니다.')
       }
 
@@ -291,8 +354,8 @@ export default function PortalPage() {
       setActionMemo('')
       await fetchUser()
       router.refresh()
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : '요청을 저장하지 못했습니다.')
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : '요청을 저장하지 못했습니다.')
     } finally {
       setActionBusy(false)
     }
@@ -313,198 +376,157 @@ export default function PortalPage() {
     )
   }
 
-  const serviceCards = [
-    {
-      id: 'card-measure',
-      Icon: Ruler,
-      title: '무료방문 실측견적 상담',
-      desc: '견적상담을 받고 진행하지 않아도 비용이 들지 않아요. 우리 집 시공 가능 여부와 방향을 먼저 확인해요.',
-      href: '/measure',
-      active: true,
-      cta: '신청하기',
-    },
-    {
-      id: 'card-as',
-      Icon: Wrench,
-      title: 'A/S 접수',
-      desc: '문 여닫힘, 부속, 표면 손상처럼 확인이 필요한 내용을 사진이나 동영상과 함께 남겨주세요.',
-      href: '/portal/as/new',
-      active: true,
-      cta: '접수하기',
-    },
-  ]
+  const hasRequests = recentMeasurements.length > 0 || recentAsRequests.length > 0
 
   return (
     <div className={styles.container} data-mg-theme="portal">
-      <div className={styles.header}>
-        <CustomerTopNav
-          homeHref="/blog"
-          account={{
-            displayName: profile?.displayName,
-            email: profile?.email,
-            isAuthenticated: Boolean(profile),
-            onLogout: handleLogout,
-          }}
-        />
-      </div>
+      <header className={styles.portalHeader}>
+        <Link href="/blog" className={styles.brand} aria-label="문장군 블로그로 이동">
+          <span className={styles.brandKo}>문장군</span>
+          <span className={styles.brandEn}>MUNJANGGUN</span>
+          <span className={styles.brandMy}>MY</span>
+        </Link>
+        <div className={styles.accountWrap}>
+          <button
+            type="button"
+            className={styles.accountButton}
+            aria-label="계정 메뉴"
+            aria-expanded={accountOpen}
+            aria-controls="portal-account-menu"
+            onClick={() => setAccountOpen(open => !open)}
+          >
+            <UserRound size={18} aria-hidden="true" />
+            <span className={styles.accountButtonName}>{profile?.displayName || '고객'}</span>
+            <ChevronDown size={16} aria-hidden="true" />
+          </button>
+          {accountOpen ? (
+            <div id="portal-account-menu" className={styles.accountMenu}>
+              <strong>{profile?.displayName || '고객'}</strong>
+              {profile?.email ? <span>{profile.email}</span> : null}
+              <button type="button" onClick={handleLogout}>로그아웃</button>
+            </div>
+          ) : null}
+        </div>
+      </header>
 
       <main className={styles.main}>
         <section className={styles.hero}>
-          <p className={styles.kicker}>문장군 마이페이지</p>
-          <h1>읽어둔 글과 남겨주신 요청을 이어서 확인해요.</h1>
-          <p>
-            블로그에서 저장한 글, 도움된 글, 남긴 질문을 먼저 모아두고 무료방문 실측견적 흐름으로 자연스럽게 이어드릴게요.
-          </p>
+          <h1>마이페이지</h1>
         </section>
 
-        <CustomerCollectionPanel savedPosts={savedPosts} helpfulPosts={helpfulPosts} questions={blogQuestions} />
-
-        <section className={styles.menuIntro} aria-labelledby="portal-actions-title">
-          <div>
-            <span>다음 행동</span>
-            <h2 id="portal-actions-title">글로 판단이 어려우면 집 조건을 확인해요.</h2>
-            <p>읽어둔 내용에서 이어서 상담하거나, 필요한 요청을 간단히 남길 수 있어요.</p>
+        <section className={styles.profileSection} aria-labelledby="profile-title">
+          <div className={styles.sectionHeading}>
+            <div>
+              <p>나의 정보</p>
+              <h2 id="profile-title">연락받을 정보를 확인해요.</h2>
+            </div>
+            {!editingProfile ? (
+              <button type="button" className={styles.editButton} onClick={startProfileEdit}>
+                <Pencil size={15} aria-hidden="true" />
+                수정
+              </button>
+            ) : null}
           </div>
-          <Link href="/blog">
-            블로그로 돌아가기
-            <ArrowRight size={15} aria-hidden="true" />
-          </Link>
+
+          {editingProfile ? (
+            <form className={styles.profileForm} onSubmit={saveProfile}>
+              <label>
+                <span>이름</span>
+                <input
+                  value={profileDraft.displayName}
+                  onChange={event => setProfileDraft(draft => ({ ...draft, displayName: event.target.value }))}
+                  autoComplete="name"
+                  maxLength={50}
+                />
+              </label>
+              <label>
+                <span>이메일</span>
+                <input value={profile?.email || ''} readOnly aria-readonly="true" />
+              </label>
+              <label>
+                <span>전화번호</span>
+                <input
+                  value={profileDraft.phone}
+                  onChange={event => setProfileDraft(draft => ({ ...draft, phone: formatPhone(event.target.value) }))}
+                  autoComplete="tel"
+                  inputMode="tel"
+                  placeholder="010-0000-0000"
+                />
+              </label>
+              {profileError ? <p className={styles.profileError} role="alert">{profileError}</p> : null}
+              <div className={styles.profileActions}>
+                <button type="button" onClick={() => setEditingProfile(false)} disabled={profileBusy}>취소</button>
+                <button type="submit" disabled={profileBusy}>{profileBusy ? '저장 중' : '저장'}</button>
+              </div>
+            </form>
+          ) : (
+            <dl className={styles.profileDetails}>
+              <div><dt>이름</dt><dd>{profile?.displayName || '-'}</dd></div>
+              <div><dt>이메일</dt><dd>{profile?.email || '-'}</dd></div>
+              <div><dt>전화번호</dt><dd>{profile?.phone || '등록하지 않음'}</dd></div>
+            </dl>
+          )}
+          {profileNotice ? <p className={styles.profileNotice} role="status">{profileNotice}</p> : null}
         </section>
 
-        <section className={styles.menuGrid} aria-label="고객 서비스">
-          {serviceCards.map(card => {
-            const Icon = card.Icon
-            return (
-              <article key={card.id} className={`${styles.menuCard} ${!card.active ? styles.inactive : ''}`}>
-                <div className={styles.cardTopline}>
-                  <span className={styles.cardIconWrap}>
-                    <Icon className={styles.cardIcon} aria-hidden="true" strokeWidth={1.8} />
-                  </span>
-                  <span className={styles.cardBadge}>{card.cta}</span>
-                </div>
-                <h2>{card.title}</h2>
-                <p>{card.desc}</p>
-                {card.active && card.href ? (
-                  <Link href={card.href} id={card.id} className={styles.cardCta}>
-                    <span>{card.cta}</span>
-                    <ArrowRight size={16} aria-hidden="true" />
-                  </Link>
-                ) : null}
-              </article>
-            )
-          })}
+        <CustomerCollectionPanel
+          likedPosts={likedPosts}
+          questions={blogQuestions}
+          recentViewedPosts={recentViewedPosts}
+          likesCount={activityCounts.likes}
+          questionsCount={activityCounts.questions}
+          recentViewedCount={activityCounts.recent}
+        />
+
+        <section className={styles.shortcutSection} aria-labelledby="service-shortcuts-title">
+          <h2 id="service-shortcuts-title">고객 서비스</h2>
+          <div className={styles.shortcutGrid}>
+            <Link href="/measure" className={styles.shortcut}>
+              <Ruler size={21} aria-hidden="true" strokeWidth={1.8} />
+              <span>무료 실측상담</span>
+            </Link>
+            <Link href="/portal/as/new" className={styles.shortcut}>
+              <Wrench size={21} aria-hidden="true" strokeWidth={1.8} />
+              <span>A/S 접수</span>
+            </Link>
+          </div>
         </section>
 
-        <div className={styles.historyGrid}>
-          <section className={styles.requestSection}>
-            <div className={styles.sectionHeader}>
-              <h2>최근 견적상담</h2>
-              <Link href="/measure">새 상담 신청</Link>
+        <section className={styles.requestSection} aria-labelledby="request-history-title">
+          <div className={styles.sectionHeading}>
+            <div>
+              <p>요청 내역</p>
+              <h2 id="request-history-title">진행 중인 요청</h2>
             </div>
-            {recentMeasurements.length === 0 ? (
-              <div className={styles.emptyState}>
-                <ClipboardList className={styles.emptyIcon} aria-hidden="true" strokeWidth={1.7} />
-                <p>아직 남겨주신 견적상담이 없습니다.</p>
-              </div>
-            ) : (
-              <ul className={styles.requestList}>
-                {recentMeasurements.map(req => (
-                  <li key={req.id} className={styles.requestItem}>
-                    <div className={styles.requestMeta}>
-                      <span>{getCategoryLabel(req)}</span>
-                      <strong className={styles[`customer_${req.customer_status}`]}>
-                        {CUSTOMER_STATUS_LABEL[req.customer_status] ?? req.customer_status}
-                      </strong>
-                    </div>
-                    <p>{req.address}</p>
-                    {req.customer_action_note && <small className={styles.actionNote}>요청 메모: {req.customer_action_note}</small>}
-                    <small>{formatDate(req.created_at)}</small>
-                    <div className={styles.requestActions}>
-                      {canRequestChange(req.customer_status) && (
-                        <button type="button" onClick={() => openAction({
-                          sourceType: 'measurement',
-                          requestId: req.id,
-                          action: 'change',
-                          title: '견적상담 수정 요청',
-                          description: '변경해야 할 날짜, 연락처, 주소, 요청 내용을 적어주세요.',
-                        })}>
-                          수정요청
-                        </button>
-                      )}
-                      {canRequestCancel(req.customer_status) && (
-                        <button type="button" className={styles.dangerAction} onClick={() => openAction({
-                          sourceType: 'measurement',
-                          requestId: req.id,
-                          action: 'cancel',
-                          title: '견적상담 취소 요청',
-                          description: '취소가 필요한 이유나 담당자에게 남길 말을 적어주세요.',
-                        })}>
-                          취소요청
-                        </button>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <section className={styles.requestSection}>
-            <div className={styles.sectionHeader}>
-              <h2>최근 A/S 접수</h2>
-              <Link href="/portal/as/new">A/S 접수</Link>
+          </div>
+          {!hasRequests ? (
+            <p className={styles.requestEmpty}>아직 진행 중인 상담이나 A/S 요청이 없어요.</p>
+          ) : (
+            <div className={styles.historyGrid}>
+              {recentMeasurements.length > 0 ? (
+                <RequestList
+                  title="최근 견적상담"
+                  requests={recentMeasurements}
+                  getLabel={getCategoryLabel}
+                  onAction={openAction}
+                  sourceType="measurement"
+                />
+              ) : null}
+              {recentAsRequests.length > 0 ? (
+                <RequestList
+                  title="최근 A/S 접수"
+                  requests={recentAsRequests}
+                  getLabel={request => ISSUE_LABEL[request.issue_type] ?? request.issue_type}
+                  onAction={openAction}
+                  sourceType="as"
+                />
+              ) : null}
             </div>
-            {recentAsRequests.length === 0 ? (
-              <div className={styles.emptyState}>
-                <Wrench className={styles.emptyIcon} aria-hidden="true" strokeWidth={1.7} />
-                <p>아직 남겨주신 A/S 접수가 없습니다.</p>
-              </div>
-            ) : (
-              <ul className={styles.requestList}>
-                {recentAsRequests.map(req => (
-                  <li key={req.id} className={styles.requestItem}>
-                    <div className={styles.requestMeta}>
-                      <span>{ISSUE_LABEL[req.issue_type] ?? req.issue_type}</span>
-                      <strong className={styles[`customer_${req.customer_status}`]}>
-                        {CUSTOMER_STATUS_LABEL[req.customer_status] ?? req.customer_status}
-                      </strong>
-                    </div>
-                    <p>{req.address || '주소 미입력'}</p>
-                    {req.customer_action_note && <small className={styles.actionNote}>요청 메모: {req.customer_action_note}</small>}
-                    <small>{formatDate(req.created_at)}</small>
-                    <div className={styles.requestActions}>
-                      {canRequestChange(req.customer_status) && (
-                        <button type="button" onClick={() => openAction({
-                          sourceType: 'as',
-                          requestId: req.id,
-                          action: 'change',
-                          title: 'A/S 수정 요청',
-                          description: '변경해야 할 연락처, 주소, 증상 내용을 적어주세요.',
-                        })}>
-                          수정요청
-                        </button>
-                      )}
-                      {canRequestCancel(req.customer_status) && (
-                        <button type="button" className={styles.dangerAction} onClick={() => openAction({
-                          sourceType: 'as',
-                          requestId: req.id,
-                          action: 'cancel',
-                          title: 'A/S 취소 요청',
-                          description: '취소가 필요한 이유나 담당자에게 남길 말을 적어주세요.',
-                        })}>
-                          취소요청
-                        </button>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        </div>
+          )}
+        </section>
       </main>
 
-      {actionTarget && (
+      {actionTarget ? (
         <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-labelledby="customer-action-title">
           <div className={styles.actionModal}>
             <header>
@@ -522,16 +544,73 @@ export default function PortalPage() {
               placeholder="담당자가 확인할 수 있도록 필요한 내용을 남겨주세요."
               rows={5}
             />
-            {actionError && <p className={styles.modalError}>{actionError}</p>}
+            {actionError ? <p className={styles.modalError}>{actionError}</p> : null}
             <footer>
-              <button type="button" onClick={() => setActionTarget(null)} disabled={actionBusy}>닫기</button>
-              <button type="button" onClick={submitAction} disabled={actionBusy}>
+              <button type="button" onClick={() => setActionTarget(null)} disabled={actionBusy}>취소</button>
+              <button type="button" onClick={() => void submitAction()} disabled={actionBusy}>
                 {actionBusy ? '저장 중' : '요청 남기기'}
               </button>
             </footer>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
+  )
+}
+
+type RequestItem = RecentMeasurementRequest | RecentAsRequest
+
+function RequestList<T extends RequestItem>({
+  title,
+  requests,
+  getLabel,
+  onAction,
+  sourceType,
+}: {
+  title: string
+  requests: T[]
+  getLabel: (request: T) => string
+  onAction: (target: ActionTarget) => void
+  sourceType: QueueSourceType
+}) {
+  return (
+    <section className={styles.requestListSection} aria-label={title}>
+      <h3>{title}</h3>
+      <ul className={styles.requestList}>
+        {requests.map(request => (
+          <li key={request.id} className={styles.requestItem}>
+            <div className={styles.requestMeta}>
+              <span>{getLabel(request)}</span>
+              <strong className={styles[`customer_${request.customer_status}`]}>
+                {CUSTOMER_STATUS_LABEL[request.customer_status] ?? request.customer_status}
+              </strong>
+            </div>
+            <p>{'address' in request && request.address ? request.address : '주소 미입력'}</p>
+            {request.customer_action_note ? <small className={styles.actionNote}>요청 메모: {request.customer_action_note}</small> : null}
+            <small>{formatDate(request.created_at)}</small>
+            <div className={styles.requestActions}>
+              {canRequestChange(request.customer_status) ? (
+                <button type="button" onClick={() => onAction({
+                  sourceType,
+                  requestId: request.id,
+                  action: 'change',
+                  title: `${title} 수정 요청`,
+                  description: '변경해야 할 내용을 적어주세요.',
+                })}>수정요청</button>
+              ) : null}
+              {canRequestCancel(request.customer_status) ? (
+                <button type="button" className={styles.dangerAction} onClick={() => onAction({
+                  sourceType,
+                  requestId: request.id,
+                  action: 'cancel',
+                  title: `${title} 취소 요청`,
+                  description: '취소가 필요한 이유나 담당자에게 남길 말을 적어주세요.',
+                })}>취소요청</button>
+              ) : null}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }

@@ -16,7 +16,9 @@ test('desktop queue keeps native table semantics and a real editor link', async 
 
   const table = page.getByRole('table', { name: '블로그 콘텐츠 목록' })
   await expect(table).toBeVisible()
-  await expect(table.getByRole('columnheader')).toHaveCount(7)
+  await expect(table.getByRole('columnheader')).toHaveCount(4)
+  await expect(table.getByRole('columnheader')).toHaveText(['제목', '상태', '카테고리', '수정일'])
+  await expect(page.getByRole('group', { name: '상태 필터' }).getByRole('button')).toHaveText(['전체', '초안', '발행', '보관'])
   const rows = table.getByRole('row')
   expect(await rows.count()).toBeGreaterThan(1)
   const editorLink = table.getByRole('link', { name: /에디터 열기/ }).first()
@@ -38,5 +40,6 @@ test('390px queue exposes the native mobile list and keyboard link', async ({ pa
   await editorLink.focus()
   await expect(editorLink).toBeFocused()
   expect(await editorLink.evaluate(element => getComputedStyle(element).outlineStyle)).not.toBe('none')
+  await expect(list.getByText(/검토 필요|검토중|사진필요|발행대기|발행완료/, { exact: true })).toHaveCount(0)
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1)
 })

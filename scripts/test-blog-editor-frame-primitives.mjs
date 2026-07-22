@@ -45,7 +45,9 @@ assert.match(editor, /id=["']blog-editor-mode["']/)
 assert.match(editor, /surface=["']embedded-preview["']/)
 assert.match(editor, /<PlatformPreviewFrame[\s\S]*?<BlogPostRenderer/)
 assert.match(editor, /<PlatformPreviewFrame[\s\S]*?className=\{styles\.mobilePreviewFrame\}/)
-assert.doesNotMatch(editorCss, /\.(?:editorModeTabs|editorModeActive|mobilePreviewShell|mobilePreviewChrome|mobilePreviewArticle)\b/)
+assert.doesNotMatch(editorCss, /\.(?:editorModeActive|mobilePreviewShell|mobilePreviewChrome|mobilePreviewArticle)\b/)
+assert.match(editorCss, /\.editorModeTabs\s*\{\s*border-radius: var\(--radius-lg\)/)
+assert.match(editorCss, /\.editorModeTabs > :global\(button\[role='tab'\]\)\s*\{\s*border-radius: var\(--radius-md\)/)
 
 for (const cssFile of ['PlatformTabs.module.css', 'PlatformPreviewFrame.module.css']) {
   assert.match(tokenPolicy, new RegExp(cssFile.replace('.', '\\.')), `${cssFile} must be governed by the raw-token policy`)
