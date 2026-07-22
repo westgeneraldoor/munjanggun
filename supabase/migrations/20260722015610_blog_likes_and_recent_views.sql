@@ -82,7 +82,10 @@ SELECT
   post_excerpt_snapshot,
   post_published_at_snapshot,
   created_at
-FROM deduplicated_rows
+FROM deduplicated_rows AS legacy
+JOIN showroom.blog_posts AS post
+  ON post.id = legacy.post_id
+  AND post.status = 'published'
 ON CONFLICT (user_id, post_id) DO NOTHING;
 
 -- Keep the old clients safe during the migration-to-web cutover window. The
@@ -96,6 +99,7 @@ SET search_path = pg_catalog
 AS $$
 BEGIN
   IF TG_OP = 'DELETE' THEN
+    PERFORM pg_advisory_xact_lock(hashtextextended(OLD.user_id::TEXT || ':' || OLD.post_id::TEXT, 0));
     IF NOT EXISTS (
       SELECT 1
       FROM platform.blog_article_helpful_votes AS helpful
@@ -107,6 +111,27 @@ BEGIN
         AND canonical.post_id = OLD.post_id;
     END IF;
     RETURN OLD;
+  END IF;
+
+  IF TG_OP = 'UPDATE'
+    AND (NEW.user_id, NEW.post_id) IS DISTINCT FROM (OLD.user_id, OLD.post_id) THEN
+    PERFORM pg_advisory_xact_lock(hashtextextended(OLD.user_id::TEXT || ':' || OLD.post_id::TEXT, 0));
+    IF NOT EXISTS (
+      SELECT 1
+      FROM platform.blog_article_helpful_votes AS helpful
+      WHERE helpful.user_id = OLD.user_id
+        AND helpful.post_id = OLD.post_id
+    ) THEN
+      DELETE FROM platform.blog_article_likes AS canonical
+      WHERE canonical.user_id = OLD.user_id
+        AND canonical.post_id = OLD.post_id;
+    END IF;
+  END IF;
+
+  PERFORM pg_advisory_xact_lock(hashtextextended(NEW.user_id::TEXT || ':' || NEW.post_id::TEXT, 0));
+
+  IF NOT platform_private.is_published_blog_post(NEW.post_id) THEN
+    RETURN NEW;
   END IF;
 
   INSERT INTO platform.blog_article_likes (
@@ -143,6 +168,7 @@ SET search_path = pg_catalog
 AS $$
 BEGIN
   IF TG_OP = 'DELETE' THEN
+    PERFORM pg_advisory_xact_lock(hashtextextended(OLD.user_id::TEXT || ':' || OLD.post_id::TEXT, 0));
     IF NOT EXISTS (
       SELECT 1
       FROM platform.blog_article_saves AS saved
@@ -154,6 +180,27 @@ BEGIN
         AND canonical.post_id = OLD.post_id;
     END IF;
     RETURN OLD;
+  END IF;
+
+  IF TG_OP = 'UPDATE'
+    AND (NEW.user_id, NEW.post_id) IS DISTINCT FROM (OLD.user_id, OLD.post_id) THEN
+    PERFORM pg_advisory_xact_lock(hashtextextended(OLD.user_id::TEXT || ':' || OLD.post_id::TEXT, 0));
+    IF NOT EXISTS (
+      SELECT 1
+      FROM platform.blog_article_saves AS saved
+      WHERE saved.user_id = OLD.user_id
+        AND saved.post_id = OLD.post_id
+    ) THEN
+      DELETE FROM platform.blog_article_likes AS canonical
+      WHERE canonical.user_id = OLD.user_id
+        AND canonical.post_id = OLD.post_id;
+    END IF;
+  END IF;
+
+  PERFORM pg_advisory_xact_lock(hashtextextended(NEW.user_id::TEXT || ':' || NEW.post_id::TEXT, 0));
+
+  IF NOT platform_private.is_published_blog_post(NEW.post_id) THEN
+    RETURN NEW;
   END IF;
 
   INSERT INTO platform.blog_article_likes (
@@ -204,7 +251,7 @@ ALTER TABLE platform.blog_article_recent_views ENABLE ROW LEVEL SECURITY;
 -- Authenticated clients do not have direct SELECT access to showroom.blog_posts.
 -- Keep the published-state guard inside a narrow, schema-qualified definer
 -- function instead of widening the showroom read surface just for RLS checks.
-CREATE OR REPLACE FUNCTION platform.is_published_blog_post(target_post_id UUID)
+CREATE OR REPLACE FUNCTION platform_private.is_published_blog_post(target_post_id UUID)
 RETURNS BOOLEAN
 LANGUAGE sql
 STABLE
@@ -219,8 +266,28 @@ AS $$
   );
 $$;
 
-REVOKE ALL ON FUNCTION platform.is_published_blog_post(UUID) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION platform.is_published_blog_post(UUID) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION platform_private.is_published_blog_post(UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION platform_private.is_published_blog_post(UUID) TO authenticated, service_role;
+
+-- Legacy REST clients remain available only for a short cutover window. Keep
+-- their ownership rule, but reject a direct write for an unpublished post
+-- before the trigger can see it.
+DROP POLICY IF EXISTS insert_own_blog_saves ON platform.blog_article_saves;
+CREATE POLICY insert_own_blog_saves
+  ON platform.blog_article_saves
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    user_id = (SELECT auth.uid())
+    AND platform_private.is_published_blog_post(post_id)
+  );
+DROP POLICY IF EXISTS insert_own_blog_helpful_votes ON platform.blog_article_helpful_votes;
+CREATE POLICY insert_own_blog_helpful_votes
+  ON platform.blog_article_helpful_votes
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    user_id = (SELECT auth.uid())
+    AND platform_private.is_published_blog_post(post_id)
+  );
 
 DROP POLICY IF EXISTS select_own_blog_article_likes ON platform.blog_article_likes;
 CREATE POLICY select_own_blog_article_likes
@@ -228,7 +295,7 @@ CREATE POLICY select_own_blog_article_likes
   FOR SELECT TO authenticated
   USING (
     user_id = (SELECT auth.uid())
-    AND platform.is_published_blog_post(post_id)
+    AND platform_private.is_published_blog_post(post_id)
   );
 DROP POLICY IF EXISTS insert_own_blog_article_likes ON platform.blog_article_likes;
 CREATE POLICY insert_own_blog_article_likes
@@ -236,7 +303,7 @@ CREATE POLICY insert_own_blog_article_likes
   FOR INSERT TO authenticated
   WITH CHECK (
     user_id = (SELECT auth.uid())
-    AND platform.is_published_blog_post(post_id)
+    AND platform_private.is_published_blog_post(post_id)
   );
 DROP POLICY IF EXISTS update_own_blog_article_likes ON platform.blog_article_likes;
 CREATE POLICY update_own_blog_article_likes
@@ -245,7 +312,7 @@ CREATE POLICY update_own_blog_article_likes
   USING (user_id = (SELECT auth.uid()))
   WITH CHECK (
     user_id = (SELECT auth.uid())
-    AND platform.is_published_blog_post(post_id)
+    AND platform_private.is_published_blog_post(post_id)
   );
 DROP POLICY IF EXISTS delete_own_blog_article_likes ON platform.blog_article_likes;
 CREATE POLICY delete_own_blog_article_likes
@@ -259,7 +326,7 @@ CREATE POLICY select_own_blog_article_recent_views
   FOR SELECT TO authenticated
   USING (
     user_id = (SELECT auth.uid())
-    AND platform.is_published_blog_post(post_id)
+    AND platform_private.is_published_blog_post(post_id)
   );
 DROP POLICY IF EXISTS insert_own_blog_article_recent_views ON platform.blog_article_recent_views;
 CREATE POLICY insert_own_blog_article_recent_views
@@ -267,7 +334,7 @@ CREATE POLICY insert_own_blog_article_recent_views
   FOR INSERT TO authenticated
   WITH CHECK (
     user_id = (SELECT auth.uid())
-    AND platform.is_published_blog_post(post_id)
+    AND platform_private.is_published_blog_post(post_id)
   );
 DROP POLICY IF EXISTS update_own_blog_article_recent_views ON platform.blog_article_recent_views;
 CREATE POLICY update_own_blog_article_recent_views
@@ -276,7 +343,7 @@ CREATE POLICY update_own_blog_article_recent_views
   USING (user_id = (SELECT auth.uid()))
   WITH CHECK (
     user_id = (SELECT auth.uid())
-    AND platform.is_published_blog_post(post_id)
+    AND platform_private.is_published_blog_post(post_id)
   );
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON platform.blog_article_likes TO authenticated;
@@ -292,6 +359,14 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON platform.blog_article_recent_views TO se
 --   UNION
 --   SELECT user_id, post_id FROM platform.blog_article_helpful_votes
 -- ) AS legacy;
+-- SELECT COUNT(*) AS legacy_published_union FROM (
+--   SELECT user_id, post_id FROM platform.blog_article_saves
+--   UNION
+--   SELECT user_id, post_id FROM platform.blog_article_helpful_votes
+-- ) AS legacy
+-- JOIN showroom.blog_posts AS post
+--   ON post.id = legacy.post_id
+--  AND post.status = 'published';
 -- SELECT COUNT(*) AS canonical_likes FROM platform.blog_article_likes;
 -- SELECT COUNT(*) AS duplicate_like_pairs FROM (
 --   SELECT user_id, post_id FROM platform.blog_article_likes GROUP BY user_id, post_id HAVING COUNT(*) > 1
