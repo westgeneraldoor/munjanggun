@@ -1182,7 +1182,6 @@ function validatePublishGate(post: BlogPost, blocks: BlogBlock[], media: BlogMed
     issues.push('대표 사진 또는 사진 부족 사유가 필요합니다.')
   }
 
-  if (post.status !== 'ready') issues.push('발행 준비 상태인 글만 공개할 수 있습니다.')
   if (!cleanText(post.title)) issues.push('제목이 필요합니다.')
   if (!cleanText(post.slug) || !SLUG_PATTERN.test(post.slug)) issues.push('글 주소 형식이 올바르지 않습니다.')
   const metaDescription = cleanText(post.meta_description)
@@ -1481,13 +1480,13 @@ async function rollbackPublishedMedia(mediaIds: string[]) {
   }
 }
 
-async function rollbackPublishedPost(postId: string | null) {
-  if (!postId) return
+async function rollbackPublishedPost(postId: string | null, previousStatus: BlogPostStatus | null) {
+  if (!postId || !previousStatus) return
   const showroomAdmin = createShowroomAdminClient()
   const { data, error } = await showroomAdmin
     .from('blog_posts')
     .update({
-      status: 'ready',
+      status: previousStatus,
       published_by: null,
       published_at: null,
       updated_at: new Date().toISOString(),
@@ -1501,11 +1500,16 @@ async function rollbackPublishedPost(postId: string | null) {
   }
 }
 
-async function compensateFailedPublication(mediaIds: string[], paths: string[], postId: string | null = null) {
+async function compensateFailedPublication(
+  mediaIds: string[],
+  paths: string[],
+  postId: string | null = null,
+  previousPostStatus: BlogPostStatus | null = null,
+) {
   const results = await Promise.allSettled([
     rollbackPublishedMedia(mediaIds),
     cleanupPublicObjects(paths),
-    rollbackPublishedPost(postId),
+    rollbackPublishedPost(postId, previousPostStatus),
   ])
   return results.flatMap(result => (
     result.status === 'rejected'
@@ -1606,6 +1610,7 @@ export async function publishBlogPost(postId: string): Promise<PublishBlogPostRe
   let uploadedPaths: string[] = []
   let publishedMediaIds: string[] = []
   let publishedPostId: string | null = null
+  let previousPostStatus: BlogPostStatus | null = null
 
   try {
     const actorId = await requireAdministrator()
@@ -1640,6 +1645,16 @@ export async function publishBlogPost(postId: string): Promise<PublishBlogPostRe
       return { ok: false, message: '발행할 글을 찾지 못했습니다.' }
     }
 
+    if (post.status === 'published') {
+      return { ok: false, message: '이미 발행된 글입니다.' }
+    }
+
+    if (post.status === 'archived') {
+      return { ok: false, message: '보관된 글은 발행할 수 없습니다.' }
+    }
+
+    previousPostStatus = post.status
+
     if (blocksResult.error) {
       return { ok: false, message: '본문 정보를 불러오지 못했습니다.' }
     }
@@ -1673,7 +1688,7 @@ export async function publishBlogPost(postId: string): Promise<PublishBlogPostRe
         updated_at: publishedAt,
       } as never)
       .eq('id', post.id)
-      .eq('status', 'ready')
+      .eq('status', post.status)
       .select('id, slug')
 
     if (postUpdateError) {
@@ -1682,7 +1697,7 @@ export async function publishBlogPost(postId: string): Promise<PublishBlogPostRe
 
     const updatedPostRows = (updatedPostData ?? []) as Array<{ id: string; slug: string }>
     if (updatedPostRows.length !== 1) {
-      throw new Error('발행 준비가 끝난 글만 공개할 수 있습니다.')
+      throw new Error('글 상태가 바뀌었습니다. 새로고침 후 다시 발행해주세요.')
     }
 
     publishedPostId = post.id
@@ -1723,7 +1738,12 @@ export async function publishBlogPost(postId: string): Promise<PublishBlogPostRe
       slug: post.slug,
     }
   } catch (error) {
-    const compensationIssues = await compensateFailedPublication(publishedMediaIds, uploadedPaths, publishedPostId)
+    const compensationIssues = await compensateFailedPublication(
+      publishedMediaIds,
+      uploadedPaths,
+      publishedPostId,
+      previousPostStatus,
+    )
     const originalMessage = error instanceof Error ? error.message : '발행 중 오류가 발생했습니다.'
 
     return {

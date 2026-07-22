@@ -22,7 +22,7 @@
 
 .copy h2 {
   color: var(--blog-cocoa);
-  font-family: var(--font-blog-display);
+  font-family: var(--mg-font-body);
   font-size: var(--mg-blog-type-heading);
   font-weight: 850;
   line-height: 1.35;
@@ -42,7 +42,7 @@
 .controls {
   min-width: 0;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-2);
   margin-top: var(--space-4);
 }
@@ -203,8 +203,7 @@
   overflow-wrap: anywhere;
 }
 
-.mobileBar,
-.mobileMoreMenu {
+.mobileBar {
   display: none;
 }
 
@@ -244,7 +243,7 @@
     min-width: 0;
     min-height: var(--mg-space-8);
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--mg-space-1);
     padding: var(--mg-blog-space-tight);
     background: color-mix(in srgb, var(--blog-paper) 94%, transparent);
@@ -320,61 +319,16 @@
     outline-offset: var(--mg-border-width-strong);
   }
 
-  .mobileMoreMenu {
-    position: fixed;
-    right: var(--mg-blog-space-tight);
-    bottom: calc(var(--mg-blog-space-hero) + env(safe-area-inset-bottom, 0));
-    z-index: 96;
-    width: min(var(--mg-blog-frame-rail), calc(100vw - var(--mg-blog-space-comfortable)));
-    display: flex;
-    flex-direction: column;
-    gap: var(--mg-space-1);
-    padding: var(--mg-space-2);
-    background: var(--blog-paper);
-    border: var(--mg-border-width) solid var(--blog-line);
-    border-radius: var(--mg-radius-card);
-    box-shadow: var(--mg-blog-showroom-shadow-strong);
-  }
-
-  .mobileMoreMenu button {
-    width: 100%;
-    min-height: var(--mg-control-size-min);
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: var(--mg-space-2);
-    padding: 0 var(--mg-space-3);
-    color: var(--blog-cocoa);
-    background: transparent;
-    border: 0;
-    border-radius: var(--mg-blog-radius-compact);
-    font: inherit;
-    font-size: var(--text-sm);
-    font-weight: 850;
-    cursor: pointer;
-  }
-
-  .mobileMoreMenu button:hover,
-  .mobileMoreMenu button:focus-visible {
-    background: var(--blog-almond);
-  }
-
-  .mobileMoreMenu button:focus-visible {
-    outline: var(--mg-border-width-strong) solid var(--blog-terracotta);
-    outline-offset: var(--mg-border-width-strong);
-  }
 }
 
 @media (min-width: 768px) {
-  .mobileBar,
-  .mobileMoreMenu {
+  .mobileBar {
     display: none;
   }
 }
 
 @media print {
-  .mobileBar,
-  .mobileMoreMenu {
+  .mobileBar {
     display: none;
   }
 }

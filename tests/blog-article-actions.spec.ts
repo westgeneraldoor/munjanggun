@@ -1,5 +1,51 @@
 import { expect, test, type Page } from '@playwright/test'
 
+type ReaderMockOptions = {
+  authenticated?: boolean
+}
+
+function readerPayload(liked: boolean, authenticated: boolean) {
+  return {
+    counts: { likes: liked ? 1 : 0 },
+    viewer: authenticated
+      ? { isAuthenticated: true, liked, privateQuestionCount: 0 }
+      : null,
+  }
+}
+
+async function mockReader(page: Page, { authenticated = true }: ReaderMockOptions = {}) {
+  let liked = false
+  let viewRequests = 0
+  const patchBodies: Array<{ liked: boolean }> = []
+
+  await page.route('**/api/blog/posts/*/reader/view', route => {
+    viewRequests += 1
+    return route.fulfill({ status: authenticated ? 204 : 401 })
+  })
+  await page.route('**/api/blog/posts/*/reader', async route => {
+    const method = route.request().method()
+
+    if (method === 'GET') {
+      return route.fulfill({ contentType: 'application/json', body: JSON.stringify(readerPayload(liked, authenticated)) })
+    }
+
+    if (method === 'PATCH') {
+      if (!authenticated) return route.fulfill({ status: 401 })
+      const body = route.request().postDataJSON() as { liked: boolean }
+      patchBodies.push(body)
+      liked = body.liked
+      return route.fulfill({ contentType: 'application/json', body: JSON.stringify(readerPayload(liked, true)) })
+    }
+
+    return route.fulfill({ contentType: 'application/json', body: JSON.stringify(readerPayload(liked, authenticated)) })
+  })
+
+  return {
+    patchBodies: () => patchBodies,
+    viewRequests: () => viewRequests,
+  }
+}
+
 async function openFirstBlogPost(page: Page) {
   await page.goto('/blog', { waitUntil: 'domcontentloaded' })
 
@@ -16,7 +62,7 @@ async function openFirstBlogPost(page: Page) {
   await page.goto(href!, { waitUntil: 'domcontentloaded' })
   await page.evaluate(() => {
     Object.keys(window.localStorage)
-      .filter(key => key.startsWith('munjanggun:blog-helpful:') || key.startsWith('munjanggun:blog-question-draft:'))
+      .filter(key => key.startsWith('munjanggun:blog-question-draft:'))
       .forEach(key => window.localStorage.removeItem(key))
     Object.keys(window.sessionStorage)
       .filter(key => key.startsWith('munjanggun:blog-question-draft:'))
@@ -34,6 +80,7 @@ async function scrollToAndSettle(page: Page, y: number) {
 }
 
 test('blog article offers lightweight reader actions', async ({ page }) => {
+  const reader = await mockReader(page)
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'share', {
       configurable: true,
@@ -54,7 +101,7 @@ test('blog article offers lightweight reader actions', async ({ page }) => {
 
   await actions.getByRole('button', { name: '공유하기' }).click()
   await expect(actions.getByRole('status')).toContainText('링크를 복사했어요.')
-  await expect(actions.getByRole('button', { name: '도움돼요' })).toBeVisible()
+  await expect(actions.getByRole('button', { name: '좋아요' })).toBeVisible()
 
   const questionLink = actions.getByRole('link', { name: /무료 방문실측 상담/ })
   await expect(questionLink).toBeVisible()
@@ -75,9 +122,11 @@ test('blog article offers lightweight reader actions', async ({ page }) => {
   await expect(page.getByTestId('blog-question-panel')).toBeVisible()
   await expect(page.getByTestId('blog-question-panel')).toContainText('비공개 질문')
   await expect(page.getByTestId('blog-question-panel')).toContainText('개인정보를 적지 마세요')
+  await expect.poll(reader.viewRequests, { timeout: 6_500 }).toBe(1)
 })
 
 test('blog article exposes current-article reading progress on mobile', async ({ page }) => {
+  await mockReader(page)
   await page.setViewportSize({ width: 390, height: 900 })
   await openFirstBlogPost(page)
 
@@ -108,6 +157,7 @@ test('blog article exposes current-article reading progress on mobile', async ({
 })
 
 test('blog article keeps reading progress available on desktop', async ({ page }) => {
+  await mockReader(page)
   await page.setViewportSize({ width: 1366, height: 768 })
   await openFirstBlogPost(page)
 
@@ -135,19 +185,32 @@ test('blog article keeps reading progress available on desktop', async ({ page }
   expect(overflow).toBeLessThanOrEqual(1)
 })
 
-test('helpful action stays local to the article', async ({ page }) => {
+test('blog article likes toggle through the reader API', async ({ page }) => {
+  const reader = await mockReader(page)
   await openFirstBlogPost(page)
 
   const actions = page.getByRole('region', { name: '글을 읽은 뒤 할 수 있는 일' })
-  await expect(actions.getByRole('button', { name: '도움돼요' })).toBeEnabled()
-  await actions.getByRole('button', { name: '도움돼요' }).click()
-  await expect(actions.getByRole('status')).toContainText('도움 표시를 저장했어요.')
+  const like = actions.getByTestId('blog-like-action')
+  await expect(like).toBeEnabled()
+  await expect(like).toHaveAttribute('aria-pressed', 'false')
+  await like.click()
+  await expect(like).toHaveAttribute('aria-pressed', 'true')
+  await like.click()
+  await expect(like).toHaveAttribute('aria-pressed', 'false')
+  expect(reader.patchBodies()).toEqual([{ liked: true }, { liked: false }])
+})
 
-  await page.reload()
-  await expect(page.getByRole('region', { name: '글을 읽은 뒤 할 수 있는 일' }).getByRole('status')).toContainText('도움 표시를 저장했어요.')
+test('blog article asks unauthenticated readers to log in instead of writing browser state', async ({ page }) => {
+  await mockReader(page, { authenticated: false })
+  await openFirstBlogPost(page)
+
+  await page.getByTestId('blog-like-action').click()
+  await expect(page.getByRole('status')).toContainText('로그인하면 좋아요와 비공개 질문을 마이페이지에 남길 수 있어요.')
+  expect(await page.evaluate(() => Object.keys(window.localStorage).filter(key => key.startsWith('munjanggun:blog-')))).toEqual([])
 })
 
 test('blog article actions do not create mobile horizontal overflow', async ({ page }) => {
+  await mockReader(page)
   await page.setViewportSize({ width: 390, height: 900 })
   await openFirstBlogPost(page)
 
@@ -156,6 +219,7 @@ test('blog article actions do not create mobile horizontal overflow', async ({ p
 })
 
 test('blog article exposes a mobile bottom action bar', async ({ page }) => {
+  await mockReader(page)
   await page.setViewportSize({ width: 390, height: 900 })
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'share', {
@@ -174,26 +238,13 @@ test('blog article exposes a mobile bottom action bar', async ({ page }) => {
 
   const bottomBar = page.getByTestId('blog-mobile-bottom-actions')
   await expect(bottomBar).toBeVisible()
-  await expect(page.getByTestId('blog-mobile-helpful')).toHaveAttribute('aria-pressed', 'false')
+  await expect(page.getByTestId('blog-mobile-like')).toHaveAttribute('aria-pressed', 'false')
   await expect(page.getByTestId('blog-mobile-question')).toHaveAttribute('href', '#blog-question-panel')
   await expect(page.getByTestId('blog-mobile-measure')).toHaveAttribute('href', /\/portal\/measure\/new\?source=blog-question&post=/)
 
-  await expect(page.getByTestId('blog-mobile-helpful')).toBeEnabled()
-  await page.getByTestId('blog-mobile-helpful').click()
-  await expect(page.getByTestId('blog-mobile-helpful')).toHaveAttribute('aria-pressed', 'true')
-
-  await page.getByTestId('blog-mobile-more').click()
-  await expect(page.getByTestId('blog-mobile-more-actions')).toBeVisible()
-  await page.keyboard.press('Escape')
-  await expect(page.getByTestId('blog-mobile-more-actions')).toBeHidden()
-  await expect(page.getByTestId('blog-mobile-more')).toBeFocused()
-
-  await page.getByTestId('blog-mobile-more').click()
-  await expect(page.getByTestId('blog-mobile-more-actions')).toBeVisible()
-  await page.getByTestId('blog-mobile-share').click()
-  await expect(page.getByRole('status')).toContainText('링크를 복사했어요')
-  await expect(page.getByTestId('blog-mobile-more-actions')).toBeHidden()
-  await expect(page.getByTestId('blog-mobile-more')).toBeFocused()
+  await expect(page.getByTestId('blog-mobile-like')).toBeEnabled()
+  await page.getByTestId('blog-mobile-like').click()
+  await expect(page.getByTestId('blog-mobile-like')).toHaveAttribute('aria-pressed', 'true')
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(1)

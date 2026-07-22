@@ -685,7 +685,7 @@
 .searchResultStrip h2 {
   margin-top: var(--mg-space-1);
   color: var(--blog-cocoa);
-  font-family: var(--font-blog-display);
+  font-family: var(--mg-font-body);
   font-size: var(--mg-blog-type-card);
   font-weight: 700;
   line-height: 1.32;
@@ -954,7 +954,7 @@
 
 .card h3 {
   color: var(--blog-cocoa);
-  font-family: var(--font-blog-display);
+  font-family: var(--mg-font-body);
   font-size: var(--mg-blog-type-card);
   font-weight: 700;
   line-height: 1.3;
@@ -1027,7 +1027,7 @@
 
 .storyGroupHeader strong {
   color: var(--blog-cocoa);
-  font-family: var(--font-blog-display);
+  font-family: var(--mg-font-body);
   font-size: var(--text-lg);
   font-weight: 700;
 }
@@ -1391,7 +1391,7 @@
 .threadPanel h2 {
   margin-top: var(--mg-blog-space-tight);
   color: var(--mg-color-ink-900);
-  font-family: var(--font-blog-display);
+  font-family: var(--mg-font-body);
   font-size: var(--mg-blog-type-title);
   line-height: 1.18;
   word-break: keep-all;
@@ -1492,7 +1492,7 @@
 
 .featuredBody h3 {
   color: var(--mg-color-ink-900);
-  font-family: var(--font-blog-display);
+  font-family: var(--mg-font-body);
   font-size: var(--mg-blog-type-title);
   line-height: 1.22;
   word-break: keep-all;

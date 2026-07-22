@@ -2,8 +2,9 @@
 
 import React, { use, useState } from 'react'
 import Link from 'next/link'
-import { Home, Mail, MessageCircle, X } from 'lucide-react'
+import { Mail, MessageCircle, X } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
+import MunjanggunWordmark from '@/app/blog/BlogBrandWordmark'
 import { logError } from '@/lib/logger'
 import styles from './login.module.css'
 
@@ -139,19 +140,10 @@ export default function LoginPage({ searchParams }: PageProps) {
   return (
     <div className={styles.container} data-mg-theme="portal">
       <div className={styles.card}>
-        <Link href="/" className={styles.closeLink} aria-label="문장군 홈으로 이동">
+        <Link href="/blog" className={styles.closeLink} aria-label="문장군 블로그로 돌아가기">
           <X size={20} aria-hidden="true" />
         </Link>
-        <Link href="/" className={styles.homeLink}>
-          <Home size={16} aria-hidden="true" />
-          <span>쇼룸 홈</span>
-        </Link>
-
-        <div className={styles.brand}>
-          <span className={styles.brandKo}>문장군</span>
-          <span className={styles.brandEn}>MUNJANGGUN</span>
-        </div>
-        <div className={styles.brandSub}>고객 포털</div>
+        <MunjanggunWordmark label="MY" className={styles.wordmark} />
 
         {step === 'main' && (
           <>

@@ -89,11 +89,10 @@ test('customer portal uses the platform theme without mobile overflow', async ({
   }
 
   await expect(page.locator('[data-mg-theme="portal"]').first()).toBeVisible()
-  await expect(page.getByRole('link', { name: '문장군 홈으로 이동' }).first()).toBeVisible()
-  await expect(page.getByRole('link', { name: '문장군 홈으로 이동' }).first()).toHaveAttribute('href', '/blog')
-  await expect(page.getByRole('button', { name: '로그아웃' })).toBeVisible()
-  await expect(page.locator('#card-measure')).toHaveAttribute('href', '/measure')
-  await expect(page.locator('#card-as')).toHaveAttribute('href', '/portal/as/new')
+  await expect(page.getByRole('link', { name: '문장군 블로그로 이동' })).toHaveAttribute('href', '/blog')
+  await expect(page.getByRole('button', { name: '계정 메뉴' })).toHaveAttribute('aria-expanded', 'false')
+  await expect(page.getByRole('link', { name: '무료 실측상담' })).toHaveAttribute('href', '/measure')
+  await expect(page.getByRole('link', { name: 'A/S 접수' })).toHaveAttribute('href', '/portal/as/new')
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(1)
@@ -111,11 +110,13 @@ test('customer portal groups blog activity for My Page convenience', async ({ pa
     test.skip(true, 'Dev customer login redirected to the public login page in this environment.')
   }
 
-  const blogActivity = page.getByRole('region', { name: '나의 블로그 활동' })
+  const blogActivity = page.getByRole('group', { name: '나의 활동 선택' })
   await expect(blogActivity).toBeVisible()
-  await expect(blogActivity.getByRole('heading', { name: '저장한 글' })).toBeVisible()
-  await expect(blogActivity.getByRole('heading', { name: '도움된 글' })).toBeVisible()
-  await expect(blogActivity.getByRole('heading', { name: '내 질문' })).toBeVisible()
+  await expect(blogActivity.getByRole('button', { name: /좋아요한 글/ })).toBeVisible()
+  await expect(blogActivity.getByRole('button', { name: /내 질문/ })).toBeVisible()
+  await expect(blogActivity.getByRole('button', { name: /최근 본 글/ })).toBeVisible()
+  await expect(page.getByText('저장한 글', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('도움된 글', { exact: true })).toHaveCount(0)
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(1)
@@ -126,9 +127,20 @@ test('login screen uses the Munjanggun platform theme', async ({ page }) => {
   await page.goto('/login?next=/portal')
 
   await expect(page.locator('[data-mg-theme="portal"]').first()).toBeVisible()
-  await expect(page.locator('[data-mg-theme="portal"] span').filter({ hasText: /^문장군$/ })).toBeVisible()
+  await expect(page.getByText('MUNJANGGUN', { exact: true })).toBeVisible()
+  await expect(page.getByText('MY', { exact: true })).toBeVisible()
+  await expect(page.getByText('쇼룸 홈', { exact: true })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: '문장군 블로그로 돌아가기' })).toHaveAttribute('href', '/blog')
   await expect(page.getByRole('button', { name: /카카오/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /이메일/ })).toBeVisible()
+
+  const title = await page.getByRole('heading', { level: 1 }).evaluate(element => {
+    const style = getComputedStyle(element)
+    return { fontFamily: style.fontFamily, fontSize: Number.parseFloat(style.fontSize) }
+  })
+  expect(title.fontFamily).toContain('Pretendard')
+  expect(title.fontFamily).not.toContain('Tmoney RoundWind')
+  expect(title.fontSize).toBeLessThan(32)
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(1)

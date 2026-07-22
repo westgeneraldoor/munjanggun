@@ -11,13 +11,14 @@ const nunito = Nunito({
 type BlogBrandWordmarkProps = {
   className?: string
   compact?: boolean
+  label?: string
 }
 
-export default function BlogBrandWordmark({ className = '', compact = false }: BlogBrandWordmarkProps) {
+export default function BlogBrandWordmark({ className = '', compact = false, label = 'BLOG' }: BlogBrandWordmarkProps) {
   return (
     <span className={`${styles.lockup} ${nunito.className} ${nunito.variable} ${compact ? styles.compact : ''} ${className}`}>
       <span className={styles.brand}>MUNJANGGUN</span>
-      <span className={styles.blog}>BLOG</span>
+      <span className={styles.blog}>{label}</span>
     </span>
   )
 }

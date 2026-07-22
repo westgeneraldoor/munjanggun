@@ -29,8 +29,8 @@
   position: absolute;
   top: 14px;
   right: 14px;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -46,58 +46,13 @@
   border-color: var(--mg-border-strong);
 }
 
-.homeLink {
-  align-self: flex-start;
-  min-height: 34px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: var(--mg-space-lg);
-  color: var(--mg-text-body);
-  font-size: var(--mg-current-label);
-  font-weight: var(--mg-font-weight-label);
-  text-decoration: none;
-}
-
-.homeLink:hover {
-  color: var(--mg-action-primary);
-}
-
-.brand {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  margin-bottom: var(--mg-space-sm);
+.wordmark {
+  margin: var(--mg-space-sm) 0 var(--mg-space-xl);
   color: var(--mg-text-primary);
 }
 
-.brandKo {
-  font-family: var(--mg-font-brand-ko);
-  font-size: 32px;
-  font-weight: 700;
-  line-height: 1.12;
-  letter-spacing: 0;
-}
-
-.brandEn {
-  color: var(--mg-action-primary);
-  font-family: var(--mg-font-latin);
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: 0;
-}
-
-.brandSub {
-  font-size: var(--mg-current-label);
-  color: var(--mg-text-muted);
-  margin-bottom: var(--mg-space-xl);
-  letter-spacing: 0;
-}
-
 .title {
-  font-family: var(--mg-font-brand-ko);
+  font-family: var(--mg-font-body);
   font-size: 22px;
   font-weight: 700;
   line-height: 1.28;

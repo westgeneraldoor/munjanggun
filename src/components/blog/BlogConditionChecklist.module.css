@@ -32,7 +32,7 @@
 
 .copy h2 {
   color: var(--blog-cocoa);
-  font-family: var(--font-blog-display);
+  font-family: var(--mg-font-body);
   font-size: var(--mg-font-size-state);
   font-weight: 850;
   line-height: 1.36;

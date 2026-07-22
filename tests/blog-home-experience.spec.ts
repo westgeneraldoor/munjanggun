@@ -42,13 +42,11 @@ test('blog home opens with a full-screen image hero and live navigation', async 
   expect(heroNavigationTone.headlineFont).toContain('Tmoney RoundWind')
 
   const displayFontSurfaces = await page.evaluate(() => [
-    '#featured-blog-title',
     '#blog-topics-title',
     '#blog-story-title',
     '#blog-story h3',
     '#blog-condition-title',
     '[data-testid="blog-condition-composer"] p[class*="sentence"]',
-    '#blog-condition-step-title',
     '[data-testid="blog-final-cta-panel"] h2',
     '#blog-footer h2',
   ].flatMap(selector => {

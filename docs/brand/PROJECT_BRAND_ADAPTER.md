@@ -81,6 +81,7 @@ central_brand_root: "C:\\Users\\hjh\\안티그래비티\\문장군_브랜드"
 - `/blog` 홈은 `data-mg-blog-experience="showroom"`으로 이미지 쇼룸 override를 명시한다.
 - `/blog/[slug]`는 같은 semantic vocabulary의 reader 기본값을 사용한다.
 - Tmoney RoundWind는 블로그의 큰 한글 display에만, Pretendard는 본문과 UI에 사용한다.
+- 디지털 영문 워드마크는 중앙 `DESIGN.md` v5.1에 따라 둥근 대문자 `MUNJANGGUN`의 Nunito 900을 유지한다. `BLOG`, `MY`는 작은 보조 라벨이며 이 예외를 일반 UI 서체로 확장하지 않는다.
 - 블로그 어댑터를 포털·무료방문실측·마이페이지·A/S·플랫폼 어드민의 자동 재설계 기준으로 확장하지 않는다.
 - `src/styles/generated/brand.css`는 생성물로만 갱신하고, 블로그 작업이 직접 수정하지 않는다.
 - `/blog` 홈의 승인된 DOM, 섹션 순서, gutter, section spacing, radius와 breakpoint geometry는 토큰 연결 작업에서 바꾸지 않는다.

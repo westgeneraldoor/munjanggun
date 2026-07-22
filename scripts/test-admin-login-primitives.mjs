@@ -12,6 +12,9 @@ assert.doesNotMatch(login, /<button\b/, 'admin login must not define a raw submi
 assert.match(login, /<PlatformStatePanel[\s\S]*?tone="error"/, 'authentication failures must use the shared assertive error state')
 assert.match(login, /autoComplete="email"/, 'email input must expose its autocomplete purpose')
 assert.match(login, /autoComplete="current-password"/, 'password input must expose its autocomplete purpose')
+assert.match(login, /try\s*\{[\s\S]*createClient\(\)[\s\S]*signInWithPassword/, 'admin login must contain Supabase client creation inside its recoverable error boundary')
+assert.match(login, /관리자 로그인을 시작할 수 없습니다/, 'missing local auth configuration must render a recoverable admin message')
+assert.match(login, /finally\s*\{[\s\S]*setLoading\(false\)/, 'admin login must always release its loading state')
 assert.doesNotMatch(styles, /height:\s*36px/, 'desktop login must not shrink the submit button below the shared minimum')
 
 console.log('admin login primitive contract passed')

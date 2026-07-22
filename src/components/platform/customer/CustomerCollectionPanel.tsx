@@ -1,13 +1,16 @@
+'use client'
+
 import Link from 'next/link'
-import { Bookmark, HelpCircle, MessageSquareText } from 'lucide-react'
-import { PlatformBadge, PlatformCard } from '@/components/platform/ui'
+import { Clock3, Heart, MessageSquareText } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import styles from './CustomerCollectionPanel.module.css'
 
 export interface CustomerBlogActivityPost {
   id: string
   post_slug: string
   post_title_snapshot: string
-  created_at: string
+  created_at?: string
+  last_viewed_at?: string
 }
 
 export interface CustomerBlogActivityQuestion {
@@ -18,104 +21,125 @@ export interface CustomerBlogActivityQuestion {
   created_at: string
 }
 
+type ActivityKey = 'likes' | 'questions' | 'recent'
+
 interface CustomerCollectionPanelProps {
-  savedPosts?: CustomerBlogActivityPost[]
-  helpfulPosts?: CustomerBlogActivityPost[]
+  likedPosts?: CustomerBlogActivityPost[]
   questions?: CustomerBlogActivityQuestion[]
+  recentViewedPosts?: CustomerBlogActivityPost[]
+  likesCount?: number
+  questionsCount?: number
+  recentViewedCount?: number
+  errorMessage?: string | null
 }
 
-function formatDate(value: string) {
+function formatDate(value: string | undefined) {
+  if (!value) return ''
+
   return new Date(value).toLocaleDateString('ko-KR', {
     month: 'short',
     day: 'numeric',
   })
 }
 
-function ActivityList({ items }: { items: CustomerBlogActivityPost[] }) {
-  if (items.length === 0) return null
-
-  return (
-    <ul className={styles.activityList}>
-      {items.slice(0, 3).map(item => (
-        <li key={item.id}>
-          <Link href={`/blog/${item.post_slug}`}>{item.post_title_snapshot}</Link>
-          <span>{formatDate(item.created_at)}</span>
-        </li>
-      ))}
-    </ul>
-  )
-}
-
-function QuestionList({ items }: { items: CustomerBlogActivityQuestion[] }) {
-  if (items.length === 0) return null
-
-  return (
-    <ul className={styles.activityList}>
-      {items.slice(0, 3).map(item => (
-        <li key={item.id}>
-          <Link href={`/blog/${item.post_slug}`}>{item.post_title_snapshot}</Link>
-          <span>{item.status === 'private' ? '비공개' : item.status}</span>
-        </li>
-      ))}
-    </ul>
-  )
+function getQuestionStatusLabel(status: string) {
+  if (status === 'approved') return '답변 완료'
+  if (status === 'rejected' || status === 'archived') return '확인 완료'
+  return '확인 중'
 }
 
 export function CustomerCollectionPanel({
-  savedPosts = [],
-  helpfulPosts = [],
+  likedPosts = [],
   questions = [],
+  recentViewedPosts = [],
+  likesCount = likedPosts.length,
+  questionsCount = questions.length,
+  recentViewedCount = recentViewedPosts.length,
+  errorMessage = null,
 }: CustomerCollectionPanelProps) {
-  const activityItems = [
+  const [selected, setSelected] = useState<ActivityKey>('likes')
+
+  const activities = useMemo(() => ([
     {
-      key: 'saved',
-      title: '저장한 글',
-      description: savedPosts.length > 0 ? '다시 확인할 글을 모아두었어요.' : '마음에 둔 글을 저장하면 여기에 모입니다.',
-      badge: `${savedPosts.length}개`,
-      Icon: Bookmark,
-      content: <ActivityList items={savedPosts} />,
+      key: 'likes' as const,
+      title: '좋아요한 글',
+      count: likesCount,
+      Icon: Heart,
+      items: likedPosts,
+      empty: '좋아요한 글이 아직 없어요.',
     },
     {
-      key: 'helpful',
-      title: '도움된 글',
-      description: helpfulPosts.length > 0 ? '도움됐다고 표시한 글입니다.' : '도움된 글을 표시하면 상담 전에 다시 보기 쉬워요.',
-      badge: `${helpfulPosts.length}개`,
-      Icon: HelpCircle,
-      content: <ActivityList items={helpfulPosts} />,
-    },
-    {
-      key: 'questions',
+      key: 'questions' as const,
       title: '내 질문',
-      description: questions.length > 0 ? '블로그 글에서 남긴 비공개 질문입니다.' : '비공개 질문을 남기면 이곳에서 다시 볼 수 있어요.',
-      badge: `${questions.length}개`,
+      count: questionsCount,
       Icon: MessageSquareText,
-      content: <QuestionList items={questions} />,
+      items: questions,
+      empty: '남긴 질문이 아직 없어요.',
     },
-  ]
+    {
+      key: 'recent' as const,
+      title: '최근 본 글',
+      count: recentViewedCount,
+      Icon: Clock3,
+      items: recentViewedPosts,
+      empty: '최근 본 글이 아직 없어요.',
+    },
+  ]), [likedPosts, likesCount, questions, questionsCount, recentViewedCount, recentViewedPosts])
+
+  const current = activities.find(activity => activity.key === selected) ?? activities[0]
 
   return (
-    <section className={styles.section} aria-label="나의 블로그 활동">
+    <section className={styles.section} aria-labelledby="portal-activity-title">
       <div className={styles.header}>
         <div>
-          <p className={styles.kicker}>블로그 활동</p>
-          <h2>나의 블로그 활동</h2>
+          <p className={styles.kicker}>나의 활동</p>
+          <h2 id="portal-activity-title">다시 확인할 내용</h2>
         </div>
-        <PlatformBadge tone="neutral">마이페이지 통합</PlatformBadge>
       </div>
-      <div className={styles.grid}>
-        {activityItems.map(({ key, title, description, badge, Icon, content }) => (
-          <PlatformCard key={key} as="article" variant="subtle" className={styles.item}>
-            <div className={styles.itemTopline}>
-              <span className={styles.iconWrap}>
-                <Icon size={20} aria-hidden="true" strokeWidth={1.8} />
-              </span>
-              <PlatformBadge tone="neutral">{badge}</PlatformBadge>
-            </div>
-            <h3>{title}</h3>
-            <p>{description}</p>
-            {content}
-          </PlatformCard>
-        ))}
+
+      <div className={styles.selector} role="group" aria-label="나의 활동 선택">
+        {activities.map(({ key, title, count, Icon }) => {
+          const isSelected = selected === key
+          return (
+            <button
+              key={key}
+              type="button"
+              className={`${styles.selectorButton} ${isSelected ? styles.selected : ''}`}
+              aria-pressed={isSelected}
+              onClick={() => setSelected(key)}
+            >
+              <Icon size={20} aria-hidden="true" strokeWidth={1.8} />
+              <span>{title}</span>
+              <strong>{count}</strong>
+            </button>
+          )
+        })}
+      </div>
+
+      <div className={styles.listPanel} aria-live="polite">
+        <div className={styles.listHeader}>
+          <h3>{current.title}</h3>
+          <span>{current.count}개</span>
+        </div>
+
+        {errorMessage ? (
+          <p className={styles.errorState} role="alert">{errorMessage}</p>
+        ) : current.items.length === 0 ? (
+          <p className={styles.emptyState}>{current.empty}</p>
+        ) : (
+          <ul className={styles.activityList}>
+            {current.items.map(item => (
+              <li key={item.id}>
+                <Link href={`/blog/${item.post_slug}`}>{item.post_title_snapshot}</Link>
+                <span>
+                  {'status' in item
+                    ? getQuestionStatusLabel(item.status)
+                    : formatDate(item.last_viewed_at ?? item.created_at)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
   )

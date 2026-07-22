@@ -16,25 +16,8 @@
 .brand {
   color: var(--mg-text-primary);
   display: inline-flex;
-  flex-direction: column;
-  gap: 1px;
-  font-weight: var(--mg-font-weight-label);
-  letter-spacing: 0;
-  line-height: 1.05;
+  align-items: center;
   text-decoration: none;
-}
-
-.brandKo {
-  font-family: var(--mg-font-brand-ko);
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.brandEn {
-  color: var(--mg-text-muted);
-  font-family: var(--mg-font-latin);
-  font-size: 10px;
-  font-weight: 750;
 }
 
 .topActions {
@@ -43,8 +26,7 @@
   gap: var(--mg-space-xs);
 }
 
-.topLink,
-.iconLink {
+.topLink {
   min-height: var(--mg-button-height-sm);
   display: inline-flex;
   align-items: center;
@@ -69,32 +51,24 @@
   padding: 0 12px 0 9px;
 }
 
-.iconLink {
-  width: var(--mg-button-height-sm);
-}
-
 .brand:hover,
-.topLink:hover,
-.iconLink:hover {
+.topLink:hover {
   color: var(--mg-text-primary);
 }
 
-.topLink:hover,
-.iconLink:hover {
+.topLink:hover {
   background: var(--mg-action-secondary-hover);
   border-color: var(--mg-border-strong);
 }
 
-.topLink:active,
-.iconLink:active {
+.topLink:active {
   transform: translateY(1px);
   background: color-mix(in srgb, var(--mg-action-secondary-hover) 76%, var(--mg-border-subtle));
   border-color: var(--mg-action-primary);
 }
 
 .brand:focus-visible,
-.topLink:focus-visible,
-.iconLink:focus-visible {
+.topLink:focus-visible {
   outline: 2px solid var(--mg-focus-ring);
   outline-offset: 3px;
 }
@@ -112,9 +86,5 @@
   .topLink {
     min-width: 0;
     padding: 0 10px 0 8px;
-  }
-
-  .brandKo {
-    font-size: 17px;
   }
 }

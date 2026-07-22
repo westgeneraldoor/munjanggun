@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { PlatformButton } from '@/components/platform/ui/PlatformButton'
 import { PlatformField } from '@/components/platform/ui/PlatformField'
 import { PlatformStatePanel } from '@/components/platform/ui/PlatformStatePanel'
+import { logError } from '@/lib/logger'
 import styles from './login.module.css'
 
 export default function AdminLogin() {
@@ -19,19 +20,25 @@ export default function AdminLogin() {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    const supabase = createClient()
+    try {
+      const supabase = createClient()
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+      if (loginError) {
+        setError('이메일 또는 비밀번호가 올바르지 않습니다')
+        return
+      }
 
-    if (error) {
-      setError('이메일 또는 비밀번호가 올바르지 않습니다')
-      setLoading(false)
-    } else {
-      router.push('/admin/nodes')
+      router.push('/admin/platform')
       router.refresh()
+    } catch (unexpectedError) {
+      logError('Admin login unexpected error', unexpectedError)
+      setError('관리자 로그인을 시작할 수 없습니다. 환경 설정을 확인해 주세요.')
+    } finally {
+      setLoading(false)
     }
   }
 
