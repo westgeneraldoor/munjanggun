@@ -34,6 +34,14 @@ const HIDDEN_PATH_PREFIXES = [
 
 const hasSupabasePublicEnv = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
+function normalizeDisplayName(value: string | null | undefined, role: ProfileRole) {
+  const trimmed = value?.trim()
+  if (!trimmed || /^[?\s]+$/.test(trimmed) || trimmed.includes('�')) {
+    return role === 'administrator' ? '문장군 관리자' : '문장군 고객'
+  }
+  return trimmed
+}
+
 export default function PublicUserMenu({
   variant = 'floating',
   tone = 'dark',
@@ -104,10 +112,14 @@ export default function PublicUserMenu({
         } | null
 
         if (mounted) {
+          const role = dbProfile?.role || 'customer'
           setProfile({
             email: dbProfile?.email || user.email || null,
-            displayName: dbProfile?.display_name || user.user_metadata?.full_name || user.user_metadata?.name || '마이페이지',
-            role: dbProfile?.role || 'customer',
+            displayName: normalizeDisplayName(
+              dbProfile?.display_name || user.user_metadata?.full_name || user.user_metadata?.name,
+              role,
+            ),
+            role,
           })
         }
       } catch (err) {

@@ -61,5 +61,15 @@ assert.match(wordmark, />MUNJANGGUN<\//, 'the approved wordmark must remain uppe
 assert.match(wordmarkCss, /font-family:\s*var\(--mg-blog-wordmark-loaded\)/, 'the approved wordmark font must override ordinary UI typography')
 assert.match(publicUserMenu, /useState\(hasSupabasePublicEnv\)/, 'missing local auth config must not hide the login navigation forever')
 assert.doesNotMatch(publicUserMenu, /isHidden \|\| loading \|\| !hasSupabasePublicEnv/, 'login navigation must remain visible when auth config is unavailable')
+assert.match(
+  publicUserMenu,
+  /function normalizeDisplayName\([\s\S]*?\^\[\?\\s\]\+\$[\s\S]*?문장군 관리자[\s\S]*?문장군 고객/,
+  'the public account menu must replace corrupted legacy display names with a role-appropriate Korean label',
+)
+assert.match(
+  publicUserMenu,
+  /displayName: normalizeDisplayName\(/,
+  'the public account menu must normalize the profile name before rendering it',
+)
 
 console.log('customer portal simplification contracts passed')
