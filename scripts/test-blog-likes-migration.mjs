@@ -9,7 +9,7 @@ const migration = await readFile(
   'utf8',
 )
 const recentViewsPostIndexMigration = await readFile(
-  path.join(projectRoot, 'supabase/migrations/20260722052726_blog_article_recent_views_post_index.sql'),
+  path.join(projectRoot, 'supabase/migrations/20260722054258_blog_article_recent_views_post_index.sql'),
   'utf8',
 )
 const readerRoute = await readFile(
