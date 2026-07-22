@@ -7,6 +7,15 @@ import { centralBrandPublicationBlocker } from '@/lib/content-assets/official-br
 import { validateBlogClaimSafety } from '@/lib/content-os/blog-claim-safety'
 import { hasCoverOrRecordedMediaException } from '@/lib/content-os/blog-media-policy'
 import { prepareBlogMediaForPublication } from '@/lib/content-os/blog-media-publication.mjs'
+import {
+  normalizeChecklistBlock,
+  normalizeGuideBoxBlock,
+  normalizeLinkButtonBlock,
+  normalizePlaceBlock,
+  normalizeQuizBlock,
+  normalizeQuoteBlock,
+  normalizeVideoBlock,
+} from '@/lib/content-os/blog-body-blocks'
 import { createPlatformAdminClient, createPlatformClient } from '@/lib/supabase/platform-server'
 import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
 import type { BlogBlockType, BlogContentCategory, BlogMediaUsageStatus, BlogPostStatus, Database, Json } from '@/types/database'
@@ -158,7 +167,12 @@ function hasForbiddenExpression(value: Json) {
 }
 
 function isExpansionBlockType(type: BlogBlockType) {
-  return type === 'link_button' || type === 'guide_box'
+  return type === 'quote'
+    || type === 'video'
+    || type === 'related_post'
+    || type === 'place'
+    || type === 'quiz'
+    || type === 'checklist'
 }
 
 function blockTextSegments(blocks: BlogBlock[]) {
@@ -250,7 +264,7 @@ function validatePayload(payload: SaveBlogEditorPayload) {
 
   for (const block of payload.blocks) {
     if (isExpansionBlockType(block.type) && !BLOG_BODY_BLOCK_EXPANSION_ENABLED) {
-      return '링크 버튼과 안내 박스는 DB 마이그레이션 적용 후 사용할 수 있습니다.'
+      return '새 확장 블록은 DB 마이그레이션 적용 후 사용할 수 있습니다.'
     }
 
     if (block.type === 'image' && !block.mediaId) {
@@ -264,6 +278,17 @@ function validatePayload(payload: SaveBlogEditorPayload) {
         return '비어 있는 본문 카드가 있습니다.'
       }
     }
+  }
+
+  for (const block of payload.blocks) {
+    const input = { text: block.text, metadata: block.metadata }
+    if (block.type === 'link_button' && !normalizeLinkButtonBlock(input)) return '링크 버튼은 공개 가능한 내부 링크와 버튼 문구가 필요합니다.'
+    if (block.type === 'guide_box' && !normalizeGuideBoxBlock(input)) return '안내 박스의 본문을 입력해 주세요.'
+    if (block.type === 'quote' && !normalizeQuoteBlock(input)) return '인용문을 입력해 주세요. 출처 URL은 https 주소만 사용할 수 있습니다.'
+    if (block.type === 'video' && !normalizeVideoBlock(input)) return '영상 블록은 유효한 YouTube URL만 사용할 수 있습니다.'
+    if (block.type === 'place' && !normalizePlaceBlock(input)) return '장소 블록은 Kakao, Naver, Google 지도 링크와 장소명이 필요합니다.'
+    if (block.type === 'quiz' && !normalizeQuizBlock(input)) return '퀴즈에는 질문과 정답이 모두 필요합니다.'
+    if (block.type === 'checklist' && !normalizeChecklistBlock(input)) return '체크리스트 항목을 한 줄에 하나씩 입력해 주세요.'
   }
 
   return null
@@ -365,14 +390,14 @@ function revalidateBlogEditorPaths(postId: string, slugs: Array<string | null | 
 
 function isAllowedManualStatusTransition(fromStatus: BlogPostStatus, toStatus: BlogPostStatus) {
   if (toStatus === 'published') return false
-  if (fromStatus === 'published') return false
+  if (toStatus === 'archived') return fromStatus !== 'archived'
 
   const allowed: Record<BlogPostStatus, BlogPostStatus[]> = {
     ai_draft: ['reviewing'],
     reviewing: ['needs_media', 'ready'],
     needs_media: ['reviewing', 'ready'],
     ready: ['reviewing', 'needs_media'],
-    published: [],
+    published: ['archived'],
     archived: ['reviewing'],
   }
 
@@ -395,6 +420,25 @@ function toAttachedMedia(
     approvedAt: media.approved_at,
     createdAt: media.created_at,
   }
+}
+
+async function validateRelatedPostBlocks(
+  showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
+  blocks: SaveableBlock[],
+) {
+  const relatedBlocks = blocks.filter(block => block.type === 'related_post')
+  const ids = [...new Set(relatedBlocks
+    .map(block => cleanText(block.metadata.related_post_id))
+    .filter((id): id is string => Boolean(id)))]
+  if (relatedBlocks.length !== ids.length) return '관련 글은 발행된 글을 선택해야 합니다.'
+  if (ids.length === 0) return null
+  const { data, error } = await showroomAdmin
+    .from('blog_posts')
+    .select('id')
+    .in('id', ids)
+    .eq('status', 'published')
+  if (error || (data ?? []).length !== ids.length) return '관련 글은 현재 발행 중인 글만 연결할 수 있습니다.'
+  return null
 }
 
 async function validateImageMediaOwnership(
@@ -443,6 +487,8 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
     }
 
     const showroomAdmin = createShowroomAdminClient()
+    const relatedPostError = await validateRelatedPostBlocks(showroomAdmin, payload.blocks)
+    if (relatedPostError) return { ok: false, message: relatedPostError }
     const { data: currentPostData, error: currentPostError } = await showroomAdmin
       .from('blog_posts')
       .select('id, status, slug')
@@ -1433,7 +1479,7 @@ export async function updateBlogPostStatus(
       return { ok: false, message: '상태 변경 기록을 남기지 못했습니다.' }
     }
 
-    revalidateBlogEditorPaths(post.id, [post.slug], false)
+    revalidateBlogEditorPaths(post.id, [post.slug], true)
 
     return {
       ok: true,

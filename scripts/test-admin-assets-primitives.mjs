@@ -3,6 +3,9 @@ import { readFile } from 'node:fs/promises'
 
 const client = await readFile(new URL('../src/app/admin/platform/assets/ContentAssetsClient.tsx', import.meta.url), 'utf8')
 const styles = await readFile(new URL('../src/app/admin/platform/assets/assets.module.css', import.meta.url), 'utf8')
+const actions = await readFile(new URL('../src/app/admin/platform/assets/actions.ts', import.meta.url), 'utf8')
+const previewRoute = await readFile(new URL('../src/app/admin/platform/assets/[assetId]/preview/route.ts', import.meta.url), 'utf8')
+const archiveMigration = await readFile(new URL('../supabase/migrations/20260722090100_content_asset_recoverable_archive.sql', import.meta.url), 'utf8')
 
 for (const primitive of [
   'PlatformButton',
@@ -33,5 +36,26 @@ assert.match(client, /autoFocus onClick=\{onClose\}/, 'mobile detail must receiv
 assert.match(client, /requestAnimationFrame\(\(\) => returnTarget\?\.focus\(\)\)/, 'closing mobile detail must restore card focus')
 assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/, 'asset route animation must respect reduced motion')
 assert.match(styles, /content-visibility:\s*auto/, 'large asset collections should skip off-screen rendering work')
+assert.match(client, /현재 필터 결과 전체 선택/, 'current filter results must support accessible bulk selection')
+assert.match(client, /사용처 확인 후 보관/, 'archive confirmation must state the server-side reference check')
+assert.match(client, /사용처 보기/, 'blocked archive results must provide a usage-view action')
+assert.match(client, /사진 보관함으로 복원/, 'archived assets must have a restore path')
+assert.match(client, /안전한 미리보기를 불러오지 못했습니다/, 'broken image states must explain recovery')
+assert.match(actions, /archive_content_assets_safely/, 'archive actions must use the atomic server RPC')
+const archiveActionSlice = actions.slice(actions.indexOf('export async function archiveContentAssets'))
+assert.doesNotMatch(archiveActionSlice, /storage\.from\([^\n]+\)\.remove/, 'archive actions must never remove storage objects')
+assert.match(previewRoute, /createPlatformClient/, 'preview route must authenticate through platform cookies')
+assert.match(previewRoute, /profile\?\.role !== 'administrator'/, 'preview route must require administrator role')
+assert.match(previewRoute, /export async function HEAD/, 'image recovery probe must use the same authenticated opaque route')
+assert.match(previewRoute, /private, no-store, max-age=0/, 'preview route must not permit shared caching')
+assert.doesNotMatch(previewRoute, /createSignedUrl/, 'preview route must stream opaque bytes rather than leak signed storage URLs')
+assert.match(archiveMigration, /FOR UPDATE/, 'archive RPC must lock rows before rechecking references')
+assert.match(archiveMigration, /FOR KEY SHARE/, 'new references must serialize against the archive row lock')
+assert.match(archiveMigration, /reject_archived_content_asset_blog_media_reference/, 'blog media inserts must reject archived assets at the database boundary')
+assert.match(archiveMigration, /reject_archived_content_asset_usage_reference/, 'usage-ledger writes must reject archived assets at the database boundary')
+assert.match(archiveMigration, /showroom\.blog_media/, 'archive RPC must inspect direct blog media references')
+assert.match(archiveMigration, /showroom\.blog_blocks/, 'archive RPC must inspect body block references')
+assert.match(archiveMigration, /showroom\.content_asset_usages/, 'archive RPC must inspect the asset usage ledger')
+assert.doesNotMatch(archiveMigration, /DELETE\s+FROM\s+(?:storage\.|showroom\.content_assets)/i, 'archive migration must remain recoverable and never delete assets')
 
 console.log('admin assets primitive contract passed')

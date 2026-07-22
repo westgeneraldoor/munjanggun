@@ -62,6 +62,26 @@ export type ContentAssetActionResult = {
   message: string
 }
 
+export type ContentAssetReference = {
+  postId: string | null
+  postTitle: string
+  status: string
+  location: 'cover' | 'body' | 'blog_media' | string
+}
+
+export type ArchiveContentAssetItemResult = {
+  assetId: string
+  changed: boolean
+  reason: string
+  references: ContentAssetReference[]
+}
+
+export type ArchiveContentAssetsResult = {
+  ok: boolean
+  message: string
+  results: ArchiveContentAssetItemResult[]
+}
+
 function cleanText(value: FormDataEntryValue | string | null | undefined) {
   const text = typeof value === 'string' ? value.trim() : ''
   return text.length > 0 ? text : null
@@ -525,5 +545,76 @@ export async function updateContentAsset(payload: UpdateContentAssetPayload): Pr
       ok: false,
       message: error instanceof Error ? error.message : '저장 중 오류가 발생했습니다.',
     }
+  }
+}
+
+function isArchiveResult(value: unknown): value is ArchiveContentAssetItemResult {
+  if (!value || typeof value !== 'object') return false
+  const item = value as Record<string, unknown>
+  return typeof item.assetId === 'string'
+    && typeof item.changed === 'boolean'
+    && typeof item.reason === 'string'
+    && Array.isArray(item.references)
+}
+
+/**
+ * The generated database types intentionally lag unapplied migrations. Keep the
+ * service-role RPC boundary explicit here instead of exposing any storage operation
+ * or falling back to client-side `used_count` checks.
+ */
+async function invokeArchiveRpc(assetIds: string[], actorId: string, restore: boolean) {
+  const showroom = createShowroomAdminClient() as unknown as {
+    rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>
+  }
+  return showroom.rpc('archive_content_assets_safely', {
+    p_asset_ids: assetIds,
+    p_actor_id: actorId,
+    p_restore: restore,
+  })
+}
+
+export async function archiveContentAssets(assetIds: string[]): Promise<ArchiveContentAssetsResult> {
+  try {
+    const actorId = await requireAdministrator()
+    const ids = [...new Set(assetIds.filter(value => /^[0-9a-f]{8}-[0-9a-f-]{35}$/i.test(value)))].slice(0, 300)
+    if (ids.length === 0) return { ok: false, message: '보관할 사진을 선택해 주세요.', results: [] }
+
+    const { data, error } = await invokeArchiveRpc(ids, actorId, false)
+    if (error) return { ok: false, message: '사진 보관 여부를 확인하지 못했습니다.', results: [] }
+    const rawResults = (data as { results?: unknown } | null)?.results
+    const results = Array.isArray(rawResults) ? rawResults.filter(isArchiveResult) : []
+    if (results.length !== ids.length) return { ok: false, message: '사진 보관 결과를 안전하게 확인하지 못했습니다.', results: [] }
+
+    revalidatePath('/admin/platform/assets')
+    const archived = results.filter(item => item.changed).length
+    const blocked = results.filter(item => item.reason === 'in_use').length
+    return {
+      ok: true,
+      message: blocked > 0
+        ? `${archived}장을 보관했습니다. ${blocked}장은 사용 중이라 보관하지 않았습니다.`
+        : `${archived}장을 보관했습니다. 사진 파일은 삭제하지 않았습니다.`,
+      results,
+    }
+  } catch {
+    return { ok: false, message: '사진 보관 중 오류가 발생했습니다. 다시 시도해 주세요.', results: [] }
+  }
+}
+
+export async function restoreContentAssets(assetIds: string[]): Promise<ArchiveContentAssetsResult> {
+  try {
+    const actorId = await requireAdministrator()
+    const ids = [...new Set(assetIds.filter(value => /^[0-9a-f]{8}-[0-9a-f-]{35}$/i.test(value)))].slice(0, 300)
+    if (ids.length === 0) return { ok: false, message: '복원할 사진을 선택해 주세요.', results: [] }
+
+    const { data, error } = await invokeArchiveRpc(ids, actorId, true)
+    if (error) return { ok: false, message: '사진을 복원하지 못했습니다.', results: [] }
+    const rawResults = (data as { results?: unknown } | null)?.results
+    const results = Array.isArray(rawResults) ? rawResults.filter(isArchiveResult) : []
+    if (results.length !== ids.length) return { ok: false, message: '사진 복원 결과를 안전하게 확인하지 못했습니다.', results: [] }
+
+    revalidatePath('/admin/platform/assets')
+    return { ok: true, message: `${results.filter(item => item.changed).length}장을 복원했습니다.`, results }
+  } catch {
+    return { ok: false, message: '사진 복원 중 오류가 발생했습니다. 다시 시도해 주세요.', results: [] }
   }
 }

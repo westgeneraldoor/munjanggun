@@ -350,7 +350,7 @@ assert.match(editor, /ai_draft: '초안'/)
 assert.match(editorActions, /ai_draft: \['reviewing'\]/)
 
 assert.match(queue, /<Link[\s\S]*?href=\{`\/admin\/platform\/blog\/\$\{row\.id\}`\}[\s\S]*?에디터 열기/)
-assert.doesNotMatch(queue, /<tr[\s\S]*?onClick=/)
+assert.doesNotMatch(queue, /<tr[^>]*\bonClick=/, 'queue rows themselves must not change state on click')
 assert.match(queue, /블로그 콘텐츠 큐/)
 assert.match(queue, /href="\/admin\/platform\/blog\/new"/)
 assert.match(queue, /승인 원고 등록/)

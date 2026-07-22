@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition, type ChangeEvent, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import {
+  AlertTriangle,
   CheckCircle2,
   ImageIcon,
   Images,
@@ -17,6 +18,7 @@ import {
   PlatformCheckbox,
   PlatformField,
   PlatformIconButton,
+  PlatformModal,
   PlatformPageHeader,
   PlatformPanel,
   PlatformSegmentedControl,
@@ -24,7 +26,15 @@ import {
   PlatformStatePanel,
   PlatformStatusBadge,
 } from '@/components/platform/ui'
-import { updateContentAsset, uploadContentAssets, type UploadContentAssetsResult } from './actions'
+import {
+  archiveContentAssets,
+  restoreContentAssets,
+  updateContentAsset,
+  uploadContentAssets,
+  type ArchiveContentAssetsResult,
+  type ContentAssetReference,
+  type UploadContentAssetsResult,
+} from './actions'
 import styles from './assets.module.css'
 
 type AssetFileSummary = {
@@ -37,6 +47,7 @@ type AssetFileSummary = {
 
 export type ContentAssetLibraryItem = {
   id: string
+  libraryState: 'available' | 'hidden' | 'archived'
   title: string | null
   description: string | null
   category: string | null
@@ -53,6 +64,8 @@ export type ContentAssetLibraryItem = {
   thumbnail: AssetFileSummary
   web: AssetFileSummary
 }
+
+type LibraryView = 'active' | 'archived'
 
 export type ContentAssetTagOption = {
   id: string
@@ -392,22 +405,129 @@ function UploadPanel() {
 
 function AssetThumbnail({ item }: { item: ContentAssetLibraryItem }) {
   const image = item.thumbnail?.url ?? item.web?.url
+  const [failed, setFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
+  const [failureReason, setFailureReason] = useState('네트워크 또는 브라우저에서 미리보기를 열지 못했습니다.')
 
-  if (!image) {
+  async function explainImageFailure() {
+    if (!image) return
+    try {
+      const response = await fetch(image, { method: 'HEAD', cache: 'no-store', credentials: 'same-origin' })
+      if (response.status === 401 || response.status === 403) setFailureReason('관리자 인증 또는 권한을 다시 확인해 주세요.')
+      else if (response.status === 404) setFailureReason('안전한 미리보기 파일을 찾지 못했습니다. 변환 상태를 확인해 주세요.')
+      else if (response.status >= 500) setFailureReason('미리보기 서버가 일시적으로 응답하지 않습니다.')
+      else setFailureReason('브라우저가 미리보기 응답을 표시하지 못했습니다.')
+    } catch {
+      setFailureReason('네트워크 연결을 확인한 뒤 다시 시도해 주세요.')
+    }
+  }
+
+  if (!image || (!item.thumbnail?.ready && !item.web?.ready)) {
     return (
-      <div className={styles.thumbPlaceholder}>
+      <div className={styles.thumbPlaceholder} role="status">
         <ImageIcon aria-hidden="true" size={28} />
+        <span>미리보기 준비 중</span>
+      </div>
+    )
+  }
+
+  if (failed) {
+    return (
+      <div className={styles.previewFailure} role="status">
+        <AlertTriangle aria-hidden="true" size={20} />
+        <span>안전한 미리보기를 불러오지 못했습니다.</span>
+        <small>{failureReason}</small>
+        <PlatformButton type="button" variant="secondary" size="sm" onClick={() => { setFailed(false); setAttempt(value => value + 1); setFailureReason('다시 미리보기를 요청하고 있습니다.') }}>다시 시도</PlatformButton>
       </div>
     )
   }
 
   return (
     <img
-      src={image}
+      src={`${image}${image.includes('?') ? '&' : '?'}retry=${attempt}`}
       alt={item.title || item.description || '보관함 사진'}
       loading="lazy"
       className={styles.thumbImage}
+      onError={() => { setFailed(true); void explainImageFailure() }}
     />
+  )
+}
+
+function referenceStatus(status: string) {
+  const labels: Record<string, string> = { draft: '초안', reviewing: '검토', approved: '승인', published: '발행', archived: '보관', linked: '연결됨' }
+  return labels[status] ?? status
+}
+
+function referenceLocation(location: string) {
+  const labels: Record<string, string> = { cover: '대표사진', body: '본문', blog_media: '연결된 사진' }
+  return labels[location] ?? location
+}
+
+function ArchiveDialog({
+  items,
+  restore,
+  onClose,
+  onComplete,
+}: {
+  items: ContentAssetLibraryItem[]
+  restore: boolean
+  onClose: () => void
+  onComplete: (result: ArchiveContentAssetsResult) => void
+}) {
+  const [result, setResult] = useState<ArchiveContentAssetsResult | null>(null)
+  const [isPending, startTransition] = useTransition()
+  const blocked = result?.results.filter(item => item.reason === 'in_use') ?? []
+  const changed = result?.results.filter(item => item.changed) ?? []
+
+  function submit() {
+    startTransition(async () => {
+      const next = restore
+        ? await restoreContentAssets(items.map(item => item.id))
+        : await archiveContentAssets(items.map(item => item.id))
+      setResult(next)
+      onComplete(next)
+    })
+  }
+
+  return (
+    <PlatformModal isOpen title={restore ? '사진 복원' : '사진 보관'} onClose={onClose} closeDisabled={isPending}>
+      <PlatformPanel as="section" className={styles.archiveDialog}>
+        <h2 id="asset-archive-title">{restore ? '사진 보관함에서 복원' : '사진 보관함으로 이동'}</h2>
+        {!result ? (
+          <>
+            <p>{restore ? `${items.length}장을 다시 사진보관함에 표시합니다.` : `${items.length}장의 사용처를 서버에서 다시 확인합니다. 사용 중인 사진은 보관하지 않으며, 사진 파일은 삭제하지 않습니다.`}</p>
+            <div className={styles.dialogActions}>
+              <PlatformButton type="button" variant="secondary" onClick={onClose} disabled={isPending}>취소</PlatformButton>
+              <PlatformButton type="button" variant={restore ? 'primary' : 'danger'} onClick={submit} isLoading={isPending} loadingLabel="확인 중…">{restore ? '복원' : '사용처 확인 후 보관'}</PlatformButton>
+            </div>
+          </>
+        ) : (
+          <>
+            <p role="status" aria-live="polite">{result.message}</p>
+            {changed.length > 0 ? <p className={styles.resultSuccess}>{changed.length}장은 안전하게 처리했습니다.</p> : null}
+            {blocked.length > 0 ? (
+              <section id="asset-usage-results" tabIndex={-1} className={styles.blockedReferences} aria-label="사용 중인 사진">
+                <h3>사용 중인 사진은 보관할 수 없습니다</h3>
+                {blocked.map(item => {
+                  const asset = items.find(candidate => candidate.id === item.assetId)
+                  return (
+                    <div key={item.assetId} className={styles.blockedReference}>
+                      <strong>{asset ? displayAssetTitle(asset) : '사진'}</strong>
+                      <ul>{item.references.map((reference: ContentAssetReference, index) => <li key={`${reference.postId ?? 'linked'}-${reference.location}-${index}`}>{reference.postTitle} · {referenceStatus(reference.status)} · {referenceLocation(reference.location)}</li>)}</ul>
+                    </div>
+                  )
+                })}
+                <p>사용처를 확인해 연결을 해제한 뒤 다시 시도해 주세요.</p>
+              </section>
+            ) : null}
+            <div className={styles.dialogActions}>
+              {blocked.length > 0 ? <PlatformButton type="button" variant="secondary" onClick={() => document.getElementById('asset-usage-results')?.focus()}>사용처 보기</PlatformButton> : null}
+              <PlatformButton type="button" onClick={onClose}>{blocked.length > 0 ? '취소' : '확인'}</PlatformButton>
+            </div>
+          </>
+        )}
+      </PlatformPanel>
+    </PlatformModal>
   )
 }
 
@@ -415,16 +535,17 @@ function AssetDetailPanel({
   item,
   mode,
   onClose,
+  onRequestLifecycle,
 }: {
   item: ContentAssetLibraryItem
   mode: 'desktop' | 'mobile'
   onClose?: () => void
+  onRequestLifecycle: (item: ContentAssetLibraryItem) => void
 }) {
   const router = useRouter()
   const [form, setForm] = useState<DetailForm>(() => itemToForm(item))
   const [feedback, setFeedback] = useState<{ ok: boolean; message: string } | null>(null)
   const [isPending, startTransition] = useTransition()
-  const image = item.web?.url ?? item.thumbnail?.url
 
   function setField<K extends keyof DetailForm>(key: K, value: DetailForm[K]) {
     setForm(current => ({ ...current, [key]: value }))
@@ -473,13 +594,7 @@ function AssetDetailPanel({
       ) : null}
 
       <div className={styles.detailPreview}>
-        {image ? (
-          <img src={image} alt={item.title || item.description || '선택한 사진'} />
-        ) : (
-          <div className={styles.thumbPlaceholder}>
-            <Images aria-hidden="true" size={30} />
-          </div>
-        )}
+        <AssetThumbnail item={item} />
       </div>
 
       <div className={styles.detailMeta}>
@@ -510,6 +625,9 @@ function AssetDetailPanel({
         </details>
 
         <PlatformButton type="submit" isLoading={isPending} loadingLabel="저장 중…">저장</PlatformButton>
+        <PlatformButton type="button" variant={item.libraryState === 'archived' ? 'primary' : 'danger'} onClick={() => onRequestLifecycle(item)}>
+          {item.libraryState === 'archived' ? '사진 보관함으로 복원' : '사진 보관함으로 이동'}
+        </PlatformButton>
         {feedback ? (
           <p className={styles.saveMessage} role="status" aria-live="polite" data-tone={feedback.ok ? 'success' : 'error'}>
             {feedback.message}
@@ -529,6 +647,7 @@ export default function ContentAssetsClient({
   tagOptions: ContentAssetTagOption[]
   loadError: string | null
 }) {
+  const router = useRouter()
   const [uploadOpen, setUploadOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [filters, setFilters] = useState<Record<FilterKey, string>>({
@@ -539,19 +658,24 @@ export default function ContentAssetsClient({
     usagePurpose: '',
   })
   const [tagFilter, setTagFilter] = useState('')
+  const [libraryView, setLibraryView] = useState<LibraryView>('active')
+  const [selectedForAction, setSelectedForAction] = useState<Set<string>>(() => new Set())
+  const [lifecycleItems, setLifecycleItems] = useState<ContentAssetLibraryItem[] | null>(null)
+  const [lifecycleResult, setLifecycleResult] = useState<ArchiveContentAssetsResult | null>(null)
   const [selectedId, setSelectedId] = useState('')
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
   const returnFocusRef = useRef<HTMLButtonElement | null>(null)
 
   const filteredItems = useMemo(() => {
     return initialItems.filter(item => {
+      if (libraryView === 'archived' ? item.libraryState !== 'archived' : item.libraryState === 'archived') return false
       if (!includesSearch(item, search.trim())) return false
       if (tagFilter && !item.tags.includes(tagFilter)) return false
       return (Object.entries(filters) as Array<[FilterKey, string]>).every(([key, value]) => {
         return !value || item[key] === value
       })
     }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  }, [filters, initialItems, search, tagFilter])
+  }, [filters, initialItems, libraryView, search, tagFilter])
 
   const selectedItem = selectedId
     ? filteredItems.find(item => item.id === selectedId) ?? null
@@ -579,6 +703,38 @@ export default function ContentAssetsClient({
     window.requestAnimationFrame(() => returnTarget?.focus())
   }
 
+  function toggleActionSelection(id: string) {
+    setSelectedForAction(current => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function selectFiltered() {
+    setSelectedForAction(new Set(filteredItems.map(item => item.id)))
+  }
+
+  function requestLifecycle(items: ContentAssetLibraryItem[]) {
+    if (items.length > 0) setLifecycleItems(items)
+  }
+
+  function completeLifecycle(result: ArchiveContentAssetsResult) {
+    setLifecycleResult(result)
+    if (result.ok) {
+      setSelectedForAction(current => {
+        const next = new Set(current)
+        result.results.filter(item => item.changed).forEach(item => next.delete(item.assetId))
+        return next
+      })
+      if (result.results.some(item => item.changed && item.assetId === selectedId)) closeDetail()
+      router.refresh()
+    }
+  }
+
+  const actionItems = filteredItems.filter(item => selectedForAction.has(item.id))
+
   return (
     <div className={styles.page}>
       <PlatformPageHeader
@@ -600,6 +756,12 @@ export default function ContentAssetsClient({
       ) : null}
 
       <PlatformPanel as="section" className={styles.toolbar} aria-label="사진 검색과 필터">
+        <PlatformSegmentedControl
+          label="사진 보관함 보기"
+          value={libraryView}
+          onChange={value => { setLibraryView(value); setSelectedForAction(new Set()); closeDetail() }}
+          items={[{ value: 'active', label: '사진보관함' }, { value: 'archived', label: '보관된 사진' }]}
+        />
         <PlatformField
           type="search"
           label="사진 검색"
@@ -640,7 +802,7 @@ export default function ContentAssetsClient({
 
       {mobileDetailOpen && selectedItem ? (
         <div className={styles.mobileDetail}>
-          <AssetDetailPanel key={`mobile-${selectedItem.id}`} item={selectedItem} mode="mobile" onClose={closeDetail} />
+          <AssetDetailPanel key={`mobile-${selectedItem.id}`} item={selectedItem} mode="mobile" onClose={closeDetail} onRequestLifecycle={item => requestLifecycle([item])} />
         </div>
       ) : null}
 
@@ -648,8 +810,16 @@ export default function ContentAssetsClient({
         <section className={styles.libraryList} aria-label="사진 목록">
           <div className={styles.listSummary}>
             <strong>{filteredItems.length}장</strong>
-            <span>최근 업로드 순</span>
+            <span>{libraryView === 'archived' ? '복원할 수 있는 보관함' : '최근 업로드 순'}</span>
           </div>
+
+          {filteredItems.length > 0 ? (
+            <div className={styles.selectionControls}>
+              <PlatformButton type="button" variant="secondary" size="sm" onClick={selectFiltered}>현재 필터 결과 전체 선택</PlatformButton>
+              <PlatformButton type="button" variant="ghost" size="sm" onClick={() => setSelectedForAction(new Set())} disabled={selectedForAction.size === 0}>선택 해제</PlatformButton>
+              <span role="status" aria-live="polite">{actionItems.length}장 선택</span>
+            </div>
+          ) : null}
 
           {filteredItems.length === 0 && !loadError ? (
             <PlatformStatePanel
@@ -663,22 +833,26 @@ export default function ContentAssetsClient({
               {filteredItems.map((item, index) => {
                 const isSelected = selectedItem?.id === item.id
                 return (
-                  <button
-                    type="button"
+                  <article
                     key={item.id}
                     className={`${styles.assetCard} ${isSelected ? styles.assetCardSelected : ''}`}
-                    onClick={event => chooseItem(item.id, event.currentTarget)}
-                    aria-pressed={isSelected}
                   >
                     <div className={styles.cardThumb}>
                       <AssetThumbnail item={item} />
                     </div>
                     <div className={styles.cardBody}>
+                      <PlatformCheckbox
+                        checked={selectedForAction.has(item.id)}
+                        onChange={() => toggleActionSelection(item.id)}
+                      >
+                        {displayAssetTitle(item, index)} 선택
+                      </PlatformCheckbox>
                       <strong>{displayAssetTitle(item, index)}</strong>
                       <span>{item.description || '설명을 추가해 주세요.'}</span>
                       <time dateTime={item.createdAt}>{formatDateTime(item.createdAt)}</time>
+                      <PlatformButton type="button" variant="secondary" size="sm" onClick={event => chooseItem(item.id, event.currentTarget)} aria-pressed={isSelected}>상세 보기</PlatformButton>
                     </div>
-                  </button>
+                  </article>
                 )
               })}
             </div>
@@ -687,10 +861,20 @@ export default function ContentAssetsClient({
 
         {selectedItem ? (
           <div className={styles.desktopDetail}>
-            <AssetDetailPanel key={`desktop-${selectedItem.id}`} item={selectedItem} mode="desktop" onClose={closeDetail} />
+            <AssetDetailPanel key={`desktop-${selectedItem.id}`} item={selectedItem} mode="desktop" onClose={closeDetail} onRequestLifecycle={item => requestLifecycle([item])} />
           </div>
         ) : null}
       </div>
+      {actionItems.length > 0 ? (
+        <PlatformPanel as="section" className={styles.selectionBar} aria-label="선택한 사진 작업">
+          <strong>{actionItems.length}장 선택</strong>
+          <PlatformButton type="button" variant={libraryView === 'archived' ? 'primary' : 'danger'} onClick={() => requestLifecycle(actionItems)}>
+            {libraryView === 'archived' ? '선택한 사진 복원' : '선택한 사진 보관'}
+          </PlatformButton>
+        </PlatformPanel>
+      ) : null}
+      {lifecycleResult && !lifecycleItems ? <p className={styles.saveMessage} role="status">{lifecycleResult.message}</p> : null}
+      {lifecycleItems ? <ArchiveDialog items={lifecycleItems} restore={libraryView === 'archived' || lifecycleItems.every(item => item.libraryState === 'archived')} onClose={() => setLifecycleItems(null)} onComplete={completeLifecycle} /> : null}
     </div>
   )
 }

@@ -30,6 +30,7 @@ type BlogPostRenderProjection = Pick<
 }
 type BlogBlockRow = Database['showroom']['Tables']['blog_blocks']['Row']
 type BlogMediaRow = Database['showroom']['Tables']['blog_media']['Row']
+type RelatedPostProjection = Pick<BlogPostRow, 'id' | 'title' | 'slug' | 'status'>
 
 export type BlogRenderMode = 'public' | 'preview'
 
@@ -201,6 +202,32 @@ function toRenderBlock(block: BlogBlockRow): BlogRenderBlock {
   }
 }
 
+function relatedPostIds(blocks: BlogBlockRow[]) {
+  return [...new Set(blocks
+    .filter(block => block.type === 'related_post' && isJsonObject(block.metadata))
+    .map(block => isJsonObject(block.metadata) && typeof block.metadata.related_post_id === 'string' ? block.metadata.related_post_id : null)
+    .filter((id): id is string => Boolean(id)))]
+}
+
+function withResolvedRelatedPosts(blocks: BlogBlockRow[], relatedPosts: RelatedPostProjection[]) {
+  const publishedById = new Map(relatedPosts
+    .filter(post => post.status === 'published')
+    .map(post => [post.id, post]))
+  return blocks.map(block => {
+    if (block.type !== 'related_post' || !isJsonObject(block.metadata)) return toRenderBlock(block)
+    const id = typeof block.metadata.related_post_id === 'string' ? block.metadata.related_post_id : null
+    const post = id ? publishedById.get(id) : null
+    if (!post) return { ...toRenderBlock(block), metadata: {} }
+    return {
+      ...toRenderBlock(block),
+      metadata: {
+        related_post_title: post.title,
+        related_post_slug: post.slug,
+      },
+    }
+  })
+}
+
 function toPublicRenderMedia(media: BlogMediaRow): BlogRenderMedia {
   return {
     id: media.id,
@@ -291,6 +318,11 @@ export const getPublishedBlogPostBySlug = cache(async (slug: string): Promise<Bl
       .eq('usage_status', 'published'),
   ])
 
+  const blockRows = (blocksResult.data ?? []) as unknown as BlogBlockRow[]
+  const relationIds = relatedPostIds(blockRows)
+  const { data: relatedPostRows } = relationIds.length > 0
+    ? await showroom.from('blog_posts').select('id, title, slug, status').in('id', relationIds).eq('status', 'published')
+    : { data: [] }
   const renderPost = toRenderPost(post)
   const allPublishedPosts = await getPublishedBlogPosts()
   const contentGraph = buildBlogContentGraph(
@@ -300,7 +332,7 @@ export const getPublishedBlogPostBySlug = cache(async (slug: string): Promise<Bl
 
   return {
     post: renderPost,
-    blocks: ((blocksResult.data ?? []) as unknown as BlogBlockRow[]).map(toRenderBlock),
+    blocks: withResolvedRelatedPosts(blockRows, (relatedPostRows ?? []) as unknown as RelatedPostProjection[]),
     media: ((mediaResult.data ?? []) as unknown as BlogMediaRow[]).map(toPublicRenderMedia),
     contentGraphSections: contentGraph.sections,
     relatedPosts: contentGraph.relatedPosts,
@@ -334,11 +366,16 @@ export async function getAdminPreviewBlogPost(postId: string): Promise<BlogRende
         .in('usage_status', [...BLOG_ADMIN_PREVIEW_MEDIA_STATUSES]),
   ])
 
+  const blockRows = (blocksResult.data ?? []) as unknown as BlogBlockRow[]
+  const relationIds = relatedPostIds(blockRows)
+  const { data: relatedPostRows } = relationIds.length > 0
+    ? await showroomAdmin.from('blog_posts').select('id, title, slug, status').in('id', relationIds).eq('status', 'published')
+    : { data: [] }
   const media = ((mediaResult.data ?? []) as unknown as BlogMediaRow[]).map(toPreviewRenderMedia)
 
   return {
     post: toRenderPost(post),
-    blocks: ((blocksResult.data ?? []) as unknown as BlogBlockRow[]).map(toRenderBlock),
+    blocks: withResolvedRelatedPosts(blockRows, (relatedPostRows ?? []) as unknown as RelatedPostProjection[]),
     media,
     contentGraphSections: [],
     relatedPosts: [],

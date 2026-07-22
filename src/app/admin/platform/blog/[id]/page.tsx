@@ -8,6 +8,7 @@ import BlogEditorClient, {
   type BlogEditorPost,
   type BlogEditorEvent,
   type ContentAssetPickerItem,
+  type PublishedRelatedPostOption,
 } from './BlogEditorClient'
 
 export const metadata = {
@@ -245,6 +246,7 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
     assetResult,
     assetTagResult,
     questionsResult,
+    publishedRelatedPostsResult,
   ] = await Promise.all([
     showroomAdmin
       .from('blog_posts')
@@ -283,6 +285,13 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
       .eq('post_id', id)
       .order('created_at', { ascending: false })
       .limit(24),
+    showroomAdmin
+      .from('blog_posts')
+      .select('id, title, slug')
+      .eq('status', 'published')
+      .neq('id', id)
+      .order('published_at', { ascending: false })
+      .limit(120),
   ])
 
   const typedPostResult = postResult as { data: BlogPost | null; error: unknown }
@@ -292,6 +301,7 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
   const typedAssetResult = assetResult as { data: ContentAsset[] | null }
   const typedAssetTagResult = assetTagResult as { data: ContentAssetTag[] | null }
   const typedQuestionsResult = questionsResult as { data: BlogArticleQuestion[] | null }
+  const typedPublishedRelatedPostsResult = publishedRelatedPostsResult as { data: Array<{ id: string; title: string; slug: string }> | null }
 
   if (typedPostResult.error || !typedPostResult.data) {
     notFound()
@@ -360,6 +370,7 @@ export default async function AdminPlatformBlogEditorPage({ params }: Props) {
       events={events.map(toEditorEvent)}
       initialQuestions={articleQuestions.map(toEditorQuestion)}
       contentAssets={contentAssetPickerItems}
+      publishedRelatedPosts={(typedPublishedRelatedPostsResult.data ?? []) as PublishedRelatedPostOption[]}
     />
   )
 }

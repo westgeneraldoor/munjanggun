@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
 type AssetRow = Database['showroom']['Tables']['content_assets']['Row']
 type AssetFileRow = Pick<
   Database['showroom']['Tables']['content_asset_files']['Row'],
-  'asset_id' | 'file_role' | 'public_url' | 'width' | 'height' | 'size_bytes' | 'transform_status'
+  'asset_id' | 'file_role' | 'width' | 'height' | 'size_bytes' | 'transform_status'
 >
 type TagRow = Database['showroom']['Tables']['content_asset_tags']['Row']
 type TagLinkRow = Database['showroom']['Tables']['content_asset_tag_links']['Row']
@@ -37,12 +37,14 @@ async function requireAdministratorPage() {
   }
 }
 
-function fileSummary(files: AssetFileRow[], role: 'web' | 'thumbnail') {
+function fileSummary(assetId: string, files: AssetFileRow[], role: 'web' | 'thumbnail') {
   const file = files.find(item => item.file_role === role)
   if (!file) return null
 
   return {
-    url: file.public_url,
+    // Browser-facing URLs stay opaque. Buckets, paths and service credentials never
+    // cross the server-component boundary, including for public derivatives.
+    url: `/admin/platform/assets/${assetId}/preview?variant=${role}`,
     width: file.width,
     height: file.height,
     sizeBytes: file.size_bytes,
@@ -58,7 +60,6 @@ export default async function AdminPlatformAssetsPage() {
   const assetResult = await showroomAdmin
     .from('content_assets')
     .select('id, title, description, category, labels, product_type, space_type, region, usage_purpose, library_state, privacy_checked, promotion_consent_checked, used_count, created_by, updated_by, created_at, updated_at')
-    .neq('library_state', 'archived')
     .order('created_at', { ascending: false })
     .limit(300)
 
@@ -69,7 +70,7 @@ export default async function AdminPlatformAssetsPage() {
     assetIds.length > 0
       ? showroomAdmin
         .from('content_asset_files')
-        .select('asset_id, file_role, public_url, width, height, size_bytes, transform_status')
+        .select('asset_id, file_role, width, height, size_bytes, transform_status')
         .in('asset_id', assetIds)
         .in('file_role', ['web', 'thumbnail'])
       : Promise.resolve({ data: [], error: null }),
@@ -114,6 +115,7 @@ export default async function AdminPlatformAssetsPage() {
     const assetFiles = filesByAsset[asset.id] ?? []
     return {
       id: asset.id,
+      libraryState: asset.library_state,
       title: asset.title,
       description: asset.description,
       category: asset.category,
@@ -127,8 +129,8 @@ export default async function AdminPlatformAssetsPage() {
       usedCount: asset.used_count,
       updatedAt: asset.updated_at,
       createdAt: asset.created_at,
-      thumbnail: fileSummary(assetFiles, 'thumbnail'),
-      web: fileSummary(assetFiles, 'web'),
+      thumbnail: fileSummary(asset.id, assetFiles, 'thumbnail'),
+      web: fileSummary(asset.id, assetFiles, 'web'),
     }
   })
 

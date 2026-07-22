@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
-import { FilePlus2, Search, ShieldAlert } from 'lucide-react'
+import { Archive, ArchiveRestore, Eye, FilePlus2, Search, ShieldAlert } from 'lucide-react'
 import {
   PlatformLinkButton,
   PlatformList,
@@ -16,6 +16,7 @@ import {
 } from '@/components/platform/ui'
 import type { BlogContentCategory, BlogMediaUsageStatus, BlogPostStatus } from '@/types/database'
 import styles from './blog-draft-queue.module.css'
+import { updateBlogPostStatus } from './[id]/actions'
 
 export type BlogDraftQueueRow = {
   id: string
@@ -56,23 +57,12 @@ export type BlogDraftQueueRow = {
 }
 
 type StatusFilter = 'all' | 'draft' | 'published' | 'archived'
-type CategoryFilter = 'all' | BlogContentCategory
 
 const STATUS_TABS: Array<{ key: StatusFilter; label: string }> = [
   { key: 'all', label: '전체' },
   { key: 'draft', label: '초안' },
   { key: 'published', label: '발행' },
   { key: 'archived', label: '보관' },
-]
-
-const CATEGORY_TABS: Array<{ key: CategoryFilter; label: string }> = [
-  { key: 'all', label: '전체' },
-  { key: 'case_study', label: '시공사례' },
-  { key: 'product_guide', label: '제품가이드' },
-  { key: 'customer_qa', label: '고객 Q&A' },
-  { key: 'field_knowhow', label: '현장 노하우' },
-  { key: 'price_guide', label: '가격/견적' },
-  { key: 'area_guide', label: '지역안내' },
 ]
 
 const CATEGORY_LABEL: Record<BlogContentCategory, string> = {
@@ -129,23 +119,30 @@ export default function BlogDraftQueueClient({
   loadError: string | null
 }) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
+  const [, setActionMessage] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
   const [search, setSearch] = useState('')
   const filteredRows = useMemo(() => {
     const keyword = search.trim().toLowerCase()
     return initialRows
       .filter(row => matchesStatusFilter(row, statusFilter))
-      .filter(row => categoryFilter === 'all' || row.category === categoryFilter)
       .filter(row => !keyword || getSearchHaystack(row).includes(keyword))
       .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)))
-  }, [categoryFilter, initialRows, search, statusFilter])
+  }, [initialRows, search, statusFilter])
 
   const updateStatus = (next: StatusFilter) => {
     setStatusFilter(next)
   }
 
-  const updateCategory = (next: CategoryFilter) => {
-    setCategoryFilter(next)
+  const changeStatus = (id: string, status: 'archived' | 'reviewing', currentStatus: BlogPostStatus) => {
+    if (status === 'archived' && !window.confirm(currentStatus === 'published'
+      ? '발행 글을 보관하면 현재 공개 URL과 검색 노출이 사라집니다. 글과 자산은 삭제되지 않습니다. 보관할까요?'
+      : '글은 삭제되지 않으며 나중에 초안으로 복원할 수 있습니다. 보관할까요?')) return
+    startTransition(async () => {
+      const result = await updateBlogPostStatus(id, status)
+      setActionMessage(result.message)
+      if (result.ok) window.location.reload()
+    })
   }
 
   return (
@@ -182,12 +179,6 @@ export default function BlogDraftQueueClient({
           onChange={updateStatus}
         />
 
-        <PlatformSegmentedControl
-          label="카테고리 필터"
-          items={CATEGORY_TABS.map(tab => ({ value: tab.key, label: tab.label }))}
-          value={categoryFilter}
-          onChange={updateCategory}
-        />
       </PlatformPanel>
 
       <div className={styles.queueLayout}>
@@ -240,6 +231,13 @@ export default function BlogDraftQueueClient({
                           >
                             <strong>{row.title}</strong>
                           </Link>
+                          <div className={styles.rowActions} aria-label={`${row.title} 작업`}>
+                            <Link href={`/admin/platform/blog/${row.id}`} aria-label={`${row.title} 편집`}>편집</Link>
+                            <Link href={`/admin/platform/blog/${row.id}/preview`} aria-label={`${row.title} 미리보기`}><Eye size={15} aria-hidden="true" />미리보기</Link>
+                            {row.status === 'archived'
+                              ? <button type="button" onClick={() => changeStatus(row.id, 'reviewing', row.status)} disabled={isPending}><ArchiveRestore size={15} aria-hidden="true" />복원</button>
+                              : <button type="button" onClick={() => changeStatus(row.id, 'archived', row.status)} disabled={isPending}><Archive size={15} aria-hidden="true" />보관</button>}
+                          </div>
                         </td>
                         <td>
                           <PlatformStatusBadge tone={getStatusTone(row.status)}>
@@ -273,6 +271,13 @@ export default function BlogDraftQueueClient({
                       <strong>{row.title}</strong>
                       <span className={styles.mobileCategory}>{CATEGORY_LABEL[row.category]}</span>
                     </Link>
+                    <div className={styles.mobileRowActions} aria-label={`${row.title} 작업`}>
+                      <Link href={`/admin/platform/blog/${row.id}`} aria-label={`${row.title} 편집`}>편집</Link>
+                      <Link href={`/admin/platform/blog/${row.id}/preview`} aria-label={`${row.title} 미리보기`}><Eye size={15} aria-hidden="true" />미리보기</Link>
+                      {row.status === 'archived'
+                        ? <button type="button" onClick={() => changeStatus(row.id, 'reviewing', row.status)} disabled={isPending}><ArchiveRestore size={15} aria-hidden="true" />복원</button>
+                        : <button type="button" onClick={() => changeStatus(row.id, 'archived', row.status)} disabled={isPending}><Archive size={15} aria-hidden="true" />보관</button>}
+                    </div>
                   </li>
                 ))}
               </PlatformList>

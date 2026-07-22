@@ -17,6 +17,12 @@ const {
   BLOG_BODY_BLOCK_FORBIDDEN_PUBLIC_TERMS,
   normalizeGuideBoxBlock,
   normalizeLinkButtonBlock,
+  normalizeChecklistBlock,
+  normalizePlaceBlock,
+  normalizeQuoteBlock,
+  normalizeQuizBlock,
+  normalizeVideoBlock,
+  youtubeVideoId,
 } = await import(moduleUrl)
 
 {
@@ -33,6 +39,16 @@ const {
     href: '/portal/measure/new',
     description: '무료 방문실측으로 현장 조건을 확인합니다.',
   }, 'link_button should keep a compact internal action contract')
+}
+
+{
+  assert.equal(youtubeVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), 'dQw4w9WgXcQ')
+  assert.equal(normalizeVideoBlock({ text: '', metadata: { youtube_url: 'https://evil.example/embed/dQw4w9WgXcQ' } }), null)
+  assert.equal(normalizeQuoteBlock({ text: '인용문', metadata: { source_url: 'javascript:alert(1)' } }), null)
+  assert.deepEqual(normalizeChecklistBlock({ text: '', metadata: { items: '첫 항목\n\n둘째 항목' } })?.items, ['첫 항목', '둘째 항목'])
+  assert.equal(normalizeQuizBlock({ text: '질문', metadata: { answer: '정답' } })?.answer, '정답')
+  assert.equal(normalizePlaceBlock({ text: '문장군', metadata: { place_url: 'https://www.google.com/' } }), null)
+  assert.equal(normalizePlaceBlock({ text: '문장군', metadata: { place_url: 'https://www.google.com/maps/search/?api=1&query=munjanggun' } })?.provider, 'Google')
 }
 
 {
