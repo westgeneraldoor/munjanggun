@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { inspectContentAssetImage } from '@/lib/content-assets/content-asset-validation.mjs'
 import { centralBrandPublicationBlocker } from '@/lib/content-assets/official-brand-publication.mjs'
 import { validateBlogClaimSafety } from '@/lib/content-os/blog-claim-safety'
+import { isAllowedManualBlogStatusTransition } from '@/lib/content-os/blog-status-transitions'
 import { hasCoverOrRecordedMediaException } from '@/lib/content-os/blog-media-policy'
 import { prepareBlogMediaForPublication } from '@/lib/content-os/blog-media-publication.mjs'
 import {
@@ -386,22 +387,6 @@ function revalidateBlogEditorPaths(postId: string, slugs: Array<string | null | 
   for (const slug of uniqueSlugs) {
     revalidatePath(`/blog/${slug}`)
   }
-}
-
-function isAllowedManualStatusTransition(fromStatus: BlogPostStatus, toStatus: BlogPostStatus) {
-  if (toStatus === 'published') return false
-  if (toStatus === 'archived') return fromStatus !== 'archived'
-
-  const allowed: Record<BlogPostStatus, BlogPostStatus[]> = {
-    ai_draft: ['reviewing'],
-    reviewing: ['needs_media', 'ready'],
-    needs_media: ['reviewing', 'ready'],
-    ready: ['reviewing', 'needs_media'],
-    published: ['archived'],
-    archived: ['reviewing'],
-  }
-
-  return allowed[fromStatus]?.includes(toStatus) ?? false
 }
 
 function toAttachedMedia(
@@ -1406,7 +1391,7 @@ export async function updateBlogPostStatus(
       return { ok: false, message: '사진 정보를 불러오지 못했습니다.' }
     }
 
-    if (!isAllowedManualStatusTransition(post.status, toStatus)) {
+    if (!isAllowedManualBlogStatusTransition(post.status, toStatus)) {
       return {
         ok: false,
         message: '허용되지 않는 상태 변경입니다.',
