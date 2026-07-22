@@ -45,7 +45,7 @@ export default function PublicUserMenu({
   const menuRef = useRef<HTMLDivElement>(null)
   const menuToggleRef = useRef<HTMLButtonElement>(null)
   const [profile, setProfile] = useState<MenuProfile | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(hasSupabasePublicEnv)
   const [internalOpen, setInternalOpen] = useState(false)
   const open = controlledOpen ?? internalOpen
   const isOpenControlled = controlledOpen !== undefined
@@ -158,7 +158,7 @@ export default function PublicUserMenu({
     }
   }, [open, setMenuOpen])
 
-  if (isHidden || loading || !hasSupabasePublicEnv) {
+  if (isHidden || loading) {
     return null
   }
 

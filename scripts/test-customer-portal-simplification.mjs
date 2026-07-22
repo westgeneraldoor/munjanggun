@@ -8,7 +8,7 @@ async function source(relativePath) {
   return readFile(path.join(projectRoot, relativePath), 'utf8')
 }
 
-const [login, loginCss, portal, portalCss, collection, intakeNav, intakeNavCss, measureCss, asCss] = await Promise.all([
+const [login, loginCss, portal, portalCss, collection, intakeNav, intakeNavCss, measureCss, asCss, wordmark, wordmarkCss, publicUserMenu] = await Promise.all([
   source('src/app/login/page.tsx'),
   source('src/app/login/login.module.css'),
   source('src/app/portal/page.tsx'),
@@ -18,6 +18,9 @@ const [login, loginCss, portal, portalCss, collection, intakeNav, intakeNavCss, 
   source('src/components/platform/customer/CustomerIntakeTopNav.module.css'),
   source('src/app/portal/measure/new/measure-form.module.css'),
   source('src/app/portal/as/new/as-form.module.css'),
+  source('src/app/blog/BlogBrandWordmark.tsx'),
+  source('src/app/blog/BlogBrandWordmark.module.css'),
+  source('src/components/customer/PublicUserMenu.tsx'),
 ])
 
 for (const surface of [login, portal]) {
@@ -52,5 +55,11 @@ for (const stylesheet of [intakeNavCss, measureCss, asCss]) {
     'small and wrapping customer-interface headings must use the body typeface',
   )
 }
+
+assert.match(wordmark, /import \{ Nunito \} from 'next\/font\/google'/, 'the approved MUNJANGGUN wordmark uses Nunito')
+assert.match(wordmark, />MUNJANGGUN<\//, 'the approved wordmark must remain uppercase')
+assert.match(wordmarkCss, /font-family:\s*var\(--mg-blog-wordmark-loaded\)/, 'the approved wordmark font must override ordinary UI typography')
+assert.match(publicUserMenu, /useState\(hasSupabasePublicEnv\)/, 'missing local auth config must not hide the login navigation forever')
+assert.doesNotMatch(publicUserMenu, /isHidden \|\| loading \|\| !hasSupabasePublicEnv/, 'login navigation must remain visible when auth config is unavailable')
 
 console.log('customer portal simplification contracts passed')
