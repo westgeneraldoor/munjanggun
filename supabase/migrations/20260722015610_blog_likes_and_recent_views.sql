@@ -75,13 +75,13 @@ INSERT INTO platform.blog_article_likes (
   created_at
 )
 SELECT
-  user_id,
-  post_id,
-  post_slug,
-  post_title_snapshot,
-  post_excerpt_snapshot,
-  post_published_at_snapshot,
-  created_at
+  legacy.user_id,
+  legacy.post_id,
+  legacy.post_slug,
+  legacy.post_title_snapshot,
+  legacy.post_excerpt_snapshot,
+  legacy.post_published_at_snapshot,
+  legacy.created_at
 FROM deduplicated_rows AS legacy
 JOIN showroom.blog_posts AS post
   ON post.id = legacy.post_id

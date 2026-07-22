@@ -30,6 +30,7 @@ assert.match(migration, /CREATE TABLE IF NOT EXISTS platform\.blog_article_recen
 assert.match(migration, /FROM platform\.blog_article_saves/i)
 assert.match(migration, /FROM platform\.blog_article_helpful_votes/i)
 assert.match(migration, /FROM deduplicated_rows AS legacy[\s\S]*?JOIN showroom\.blog_posts AS post[\s\S]*?post\.status = 'published'/i)
+assert.match(migration, /SELECT[\s\S]*?legacy\.created_at[\s\S]*?FROM deduplicated_rows AS legacy/i)
 assert.match(migration, /ON CONFLICT \(user_id, post_id\) DO NOTHING/i)
 assert.match(migration, /blog_article_likes_user_post_unique UNIQUE \(user_id, post_id\)/i)
 assert.match(migration, /blog_article_recent_views_user_post_unique UNIQUE \(user_id, post_id\)/i)
