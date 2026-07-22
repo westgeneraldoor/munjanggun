@@ -162,6 +162,18 @@
   line-height: 1.6;
 }
 
+.errorState {
+  margin: 0;
+  padding: 18px;
+  color: var(--mg-state-danger);
+  background: var(--mg-state-danger-surface);
+  border: 1px solid color-mix(in srgb, var(--mg-state-danger) 24%, var(--mg-border-subtle));
+  border-radius: var(--mg-radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
 @media (max-width: 640px) {
   .section {
     gap: 14px;

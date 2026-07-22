@@ -99,7 +99,6 @@ export async function proxy(request: NextRequest) {
   // 2. 로그인 여부에 따른 1차 처리 및 역할(role) 조회
   let userRole: string | null = null
   let roleQueryError = false
-  let profileExists = false
 
   if (user && needsRoleLookup) {
     // platform 스키마를 바라보는 client 임시 생성하여 역할 조회
@@ -134,7 +133,6 @@ export async function proxy(request: NextRequest) {
     if (error) {
       roleQueryError = true
     } else if (profile) {
-      profileExists = true
       userRole = profile.role
     }
   }
@@ -174,26 +172,14 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL('/portal', request.url))
     }
 
-    // 4.3 역할(Role) 기반 가드 및 레거시 어드민 허용 정책
-    const isAdminPlatformRoute = isAdminRoute && pathname.startsWith('/admin/platform')
-
-    // A. 신규 플랫폼 어드민 경로 (/admin/platform): administrator만 허용
-    if (isAdminPlatformRoute && userRole !== 'administrator') {
+    // 4.3 모든 관리자 경로는 administrator만 허용합니다.
+    if (isAdminRoute && !isAdminLoginRoute && userRole !== 'administrator') {
       return NextResponse.redirect(new URL('/portal', request.url))
     }
 
-    // B. 매니저 경로 (/manager): sales_manager 또는 administrator만 허용
+    // 매니저 경로 (/manager): sales_manager 또는 administrator만 허용
     if (isManagerRoute && userRole !== 'sales_manager' && userRole !== 'administrator') {
       return NextResponse.redirect(new URL('/portal', request.url))
-    }
-
-    // C. 기존 /admin/* CMS 경로 보호 (단, /admin/platform 및 /admin/login 등은 위에서 이미 필터링됨)
-    // - platform profile이 존재하는 고객/매니저 계정이면 administrator가 아닐 시 차단
-    // - platform profile이 없는 legacy admin 계정은 임시 통과 허용
-    if (isAdminRoute && !isAdminLoginRoute && !isAdminPlatformRoute) {
-      if (profileExists && userRole !== 'administrator') {
-        return NextResponse.redirect(new URL('/portal', request.url))
-      }
     }
   }
 

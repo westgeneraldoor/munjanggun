@@ -1649,6 +1649,10 @@ export async function publishBlogPost(postId: string): Promise<PublishBlogPostRe
       return { ok: false, message: '이미 발행된 글입니다.' }
     }
 
+    if (post.status === 'archived') {
+      return { ok: false, message: '보관된 글은 발행할 수 없습니다.' }
+    }
+
     previousPostStatus = post.status
 
     if (blocksResult.error) {

@@ -159,7 +159,7 @@ export default function ApprovedManuscriptIntakeClient() {
         <div>
           <p className={styles.eyebrow}>콘텐츠 큐 등록</p>
           <h1>승인 원고 등록</h1>
-          <p>외부에서 완성한 원고를 검토중 상태로 등록합니다. 사진 연결과 발행은 기존 에디터에서 이어서 처리합니다.</p>
+          <p>외부에서 완성한 원고를 초안으로 등록합니다. 사진 연결과 발행은 기존 에디터에서 이어서 처리합니다.</p>
         </div>
         <PlatformLinkButton href="/admin/platform/blog" variant="secondary" size="sm" className={styles.queueLink}>
           <ArrowLeft size={16} aria-hidden="true" />

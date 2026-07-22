@@ -229,7 +229,8 @@ for (const [label, atomicFailureCode] of [
 
 const publicSafetyUnchanged = publicRendering.includes(".eq('status', 'published')")
   && publishActions.includes('const gate = validatePublishGate(post, blocks, media)')
-  && publishActions.includes(".eq('status', 'ready')")
+  && publishActions.includes("if (post.status === 'archived')")
+  && publishActions.includes(".eq('status', post.status)")
 assert.equal(publicSafetyUnchanged, true)
 
 console.log('approved manuscript intake verification passed')

@@ -1229,6 +1229,7 @@ export default function BlogEditorClient({
   const previewLinkRef = useRef<HTMLAnchorElement>(null)
 
   const isPublished = post.status === 'published'
+  const isArchived = post.status === 'archived'
   const selectableMedia = useMemo(() => editorMedia.filter(item => item.usageStatus !== 'rejected'), [editorMedia])
   const relatedQuestionsForPreview = useMemo(
     () => relatedText.split('\n').map(item => item.trim()).filter(Boolean),
@@ -1771,12 +1772,12 @@ export default function BlogEditorClient({
             <button
               type="button"
               onClick={handlePublish}
-              disabled={isPending || isPublished || hasUnsavedEditorChanges}
+              disabled={isPending || isPublished || isArchived || hasUnsavedEditorChanges}
               className={styles.publishButton}
               data-testid="publish-blog-post"
             >
               <Rocket size={16} aria-hidden="true" />
-              {isPublished ? '발행 완료' : hasUnsavedEditorChanges ? '임시저장 필요' : isPending ? '발행 중' : '발행'}
+              {isPublished ? '발행 완료' : isArchived ? '보관됨' : hasUnsavedEditorChanges ? '임시저장 필요' : isPending ? '발행 중' : '발행'}
             </button>
           </div>
         </div>

@@ -85,6 +85,112 @@ SELECT
 FROM deduplicated_rows
 ON CONFLICT (user_id, post_id) DO NOTHING;
 
+-- Keep the old clients safe during the migration-to-web cutover window. The
+-- legacy tables stay intact, but any late write is mirrored into the canonical
+-- like until every browser is serving the new API contract.
+CREATE OR REPLACE FUNCTION platform.sync_legacy_blog_article_save_to_like()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog
+AS $$
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    IF NOT EXISTS (
+      SELECT 1
+      FROM platform.blog_article_helpful_votes AS helpful
+      WHERE helpful.user_id = OLD.user_id
+        AND helpful.post_id = OLD.post_id
+    ) THEN
+      DELETE FROM platform.blog_article_likes AS canonical
+      WHERE canonical.user_id = OLD.user_id
+        AND canonical.post_id = OLD.post_id;
+    END IF;
+    RETURN OLD;
+  END IF;
+
+  INSERT INTO platform.blog_article_likes (
+    user_id,
+    post_id,
+    post_slug,
+    post_title_snapshot,
+    post_excerpt_snapshot,
+    post_published_at_snapshot,
+    created_at
+  ) VALUES (
+    NEW.user_id,
+    NEW.post_id,
+    NEW.post_slug,
+    NEW.post_title_snapshot,
+    NEW.post_excerpt_snapshot,
+    NEW.post_published_at_snapshot,
+    NEW.created_at
+  )
+  ON CONFLICT (user_id, post_id) DO UPDATE SET
+    post_slug = EXCLUDED.post_slug,
+    post_title_snapshot = EXCLUDED.post_title_snapshot,
+    post_excerpt_snapshot = EXCLUDED.post_excerpt_snapshot,
+    post_published_at_snapshot = EXCLUDED.post_published_at_snapshot;
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION platform.sync_legacy_blog_article_helpful_to_like()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog
+AS $$
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    IF NOT EXISTS (
+      SELECT 1
+      FROM platform.blog_article_saves AS saved
+      WHERE saved.user_id = OLD.user_id
+        AND saved.post_id = OLD.post_id
+    ) THEN
+      DELETE FROM platform.blog_article_likes AS canonical
+      WHERE canonical.user_id = OLD.user_id
+        AND canonical.post_id = OLD.post_id;
+    END IF;
+    RETURN OLD;
+  END IF;
+
+  INSERT INTO platform.blog_article_likes (
+    user_id,
+    post_id,
+    post_slug,
+    post_title_snapshot,
+    created_at
+  ) VALUES (
+    NEW.user_id,
+    NEW.post_id,
+    NEW.post_slug,
+    NEW.post_title_snapshot,
+    NEW.created_at
+  )
+  ON CONFLICT (user_id, post_id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION platform.sync_legacy_blog_article_save_to_like() FROM PUBLIC;
+REVOKE ALL ON FUNCTION platform.sync_legacy_blog_article_helpful_to_like() FROM PUBLIC;
+
+DROP TRIGGER IF EXISTS sync_blog_article_saves_to_likes ON platform.blog_article_saves;
+CREATE TRIGGER sync_blog_article_saves_to_likes
+  AFTER INSERT OR UPDATE OR DELETE
+  ON platform.blog_article_saves
+  FOR EACH ROW
+  EXECUTE FUNCTION platform.sync_legacy_blog_article_save_to_like();
+
+DROP TRIGGER IF EXISTS sync_blog_article_helpful_votes_to_likes ON platform.blog_article_helpful_votes;
+CREATE TRIGGER sync_blog_article_helpful_votes_to_likes
+  AFTER INSERT OR UPDATE OR DELETE
+  ON platform.blog_article_helpful_votes
+  FOR EACH ROW
+  EXECUTE FUNCTION platform.sync_legacy_blog_article_helpful_to_like();
+
 CREATE INDEX IF NOT EXISTS blog_article_likes_post_idx
   ON platform.blog_article_likes(post_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS blog_article_likes_user_idx
@@ -120,11 +226,23 @@ DROP POLICY IF EXISTS select_own_blog_article_likes ON platform.blog_article_lik
 CREATE POLICY select_own_blog_article_likes
   ON platform.blog_article_likes
   FOR SELECT TO authenticated
-  USING (user_id = (SELECT auth.uid()));
+  USING (
+    user_id = (SELECT auth.uid())
+    AND platform.is_published_blog_post(post_id)
+  );
 DROP POLICY IF EXISTS insert_own_blog_article_likes ON platform.blog_article_likes;
 CREATE POLICY insert_own_blog_article_likes
   ON platform.blog_article_likes
   FOR INSERT TO authenticated
+  WITH CHECK (
+    user_id = (SELECT auth.uid())
+    AND platform.is_published_blog_post(post_id)
+  );
+DROP POLICY IF EXISTS update_own_blog_article_likes ON platform.blog_article_likes;
+CREATE POLICY update_own_blog_article_likes
+  ON platform.blog_article_likes
+  FOR UPDATE TO authenticated
+  USING (user_id = (SELECT auth.uid()))
   WITH CHECK (
     user_id = (SELECT auth.uid())
     AND platform.is_published_blog_post(post_id)
@@ -139,7 +257,10 @@ DROP POLICY IF EXISTS select_own_blog_article_recent_views ON platform.blog_arti
 CREATE POLICY select_own_blog_article_recent_views
   ON platform.blog_article_recent_views
   FOR SELECT TO authenticated
-  USING (user_id = (SELECT auth.uid()));
+  USING (
+    user_id = (SELECT auth.uid())
+    AND platform.is_published_blog_post(post_id)
+  );
 DROP POLICY IF EXISTS insert_own_blog_article_recent_views ON platform.blog_article_recent_views;
 CREATE POLICY insert_own_blog_article_recent_views
   ON platform.blog_article_recent_views
@@ -158,7 +279,7 @@ CREATE POLICY update_own_blog_article_recent_views
     AND platform.is_published_blog_post(post_id)
   );
 
-GRANT SELECT, INSERT, DELETE ON platform.blog_article_likes TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON platform.blog_article_likes TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON platform.blog_article_recent_views TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON platform.blog_article_likes TO service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON platform.blog_article_recent_views TO service_role;

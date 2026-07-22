@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
+import MunjanggunWordmark from '@/app/blog/BlogBrandWordmark'
 import {
   CustomerCollectionPanel,
   type CustomerBlogActivityPost,
@@ -122,6 +123,7 @@ export default function PortalPage() {
   const [recentViewedPosts, setRecentViewedPosts] = useState<CustomerBlogActivityPost[]>([])
   const [blogQuestions, setBlogQuestions] = useState<CustomerBlogActivityQuestion[]>([])
   const [activityCounts, setActivityCounts] = useState({ likes: 0, questions: 0, recent: 0 })
+  const [activityError, setActivityError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [accountOpen, setAccountOpen] = useState(false)
   const [editingProfile, setEditingProfile] = useState(false)
@@ -133,6 +135,8 @@ export default function PortalPage() {
   const [actionMemo, setActionMemo] = useState('')
   const [actionBusy, setActionBusy] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+  const modalTextareaRef = React.useRef<HTMLTextAreaElement>(null)
+  const modalReturnFocusRef = React.useRef<HTMLElement | null>(null)
 
   const supabase = useMemo(() => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -227,6 +231,9 @@ export default function PortalPage() {
 
       if (asResult.error) logError('Fetch AS requests error', asResult.error)
       else setRecentAsRequests((asResult.data ?? []) as RecentAsRequest[])
+
+      const activityLoadFailed = Boolean(likesResult.error || questionsResult.error || recentResult.error)
+      setActivityError(activityLoadFailed ? '나의 활동을 불러오지 못했어요. 잠시 뒤 새로고침해 주세요.' : null)
 
       if (likesResult.error) logError('Fetch liked blog posts error', likesResult.error)
       else setLikedPosts((likesResult.data ?? []) as CustomerBlogActivityPost[])
@@ -323,10 +330,32 @@ export default function PortalPage() {
   }
 
   const openAction = (target: ActionTarget) => {
+    modalReturnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     setActionTarget(target)
     setActionMemo('')
     setActionError(null)
   }
+
+  const closeActionModal = useCallback(() => {
+    setActionTarget(null)
+    window.requestAnimationFrame(() => modalReturnFocusRef.current?.focus())
+  }, [])
+
+  React.useEffect(() => {
+    if (!actionTarget) return
+
+    modalTextareaRef.current?.focus()
+  }, [actionTarget])
+
+  React.useEffect(() => {
+    if (!actionTarget) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !actionBusy) closeActionModal()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [actionBusy, actionTarget, closeActionModal])
 
   const submitAction = async () => {
     if (!actionTarget || actionBusy) return
@@ -350,7 +379,7 @@ export default function PortalPage() {
         throw new Error(data?.error || '요청을 저장하지 못했습니다.')
       }
 
-      setActionTarget(null)
+      closeActionModal()
       setActionMemo('')
       await fetchUser()
       router.refresh()
@@ -382,9 +411,7 @@ export default function PortalPage() {
     <div className={styles.container} data-mg-theme="portal">
       <header className={styles.portalHeader}>
         <Link href="/blog" className={styles.brand} aria-label="문장군 블로그로 이동">
-          <span className={styles.brandKo}>문장군</span>
-          <span className={styles.brandEn}>MUNJANGGUN</span>
-          <span className={styles.brandMy}>MY</span>
+          <MunjanggunWordmark label="MY" compact />
         </Link>
         <div className={styles.accountWrap}>
           <button
@@ -476,6 +503,7 @@ export default function PortalPage() {
           likesCount={activityCounts.likes}
           questionsCount={activityCounts.questions}
           recentViewedCount={activityCounts.recent}
+          errorMessage={activityError}
         />
 
         <section className={styles.shortcutSection} aria-labelledby="service-shortcuts-title">
@@ -534,11 +562,14 @@ export default function PortalPage() {
                 <h2 id="customer-action-title">{actionTarget.title}</h2>
                 <p>{actionTarget.description}</p>
               </div>
-              <button type="button" onClick={() => setActionTarget(null)} aria-label="닫기">
+              <button type="button" onClick={closeActionModal} aria-label="닫기">
                 <X size={20} aria-hidden="true" />
               </button>
             </header>
+            <label className={styles.modalLabel} htmlFor="customer-action-memo">요청 내용</label>
             <textarea
+              id="customer-action-memo"
+              ref={modalTextareaRef}
               value={actionMemo}
               onChange={event => setActionMemo(event.target.value)}
               placeholder="담당자가 확인할 수 있도록 필요한 내용을 남겨주세요."
@@ -546,7 +577,7 @@ export default function PortalPage() {
             />
             {actionError ? <p className={styles.modalError}>{actionError}</p> : null}
             <footer>
-              <button type="button" onClick={() => setActionTarget(null)} disabled={actionBusy}>취소</button>
+              <button type="button" onClick={closeActionModal} disabled={actionBusy}>취소</button>
               <button type="button" onClick={() => void submitAction()} disabled={actionBusy}>
                 {actionBusy ? '저장 중' : '요청 남기기'}
               </button>

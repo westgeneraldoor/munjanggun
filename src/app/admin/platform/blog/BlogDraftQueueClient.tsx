@@ -1,11 +1,9 @@
 'use client'
 
-import { useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { ArrowLeft, FilePenLine, FilePlus2, Search, ShieldAlert } from 'lucide-react'
+import { FilePlus2, Search, ShieldAlert } from 'lucide-react'
 import {
-  PlatformButton,
   PlatformLinkButton,
   PlatformList,
   PlatformPageHeader,
@@ -123,44 +121,6 @@ function getStatusTone(status: BlogPostStatus): PlatformStatusBadgeTone {
   return 'neutral'
 }
 
-function SummaryPanel({
-  row,
-  onBack,
-}: {
-  row: BlogDraftQueueRow
-  onBack?: () => void
-}) {
-  return (
-    <PlatformPanel as="aside" className={styles.detailPanel}>
-      {onBack && (
-        <PlatformButton type="button" variant="secondary" size="sm" onClick={onBack}>
-          <ArrowLeft size={16} aria-hidden="true" />
-          목록
-        </PlatformButton>
-      )}
-
-      <div className={styles.detailTop}>
-        <div>
-          <span className={styles.categoryPill}>{CATEGORY_LABEL[row.category]}</span>
-          <h2>{row.title}</h2>
-          <p>수정일 {formatDateTime(row.updatedAt)}</p>
-        </div>
-        <PlatformStatusBadge tone={getStatusTone(row.status)}>
-          {STATUS_TABS.find(tab => tab.key === getVisibleStatus(row.status))?.label}
-        </PlatformStatusBadge>
-      </div>
-
-      <div className={styles.detailFooter}>
-        <PlatformLinkButton href={`/admin/platform/blog/${row.id}`} fullWidth prefetch={false}>
-          <FilePenLine size={16} aria-hidden="true" />
-          에디터 열기
-        </PlatformLinkButton>
-        <p>원고의 세부 정보와 발행 전 확인은 에디터에서 진행합니다.</p>
-      </div>
-    </PlatformPanel>
-  )
-}
-
 export default function BlogDraftQueueClient({
   initialRows,
   loadError,
@@ -168,11 +128,9 @@ export default function BlogDraftQueueClient({
   initialRows: BlogDraftQueueRow[]
   loadError: string | null
 }) {
-  const router = useRouter()
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all')
   const [search, setSearch] = useState('')
-  const [selectedId, setSelectedId] = useState<string | null>(null)
   const filteredRows = useMemo(() => {
     const keyword = search.trim().toLowerCase()
     return initialRows
@@ -182,26 +140,12 @@ export default function BlogDraftQueueClient({
       .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)))
   }, [categoryFilter, initialRows, search, statusFilter])
 
-  const selectedRow = selectedId ? filteredRows.find(row => row.id === selectedId) ?? null : null
-  const resetSelection = () => setSelectedId(null)
-
-  const openEditor = (row: BlogDraftQueueRow) => {
-    router.push(`/admin/platform/blog/${row.id}`)
-  }
-
-  const handleRowClick = (event: ReactMouseEvent<HTMLTableRowElement>, row: BlogDraftQueueRow) => {
-    if (event.target instanceof Element && event.target.closest('a,button,input,select,textarea')) return
-    openEditor(row)
-  }
-
   const updateStatus = (next: StatusFilter) => {
     setStatusFilter(next)
-    resetSelection()
   }
 
   const updateCategory = (next: CategoryFilter) => {
     setCategoryFilter(next)
-    resetSelection()
   }
 
   return (
@@ -225,7 +169,6 @@ export default function BlogDraftQueueClient({
             value={search}
             onChange={(event) => {
               setSearch(event.target.value)
-              resetSelection()
             }}
             placeholder="제목 검색"
             aria-label="콘텐츠 검색"
@@ -247,17 +190,11 @@ export default function BlogDraftQueueClient({
         />
       </PlatformPanel>
 
-      {selectedRow && (
-        <div className={styles.mobileDetailScreen}>
-          <SummaryPanel row={selectedRow} onBack={() => setSelectedId(null)} />
-        </div>
-      )}
-
-      <div className={`${styles.queueLayout} ${selectedRow ? styles.queueLayoutSelected : ''}`}>
+      <div className={styles.queueLayout}>
         <section className={styles.queueListPanel}>
           <div className={styles.queueSummary}>
             <strong>{filteredRows.length}건</strong>
-            <span>원고를 클릭하면 바로 에디터로 이동합니다.</span>
+            <span>제목을 선택하면 바로 에디터로 이동합니다.</span>
           </div>
 
           {loadError ? (
@@ -292,8 +229,7 @@ export default function BlogDraftQueueClient({
                     {filteredRows.map(row => (
                       <tr
                         key={row.id}
-                        className={`${styles.row} ${row.id === selectedId ? styles.rowSelected : ''}`}
-                        onClick={(event) => handleRowClick(event, row)}
+                        className={styles.row}
                       >
                         <td className={styles.titleCell}>
                           <Link
@@ -344,11 +280,6 @@ export default function BlogDraftQueueClient({
           )}
         </section>
 
-        {selectedRow && (
-          <div className={styles.desktopDetail}>
-            <SummaryPanel row={selectedRow} />
-          </div>
-        )}
       </div>
     </div>
   )

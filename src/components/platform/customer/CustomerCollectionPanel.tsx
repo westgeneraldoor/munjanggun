@@ -30,6 +30,7 @@ interface CustomerCollectionPanelProps {
   likesCount?: number
   questionsCount?: number
   recentViewedCount?: number
+  errorMessage?: string | null
 }
 
 function formatDate(value: string | undefined) {
@@ -41,6 +42,12 @@ function formatDate(value: string | undefined) {
   })
 }
 
+function getQuestionStatusLabel(status: string) {
+  if (status === 'approved') return '답변 완료'
+  if (status === 'rejected' || status === 'archived') return '확인 완료'
+  return '확인 중'
+}
+
 export function CustomerCollectionPanel({
   likedPosts = [],
   questions = [],
@@ -48,6 +55,7 @@ export function CustomerCollectionPanel({
   likesCount = likedPosts.length,
   questionsCount = questions.length,
   recentViewedCount = recentViewedPosts.length,
+  errorMessage = null,
 }: CustomerCollectionPanelProps) {
   const [selected, setSelected] = useState<ActivityKey>('likes')
 
@@ -114,7 +122,9 @@ export function CustomerCollectionPanel({
           <span>{current.count}개</span>
         </div>
 
-        {current.items.length === 0 ? (
+        {errorMessage ? (
+          <p className={styles.errorState} role="alert">{errorMessage}</p>
+        ) : current.items.length === 0 ? (
           <p className={styles.emptyState}>{current.empty}</p>
         ) : (
           <ul className={styles.activityList}>
@@ -123,7 +133,7 @@ export function CustomerCollectionPanel({
                 <Link href={`/blog/${item.post_slug}`}>{item.post_title_snapshot}</Link>
                 <span>
                   {'status' in item
-                    ? item.status === 'private' ? '비공개' : item.status
+                    ? getQuestionStatusLabel(item.status)
                     : formatDate(item.last_viewed_at ?? item.created_at)}
                 </span>
               </li>

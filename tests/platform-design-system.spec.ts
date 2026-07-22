@@ -127,9 +127,20 @@ test('login screen uses the Munjanggun platform theme', async ({ page }) => {
   await page.goto('/login?next=/portal')
 
   await expect(page.locator('[data-mg-theme="portal"]').first()).toBeVisible()
-  await expect(page.locator('[data-mg-theme="portal"] span').filter({ hasText: /^문장군$/ })).toBeVisible()
+  await expect(page.getByText('MUNJANGGUN', { exact: true })).toBeVisible()
+  await expect(page.getByText('MY', { exact: true })).toBeVisible()
+  await expect(page.getByText('쇼룸 홈', { exact: true })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: '문장군 블로그로 돌아가기' })).toHaveAttribute('href', '/blog')
   await expect(page.getByRole('button', { name: /카카오/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /이메일/ })).toBeVisible()
+
+  const title = await page.getByRole('heading', { level: 1 }).evaluate(element => {
+    const style = getComputedStyle(element)
+    return { fontFamily: style.fontFamily, fontSize: Number.parseFloat(style.fontSize) }
+  })
+  expect(title.fontFamily).toContain('Pretendard')
+  expect(title.fontFamily).not.toContain('Tmoney RoundWind')
+  expect(title.fontSize).toBeLessThan(32)
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(1)

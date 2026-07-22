@@ -44,7 +44,7 @@
 .railCopy h1 {
   max-width: 9em;
   color: var(--mg-on-dark);
-  font-family: var(--mg-font-brand-ko);
+  font-family: var(--mg-font-body);
   font-size: 28px;
   line-height: 1.2;
   font-weight: 700;
@@ -207,7 +207,7 @@
 .screenHeader h2 {
   max-width: 760px;
   color: var(--mg-text-primary);
-  font-family: var(--mg-font-brand-ko);
+  font-family: var(--mg-font-body);
   font-size: clamp(25px, 3vw, 34px);
   line-height: 1.22;
   font-weight: 700;
@@ -853,7 +853,7 @@
 
 .doneTitle {
   color: var(--mg-text-primary);
-  font-family: var(--mg-font-brand-ko);
+  font-family: var(--mg-font-body);
   font-size: 31px;
   line-height: 1.2;
   font-weight: 700;
