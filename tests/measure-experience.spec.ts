@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test('mobile measure interaction preserves context without duplicate sticky CTA', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/measure', { waitUntil: 'networkidle' })
+  await page.goto('/measure', { waitUntil: 'domcontentloaded' })
 
   await expect(page).toHaveTitle(/무료방문 실측견적/)
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1)
@@ -150,7 +150,7 @@ for (const viewport of [
     page.on('requestfailed', (request) => requestFailures.push(`${request.method()} ${request.url()}: ${request.failure()?.errorText}`))
 
     await page.setViewportSize(viewport)
-    await page.goto('/measure', { waitUntil: 'networkidle' })
+    await page.goto('/measure', { waitUntil: 'domcontentloaded' })
 
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1)
     await expect(page.locator('h1')).toHaveCount(1)
