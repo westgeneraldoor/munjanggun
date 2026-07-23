@@ -380,14 +380,18 @@ DB migration 이후 `src/types/database.ts`를 재생성한다.
 
 ## 9. 2026-07-23 원자적 발행·휴지통 경계
 
-Production 적용 전 migration 코드 기준 계약:
+Production 적용 전 `20260723070030_admin_cms_atomic_publish_trash_and_revision.sql` 코드 기준 계약:
 
 - `showroom.save_and_publish_blog_post(...)`는 post를 먼저 `FOR UPDATE`하고 `expected_updated_at`과 활성 editor lease를 확인한다.
 - 같은 transaction에서 post payload, block 교체, content asset usage, 고객 Q&A 연결, media 공개 상태, post 공개 상태, audit event를 확정한다.
-- 공개 Storage 파생본은 시도별 고유 경로에 먼저 준비한다. RPC가 rollback되면 server action이 준비한 경로를 정리한다.
+- `showroom.create_blog_publication_attempt(...)`가 post를 잠그고 최신 revision·상태를 확인한 뒤 durable attempt를 만든다. 공개 Storage 파생본의 전체 예정 경로를 attempt에 정확히 1행 기록한 다음에만 첫 업로드를 시작한다.
+- RPC 응답이 모호하면 row-lock resolver가 commit/rollback을 확정하며, 확인된 rollback에서만 예약 경로를 정리한다. attempt는 글 삭제 시 cascade 삭제하지 않고 `post_id = NULL`로 보존해 정리 경로가 사라지지 않게 한다.
+- `blog_public_media_objects`가 기존·신규 공개 파생본의 전체 이력을 보존한다. 재발행에서 교체된 파생본과 휴지통·영구삭제 대상은 모두 `storage_cleanup_jobs`와 관리자 재시도 동작으로 실패를 남긴다.
+- `staged` 또는 `reconcile` 발행 시도가 있으면 휴지통 이동과 영구삭제를 DB row lock 뒤 거부한다. 발행·자산 휴지통·영구삭제는 content asset을 ID 순서로 먼저 잠가 usage trigger와의 역순 잠금을 피한다.
+- 외부 Storage 준비 중에는 DB heartbeat를 갱신한다. 만료된 `staged` 시도는 관리자 RPC가 row lock 뒤 `reconcile`로 fencing하고, 별도 15분 유예가 지난 뒤에만 예약 경로를 정리한다. 살아 있는 업로드와 crash 복구가 같은 경로를 동시에 확정하지 않는다.
 - `showroom.transition_blog_post_trash(...)`는 글 상태·발행 미디어 재검수 상태·audit event를 한 transaction에서 처리한다.
 - `showroom.permanently_delete_blog_post(...)`는 `archived` 상태와 정확한 제목 확인을 요구하고, public 파생본은 durable cleanup job으로 넘긴다.
 - 위 함수는 `SECURITY INVOKER`, 빈 `search_path`, service-role 전용 실행 권한을 사용한다.
-- `blog_posts`에 대한 authenticated 직접 `DELETE` policy와 grant는 제거한다.
+- `blog_posts`에 대한 authenticated 직접 `DELETE`와 상태·발행 열 직접 `UPDATE` 권한을 제거한다.
 
 이 migration은 코드와 계약 검증만 포함하며 Production DB에는 별도 승인 없이 적용하지 않는다.

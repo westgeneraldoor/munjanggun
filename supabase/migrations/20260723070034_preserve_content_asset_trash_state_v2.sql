@@ -61,7 +61,9 @@ BEGIN
         SET
           library_state = COALESCE(
             v_previous_state,
-            'available'::showroom.content_asset_library_state
+            -- Legacy archived rows predate the previous-state column. Restore
+            -- them privately instead of exposing an unknown prior state.
+            'hidden'::showroom.content_asset_library_state
           ),
           library_state_before_archive = NULL,
           trashed_at = NULL,
@@ -82,7 +84,7 @@ BEGIN
           v_asset_id,
           'restored_from_library_trash',
           p_actor_id,
-          jsonb_build_object('restored_state', COALESCE(v_previous_state, 'available'))
+          jsonb_build_object('restored_state', COALESCE(v_previous_state, 'hidden'))
         );
         v_results := v_results || jsonb_build_array(jsonb_build_object(
           'assetId', v_asset_id,
@@ -242,6 +244,21 @@ $$;
 
 DROP POLICY IF EXISTS content_assets_admin_delete ON showroom.content_assets;
 REVOKE DELETE ON showroom.content_assets FROM authenticated;
+REVOKE UPDATE ON showroom.content_assets FROM authenticated;
+GRANT UPDATE (
+  title,
+  description,
+  category,
+  labels,
+  product_type,
+  space_type,
+  region,
+  usage_purpose,
+  privacy_checked,
+  promotion_consent_checked,
+  updated_by,
+  updated_at
+) ON showroom.content_assets TO authenticated;
 
 REVOKE ALL ON FUNCTION showroom.archive_content_assets_safely(UUID[], UUID, BOOLEAN)
   FROM PUBLIC, anon, authenticated;

@@ -37,6 +37,7 @@ import {
 } from '@/components/platform/ui'
 import {
   archiveContentAssets,
+  loadMoreContentAssets,
   restoreContentAssets,
   updateContentAsset,
   uploadContentAssets,
@@ -481,7 +482,7 @@ function referenceStatus(status: string) {
     reviewing: '검토',
     approved: '승인',
     published: '발행',
-    archived: '보관',
+    archived: '휴지통',
     linked: '연결됨',
   }
   return labels[status] ?? status
@@ -647,14 +648,23 @@ function AssetDetailPanel({
 
 export default function ContentAssetsClient({
   initialItems,
+  initialNextOffset,
+  initialHasMore,
   tagOptions,
   loadError,
 }: {
   initialItems: ContentAssetLibraryItem[]
+  initialNextOffset: number
+  initialHasMore: boolean
   tagOptions: ContentAssetTagOption[]
   loadError: string | null
 }) {
   const router = useRouter()
+  const [isPagePending, startPageTransition] = useTransition()
+  const [libraryItems, setLibraryItems] = useState(initialItems)
+  const [nextOffset, setNextOffset] = useState(initialNextOffset)
+  const [hasMoreServerItems, setHasMoreServerItems] = useState(initialHasMore)
+  const [pageMessage, setPageMessage] = useState<string | null>(null)
   const [uploadOpen, setUploadOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [filters, setFilters] = useState<Record<FilterKey, string>>({
@@ -685,7 +695,7 @@ export default function ContentAssetsClient({
   } | null>(null)
 
   const filteredItems = useMemo(() => {
-    const items = initialItems.filter(item => {
+    const items = libraryItems.filter(item => {
       if (libraryView === 'archived' ? item.libraryState !== 'archived' : item.libraryState === 'archived') return false
       if (!includesSearch(item, search.trim())) return false
       if (tagFilter && !item.tags.includes(tagFilter)) return false
@@ -705,21 +715,21 @@ export default function ContentAssetsClient({
       if (sortOrder === 'sizeAsc') return sizeDifference || a.id.localeCompare(b.id)
       return -createdDifference || a.id.localeCompare(b.id)
     })
-  }, [filters, initialItems, libraryView, search, sortOrder, tagFilter])
+  }, [filters, libraryItems, libraryView, search, sortOrder, tagFilter])
 
   const visibleItems = filteredItems.slice(0, visibleCount)
 
   const selectedItem = selectedId
-    ? initialItems.find(item => item.id === selectedId) ?? null
+    ? libraryItems.find(item => item.id === selectedId) ?? null
     : null
 
   const options = useMemo(() => ({
-    category: optionValues(initialItems, 'category'),
-    productType: optionValues(initialItems, 'productType'),
-    spaceType: optionValues(initialItems, 'spaceType'),
-    region: optionValues(initialItems, 'region'),
-    usagePurpose: optionValues(initialItems, 'usagePurpose'),
-  }), [initialItems])
+    category: optionValues(libraryItems, 'category'),
+    productType: optionValues(libraryItems, 'productType'),
+    spaceType: optionValues(libraryItems, 'spaceType'),
+    region: optionValues(libraryItems, 'region'),
+    usagePurpose: optionValues(libraryItems, 'usagePurpose'),
+  }), [libraryItems])
 
   function resetVisibleResults() {
     setVisibleCount(RESULT_PAGE_SIZE)
@@ -823,12 +833,39 @@ export default function ContentAssetsClient({
   }
 
   function requestLifecycle(items: ContentAssetLibraryItem[]) {
-    if (items.length > 0) setLifecycleItems(items)
+    if (items.length === 0) return
+    closeDetail()
+    setLifecycleItems(items)
+  }
+
+  function showMoreResults() {
+    if (visibleItems.length < filteredItems.length) {
+      setVisibleCount(current => current + RESULT_PAGE_SIZE)
+      return
+    }
+    if (!hasMoreServerItems || isPagePending) return
+
+    setPageMessage(null)
+    startPageTransition(async () => {
+      const result = await loadMoreContentAssets(nextOffset)
+      setPageMessage(result.ok ? null : result.message)
+      if (!result.ok) return
+
+      setLibraryItems(current => {
+        const existingIds = new Set(current.map(item => item.id))
+        return [...current, ...result.items.filter(item => !existingIds.has(item.id))]
+      })
+      setNextOffset(result.nextOffset)
+      setHasMoreServerItems(result.hasMore)
+      setVisibleCount(current => current + RESULT_PAGE_SIZE)
+    })
   }
 
   function completeLifecycle(result: ArchiveContentAssetsResult) {
     setLifecycleResult(result)
     if (result.ok) {
+      const changedIds = new Set(result.results.filter(item => item.changed).map(item => item.assetId))
+      setLibraryItems(current => current.filter(item => !changedIds.has(item.id)))
       setSelectedForAction(current => {
         const next = new Set(current)
         result.results.filter(item => item.changed).forEach(item => next.delete(item.assetId))
@@ -952,8 +989,8 @@ export default function ContentAssetsClient({
       <div className={styles.libraryLayout}>
         <section className={styles.libraryList} aria-label="사진 목록">
           <div className={styles.listSummary}>
-            <strong>{filteredItems.length}장</strong>
-            <span>{filteredItems.length > visibleItems.length ? `${visibleItems.length}장 표시` : libraryView === 'archived' ? '복원할 수 있는 휴지통' : SORT_OPTIONS.find(option => option.value === sortOrder)?.label}</span>
+            <strong>{hasMoreServerItems ? `불러온 결과 ${filteredItems.length}장` : `${filteredItems.length}장`}</strong>
+            <span>{filteredItems.length > visibleItems.length ? `${visibleItems.length}장 표시` : hasMoreServerItems ? '이전 사진을 더 불러올 수 있습니다' : libraryView === 'archived' ? '복원할 수 있는 휴지통' : SORT_OPTIONS.find(option => option.value === sortOrder)?.label}</span>
           </div>
 
           {selectionMode && filteredItems.length > 0 ? (
@@ -1017,17 +1054,25 @@ export default function ContentAssetsClient({
                 )
               })}
               </div>
-              {filteredItems.length > visibleItems.length ? (
+              {filteredItems.length > visibleItems.length || hasMoreServerItems ? (
                 <div className={styles.loadMore}>
-                  <PlatformButton type="button" variant="secondary" onClick={() => setVisibleCount(current => current + RESULT_PAGE_SIZE)}>
-                    더 보기
+                  <PlatformButton type="button" variant="secondary" onClick={showMoreResults} isLoading={isPagePending} loadingLabel="이전 사진 불러오는 중…">
+                    {filteredItems.length > visibleItems.length ? '더 보기' : '이전 사진 더 불러오기'}
                   </PlatformButton>
                 </div>
               ) : null}
             </>
           ) : null}
+          {filteredItems.length === 0 && hasMoreServerItems && !loadError ? (
+            <div className={styles.loadMore}>
+              <PlatformButton type="button" variant="secondary" onClick={showMoreResults} isLoading={isPagePending} loadingLabel="이전 사진 불러오는 중…">
+                이전 사진에서 계속 찾기
+              </PlatformButton>
+            </div>
+          ) : null}
         </section>
       </div>
+      {pageMessage ? <PlatformStatePanel tone="error" title={pageMessage} /> : null}
       {selectionMode && actionItems.length > 0 ? (
         <PlatformPanel as="section" className={styles.selectionBar} aria-label="선택한 사진 작업">
           <strong>{actionItems.length}장 선택</strong>

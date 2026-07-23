@@ -5,6 +5,7 @@ import { Eye, FilePlus2, Search, ShieldAlert } from 'lucide-react'
 import { IntentPrefetchLink } from '@/components/admin/IntentPrefetchLink'
 import {
   PlatformLinkButton,
+  PlatformButton,
   PlatformList,
   PlatformModal,
   PlatformPageHeader,
@@ -17,7 +18,7 @@ import {
 } from '@/components/platform/ui'
 import type { BlogContentCategory, BlogPostStatus } from '@/types/database'
 import styles from './blog-draft-queue.module.css'
-import { permanentlyDeleteBlogPost, updateBlogPostStatus } from './[id]/actions'
+import { permanentlyDeleteBlogPost, retryPendingBlogMediaCleanup, updateBlogPostStatus } from './[id]/actions'
 
 export type BlogDraftQueueRow = {
   id: string
@@ -153,6 +154,14 @@ export default function BlogDraftQueueClient({
     })
   }
 
+  const retryCleanup = () => {
+    setActionMessage(null)
+    startTransition(async () => {
+      const result = await retryPendingBlogMediaCleanup()
+      setActionMessage({ ok: result.ok, text: result.message })
+    })
+  }
+
   return (
     <div className={styles.page}>
       <PlatformPageHeader
@@ -186,6 +195,11 @@ export default function BlogDraftQueueClient({
           value={statusFilter}
           onChange={updateStatus}
         />
+        {statusFilter === 'archived' ? (
+          <PlatformButton type="button" variant="secondary" size="sm" onClick={retryCleanup} disabled={isPending}>
+            공개 사진 정리 재시도
+          </PlatformButton>
+        ) : null}
 
       </PlatformPanel>
 

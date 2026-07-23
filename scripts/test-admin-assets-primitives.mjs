@@ -5,6 +5,8 @@ const client = await readFile(new URL('../src/app/admin/platform/assets/ContentA
 const styles = await readFile(new URL('../src/app/admin/platform/assets/assets.module.css', import.meta.url), 'utf8')
 const actions = await readFile(new URL('../src/app/admin/platform/assets/actions.ts', import.meta.url), 'utf8')
 const previewRoute = await readFile(new URL('../src/app/admin/platform/assets/[assetId]/preview/route.ts', import.meta.url), 'utf8')
+const page = await readFile(new URL('../src/app/admin/platform/assets/page.tsx', import.meta.url), 'utf8')
+const libraryData = await readFile(new URL('../src/app/admin/platform/assets/library-data.ts', import.meta.url), 'utf8')
 const archiveMigration = await readFile(new URL('../supabase/migrations/20260722090100_content_asset_recoverable_archive.sql', import.meta.url), 'utf8')
 
 for (const primitive of [
@@ -39,8 +41,12 @@ assert.match(client, /onPointerDown=\{handlePointerDown\}[\s\S]*onPointerMove=\{
 assert.match(client, /현재 결과 전체 선택/, 'current results must support accessible bulk selection')
 assert.match(client, /현재 결과 전체 해제/, 'current results must support accessible bulk clear')
 assert.match(client, /visibleItems[\s\S]*더 보기/, 'large result sets must use progressive rendering')
+assert.match(client, /loadMoreContentAssets\(nextOffset\)/, 'older assets must be fetched through server pagination')
+assert.match(libraryData, /\.range\(safeOffset, safeOffset \+ ASSET_LIBRARY_SERVER_PAGE_SIZE\)/, 'the server query must use bounded pages')
+assert.doesNotMatch(page, /\.limit\(300\)/, 'the library must not silently hide assets beyond a fixed 300-row cap')
 assert.match(client, /data-asset-card-button[\s\S]*aria-label=\{selectionMode[\s\S]*선택 해제[\s\S]*상세 보기/, 'the whole asset card must expose its current detail or selection action')
 assert.match(client, /<PlatformModal[\s\S]*closeOnBackdrop[\s\S]*showCloseButton[\s\S]*closeLabel="사진 상세 닫기"/, 'asset detail must close by backdrop, Escape, or an explicit close button')
+assert.match(client, /function requestLifecycle[\s\S]*closeDetail\(\)[\s\S]*setLifecycleItems\(items\)/, 'the detail modal must close before the lifecycle confirmation opens')
 assert.match(client, /loading="lazy"/, 'asset thumbnails must remain viewport-near lazy loaded')
 assert.match(client, /role="status" aria-live="polite"/, 'asset detail save feedback must be announced')
 assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/, 'asset route animation must respect reduced motion')

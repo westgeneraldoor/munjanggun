@@ -12,9 +12,15 @@ const [actions, editor, proxy] = await Promise.all([
 
 assert.match(
   actions,
-  /if \(post\.status === 'archived'\)\s*\{[\s\S]*?보관된 글은 발행할 수 없습니다/,
+  /if \(currentPost\.status === 'archived'\)\s*\{[\s\S]*?휴지통의 글은 발행할 수 없습니다/,
   'the server action must reject archived posts before publication side effects',
 )
+assert.equal(
+  (actions.match(/요약 답변은 21자 이상 작성해야 합니다/g) ?? []).length,
+  2,
+  'ready and publish server gates must both enforce the DB 21-character boundary',
+)
+assert.match(editor, /post\.summaryAnswer\?\.trim\(\)\.length \?\? 0\) > 20/)
 assert.match(
   editor,
   /publishBlogEditor\(buildPayload\(\)\)/,

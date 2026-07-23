@@ -273,6 +273,14 @@ function emptyToNull(value: string) {
   return trimmed.length > 0 ? trimmed : null
 }
 
+function createEditorContentSignature(payload: SaveBlogEditorPayload) {
+  return createStableEditorSignature({
+    postId: payload.postId,
+    post: payload.post,
+    blocks: payload.blocks,
+  })
+}
+
 function fallbackPhotoName(index: number) {
   return `사진 ${index + 1}`
 }
@@ -1274,8 +1282,13 @@ export default function BlogEditorClient({
     ...block,
     clientId: block.id,
   })))
-  const [saveMessage, setSaveMessage] = useState<{ ok: boolean; text: string } | null>(null)
-  const [publishMessage, setPublishMessage] = useState<{ ok: boolean; text: string; issues?: string[] } | null>(null)
+  const [saveMessage, setSaveMessage] = useState<{ ok: boolean; text: string; code?: 'stale_revision' } | null>(null)
+  const [publishMessage, setPublishMessage] = useState<{
+    ok: boolean
+    text: string
+    issues?: string[]
+    code?: 'stale_revision' | 'publication_unknown'
+  } | null>(null)
   const [editorMedia, setEditorMedia] = useState<BlogEditorMedia[]>(media)
   const [readerQuestions, setReaderQuestions] = useState<BlogEditorQuestion[]>(initialQuestions)
   const [assetPickerTarget, setAssetPickerTarget] = useState<AssetPickerTarget | null>(null)
@@ -1283,6 +1296,7 @@ export default function BlogEditorClient({
   const [editorMode, setEditorMode] = useState<EditorMode>('write')
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false)
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false)
+  const [currentRevision, setCurrentRevision] = useState(initialPost.updatedAt)
   const titleRef = useRef<HTMLInputElement>(null)
   const slugRef = useRef<HTMLInputElement>(null)
   const summaryAnswerRef = useRef<HTMLTextAreaElement>(null)
@@ -1397,9 +1411,9 @@ export default function BlogEditorClient({
     },
     {
       key: 'body',
-      ok: Boolean(post.summaryAnswer?.trim()),
+      ok: (post.summaryAnswer?.trim().length ?? 0) > 20,
       label: '요약',
-      detail: post.summaryAnswer?.trim() ? undefined : '요약 답변',
+      detail: (post.summaryAnswer?.trim().length ?? 0) > 20 ? undefined : '요약 답변 21자 이상',
     },
     {
       key: 'body-blocks',
@@ -1540,9 +1554,9 @@ export default function BlogEditorClient({
     })
   }
 
-  const buildPayload = (): SaveBlogEditorPayload => ({
+  const buildPayload = (blockSource: EditableBlock[] = blocks): SaveBlogEditorPayload => ({
     postId: post.id,
-    expectedUpdatedAt: initialPost.updatedAt,
+    expectedUpdatedAt: currentRevision,
     post: {
       title: post.title,
       slug: post.slug,
@@ -1560,7 +1574,7 @@ export default function BlogEditorClient({
       aiCitationReady: post.aiCitationReady,
       mediaMissingReason: emptyToNull(post.mediaMissingReason ?? ''),
     },
-    blocks: blocks.map(block => ({
+    blocks: blockSource.map(block => ({
       id: block.id || null,
       type: block.type,
       headingLevel: block.type === 'heading' ? block.headingLevel : null,
@@ -1599,7 +1613,7 @@ export default function BlogEditorClient({
     })),
   })
   const [savedEditorSignature, setSavedEditorSignature] = useState(initialEditorSignature)
-  const currentEditorSignature = createStableEditorSignature(buildPayload())
+  const currentEditorSignature = createEditorContentSignature(buildPayload())
   const hasUnsavedEditorChanges = currentEditorSignature !== savedEditorSignature
 
   useEffect(() => {
@@ -1634,9 +1648,14 @@ export default function BlogEditorClient({
     setSaveMessage(null)
     startTransition(async () => {
       const result = await saveBlogEditor(buildPayload())
-      setSaveMessage({ ok: result.ok, text: result.message })
-      if (result.ok) {
-        setSavedEditorSignature(currentEditorSignature)
+      setSaveMessage({ ok: result.ok, text: result.message, code: result.code })
+      if (result.ok && result.updatedAt) {
+        const savedBlocks = result.blockIds?.length === blocks.length
+          ? blocks.map((block, index) => ({ ...block, id: result.blockIds?.[index] ?? block.id }))
+          : blocks
+        setCurrentRevision(result.updatedAt)
+        setBlocks(savedBlocks)
+        setSavedEditorSignature(createEditorContentSignature(buildPayload(savedBlocks)))
         router.refresh()
       }
     })
@@ -1648,7 +1667,7 @@ export default function BlogEditorClient({
     startTransition(async () => {
       try {
         const result = await publishBlogEditor(buildPayload())
-        setPublishMessage({ ok: result.ok, text: result.message, issues: result.issues })
+        setPublishMessage({ ok: result.ok, text: result.message, issues: result.issues, code: result.code })
         if (result.ok) {
           setSavedEditorSignature(currentEditorSignature)
           setPost(current => ({ ...current, status: 'published' }))
@@ -1908,10 +1927,24 @@ export default function BlogEditorClient({
           </section>
         </div>
         {saveMessage && (
-          <EditorStateMessage ok={saveMessage.ok} text={saveMessage.text} />
+          <>
+            <EditorStateMessage ok={saveMessage.ok} text={saveMessage.text} />
+            {saveMessage.code === 'stale_revision' ? (
+              <button type="button" className={styles.secondaryButton} onClick={() => window.location.reload()}>
+                최신본 다시 불러오기
+              </button>
+            ) : null}
+          </>
         )}
         {publishMessage && (
-          <EditorStateMessage ok={publishMessage.ok} text={publishMessage.text} issues={publishMessage.issues} />
+          <>
+            <EditorStateMessage ok={publishMessage.ok} text={publishMessage.text} issues={publishMessage.issues} />
+            {publishMessage.code === 'stale_revision' || publishMessage.code === 'publication_unknown' ? (
+              <button type="button" className={styles.secondaryButton} onClick={() => window.location.reload()}>
+                최신본 다시 불러오기
+              </button>
+            ) : null}
+          </>
         )}
         {hasUnsavedEditorChanges && !isPublished && !isArchived && (
           <p className={styles.unsavedHint} role="status">변경 내용은 발행할 때 함께 저장됩니다.</p>

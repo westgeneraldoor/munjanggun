@@ -33,6 +33,11 @@ jobs:
           npm run test:production-fixture-boundary
           npm run test:server-actions-origin
           npm run test:content-asset-hidden-draft-references
+          npm run test:blog-editor-revision-state
+          npm run test:blog-workflow-rpc
+          npm run test:blog-workflow-db-runtime
+          npm run test:content-asset-trash-migration
+          npm run test:admin-navigation-performance
           npm run test:official-asset-detach
           npm run test:admin-node-list-primitives
           npm run test:admin-site-settings-primitives

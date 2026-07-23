@@ -120,10 +120,6 @@
 .queueTable th:nth-child(3) { width: 20%; }
 .queueTable th:nth-child(4) { width: 16%; }
 
-.row {
-  cursor: pointer;
-}
-
 .row:hover td {
   background: var(--admin-surface-elevated);
 }

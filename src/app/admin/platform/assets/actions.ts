@@ -14,6 +14,7 @@ import { readUploadReviewChecks, type UploadReviewChecks } from '@/lib/content-a
 import { createPlatformClient } from '@/lib/supabase/platform-server'
 import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
 import type { Database, Json } from '@/types/database'
+import { loadAssetLibraryServerPage } from './library-data'
 
 const MAX_FILES_PER_UPLOAD = 12
 const MAX_UPLOAD_TOTAL_BYTES = 120 * 1024 * 1024
@@ -41,6 +42,29 @@ export type UploadContentAssetsResult = {
   ok: boolean
   message: string
   items: UploadAssetItemResult[]
+}
+
+export async function loadMoreContentAssets(offset: number) {
+  try {
+    await requireAdministrator()
+    const showroomAdmin = createShowroomAdminClient()
+    const page = await loadAssetLibraryServerPage(showroomAdmin, offset)
+    return {
+      ok: !page.loadError,
+      message: page.loadError ?? '이전 사진을 불러왔습니다.',
+      items: page.items,
+      hasMore: page.hasMore,
+      nextOffset: page.nextOffset,
+    }
+  } catch {
+    return {
+      ok: false,
+      message: '이전 사진을 불러오지 못했습니다.',
+      items: [],
+      hasMore: true,
+      nextOffset: offset,
+    }
+  }
 }
 
 export type UpdateContentAssetPayload = {
@@ -577,13 +601,13 @@ export async function archiveContentAssets(assetIds: string[]): Promise<ArchiveC
   try {
     const actorId = await requireAdministrator()
     const ids = [...new Set(assetIds.filter(value => /^[0-9a-f]{8}-[0-9a-f-]{35}$/i.test(value)))].slice(0, 300)
-    if (ids.length === 0) return { ok: false, message: '보관할 사진을 선택해 주세요.', results: [] }
+    if (ids.length === 0) return { ok: false, message: '휴지통으로 이동할 사진을 선택해 주세요.', results: [] }
 
     const { data, error } = await invokeArchiveRpc(ids, actorId, false)
-    if (error) return { ok: false, message: '사진 보관 여부를 확인하지 못했습니다.', results: [] }
+    if (error) return { ok: false, message: '사진의 휴지통 이동 가능 여부를 확인하지 못했습니다.', results: [] }
     const rawResults = (data as { results?: unknown } | null)?.results
     const results = Array.isArray(rawResults) ? rawResults.filter(isArchiveResult) : []
-    if (results.length !== ids.length) return { ok: false, message: '사진 보관 결과를 안전하게 확인하지 못했습니다.', results: [] }
+    if (results.length !== ids.length) return { ok: false, message: '사진 휴지통 이동 결과를 안전하게 확인하지 못했습니다.', results: [] }
 
     revalidatePath('/admin/platform/assets')
     const archived = results.filter(item => item.changed).length
@@ -591,12 +615,12 @@ export async function archiveContentAssets(assetIds: string[]): Promise<ArchiveC
     return {
       ok: true,
       message: blocked > 0
-        ? `${archived}장을 보관했습니다. ${blocked}장은 사용 중이라 보관하지 않았습니다.`
-        : `${archived}장을 보관했습니다. 사진 파일은 삭제하지 않았습니다.`,
+        ? `${archived}장을 휴지통으로 이동했습니다. ${blocked}장은 사용 중이라 이동하지 않았습니다.`
+        : `${archived}장을 휴지통으로 이동했습니다. 사진 파일은 삭제하지 않았습니다.`,
       results,
     }
   } catch {
-    return { ok: false, message: '사진 보관 중 오류가 발생했습니다. 다시 시도해 주세요.', results: [] }
+    return { ok: false, message: '사진을 휴지통으로 이동하는 중 오류가 발생했습니다. 다시 시도해 주세요.', results: [] }
   }
 }
 
