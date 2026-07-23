@@ -28,7 +28,10 @@ BEGIN
     RAISE EXCEPTION 'actor must be an administrator';
   END IF;
 
-  FOR v_asset_id IN SELECT DISTINCT unnest(p_asset_ids)
+  FOR v_asset_id IN
+    SELECT DISTINCT candidate_id
+    FROM unnest(p_asset_ids) AS candidate_id
+    ORDER BY candidate_id
   LOOP
     SELECT asset.library_state
     INTO v_current_state
@@ -131,7 +134,7 @@ BEGIN
       FROM showroom.content_asset_usages AS usage
       WHERE usage.asset_id = v_asset_id
         AND usage.ref_table NOT IN ('showroom.blog_posts', 'showroom.blog_blocks')
-    ) AS references;
+    ) AS reference_rows;
 
     IF jsonb_array_length(v_references) > 0 THEN
       v_results := v_results || jsonb_build_array(jsonb_build_object(

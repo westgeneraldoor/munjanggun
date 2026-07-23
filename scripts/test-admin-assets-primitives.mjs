@@ -51,11 +51,13 @@ assert.match(previewRoute, /private, no-store, max-age=0/, 'preview route must n
 assert.doesNotMatch(previewRoute, /createSignedUrl/, 'preview route must stream opaque bytes rather than leak signed storage URLs')
 assert.match(archiveMigration, /FOR UPDATE/, 'archive RPC must lock rows before rechecking references')
 assert.match(archiveMigration, /FOR KEY SHARE/, 'new references must serialize against the archive row lock')
+assert.match(archiveMigration, /FROM unnest\(p_asset_ids\) AS candidate_id[\s\S]*ORDER BY candidate_id/, 'bulk archive must lock assets in a deterministic order')
 assert.match(archiveMigration, /reject_archived_content_asset_blog_media_reference/, 'blog media inserts must reject archived assets at the database boundary')
 assert.match(archiveMigration, /reject_archived_content_asset_usage_reference/, 'usage-ledger writes must reject archived assets at the database boundary')
 assert.match(archiveMigration, /showroom\.blog_media/, 'archive RPC must inspect direct blog media references')
 assert.match(archiveMigration, /showroom\.blog_blocks/, 'archive RPC must inspect body block references')
 assert.match(archiveMigration, /showroom\.content_asset_usages/, 'archive RPC must inspect the asset usage ledger')
+assert.doesNotMatch(archiveMigration, /\bAS\s+references\b/i, 'archive migration must not use the reserved REFERENCES keyword as an alias')
 assert.doesNotMatch(archiveMigration, /DELETE\s+FROM\s+(?:storage\.|showroom\.content_assets)/i, 'archive migration must remain recoverable and never delete assets')
 
 console.log('admin assets primitive contract passed')
