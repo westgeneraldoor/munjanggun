@@ -32,6 +32,7 @@
     "test:blog-queue-list-primitives-browser": "playwright test tests/blog-queue-list-primitives.spec.ts",
     "test:brand-token-snapshot": "node scripts/test-brand-token-snapshot.mjs",
     "test:blog-likes-migration": "node scripts/test-blog-likes-migration.mjs",
+    "test:content-asset-hidden-draft-references": "node scripts/test-content-asset-hidden-draft-references.mjs",
     "test:customer-portal-simplification": "node scripts/test-customer-portal-simplification.mjs",
     "test:blog-publish-safety": "node scripts/test-blog-publish-safety.mjs",
     "test:blog-status-transitions": "node scripts/test-blog-status-transitions.mjs",
