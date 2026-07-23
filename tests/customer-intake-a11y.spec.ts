@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
 async function loginAsCustomer(page: Page, next: string) {
-  const response = await page.goto(`/api/dev/playwright-login?role=customer&next=${encodeURIComponent(next)}`)
+  const response = await page.goto(`/api/dev/playwright-login?role=customer&next=${encodeURIComponent(next)}`, { waitUntil: 'domcontentloaded' })
   if (response && response.status() >= 500) {
     test.skip(true, 'Dev Supabase login is not configured in this environment.')
   }

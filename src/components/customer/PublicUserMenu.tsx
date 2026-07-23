@@ -17,7 +17,7 @@ interface MenuProfile {
 }
 
 type PublicUserMenuProps = {
-  variant?: 'floating' | 'blog'
+  variant?: 'floating' | 'blog' | 'inline'
   tone?: 'dark' | 'light' | 'hero'
   open?: boolean
   onOpenChange?: (open: boolean) => void
@@ -29,6 +29,7 @@ const HIDDEN_PATH_PREFIXES = [
   '/auth',
   '/login',
   '/manager',
+  '/measure',
   '/portal',
 ]
 
@@ -64,14 +65,17 @@ export default function PublicUserMenu({
   }, [isOpenControlled, onOpenChange])
 
   const isBlogPath = pathname === '/blog' || pathname.startsWith('/blog/')
-  const isEmbedded = variant === 'blog'
-  const isHidden = HIDDEN_PATH_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
-    || (isBlogPath && !isEmbedded)
+  const isInline = variant === 'inline'
+  const isEmbedded = variant !== 'floating'
+  const isHidden = !isEmbedded && (
+    HIDDEN_PATH_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+    || isBlogPath
+  )
   const loginHref = `/login?next=${encodeURIComponent(pathname || '/')}`
   const containerClassName = [
     styles.container,
-    isEmbedded ? styles.blogEmbedded : '',
-    tone === 'hero' ? styles.blogHero : tone === 'light' ? styles.blogLight : styles.blogDark,
+    isInline ? styles.inlineEmbedded : variant === 'blog' ? styles.blogEmbedded : '',
+    isInline ? '' : tone === 'hero' ? styles.blogHero : tone === 'light' ? styles.blogLight : styles.blogDark,
   ].filter(Boolean).join(' ')
 
   useEffect(() => {

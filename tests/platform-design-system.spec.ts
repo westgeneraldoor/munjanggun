@@ -78,7 +78,7 @@ test('theme scopes override semantic component tokens', async ({ page }) => {
 
 test('customer portal uses the platform theme without mobile overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 })
-  const response = await page.goto('/api/dev/playwright-login?role=customer&next=/portal')
+  const response = await page.goto('/api/dev/playwright-login?role=customer&next=/portal', { waitUntil: 'domcontentloaded' })
 
   if (response && response.status() >= 500) {
     test.skip(true, 'Dev Supabase login is not configured in this environment.')
@@ -100,7 +100,7 @@ test('customer portal uses the platform theme without mobile overflow', async ({
 
 test('customer portal groups blog activity for My Page convenience', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 })
-  const response = await page.goto('/api/dev/playwright-login?role=customer&next=/portal')
+  const response = await page.goto('/api/dev/playwright-login?role=customer&next=/portal', { waitUntil: 'domcontentloaded' })
 
   if (response && response.status() >= 500) {
     test.skip(true, 'Dev Supabase login is not configured in this environment.')
@@ -163,7 +163,7 @@ test('customer intake routes use the platform theme without mobile overflow', as
   await page.setViewportSize({ width: 390, height: 900 })
 
   for (const route of ['/portal/measure/new', '/portal/as/new']) {
-    const response = await page.goto(`/api/dev/playwright-login?role=customer&next=${encodeURIComponent(route)}`)
+    const response = await page.goto(`/api/dev/playwright-login?role=customer&next=${encodeURIComponent(route)}`, { waitUntil: 'domcontentloaded' })
 
     if (response && response.status() >= 500) {
       test.skip(true, 'Dev Supabase login is not configured in this environment.')
@@ -204,12 +204,65 @@ test('free measurement landing is public and leads into the protected intake for
   await page.setViewportSize({ width: 390, height: 900 })
   await page.goto('/measure')
 
-  await expect(page.getByRole('heading', { name: /집에 맞는지 먼저 보고/ })).toBeVisible()
-  await expect(page.getByRole('link', { name: /문장군 블로그로 돌아가기/ })).toHaveAttribute('href', '/blog')
-  await expect(page.getByRole('link', { name: /무료방문 실측견적 신청/ })).toHaveAttribute('href', '/portal/measure/new')
+  await expect(page.getByRole('heading', { name: /집에 맞는 문은/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: '문장군 홈으로 이동' })).toHaveAttribute('href', '/')
+  await expect(page.getByRole('link', { name: /문장군 블로그로 돌아가기/ })).toHaveCount(0)
+  await expect(page.locator('main img[src*="/_next/image"]')).toHaveCount(0)
+  const heroCta = page.getByTestId('measure-hero-cta')
+  await expect(heroCta).toHaveAttribute('href', '/portal/measure/new')
+  await expect(heroCta).toHaveAccessibleName('무료방문 실측견적 신청')
+  const conditionGroup = page.getByRole('group', { name: '현관 조건 선택' })
+  await expect(conditionGroup).toBeVisible()
+  await expect(conditionGroup.getByRole('button', { name: /신발장 간섭/ })).toHaveAttribute('aria-pressed', 'true')
+  const finishCondition = conditionGroup.getByRole('button', { name: /마감 간섭/ })
+  await finishCondition.focus()
+  await page.keyboard.press('Enter')
+  await expect(finishCondition).toHaveAttribute('aria-pressed', 'true')
+
+  const siteVisitStep = page.getByRole('button', { name: /03 방문 실측/ })
+  await siteVisitStep.focus()
+  await page.keyboard.press('Enter')
+  await expect(siteVisitStep).toHaveAttribute('aria-expanded', 'true')
+  await expect(page.getByText('현장 구조와 마감, 시공 가능 조건을 확인합니다.')).toBeVisible()
+  await expect(page.getByTestId('measure-mobile-cta')).toBeVisible()
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(1)
+})
+
+test('measurement CTA keeps the protected intake return path after login', async ({ page }) => {
+  await page.goto('/measure')
+
+  const heroCta = page.getByTestId('measure-hero-cta')
+  await expect(heroCta).toHaveAttribute('href', '/portal/measure/new')
+  await heroCta.click()
+  await expect(page).toHaveURL(/\/login\?next=%2Fportal%2Fmeasure%2Fnew/)
+})
+
+test('measurement landing reuses customer and administrator account menu behavior', async ({ page }) => {
+  const loginAs = async (role: 'customer' | 'administrator') => {
+    const response = await page.goto(`/api/dev/playwright-login?role=${role}&next=/measure`, { waitUntil: 'domcontentloaded' })
+    if (response && response.status() >= 500) {
+      test.skip(true, 'Dev Supabase login is not configured in this environment.')
+    }
+    if (page.url().includes('/login')) {
+      test.skip(true, 'Dev user login redirected to the public login page in this environment.')
+    }
+    await expect(page).toHaveURL(/\/measure$/)
+  }
+
+  await loginAs('customer')
+  const customerMenu = page.getByRole('button', { name: '계정 메뉴 열기' })
+  await expect(customerMenu).toBeVisible()
+  await customerMenu.click()
+  await expect(page.getByRole('menuitem', { name: '마이페이지' })).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: '무료방문견적 신청' })).toBeVisible()
+  await expect(page.getByRole('menuitem', { name: '플랫폼 어드민' })).toHaveCount(0)
+
+  await loginAs('administrator')
+  const administratorMenu = page.getByRole('button', { name: '계정 메뉴 열기' })
+  await administratorMenu.click()
+  await expect(page.getByRole('menuitem', { name: '플랫폼 어드민' })).toBeVisible()
 })
 
 test('measurement intake preserves private blog question context after login', async ({ page }) => {
@@ -223,7 +276,7 @@ test('measurement intake preserves private blog question context after login', a
   })
 
   const next = '/portal/measure/new?source=blog-question&post=test-blog-post'
-  const response = await page.goto(`/api/dev/playwright-login?role=customer&next=${encodeURIComponent(next)}`)
+  const response = await page.goto(`/api/dev/playwright-login?role=customer&next=${encodeURIComponent(next)}`, { waitUntil: 'domcontentloaded' })
 
   if (response && response.status() >= 500) {
     test.skip(true, 'Dev Supabase login is not configured in this environment.')
