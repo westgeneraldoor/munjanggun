@@ -133,7 +133,7 @@ export default function MeasureExperience() {
             </ul>
           </div>
           <div className={styles.heroVisual}>
-            <Image src="/images/measure/illustrative-entryway-hero.png" alt="문틀과 바닥 단차, 현관 수납장이 보이는 설명용 가상 현관" fill loading="eager" sizes="(max-width: 900px) 100vw, 54vw" className={styles.coverImage} />
+            <Image src="/images/measure/illustrative-entryway-hero.png" alt="문틀과 바닥 단차, 현관 수납장이 보이는 설명용 가상 현관" fill loading="eager" sizes="(max-width: 900px) 100vw, 54vw" className={styles.coverImage} unoptimized />
             <div className={styles.heroOverlay} />
             <div className={styles.heroStamp}><Ruler size={20} aria-hidden="true" /><span>현장 구조를<br />먼저 확인합니다</span></div>
             <p className={styles.imageCaption}><span>설명용 이미지 · 실제 시공 사례가 아닙니다.</span>방문 실측은 제품을 고르기 전, 집의 조건을 확인하는 상담입니다.</p>
@@ -159,7 +159,7 @@ export default function MeasureExperience() {
             <div className={styles.conditionStage} aria-live="polite">
               <div className={styles.conditionImage}>
                 {conditions.map((item, index) => (
-                  <Image key={item.id} src={item.image} alt={activeCondition === index ? item.alt : ''} fill sizes="(max-width: 900px) 100vw, 52vw" className={`${styles.coverImage} ${activeCondition === index ? styles.conditionImageActive : styles.conditionImageIdle}`} />
+                  <Image key={item.id} src={item.image} alt={activeCondition === index ? item.alt : ''} fill sizes="(max-width: 900px) 100vw, 52vw" className={`${styles.coverImage} ${activeCondition === index ? styles.conditionImageActive : styles.conditionImageIdle}`} unoptimized />
                 ))}
                 <div className={styles.hotspots} aria-hidden="true">
                   {condition.hotspots.map((spot) => <span key={spot.label} style={{ left: spot.x, top: spot.y }}><i />{spot.label}</span>)}
@@ -187,7 +187,7 @@ export default function MeasureExperience() {
         </section>
 
         <section id="process" className={styles.process} aria-labelledby="process-title">
-          <div className={styles.processImage}><Image src="/images/measure/illustrative-level-study.png" alt="레이저 수평기와 바닥 경계가 보이는 설명용 가상 현관" fill sizes="(max-width: 900px) 100vw, 44vw" className={styles.coverImage} /><span className={styles.illustrationLabel}>설명용 이미지</span></div>
+          <div className={styles.processImage}><Image src="/images/measure/illustrative-level-study.png" alt="레이저 수평기와 바닥 경계가 보이는 설명용 가상 현관" fill sizes="(max-width: 900px) 100vw, 44vw" className={styles.coverImage} unoptimized /><span className={styles.illustrationLabel}>설명용 이미지</span></div>
           <div className={styles.processContent}>
             <p className={styles.eyebrow}>FROM REQUEST TO DECISION</p>
             <h2 id="process-title">접수부터 결정까지,<br />한 단계씩 분명하게.</h2>
@@ -212,12 +212,12 @@ export default function MeasureExperience() {
             <p>사진은 필수는 아닙니다. 다만 구조를 함께 볼 수 있으면 방문 전 안내가 더 수월해집니다.</p>
           </div>
           <ol className={styles.photoSteps}>
-            {photoGuides.map((guide) => <li key={guide.number}><div className={styles.photoIllustration}><Image src={guide.image} alt={guide.alt} fill sizes="(max-width: 620px) 100vw, 33vw" className={styles.coverImage} /><span className={styles.illustrationLabel}>설명용 이미지</span></div><span>{guide.number}</span><div><strong>{guide.title}</strong><p>{guide.description}</p></div></li>)}
+            {photoGuides.map((guide) => <li key={guide.number}><div className={styles.photoIllustration}><Image src={guide.image} alt={guide.alt} fill sizes="(max-width: 620px) 100vw, 33vw" className={styles.coverImage} unoptimized /><span className={styles.illustrationLabel}>설명용 이미지</span></div><span>{guide.number}</span><div><strong>{guide.title}</strong><p>{guide.description}</p></div></li>)}
           </ol>
         </section>
 
         <section className={styles.trust} aria-labelledby="trust-title">
-          <div className={styles.trustImage}><Image src="/images/measure/illustrative-condition-study.png" alt="문틀과 수납장 경계가 보이는 설명용 가상 현관" fill sizes="(max-width: 900px) 100vw, 45vw" className={styles.coverImage} /><span className={styles.illustrationLabel}>설명용 이미지</span></div>
+          <div className={styles.trustImage}><Image src="/images/measure/illustrative-condition-study.png" alt="문틀과 수납장 경계가 보이는 설명용 가상 현관" fill sizes="(max-width: 900px) 100vw, 45vw" className={styles.coverImage} unoptimized /><span className={styles.illustrationLabel}>설명용 이미지</span></div>
           <div className={styles.trustCopy}><Sparkles size={22} aria-hidden="true" /><p className={styles.eyebrow}>THE MUNJANGGUN STANDARD</p><h2 id="trust-title">직접 제작부터 전속 시공,<br />A/S까지 이어지는 선택.</h2><p>문장군은 문짝만의 문제가 아니라 설치와 마감까지 함께 살핍니다. 그래서 실측에서 구조와 선택 기준을 충분히 확인합니다.</p><ul><li><DoorOpen size={17} aria-hidden="true" />집에 맞는 구조를 먼저 검토</li><li><Compass size={17} aria-hidden="true" />현장 조건과 원하는 디자인을 함께 상담</li><li><ShieldCheck size={17} aria-hidden="true" />시공 뒤 A/S 접수까지 이어지는 고객 여정</li></ul></div>
         </section>
 

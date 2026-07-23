@@ -207,6 +207,7 @@ test('free measurement landing is public and leads into the protected intake for
   await expect(page.getByRole('heading', { name: /집에 맞는 문은/ })).toBeVisible()
   await expect(page.getByRole('link', { name: '문장군 홈으로 이동' })).toHaveAttribute('href', '/')
   await expect(page.getByRole('link', { name: /문장군 블로그로 돌아가기/ })).toHaveCount(0)
+  await expect(page.locator('main img[src*="/_next/image"]')).toHaveCount(0)
   const heroCta = page.getByTestId('measure-hero-cta')
   await expect(heroCta).toHaveAttribute('href', '/portal/measure/new')
   await expect(heroCta).toHaveAccessibleName('무료방문 실측견적 신청')
