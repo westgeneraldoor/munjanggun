@@ -20,6 +20,11 @@ for (const functionName of [
     new RegExp(`REVOKE ALL ON FUNCTION showroom\\.${functionName}\\(\\)[\\s\\S]*?FROM PUBLIC, anon, authenticated`, 'i'),
     `${functionName} must not become directly executable by clients`,
   )
+  assert.match(
+    migration,
+    new RegExp(`CREATE OR REPLACE FUNCTION showroom\\.${functionName}\\(\\)[\\s\\S]*?FOR KEY SHARE`, 'i'),
+    `${functionName} must serialize references against concurrent archive`,
+  )
 }
 
 assert.match(
