@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
+  "name": "munjanggun-production-router",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-21",
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "munjanggun.com/*",
+      "zone_name": "munjanggun.com"
+    },
+    {
+      "pattern": "www.munjanggun.com/*",
+      "zone_name": "munjanggun.com"
+    }
+  ],
+  "vars": {
+    "HOME_ORIGIN": "https://munjanggun-home.pages.dev",
+    "APP_ORIGIN": "https://preview.munjanggun.com",
+    "PUBLIC_ORIGIN": "https://munjanggun.com"
+  }
+}
