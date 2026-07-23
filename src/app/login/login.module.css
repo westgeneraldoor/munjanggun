@@ -25,29 +25,30 @@
   align-items: center;
 }
 
-.closeLink {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 44px;
-  height: 44px;
+.contextLink {
+  min-height: var(--mg-control-size-min);
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  border-radius: var(--mg-radius-full);
+  align-self: flex-start;
+  gap: var(--mg-space-sm);
+  margin-bottom: var(--mg-space-md);
   color: var(--mg-text-muted);
-  background: var(--mg-surface-page-soft);
-  border: 1px solid var(--mg-border-subtle);
+  font-size: var(--mg-current-label);
+  font-weight: var(--mg-font-weight-label);
   text-decoration: none;
 }
 
-.closeLink:hover {
+.contextLink:hover {
   color: var(--mg-action-primary);
-  border-color: var(--mg-border-strong);
+}
+
+.contextLink:focus-visible {
+  outline: 3px solid var(--mg-focus-ring);
+  outline-offset: 3px;
 }
 
 .wordmark {
-  margin: var(--mg-space-sm) 0 var(--mg-space-xl);
+  margin: 0 0 var(--mg-space-xl);
   color: var(--mg-text-primary);
 }
 

@@ -1,12 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { getSafeInternalPath } from '@/lib/safe-internal-path'
 
 function getSafeNextPath(request: NextRequest) {
   const nextPath = `${request.nextUrl.pathname}${request.nextUrl.search}`
-  if (!nextPath.startsWith('/') || nextPath.startsWith('//')) {
-    return '/portal'
-  }
-  return nextPath
+  return getSafeInternalPath(nextPath)
 }
 
 function getCustomerLoginUrl(request: NextRequest) {
@@ -16,11 +14,7 @@ function getCustomerLoginUrl(request: NextRequest) {
 }
 
 function getSafeLoginNextParam(request: NextRequest) {
-  const nextParam = request.nextUrl.searchParams.get('next')
-  if (!nextParam || !nextParam.startsWith('/') || nextParam.startsWith('//')) {
-    return '/portal'
-  }
-  return nextParam
+  return getSafeInternalPath(request.nextUrl.searchParams.get('next'))
 }
 
 function hasSupabasePublicEnv() {

@@ -29,9 +29,15 @@ interface BlogQuestionContext {
   postSlug: string
 }
 
+interface MeasureConcernContext {
+  id: 'cabinet' | 'finish' | 'level'
+  label: string
+}
+
 interface Props {
   userId: string
   blogQuestionContext?: BlogQuestionContext | null
+  measureConcernContext?: MeasureConcernContext | null
 }
 
 interface CategoryOption {
@@ -78,6 +84,22 @@ function buildBlogQuestionMessage(blogQuestionContext: BlogQuestionContext | nul
     `글: ${blogQuestionContext.postSlug.trim()}`,
     draft.trim() ? `질문 메모: ${draft.trim()}` : null,
   ].filter(Boolean).join('\n')
+}
+
+function buildMeasureConcernMessage(measureConcernContext: MeasureConcernContext | null) {
+  if (!measureConcernContext) return ''
+  return `실측견적 안내에서 ${measureConcernContext.label} 조건을 살펴보고 신청했습니다.`
+}
+
+function buildInitialMessage(
+  blogQuestionContext: BlogQuestionContext | null,
+  measureConcernContext: MeasureConcernContext | null,
+  draft = '',
+) {
+  return [
+    buildBlogQuestionMessage(blogQuestionContext, draft),
+    buildMeasureConcernMessage(measureConcernContext),
+  ].filter(Boolean).join('\n\n')
 }
 
 function consumeBlogQuestionDraft(postSlug: string) {
@@ -181,7 +203,7 @@ function classifyServiceRegion(addressText: string): ServiceRegion {
   }
 }
 
-export default function MeasureForm({ userId, blogQuestionContext = null }: Props) {
+export default function MeasureForm({ userId, blogQuestionContext = null, measureConcernContext = null }: Props) {
   const [currentStep, setCurrentStep] = useState(0)
   const [isDone, setIsDone] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -208,7 +230,7 @@ export default function MeasureForm({ userId, blogQuestionContext = null }: Prop
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [visitDate, setVisitDate] = useState('')
-  const [message, setMessage] = useState(() => buildBlogQuestionMessage(blogQuestionContext, ''))
+  const [message, setMessage] = useState(() => buildInitialMessage(blogQuestionContext, measureConcernContext))
   const [referrerName, setReferrerName] = useState('')
   const [privacy, setPrivacy] = useState(false)
   const [files, setFiles] = useState<FilePreview[]>([])
@@ -233,16 +255,16 @@ export default function MeasureForm({ userId, blogQuestionContext = null }: Prop
 
       if (!draft) return
 
-      const blogQuestionMessage = buildBlogQuestionMessage(blogQuestionContext, draft)
+      const contextualMessage = buildInitialMessage(blogQuestionContext, measureConcernContext, draft)
       setMessage(prev => {
-        if (!prev.trim()) return blogQuestionMessage
+        if (!prev.trim()) return contextualMessage
         if (prev.includes('질문 메모:') || !prev.startsWith('블로그 글 질문에서 이어진 상담입니다.')) return prev
-        return blogQuestionMessage
+        return contextualMessage
       })
     }, 0)
 
     return () => window.clearTimeout(timer)
-  }, [blogQuestionContext])
+  }, [blogQuestionContext, measureConcernContext])
 
   useEffect(() => {
     async function loadCategories() {
@@ -527,7 +549,7 @@ export default function MeasureForm({ userId, blogQuestionContext = null }: Prop
             <h1 className={styles.doneTitle}>접수되었습니다.</h1>
             <p className={styles.doneDesc}>
               담당자가 주소, 품목, 방문 희망일을 확인한 뒤 연락드릴게요.
-              방문 시간은 전날 오후 4~5시쯤 코스 마감 후 안내드립니다.
+              방문 시간은 담당자가 희망일과 지역별 코스를 확인한 뒤 안내드립니다.
             </p>
             <div className={styles.doneNotice}>
               전화가 부재중이면 문자라도 남겨드립니다. 안내받은 시간이 맞지 않으면 일정 변경도 도와드려요.
@@ -583,6 +605,13 @@ export default function MeasureForm({ userId, blogQuestionContext = null }: Prop
             </div>
           )}
 
+          {measureConcernContext && (
+            <div className={styles.blogContextBanner} data-testid="measure-condition-context">
+              <strong>{measureConcernContext.label} 조건에서 이어졌어요.</strong>
+              <span>선택한 현관 조건을 상담 희망 내용에 넣어두었습니다. 현장에서는 다른 조건도 함께 확인합니다.</span>
+            </div>
+          )}
+
           {currentStep === 0 && (
             <div className={styles.stepScreen}>
               <div className={styles.screenHeader}>
@@ -595,8 +624,8 @@ export default function MeasureForm({ userId, blogQuestionContext = null }: Prop
               <div className={styles.reassuranceList}>
                 <div>
                   <CalendarDays size={20} strokeWidth={1.8} aria-hidden="true" />
-                  <strong>시간은 전날 안내드려요</strong>
-                  <span>방문 전날 오후 4~5시쯤 코스를 마감하고 담당자가 직접 연락드립니다.</span>
+                  <strong>방문 시간은 확인 후 안내드려요</strong>
+                  <span>담당자가 희망일과 지역별 방문 코스를 확인한 뒤 직접 연락드립니다.</span>
                 </div>
                 <div>
                   <UserRound size={20} strokeWidth={1.8} aria-hidden="true" />
@@ -794,7 +823,7 @@ export default function MeasureForm({ userId, blogQuestionContext = null }: Prop
               <div className={styles.screenHeader}>
                 <p className={styles.stepKicker}>방문 희망일</p>
                 <h2>가능한 날짜를 선택해 주세요.</h2>
-                <p>시간 지정은 어렵지만, 담당자가 방문 전날 오후 4~5시쯤 코스를 마감하고 직접 안내드립니다.</p>
+                <p>시간 지정은 어렵지만, 담당자가 희망일과 지역별 방문 코스를 확인한 뒤 직접 안내드립니다.</p>
               </div>
 
               <div className={styles.scheduleGuide}>
