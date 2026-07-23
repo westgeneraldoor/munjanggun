@@ -13,6 +13,7 @@ const APP_PATH_PREFIXES = [
   '/auth/callback',
   '/blog',
   '/images/blog-launch/',
+  '/icon.png',
   '/login',
   '/measure',
   '/portal',
