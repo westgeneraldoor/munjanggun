@@ -32,6 +32,13 @@ test('routes the Next.js generated icon through the Vercel application origin', 
   assert.equal(routed.pathname, '/icon.png')
 })
 
+test('routes measurement landing illustrations through the Vercel application origin', async () => {
+  const routed = await routedOrigin('/images/measure/illustrative-entryway-hero.png')
+
+  assert.equal(routed.origin, env.APP_ORIGIN)
+  assert.equal(routed.pathname, '/images/measure/illustrative-entryway-hero.png')
+})
+
 test('keeps the homepage root on Cloudflare Pages', async () => {
   const routed = await routedOrigin('/')
 
