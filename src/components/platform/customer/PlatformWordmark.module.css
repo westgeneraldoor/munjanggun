@@ -1,0 +1,13 @@
+.wordmark {
+  display: inline-block;
+  color: var(--mg-text-primary);
+  font-family: var(--mg-platform-wordmark), Nunito, sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0.035em;
+  line-height: 1;
+}
+
+@media (max-width: 620px) {
+  .wordmark { font-size: 17px; }
+}

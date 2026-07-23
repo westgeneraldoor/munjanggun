@@ -43,6 +43,46 @@
   color: inherit;
 }
 
+.inlineEmbedded {
+  position: relative;
+  top: auto;
+  right: auto;
+  z-index: 2;
+  color: var(--mg-text-primary);
+}
+
+.inlineEmbedded .loginLink,
+.inlineEmbedded .embeddedTrigger {
+  min-height: var(--mg-control-size-min);
+  color: var(--mg-text-body);
+  background: var(--mg-surface-card);
+  border-color: var(--mg-border-subtle);
+  border-radius: var(--mg-radius-md);
+  box-shadow: none;
+}
+
+.inlineEmbedded .loginLink:hover,
+.inlineEmbedded .loginLink:focus-visible,
+.inlineEmbedded .embeddedTrigger:hover,
+.inlineEmbedded .embeddedTrigger:focus-visible {
+  color: var(--mg-text-primary);
+  background: var(--mg-surface-page-soft);
+  border-color: var(--mg-border-strong);
+}
+
+.inlineEmbedded .menu {
+  color: var(--mg-text-primary);
+  background: var(--mg-surface-card);
+  border-color: var(--mg-border-subtle);
+  border-radius: var(--mg-radius-card);
+}
+
+.inlineEmbedded .identity { border-bottom-color: var(--mg-border-subtle); }
+.inlineEmbedded .identityName,
+.inlineEmbedded .menuItem { color: var(--mg-text-primary); }
+.inlineEmbedded .identityEmail { color: var(--mg-text-muted); }
+.inlineEmbedded .menuItem:hover { color: var(--mg-text-primary); background: var(--mg-surface-page-soft); }
+
 .blogEmbedded .loginLink,
 .embeddedTrigger {
   min-height: var(--mg-blog-control-size);
@@ -231,13 +271,23 @@
     right: auto;
   }
 
+  .inlineEmbedded {
+    top: auto;
+    right: auto;
+  }
+
   .blogEmbedded .loginLink,
+  .inlineEmbedded .loginLink,
+  .inlineEmbedded .embeddedTrigger,
   .embeddedTrigger {
     width: var(--mg-control-size-min);
     padding: 0;
   }
 
   .blogEmbedded .loginLink span,
+  .inlineEmbedded .loginLink span,
+  .inlineEmbedded .embeddedTrigger span,
+  .inlineEmbedded .embeddedTrigger svg:last-child,
   .embeddedTrigger span,
   .embeddedTrigger svg:last-child {
     position: absolute;
@@ -248,6 +298,11 @@
   }
 
   .blogEmbedded .menu {
+    right: calc(var(--mg-border-width-strong) * -1);
+    width: min(calc(var(--mg-layout-section) * 2 + var(--mg-space-3) + var(--mg-border-width-strong)), calc(100vw - var(--mg-space-5)));
+  }
+
+  .inlineEmbedded .menu {
     right: calc(var(--mg-border-width-strong) * -1);
     width: min(calc(var(--mg-layout-section) * 2 + var(--mg-space-3) + var(--mg-border-width-strong)), calc(100vw - var(--mg-space-5)));
   }
