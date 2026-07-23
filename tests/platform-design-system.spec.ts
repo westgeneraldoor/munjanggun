@@ -78,7 +78,7 @@ test('theme scopes override semantic component tokens', async ({ page }) => {
 
 test('customer portal uses the platform theme without mobile overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 })
-  const response = await page.goto('/api/dev/playwright-login?role=customer&next=/portal')
+  const response = await page.goto('/api/dev/playwright-login?role=customer&next=/portal', { waitUntil: 'domcontentloaded' })
 
   if (response && response.status() >= 500) {
     test.skip(true, 'Dev Supabase login is not configured in this environment.')
@@ -100,7 +100,7 @@ test('customer portal uses the platform theme without mobile overflow', async ({
 
 test('customer portal groups blog activity for My Page convenience', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 })
-  const response = await page.goto('/api/dev/playwright-login?role=customer&next=/portal')
+  const response = await page.goto('/api/dev/playwright-login?role=customer&next=/portal', { waitUntil: 'domcontentloaded' })
 
   if (response && response.status() >= 500) {
     test.skip(true, 'Dev Supabase login is not configured in this environment.')
@@ -163,7 +163,7 @@ test('customer intake routes use the platform theme without mobile overflow', as
   await page.setViewportSize({ width: 390, height: 900 })
 
   for (const route of ['/portal/measure/new', '/portal/as/new']) {
-    const response = await page.goto(`/api/dev/playwright-login?role=customer&next=${encodeURIComponent(route)}`)
+    const response = await page.goto(`/api/dev/playwright-login?role=customer&next=${encodeURIComponent(route)}`, { waitUntil: 'domcontentloaded' })
 
     if (response && response.status() >= 500) {
       test.skip(true, 'Dev Supabase login is not configured in this environment.')
@@ -240,7 +240,7 @@ test('measurement CTA keeps the protected intake return path after login', async
 
 test('measurement landing reuses customer and administrator account menu behavior', async ({ page }) => {
   const loginAs = async (role: 'customer' | 'administrator') => {
-    const response = await page.goto(`/api/dev/playwright-login?role=${role}&next=/measure`)
+    const response = await page.goto(`/api/dev/playwright-login?role=${role}&next=/measure`, { waitUntil: 'domcontentloaded' })
     if (response && response.status() >= 500) {
       test.skip(true, 'Dev Supabase login is not configured in this environment.')
     }
@@ -275,7 +275,7 @@ test('measurement intake preserves private blog question context after login', a
   })
 
   const next = '/portal/measure/new?source=blog-question&post=test-blog-post'
-  const response = await page.goto(`/api/dev/playwright-login?role=customer&next=${encodeURIComponent(next)}`)
+  const response = await page.goto(`/api/dev/playwright-login?role=customer&next=${encodeURIComponent(next)}`, { waitUntil: 'domcontentloaded' })
 
   if (response && response.status() >= 500) {
     test.skip(true, 'Dev Supabase login is not configured in this environment.')
