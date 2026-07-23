@@ -119,7 +119,12 @@ assert.match(migrationSource, /'storageFiles', v_storage_files/)
 assert.match(editorActionSource, /\.rpc\('acquire_blog_editor_save_lease'/)
 assert.match(editorActionSource, /finally \{/)
 assert.match(editorActionSource, /\.rpc\('release_blog_editor_save_lease'/)
-assert.match(editorClientSource, /expectedUpdatedAt: initialPost\.updatedAt/)
+assert.match(editorClientSource, /useState\(initialPost\.updatedAt\)/)
+assert.match(
+  editorClientSource,
+  /expectedUpdatedAt: currentRevision/,
+  'subsequent saves must use the latest server-acknowledged editor revision',
+)
 assert.match(leaseReconciliationSource, /CODEX_AUDIT_ACTOR_ID/)
 assert.match(leaseReconciliationSource, /\.rpc\('reconcile_blog_editor_save_lease'/)
 assert.doesNotMatch(leaseReconciliationSource, /execute_sql|storage\.objects/i)

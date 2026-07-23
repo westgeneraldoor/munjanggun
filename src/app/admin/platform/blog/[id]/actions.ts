@@ -1430,6 +1430,14 @@ function nextBlocksForPublication(
   }))
 }
 
+function publicObjectPathForMedia(
+  postId: string,
+  mediaId: string,
+  extension: 'gif' | 'webp',
+) {
+  return `${postId}/${mediaId}.${extension}`
+}
+
 async function stageMediaForAtomicPublication(
   showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
   postId: string,
@@ -1465,7 +1473,9 @@ async function stageMediaForAtomicPublication(
     }
     await heartbeatPublicationAttempt(showroomAdmin, publicationAttemptId, actorId)
 
-    const publicObjectPath = `${postId}/${publicationAttemptId}/${media.id}.${prepared.extension}`
+    const mediaObjectPath = publicObjectPathForMedia(postId, media.id, prepared.extension)
+    const fileName = mediaObjectPath.slice(postId.length + 1)
+    const publicObjectPath = `${postId}/${publicationAttemptId}/${fileName}`
     preparedMedia.push({ media, publicObjectPath, prepared })
   }
 
