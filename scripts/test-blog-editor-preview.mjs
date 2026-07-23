@@ -236,4 +236,37 @@ assert.match(
   'saved preview must use the shared candidate/approved/published media policy',
 )
 
+const extensionBlocksAfterReload = JSON.parse(JSON.stringify([
+  { id: 'quote-1', clientId: 'quote-1', type: 'quote', headingLevel: null, text: '인용문', mediaId: null, metadata: { attribution: '출처', source_url: 'https://munjanggun.com/guide' }, displayOrder: 0 },
+  { id: 'video-1', clientId: 'video-1', type: 'video', headingLevel: null, text: null, mediaId: null, metadata: { youtube_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' }, displayOrder: 1 },
+  { id: 'related-1', clientId: 'related-1', type: 'related_post', headingLevel: null, text: null, mediaId: null, metadata: { related_post_id: '00000000-0000-4000-8000-000000000001' }, displayOrder: 2 },
+  { id: 'place-1', clientId: 'place-1', type: 'place', headingLevel: null, text: '문장군', mediaId: null, metadata: { place_url: 'https://map.kakao.com/?q=munjanggun' }, displayOrder: 3 },
+  { id: 'quiz-1', clientId: 'quiz-1', type: 'quiz', headingLevel: null, text: '질문', mediaId: null, metadata: { answer: '정답', explanation: '설명' }, displayOrder: 4 },
+  { id: 'checklist-1', clientId: 'checklist-1', type: 'checklist', headingLevel: null, text: null, mediaId: null, metadata: { title: '핵심 안내', items: '첫 항목\n둘째 항목' }, displayOrder: 5 },
+]))
+const extensionPreview = buildBlogEditorPreviewData({ post, blocks: extensionBlocksAfterReload, media: [] })
+assert.deepEqual(
+  extensionPreview.blocks.map(block => [block.type, block.metadata]),
+  extensionBlocksAfterReload.map(block => [block.type, block.metadata]),
+  'saved extension blocks must retain their type and metadata after JSON reload into the admin preview adapter',
+)
+assert.deepEqual(extensionPreview.blocks.map(block => block.displayOrder), [0, 1, 2, 3, 4, 5])
+
+for (const type of ['quote', 'video', 'related_post', 'place', 'quiz', 'checklist']) {
+  assert.match(rendererSource, new RegExp(`block\\.type === ['"]${type}['"]`), `${type} must have a public and admin-preview renderer branch`)
+}
+assert.match(rendererSource, /youtube-nocookie\.com\/embed\//, 'video embeds must use the privacy-enhanced YouTube domain')
+assert.match(rendererSource, /sandbox="allow-scripts allow-same-origin allow-presentation"/, 'video embeds must use a fixed restrictive sandbox')
+assert.doesNotMatch(rendererSource, /src=\{block\.metadata/, 'renderer must never accept arbitrary iframe sources')
+assert.match(
+  renderingSource,
+  /\.in\('id', relationIds\)\.eq\('status', 'published'\)/,
+  'related-post resolution must fetch published posts only',
+)
+assert.match(
+  actionsSource,
+  /\.in\('id', ids\)\s*\.eq\('status', 'published'\)/,
+  'related-post saving must reject any non-published target',
+)
+
 console.log('blog editor preview contract passed')

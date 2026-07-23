@@ -504,6 +504,32 @@
   gap: var(--space-2);
 }
 
+.quoteBlock,
+.quizBlock,
+.checklistBlock,
+.relatedPostBlock,
+.placeBlock,
+.videoBlock {
+  margin: var(--space-6) 0;
+  border: var(--mg-border-width) solid var(--blog-line);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+}
+
+.quoteBlock { border-left: var(--mg-focus-ring-width) solid var(--blog-terracotta); }
+.quoteBlock blockquote { margin: var(--space-2) 0; white-space: pre-line; font-size: var(--text-lg); line-height: 1.7; }
+.quoteBlock figcaption { color: var(--blog-body); }
+.videoFrame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: var(--radius-lg); background: var(--blog-cocoa); }
+.videoFrame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.relatedPostBlock,
+.placeBlock { display: flex; align-items: center; gap: var(--space-3); color: inherit; text-decoration: none; min-height: var(--mg-admin-choice-control-size); }
+.relatedPostBlock strong, .placeBlock strong { display: block; }
+.relatedPostBlock > :last-child, .placeBlock > :last-child { margin-left: auto; }
+.quizBlock details { margin-top: var(--space-4); }
+.quizBlock summary { min-height: var(--mg-admin-choice-control-size); cursor: pointer; font-weight: var(--font-bold); }
+.checklistBlock ul { display: grid; gap: var(--space-3); padding: 0; margin: 0; list-style: none; }
+.checklistBlock li { display: flex; gap: var(--space-2); align-items: flex-start; }
+
 .guideBoxBody p {
   color: var(--blog-body);
   font-size: var(--mg-blog-reader-font-body);
