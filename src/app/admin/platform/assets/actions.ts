@@ -14,7 +14,7 @@ import { readUploadReviewChecks, type UploadReviewChecks } from '@/lib/content-a
 import { createPlatformClient } from '@/lib/supabase/platform-server'
 import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
 import type { Database, Json } from '@/types/database'
-import { loadAssetLibraryServerPage } from './library-data'
+import { assetLibraryRpcArgs, type AssetLibraryQuery } from './query-state'
 
 const MAX_FILES_PER_UPLOAD = 12
 const MAX_UPLOAD_TOTAL_BYTES = 120 * 1024 * 1024
@@ -42,29 +42,6 @@ export type UploadContentAssetsResult = {
   ok: boolean
   message: string
   items: UploadAssetItemResult[]
-}
-
-export async function loadMoreContentAssets(offset: number) {
-  try {
-    await requireAdministrator()
-    const showroomAdmin = createShowroomAdminClient()
-    const page = await loadAssetLibraryServerPage(showroomAdmin, offset)
-    return {
-      ok: !page.loadError,
-      message: page.loadError ?? '이전 사진을 불러왔습니다.',
-      items: page.items,
-      hasMore: page.hasMore,
-      nextOffset: page.nextOffset,
-    }
-  } catch {
-    return {
-      ok: false,
-      message: '이전 사진을 불러오지 못했습니다.',
-      items: [],
-      hasMore: true,
-      nextOffset: offset,
-    }
-  }
 }
 
 export type UpdateContentAssetPayload = {
@@ -597,6 +574,33 @@ async function invokeArchiveRpc(assetIds: string[], actorId: string, restore: bo
   })
 }
 
+async function invokeArchiveSearchResultsRpc(
+  query: AssetLibraryQuery,
+  expectedCount: number,
+  expectedToken: string,
+  actorId: string,
+  restore: boolean,
+) {
+  const showroom = createShowroomAdminClient() as unknown as {
+    rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>
+  }
+  const args = assetLibraryRpcArgs(query)
+  return showroom.rpc('archive_content_asset_search_results_safely', {
+    p_search: args.p_search,
+    p_view: args.p_view,
+    p_category: args.p_category,
+    p_product_type: args.p_product_type,
+    p_space_type: args.p_space_type,
+    p_region: args.p_region,
+    p_usage_purpose: args.p_usage_purpose,
+    p_tag_id: args.p_tag_id,
+    p_expected_count: expectedCount,
+    p_expected_token: expectedToken,
+    p_actor_id: actorId,
+    p_restore: restore,
+  })
+}
+
 export async function archiveContentAssets(assetIds: string[]): Promise<ArchiveContentAssetsResult> {
   try {
     const actorId = await requireAdministrator()
@@ -640,5 +644,62 @@ export async function restoreContentAssets(assetIds: string[]): Promise<ArchiveC
     return { ok: true, message: `${results.filter(item => item.changed).length}장을 복원했습니다.`, results }
   } catch {
     return { ok: false, message: '사진 복원 중 오류가 발생했습니다. 다시 시도해 주세요.', results: [] }
+  }
+}
+
+export async function archiveContentAssetSearchResults(
+  query: AssetLibraryQuery,
+  expectedCount: number,
+  expectedToken: string,
+  restore: boolean,
+): Promise<ArchiveContentAssetsResult> {
+  try {
+    const actorId = await requireAdministrator()
+    if (!Number.isSafeInteger(expectedCount) || expectedCount < 1 || !/^[0-9a-f]{32}$/.test(expectedToken)) {
+      return { ok: false, message: '검색 결과 수를 다시 확인해 주세요.', results: [] }
+    }
+
+    const { data, error } = await invokeArchiveSearchResultsRpc(query, expectedCount, expectedToken, actorId, restore)
+    if (error || !data || typeof data !== 'object') {
+      return { ok: false, message: '검색 결과의 사진 상태를 확인하지 못했습니다.', results: [] }
+    }
+
+    const payload = data as Record<string, unknown>
+    const rawResults = payload.results
+    const results = Array.isArray(rawResults) ? rawResults.filter(isArchiveResult) : []
+    const currentCount = Number(payload.currentCount)
+    if (payload.ok !== true) {
+      return {
+        ok: false,
+        message: Number.isSafeInteger(currentCount)
+          ? `검색 결과가 ${currentCount}장으로 바뀌었습니다. 현재 결과를 다시 확인해 주세요.`
+          : '검색 결과가 바뀌었습니다. 현재 결과를 다시 확인해 주세요.',
+        results: [],
+      }
+    }
+    if (results.length !== expectedCount) {
+      return { ok: false, message: '전체 검색 결과 처리 범위를 안전하게 확인하지 못했습니다.', results: [] }
+    }
+
+    revalidatePath('/admin/platform/assets')
+    const changed = results.filter(item => item.changed).length
+    const blocked = results.filter(item => item.reason === 'in_use').length
+    return {
+      ok: true,
+      message: restore
+        ? `${changed}장을 복원했습니다.`
+        : blocked > 0
+          ? `${changed}장을 휴지통으로 이동했습니다. ${blocked}장은 사용 중이라 이동하지 않았습니다.`
+          : `${changed}장을 휴지통으로 이동했습니다. 사진 파일은 삭제하지 않았습니다.`,
+      results,
+    }
+  } catch {
+    return {
+      ok: false,
+      message: restore
+        ? '검색 결과를 복원하는 중 오류가 발생했습니다.'
+        : '검색 결과를 휴지통으로 이동하는 중 오류가 발생했습니다.',
+      results: [],
+    }
   }
 }

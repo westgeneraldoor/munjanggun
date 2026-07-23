@@ -3,6 +3,12 @@ import { createPlatformClient } from '@/lib/supabase/platform-server'
 import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
 import ContentAssetsClient from './ContentAssetsClient'
 import { loadAssetLibraryServerPage } from './library-data'
+import {
+  assetLibraryQueryKey,
+  buildAssetLibraryUrl,
+  parseAssetLibrarySearchParams,
+  type AssetLibrarySearchParams,
+} from './query-state'
 
 export const metadata = {
   title: '사진보관함 | 문장군 관리자',
@@ -29,19 +35,30 @@ async function requireAdministratorPage() {
   }
 }
 
-export default async function AdminPlatformAssetsPage() {
+export default async function AdminPlatformAssetsPage({
+  searchParams,
+}: {
+  searchParams: Promise<AssetLibrarySearchParams>
+}) {
   await requireAdministratorPage()
+  const query = parseAssetLibrarySearchParams(await searchParams)
 
   const showroomAdmin = createShowroomAdminClient()
 
-  const page = await loadAssetLibraryServerPage(showroomAdmin, 0, true)
+  const page = await loadAssetLibraryServerPage(showroomAdmin, query, true)
+  if (!page.loadError && query.page > page.totalPages) {
+    redirect(buildAssetLibraryUrl({ ...query, page: page.totalPages }))
+  }
 
   return (
     <ContentAssetsClient
-      key={page.items.map(item => `${item.id}:${item.updatedAt}`).join('|')}
+      key={`${assetLibraryQueryKey(query)}:${page.selectionToken}:${page.items.map(item => `${item.id}:${item.updatedAt}`).join('|')}`}
       initialItems={page.items}
-      initialNextOffset={page.nextOffset}
-      initialHasMore={page.hasMore}
+      query={query}
+      totalCount={page.totalCount}
+      selectionToken={page.selectionToken}
+      totalPages={page.totalPages}
+      filterOptions={page.filterOptions}
       tagOptions={page.tagOptions}
       loadError={page.loadError}
     />

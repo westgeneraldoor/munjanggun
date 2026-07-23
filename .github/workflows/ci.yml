@@ -37,6 +37,10 @@ jobs:
           npm run test:blog-workflow-rpc
           npm run test:blog-workflow-db-runtime
           npm run test:content-asset-trash-migration
+          npm run test:admin-assets-primitives
+          npm run test:content-asset-library-query
+          npm run test:content-asset-query-state
+          npm run test:content-asset-library-query-runtime
           npm run test:admin-navigation-performance
           npm run test:official-asset-detach
           npm run test:admin-node-list-primitives

@@ -32,6 +32,12 @@ test('assets route uses accessible shared controls and preserves GIF intake', as
   expect((await categoryFilter.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44)
   await expect(page.getByLabel('정렬')).toHaveValue('newest')
   await expect(page.getByLabel('정렬').locator('option')).toHaveCount(6)
+  await page.getByLabel('정렬').selectOption('sizeDesc')
+  await expect(page).toHaveURL(/(?:\?|&)sort=sizeDesc(?:&|$)/)
+  await page.reload({ waitUntil: 'networkidle' })
+  await expect(page.getByLabel('정렬')).toHaveValue('sizeDesc')
+  await page.getByLabel('정렬').selectOption('newest')
+  await expect(page).not.toHaveURL(/(?:\?|&)sort=sizeDesc(?:&|$)/)
 
   const addButton = page.getByRole('button', { name: '사진 추가' })
   await addButton.focus()
@@ -69,12 +75,20 @@ test('assets route uses accessible shared controls and preserves GIF intake', as
   await selection.focus()
   await page.keyboard.press('Space')
   await expect(selection).toBeChecked()
-  await expect(page.getByRole('button', { name: '현재 결과 전체 선택' })).toBeVisible()
-  await expect(page.getByRole('button', { name: '현재 결과 전체 해제' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /현재 페이지 전체 선택/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /현재 페이지 전체 해제/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /검색 결과 전체 선택/ })).toBeVisible()
+  await page.getByRole('button', { name: /검색 결과 전체 선택/ }).click()
+  await expect(page.getByRole('checkbox', { name: /선택$/ }).first()).toBeDisabled()
+  await page.getByRole('button', { name: '선택한 사진 휴지통으로 이동' }).click()
+  const allResultsDialog = page.getByRole('dialog', { name: '휴지통 이동' })
+  await expect(allResultsDialog).toContainText(/대상: 현재 검색·필터 결과 전체 \d+장/)
+  await allResultsDialog.getByRole('button', { name: '취소' }).click()
+  await page.getByRole('button', { name: '검색 결과 전체 해제' }).click()
 
   const cards = page.locator('[data-asset-card-button]')
   if (await cards.count() >= 3) {
-    await page.getByRole('button', { name: '현재 결과 전체 해제' }).click()
+    await page.getByRole('button', { name: /현재 페이지 전체 해제/ }).click()
     await cards.nth(0).click()
     await cards.nth(2).click({ modifiers: ['Shift'] })
     await expect(page.getByRole('checkbox', { name: /선택$/ }).nth(0)).toBeChecked()
@@ -83,7 +97,7 @@ test('assets route uses accessible shared controls and preserves GIF intake', as
   }
 
   if (await cards.count() >= 2) {
-    await page.getByRole('button', { name: '현재 결과 전체 해제' }).click()
+    await page.getByRole('button', { name: /현재 페이지 전체 해제/ }).click()
     const firstBox = await cards.nth(0).boundingBox()
     const secondBox = await cards.nth(1).boundingBox()
     if (firstBox && secondBox) {
@@ -100,6 +114,13 @@ test('assets route uses accessible shared controls and preserves GIF intake', as
   await expect(page.getByRole('dialog', { name: '휴지통 이동' })).toBeVisible()
   await expect(page.getByRole('button', { name: '사용처 확인 후 휴지통으로 이동' })).toBeVisible()
   await page.getByRole('button', { name: '취소' }).click()
+
+  await search.fill(`회귀-검색-범위-${Date.now()}`)
+  await expect(page.locator('button[aria-pressed]').filter({ hasText: /선택/ })).toBeDisabled()
+  await expect(page.getByRole('button', { name: '선택한 사진 휴지통으로 이동' })).toHaveCount(0)
+  await expect(page).toHaveURL(/(?:\?|&)q=/)
+  await search.fill('')
+  await expect(page).not.toHaveURL(/(?:\?|&)q=/)
 
   expect(consoleErrors).toEqual([])
   expect(failedResponses).toEqual([])

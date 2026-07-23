@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 
 async function source(relativePath) {
-  return readFile(new URL(`../${relativePath}`, import.meta.url), 'utf8')
+  return (await readFile(new URL(`../${relativePath}`, import.meta.url), 'utf8')).replace(/\r\n?/g, '\n')
 }
 
 const [readiness, checklist, routine] = await Promise.all([
