@@ -1,4 +1,6 @@
 .page {
+  --mg-font-brand-ko: "Tmoney RoundWind Measure", var(--mg-font-display);
+
   min-height: 100dvh;
   overflow: clip;
   color: var(--mg-text-primary);
@@ -36,7 +38,13 @@
   backdrop-filter: blur(var(--mg-overlay-backdrop-blur));
 }
 
-.brand { color: var(--mg-text-primary); text-decoration: none; }
+.brand {
+  min-height: var(--mg-control-size-min);
+  display: inline-flex;
+  align-items: center;
+  color: var(--mg-text-primary);
+  text-decoration: none;
+}
 .navLinks, .navActions { display: flex; align-items: center; gap: var(--mg-space-3); }
 .navActions { justify-content: flex-end; }
 .navLinks a, .navPortal {
@@ -147,6 +155,7 @@
 .heroLine span { position: absolute; top: calc(var(--mg-space-2) * -2); left: 50%; padding: var(--mg-space-1) var(--mg-space-2); color: var(--mg-color-ink-950); background: var(--mg-color-forest-100); border-radius: var(--mg-radius-chip); font-size: var(--mg-font-size-label); font-weight: 800; transform: translateX(-50%); }
 
 .conditions, .process, .prepare, .trustFaq { margin-top: clamp(calc(var(--mg-space-8) * 1.4), 11vw, calc(var(--mg-space-8) * 2.7)); }
+.conditions, .process, .prepare { scroll-margin-top: calc(72px + var(--mg-space-3)); }
 .sectionLead { max-width: 760px; }
 .sectionLead h2, .processIntro h2, .prepareCopy h2, .trustCopy h2, .finalCta h2 { font-size: clamp(36px, 5vw, 62px); }
 .sectionLead > p:last-child, .processIntro > p:last-child, .trustCopy > p {

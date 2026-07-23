@@ -6,6 +6,14 @@
  * platform surfaces migrate to the canonical semantic vocabulary.
  */
 
+@font-face {
+  font-family: "Tmoney RoundWind Measure";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("/assets/fonts/TmoneyRoundWindExtraBold.measure.woff2") format("woff2");
+}
+
 /* Preserve the application's existing immediate-scroll interaction contract. */
 html {
   scroll-behavior: auto;

@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Camera, Check, ChevronDown, Ruler, ShieldCheck } from 'lucide-react'
+import BlogBrandWordmark from '@/app/blog/BlogBrandWordmark'
 import PublicUserMenu from '@/components/customer/PublicUserMenu'
-import { PlatformWordmark } from '@/components/platform/customer/PlatformWordmark'
 import styles from './measure.module.css'
 
 type ResponsivePictureProps = {
@@ -140,7 +140,9 @@ export default function MeasureExperience() {
     <div className={styles.page} data-mg-theme="portal">
       <a className={styles.skipLink} href="#measure-main">본문으로 건너뛰기</a>
       <header className={styles.nav}>
-        <Link href="/" prefetch={false} className={styles.brand} aria-label="문장군 홈으로 이동"><PlatformWordmark /></Link>
+        <Link href="/blog" prefetch={false} className={styles.brand} aria-label="문장군 블로그로 이동">
+          <BlogBrandWordmark label="무료견적" compact />
+        </Link>
         <nav className={styles.navLinks} aria-label="무료방문 실측견적 안내">
           <a href="#conditions">현장 조건</a>
           <a href="#process">실측 방식</a>

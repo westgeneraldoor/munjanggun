@@ -44,10 +44,11 @@ export default function LoginPage({ searchParams }: PageProps) {
   const nextParam = getSafeInternalPath(requestedNext)
   const parsedNext = new URL(nextParam, 'https://munjanggun.local')
   const isMeasurePath = parsedNext.pathname === '/portal/measure/new'
+  const isMeasureExplainerReturn = parsedNext.pathname === '/measure'
   const isBlogQuestionReturn = isMeasurePath && parsedNext.searchParams.get('source') === 'blog-question'
   const requestedPost = parsedNext.searchParams.get('post')
   const safePost = requestedPost && /^[a-z0-9][a-z0-9-]{0,119}$/i.test(requestedPost) ? requestedPost : null
-  const isMeasureReturn = isMeasurePath && !isBlogQuestionReturn
+  const isMeasureReturn = (isMeasurePath && !isBlogQuestionReturn) || isMeasureExplainerReturn
   const isBlogReturn = isBlogQuestionReturn || parsedNext.pathname === '/blog' || parsedNext.pathname.startsWith('/blog/')
   const returnContext = isMeasureReturn
     ? { href: '/measure', label: '실측견적 안내로 돌아가기' }
