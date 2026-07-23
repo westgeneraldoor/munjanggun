@@ -234,7 +234,6 @@
 .conditionCopy li svg, .trustCopy li svg { flex: 0 0 auto; color: var(--mg-color-forest-700); }
 .contextCta { min-height: var(--mg-control-size-min); display: inline-flex; align-items: center; align-self: flex-start; gap: var(--mg-space-2); margin-top: var(--mg-space-4); color: var(--mg-color-forest-700); font-size: var(--mg-font-size-body); font-weight: 800; text-decoration: none; border-bottom: 1px solid currentColor; }
 
-/* Keep the sticky visual below variable-width intro copy; narrower layouts return to document flow. */
 .process { display: grid; grid-template-columns: minmax(0, .88fr) minmax(340px, .72fr); column-gap: clamp(var(--mg-space-5), 6vw, calc(var(--mg-space-8) * 1.5)); align-items: start; }
 .processIntro { grid-column: 1; position: sticky; top: 112px; padding-bottom: var(--mg-space-5); }
 .journeyVisual { grid-column: 1; position: sticky; top: clamp(448px, 52vh, 470px); aspect-ratio: 3 / 2; border-radius: var(--mg-radius-frame); }
