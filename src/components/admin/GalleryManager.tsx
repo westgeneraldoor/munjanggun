@@ -6,6 +6,10 @@ import { PlatformField, PlatformIconButton } from '@/components/platform/ui'
 import ImageUploader from './ImageUploader'
 import styles from './GalleryManager.module.css'
 import type { UploadStateChange } from './useUploadPendingTracker'
+import type {
+  ShowroomImageSource,
+  ShowroomImageSourceMap,
+} from '@/lib/showroom/image-sources'
 
 export interface GalleryPhoto {
   id?: string
@@ -20,9 +24,19 @@ interface GalleryManagerProps {
   nodeSlug: string
   onUploadStateChange?: UploadStateChange
   disabled?: boolean
+  imageSources?: ShowroomImageSourceMap
+  onImageSourceReady?: (source: ShowroomImageSource) => void
 }
 
-export default function GalleryManager({ photos, onPhotosChange, nodeSlug, onUploadStateChange, disabled = false }: GalleryManagerProps) {
+export default function GalleryManager({
+  photos,
+  onPhotosChange,
+  nodeSlug,
+  onUploadStateChange,
+  disabled = false,
+  imageSources = {},
+  onImageSourceReady,
+}: GalleryManagerProps) {
   const normalizeOrder = (items: GalleryPhoto[]) => items.map((photo, index) => ({ ...photo, display_order: index }))
   const handlePhotoUpload = (url: string) => {
     onPhotosChange(previous => [...previous, { image_url: url, caption: null, display_order: previous.length }])
@@ -54,6 +68,8 @@ export default function GalleryManager({ photos, onPhotosChange, nodeSlug, onUpl
                 onPhotosChange(previous => previous.map((item, itemIndex) => itemIndex === index ? { ...item, image_url: url } : item))
               }}
               currentImageUrl={photo.image_url}
+              currentImageSource={imageSources[photo.image_url]}
+              onImageSourceReady={onImageSourceReady}
               onDelete={() => handleRemovePhoto(index)}
               onUploadStateChange={onUploadStateChange}
               disabled={disabled}
@@ -96,6 +112,7 @@ export default function GalleryManager({ photos, onPhotosChange, nodeSlug, onUpl
               onPhotosChange(previous => previous.map(photo => photo.image_url === oldUrl ? { ...photo, image_url: newUrl } : photo))
             }}
             onUploadStateChange={onUploadStateChange}
+            onImageSourceReady={onImageSourceReady}
             disabled={disabled}
           />
         </div>

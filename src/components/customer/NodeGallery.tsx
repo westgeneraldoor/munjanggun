@@ -1,7 +1,8 @@
 'use client'
 
-import Image from 'next/image'
 import { useState } from 'react'
+import ShowroomImage from '@/components/showroom/ShowroomImage'
+import type { ShowroomImageSource } from '@/lib/showroom/image-sources'
 import ScrollAnimationWrapper from './ScrollAnimationWrapper'
 import ImageLightbox from './ImageLightbox'
 import styles from './NodeGallery.module.css'
@@ -9,6 +10,7 @@ import styles from './NodeGallery.module.css'
 interface Photo {
   id: string
   image_url: string
+  image_source?: ShowroomImageSource
   caption: string | null
 }
 
@@ -39,8 +41,9 @@ export default function NodeGallery({ photos, nodeName }: NodeGalleryProps) {
     <ScrollAnimationWrapper key={photo.id} delay={index * 150 + extraDelay}>
       <figure className={styles.figure}>
         <div className={styles.imageWrapper} onClick={() => setSelectedIndex(index)}>
-          <Image
-            src={photo.image_url}
+          <ShowroomImage
+            source={photo.image_source ?? photo.image_url}
+            purpose="display"
             alt={photo.caption || `${nodeName} 갤러리 사진 ${index + 1}`}
             fill
             className={`${styles.image} ${loadedSet.has(index) ? styles.imageLoaded : ''}`}
@@ -67,7 +70,11 @@ export default function NodeGallery({ photos, nodeName }: NodeGalleryProps) {
       </section>
 
       <ImageLightbox
-        photos={photos.map(p => ({ image_url: p.image_url, caption: p.caption }))}
+        photos={photos.map(p => ({
+          image_url: p.image_url,
+          image_source: p.image_source,
+          caption: p.caption,
+        }))}
         currentIndex={selectedIndex}
         isOpen={selectedIndex >= 0}
         onClose={() => setSelectedIndex(-1)}

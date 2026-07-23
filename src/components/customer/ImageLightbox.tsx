@@ -1,12 +1,17 @@
 'use client'
 
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
-import Image from 'next/image'
 import { useEffect, useRef, useCallback, useState } from 'react'
+import ShowroomImage from '@/components/showroom/ShowroomImage'
+import {
+  resolveShowroomImageUrl,
+  type ShowroomImageSource,
+} from '@/lib/showroom/image-sources'
 import styles from './ImageLightbox.module.css'
 
 interface Photo {
   image_url: string
+  image_source?: ShowroomImageSource
   caption: string | null
 }
 
@@ -48,23 +53,23 @@ export default function ImageLightbox({
     }
   }, [slideDirection])
 
-  // 인접 사진 프리로드 (Next.js 최적화 URL 기반)
+  // 인접 사진 프리로드 (저장된 large 파생본, 없으면 원본)
   useEffect(() => {
     if (!isOpen) return
     const links: HTMLLinkElement[] = []
 
-    const preload = (src: string) => {
-      const nextUrl = `/_next/image?url=${encodeURIComponent(src)}&w=1080&q=85`
+    const preload = (photo: Photo) => {
+      const src = resolveShowroomImageUrl(photo.image_source ?? photo.image_url, 'large')
       const link = document.createElement('link')
       link.rel = 'prefetch'
       link.as = 'image'
-      link.href = nextUrl
+      link.href = src
       document.head.appendChild(link)
       links.push(link)
     }
 
-    if (currentIndex > 0) preload(photos[currentIndex - 1].image_url)
-    if (currentIndex < total - 1) preload(photos[currentIndex + 1].image_url)
+    if (currentIndex > 0) preload(photos[currentIndex - 1])
+    if (currentIndex < total - 1) preload(photos[currentIndex + 1])
 
     return () => { links.forEach(l => l.remove()) }
   }, [isOpen, currentIndex, photos, total])
@@ -174,12 +179,12 @@ export default function ImageLightbox({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <Image
+        <ShowroomImage
           key={currentIndex}
-          src={currentPhoto.image_url}
+          source={currentPhoto.image_source ?? currentPhoto.image_url}
+          purpose="large"
           alt={currentPhoto.caption || `시공 사진 ${currentIndex + 1}`}
           fill
-          quality={85}
           sizes="100vw"
           className={`${styles.image} ${imgLoaded ? styles.imageLoaded : ''}`}
           onLoad={() => setImgLoaded(true)}

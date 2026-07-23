@@ -8,6 +8,7 @@ import {
   PlatformStatePanel,
 } from '@/components/platform/ui'
 import { logError } from '@/lib/logger'
+import { loadShowroomImageSources } from '@/lib/showroom/image-sources'
 import styles from './page.module.css'
 
 export const dynamic = 'force-dynamic'
@@ -89,6 +90,14 @@ export default async function NodeEditPage(props: { params: Promise<{ id: string
     logError('Failed to load node editor dependencies:', loadError)
   }
 
+  const initialImageSources = loadError
+    ? {}
+    : await loadShowroomImageSources(supabase, [
+        node.image_url,
+        ...(heroMedia ?? []).map(media => media.image_url),
+        ...(galleryPhotos ?? []).map(photo => photo.image_url),
+      ])
+
   return (
     <div className={styles.container}>
       <PlatformPageHeader
@@ -111,6 +120,7 @@ export default async function NodeEditPage(props: { params: Promise<{ id: string
           heroMedia={heroMedia ?? []}
           galleryPhotos={galleryPhotos ?? []}
           childCount={childCount ?? 0}
+          initialImageSources={initialImageSources}
         />
       )}
     </div>

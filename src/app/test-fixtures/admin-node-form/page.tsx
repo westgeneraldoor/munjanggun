@@ -57,7 +57,13 @@ export default function AdminNodeFormFixturePage() {
 
   return (
     <main className={styles.page} data-mg-theme="admin">
-      <NodeForm node={node} heroMedia={heroMedia} galleryPhotos={galleryPhotos} childCount={0} />
+      <NodeForm
+        node={node}
+        heroMedia={heroMedia}
+        galleryPhotos={galleryPhotos}
+        childCount={0}
+        initialImageSources={{}}
+      />
     </main>
   )
 }

@@ -7,6 +7,10 @@ import { logError } from '@/lib/logger'
 import { generateSlug, validateSlug } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/types/database'
+import type {
+  ShowroomImageSource,
+  ShowroomImageSourceMap,
+} from '@/lib/showroom/image-sources'
 import {
   PlatformButton,
   PlatformField,
@@ -42,6 +46,7 @@ interface NodeFormProps {
   heroMedia: HeroMediaRow[]
   galleryPhotos: GalleryPhotoRow[]
   childCount: number
+  initialImageSources: ShowroomImageSourceMap
 }
 
 const CARD_POSITION_OPTIONS = [
@@ -64,6 +69,7 @@ export default function NodeForm({
   heroMedia: initialHeroMedia,
   galleryPhotos: initialGalleryPhotos,
   childCount,
+  initialImageSources,
 }: NodeFormProps) {
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
@@ -74,6 +80,7 @@ export default function NodeForm({
   const [status, setStatus] = useState<'draft' | 'published'>(node.status as 'draft' | 'published')
   const [type, setType] = useState<'listing' | 'detail'>(node.type as 'listing' | 'detail')
   const [imageUrl, setImageUrl] = useState<string | null>(node.image_url)
+  const [imageSources, setImageSources] = useState(initialImageSources)
   const [heroEnabled, setHeroEnabled] = useState(node.hero_enabled)
   const [heroVideoUrl, setHeroVideoUrl] = useState(node.hero_video_url || '')
   const [heroMobileVideoUrl, setHeroMobileVideoUrl] = useState(node.hero_mobile_video_url || '')
@@ -132,6 +139,10 @@ export default function NodeForm({
     clearSaveFeedback()
     setGalleryPhotos(previous => typeof update === 'function' ? update(previous) : update)
   }, [clearSaveFeedback])
+
+  const handleImageSourceReady = useCallback((source: ShowroomImageSource) => {
+    setImageSources(previous => ({ ...previous, [source.originalUrl]: source }))
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -372,6 +383,8 @@ export default function NodeForm({
           folderPath={`nodes/${slug || 'temp'}`}
           onUploadComplete={url => { clearSaveFeedback(); setImageUrl(url) }}
           currentImageUrl={imageUrl || undefined}
+          currentImageSource={imageUrl ? imageSources[imageUrl] : undefined}
+          onImageSourceReady={handleImageSourceReady}
           onDelete={() => { clearSaveFeedback(); setImageUrl(null) }}
           compressionMaxDimension={1600}
           compressionQuality={0.8}
@@ -405,6 +418,8 @@ export default function NodeForm({
                 onVideoUrlChange={value => { clearSaveFeedback(); setHeroVideoUrl(value) }}
                 onMobileVideoUrlChange={value => { clearSaveFeedback(); setHeroMobileVideoUrl(value) }}
                 onUploadStateChange={onUploadStateChange}
+                imageSources={imageSources}
+                onImageSourceReady={handleImageSourceReady}
                 disabled={isLoading || hasPendingUploads}
               />
               <PlatformField
@@ -488,6 +503,8 @@ export default function NodeForm({
               onPhotosChange={handleGalleryPhotosChange}
               nodeSlug={slug}
               onUploadStateChange={onUploadStateChange}
+              imageSources={imageSources}
+              onImageSourceReady={handleImageSourceReady}
               disabled={isLoading || hasPendingUploads}
             />
           </div>

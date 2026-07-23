@@ -8,7 +8,7 @@ type FixtureNode = {
   slug: string
   status: 'draft' | 'published'
   display_order: number
-  image_url: null
+  image_url: string | null
 }
 
 const rootNodes: FixtureNode[] = [
@@ -20,7 +20,7 @@ const rootNodes: FixtureNode[] = [
     slug: 'front-door-collection',
     status: 'published',
     display_order: 0,
-    image_url: null,
+    image_url: '/icon.png',
   },
   {
     id: 'root-detail',
@@ -55,6 +55,10 @@ async function expectMinimumTargets(page: import('@playwright/test').Page) {
 
 test('shows load failure, retries, and exposes named controls at 1366px', async ({ page }) => {
   let attempts = 0
+  const optimizerRequests: string[] = []
+  page.on('request', request => {
+    if (/\/_(?:next|vercel)\/image/.test(request.url())) optimizerRequests.push(request.url())
+  })
   await page.route('**/rest/v1/nodes*', async route => {
     attempts += 1
     await fulfillNodes(route, attempts === 1 ? [] : rootNodes, attempts === 1 ? 500 : 200)
@@ -69,6 +73,10 @@ test('shows load failure, retries, and exposes named controls at 1366px', async 
   await expect(page.getByRole('button', { name: '베이직 제품 상세 아래로 이동' })).toBeDisabled()
   await expect(page.getByRole('button', { name: '현관문 컬렉션 이동' })).toBeVisible()
   await expect(page.getByRole('link', { name: '베이직 제품 상세 편집' })).toBeVisible()
+  const thumbnail = page.locator('img[data-showroom-image-purpose="thumbnail"]')
+  await expect(thumbnail).toHaveAttribute('src', /\/icon\.png$/)
+  await expect(thumbnail).toHaveJSProperty('complete', true)
+  expect(optimizerRequests).toEqual([])
   await expectMinimumTargets(page)
 
   const statusButton = page.getByRole('button', { name: '상태: 공개. 초안으로 변경' })

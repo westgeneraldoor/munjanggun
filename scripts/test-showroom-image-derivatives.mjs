@@ -1,0 +1,193 @@
+import assert from 'node:assert/strict'
+import { readFile, readdir } from 'node:fs/promises'
+import path from 'node:path'
+
+import sharp from 'sharp'
+
+const root = process.cwd()
+const read = relativePath => readFile(path.join(root, relativePath), 'utf8')
+
+const derivativeModule = await import('../src/lib/showroom/showroom-image-derivatives.mjs')
+const {
+  SHOWROOM_IMAGE_RECIPE_VERSION,
+  SHOWROOM_IMAGE_VARIANT_SPECS,
+  buildShowroomDerivativeObjectPath,
+  transformShowroomImage,
+} = derivativeModule
+
+assert.equal(SHOWROOM_IMAGE_RECIPE_VERSION, 1)
+assert.deepEqual(
+  Object.fromEntries(Object.entries(SHOWROOM_IMAGE_VARIANT_SPECS).map(([variant, spec]) => [variant, spec.width])),
+  { thumbnail: 192, card: 960, display: 1600, large: 2560 },
+  'the four variants must be tied to the measured UI delivery widths',
+)
+
+const source = await sharp({
+  create: {
+    width: 2000,
+    height: 1000,
+    channels: 3,
+    background: { r: 121, g: 83, b: 57 },
+  },
+}).png().toBuffer()
+const transformed = await transformShowroomImage(source, 'image/png')
+const repeatedTransform = await transformShowroomImage(source, 'image/png')
+
+assert.deepEqual(transformed.original.buffer, source, 'the original bytes must be preserved exactly')
+assert.equal(transformed.original.width, 2000)
+assert.equal(transformed.original.height, 1000)
+assert.equal(transformed.variants.thumbnail.status, 'ready')
+assert.equal(transformed.variants.thumbnail.width, 192)
+assert.equal(transformed.variants.card.status, 'ready')
+assert.equal(transformed.variants.card.width, 960)
+assert.equal(transformed.variants.display.status, 'ready')
+assert.equal(transformed.variants.display.width, 1600)
+assert.equal(transformed.variants.large.status, 'skipped')
+assert.equal(transformed.variants.large.skipReason, 'no-upscale')
+
+for (const variant of Object.values(transformed.variants)) {
+  if (variant.status !== 'ready') continue
+  assert.equal(variant.mimeType, 'image/webp')
+  assert.ok(variant.sizeBytes > 0)
+  assert.ok(variant.width <= 2000)
+  assert.ok(variant.height <= 1000)
+}
+assert.deepEqual(
+  Object.fromEntries(Object.entries(repeatedTransform.variants).map(([variant, result]) => [
+    variant,
+    result.checksumSha256,
+  ])),
+  Object.fromEntries(Object.entries(transformed.variants).map(([variant, result]) => [
+    variant,
+    result.checksumSha256,
+  ])),
+  'the same source and recipe must produce identical derivative identities',
+)
+
+const tiny = await sharp({
+  create: {
+    width: 100,
+    height: 50,
+    channels: 3,
+    background: { r: 20, g: 30, b: 40 },
+  },
+}).jpeg().toBuffer()
+const tinyResult = await transformShowroomImage(tiny, 'image/jpeg')
+assert.ok(
+  Object.values(tinyResult.variants).every(variant => variant.status === 'skipped' && variant.skipReason === 'no-upscale'),
+  'very small images must fall back to the original instead of creating redundant upscaled objects',
+)
+
+const exifRotated = await sharp({
+  create: {
+    width: 600,
+    height: 1200,
+    channels: 3,
+    background: { r: 80, g: 90, b: 100 },
+  },
+})
+  .jpeg()
+  .withMetadata({ orientation: 6 })
+  .toBuffer()
+const exifResult = await transformShowroomImage(exifRotated, 'image/jpeg')
+assert.equal(exifResult.original.width, 1200, 'source width must reflect EXIF auto-orientation')
+assert.equal(exifResult.original.height, 600, 'source height must reflect EXIF auto-orientation')
+assert.equal(exifResult.variants.card.status, 'ready')
+assert.equal(exifResult.variants.card.width, 960)
+
+const gif = Buffer.from(
+  'R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
+  'base64',
+)
+const gifResult = await transformShowroomImage(gif, 'image/gif')
+assert.deepEqual(gifResult.original.buffer, gif)
+assert.ok(
+  Object.values(gifResult.variants).every(variant => variant.status === 'skipped' && variant.skipReason === 'animated-or-gif'),
+  'GIF bytes and animation policy must use the original directly',
+)
+
+const hash = 'a'.repeat(64)
+assert.equal(
+  buildShowroomDerivativeObjectPath(hash, 'card'),
+  `showroom-derivatives/v${SHOWROOM_IMAGE_RECIPE_VERSION}/${hash}/card.webp`,
+  'derivative paths must be deterministic and immutable per recipe',
+)
+
+await assert.rejects(
+  () => transformShowroomImage(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>'), 'image/svg+xml'),
+  /Unsupported image MIME type/,
+  'SVG must stay outside the raster upload contract',
+)
+
+const migrations = await readdir(path.join(root, 'supabase/migrations'))
+const migrationName = migrations.find(name => name.includes('showroom_image_derivatives'))
+assert.ok(migrationName, 'a showroom image derivative migration must exist')
+const migration = await read(`supabase/migrations/${migrationName}`)
+
+assert.match(migration, /CREATE TABLE\s+showroom\.image_sources/i)
+assert.match(migration, /CREATE TABLE\s+showroom\.image_derivatives/i)
+assert.match(migration, /CHECK\s*\(\s*variant\s+IN\s*\(\s*'thumbnail',\s*'card',\s*'display',\s*'large'\s*\)\s*\)/i)
+assert.match(migration, /CHECK\s*\(\s*transform_status\s+IN\s*\(\s*'ready',\s*'skipped',\s*'failed'\s*\)\s*\)/i)
+assert.match(migration, /UNIQUE\s*\(\s*source_bucket,\s*source_object_path\s*\)/i)
+assert.match(migration, /UNIQUE\s*\(\s*source_id,\s*variant,\s*recipe_version\s*\)/i)
+assert.doesNotMatch(
+  migration,
+  /UNIQUE\s*\(\s*derivative_bucket,\s*derivative_object_path\s*\)/i,
+  'different source rows with identical bytes must be allowed to share one immutable derivative object',
+)
+assert.match(migration, /public_url\s+IS NOT NULL[\s\S]*mime_type\s+IS NOT NULL/i)
+assert.match(migration, /skip_reason\s+IS NOT NULL[\s\S]*skip_reason\s+IN\s*\(/i)
+assert.match(migration, /transform_error\s+IS NOT NULL[\s\S]*length\s*\(\s*btrim\s*\(\s*transform_error\s*\)\s*\)\s*>\s*0/i)
+assert.match(migration, /ENABLE ROW LEVEL SECURITY/i)
+assert.match(migration, /platform_private\.is_admin/i)
+assert.match(migration, /private\.is_node_visible/i)
+assert.match(migration, /resolve_preview_image_derivatives[\s\S]*derivative\.recipe_version\s*=\s*1/i)
+assert.match(migration, /GRANT SELECT[\s\S]*TO anon/i)
+assert.match(migration, /GRANT SELECT[\s\S]*TO authenticated/i)
+assert.doesNotMatch(migration, /GRANT\s+(?:INSERT|UPDATE|DELETE|ALL)[\s\S]*TO anon/i)
+
+const uploader = await read('src/components/admin/ImageUploader.tsx')
+const uploadAction = await read('src/app/admin/nodes/image-actions.ts')
+assert.doesNotMatch(uploader, /\.storage\s*\.\s*from\(/, 'the browser must not upload showroom originals directly')
+assert.match(uploadAction, /requireAdministrator/)
+assert.match(uploadAction, /createAdminClient/)
+assert.match(uploadAction, /upsert:\s*false/)
+assert.match(uploadAction, /transformShowroomImage/)
+assert.match(uploadAction, /isAlreadyExistsError/)
+assert.match(uploadAction, /\.download\(params\.path\)/)
+assert.match(uploadAction, /existingChecksum\s*!==\s*params\.checksumSha256/)
+assert.match(uploadAction, /commit_image_derivatives/)
+
+const backfill = await read('scripts/backfill-showroom-image-derivatives.mjs')
+assert.match(backfill, /dryRun:\s*true/)
+assert.match(backfill, /--apply/)
+assert.match(backfill, /--retry-failed/)
+assert.match(backfill, /SUPABASE_PROJECT_REF/)
+assert.match(backfill, /options\.confirmProject\s*!==\s*projectRef/)
+assert.match(backfill, /PRODUCTION_PROJECT_REF/)
+assert.match(backfill, /production[\s\S]{0,160}(?:refus|prohibit|block)/i)
+assert.match(backfill, /retry\s*\(\s*async\s*\(\)\s*=>\s*\{[\s\S]*commit_image_derivatives/)
+assert.doesNotMatch(backfill, /\.remove\(/, 'backfill must never delete originals or derivatives')
+
+const scopedRenderers = [
+  'src/components/customer/NodeCard.tsx',
+  'src/components/customer/NodeGallery.tsx',
+  'src/components/customer/ImageLightbox.tsx',
+  'src/components/customer/HomeHeroV2.tsx',
+  'src/components/customer/NodeHero.tsx',
+  'src/app/[...slugs]/page.tsx',
+  'src/app/preview/[token]/page.tsx',
+  'src/components/admin/NodeList.tsx',
+]
+for (const file of scopedRenderers) {
+  const sourceText = await read(file)
+  assert.doesNotMatch(sourceText, /from ['"]next\/image['"]/, `${file} must use the shared showroom image renderer`)
+  assert.doesNotMatch(sourceText, /\/_(?:next|vercel)\/image/, `${file} must not construct optimizer URLs`)
+}
+
+const showroomImage = await read('src/components/showroom/ShowroomImage.tsx')
+assert.match(showroomImage, /from ['"]next\/image['"]/)
+assert.match(showroomImage, /unoptimized/)
+assert.match(showroomImage, /fallback/i)
+
+console.log('Showroom stored-image derivative contract passed.')
