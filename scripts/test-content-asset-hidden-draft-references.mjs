@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
 const migration = readFileSync(
-  new URL('../supabase/migrations/20260723060411_allow_hidden_content_asset_draft_references.sql', import.meta.url),
+  new URL('../supabase/migrations/20260723062040_allow_hidden_content_asset_draft_references.sql', import.meta.url),
   'utf8',
 )
 

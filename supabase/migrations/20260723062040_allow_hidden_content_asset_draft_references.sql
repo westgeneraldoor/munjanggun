@@ -1,3 +1,4 @@
+-- Production ledger version: 20260723062040.
 -- Hidden assets are intentional private draft candidates imported from the
 -- central brand repository. They must remain attachable to draft media and
 -- usage ledgers, while archived assets stay blocked at the database boundary.
