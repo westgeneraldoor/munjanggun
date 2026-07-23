@@ -55,6 +55,7 @@ import {
   attachContentAssetToBlogMedia,
   publishBlogPost,
   saveBlogEditor,
+  updateBlogPostStatus,
   updateBlogMedia,
   type ContentAssetBlogMedia,
   type SaveBlogEditorPayload,
@@ -190,6 +191,12 @@ type AssetPickerTarget =
   | { type: 'insertBefore'; clientId: string }
 type EditorMode = 'write' | 'seo'
 
+export type PublishedRelatedPostOption = {
+  id: string
+  title: string
+  slug: string
+}
+
 const EDITOR_MODE_TABS: ReadonlyArray<{ value: EditorMode; label: string }> = [
   { value: 'write', label: '작성란' },
   { value: 'seo', label: 'SEO/AEO' },
@@ -206,7 +213,6 @@ const MAX_UPLOAD_TOTAL_BYTES = 120 * 1024 * 1024
 const BLOG_BODY_BLOCK_EXPANSION_ENABLED =
   process.env.NEXT_PUBLIC_BLOG_BODY_BLOCK_EXPANSION === 'enabled' &&
   process.env.NEXT_PUBLIC_BLOG_BODY_BLOCK_EXPANSION_DB_CONFIRMED === 'enabled'
-
 const CATEGORY_OPTIONS: Array<{ value: BlogContentCategory; label: string }> = [
   { value: 'case_study', label: '시공사례' },
   { value: 'product_guide', label: '제품가이드' },
@@ -246,7 +252,7 @@ function getQuestionStatusTone(status: BlogQuestionStatus): PlatformStatusBadgeT
   return 'review'
 }
 
-const BLOCK_LABEL: Record<BlogBlockType, string> = {
+const BLOCK_LABEL: Partial<Record<BlogBlockType, string>> = {
   heading: '제목',
   paragraph: '문단',
   image: '사진',
@@ -254,6 +260,15 @@ const BLOCK_LABEL: Record<BlogBlockType, string> = {
   guide_box: '안내 박스',
   qa: 'Q&A',
   cta: '상담 CTA',
+}
+
+const NEW_BLOCK_LABEL: Record<Extract<BlogBlockType, 'quote' | 'video' | 'related_post' | 'place' | 'quiz' | 'checklist'>, string> = {
+  quote: '인용구',
+  video: '영상',
+  related_post: '관련 글',
+  place: '장소/지도',
+  quiz: '퀴즈',
+  checklist: '체크리스트',
 }
 
 function emptyToNull(value: string) {
@@ -368,6 +383,13 @@ function createBlock(type: BlogBlockType, options: { mediaId?: string | null; ph
   if (type === 'image') {
     return { ...base, metadata: { photo_slot_label: options.photoSlotLabel ?? '', required_media: '' } }
   }
+
+  if (type === 'quote') return { ...base, text: '', metadata: { attribution: '', source_url: '' } }
+  if (type === 'video') return { ...base, metadata: { youtube_url: '', title: '' } }
+  if (type === 'related_post') return { ...base, metadata: { related_post_id: '' } }
+  if (type === 'place') return { ...base, text: '', metadata: { place_url: '' } }
+  if (type === 'quiz') return { ...base, text: '', metadata: { answer: '', explanation: '' } }
+  if (type === 'checklist') return { ...base, metadata: { title: '', items: '' } }
 
   return base
 }
@@ -989,6 +1011,7 @@ function BlockEditor({
   onMediaChanged,
   onMove,
   onRemove,
+  publishedRelatedPosts,
 }: {
   block: EditableBlock
   postId: string
@@ -1002,6 +1025,7 @@ function BlockEditor({
   onMediaChanged: (next: BlogEditorMedia) => void
   onMove: (direction: -1 | 1) => void
   onRemove: () => void
+  publishedRelatedPosts: PublishedRelatedPostOption[]
 }) {
   const selectedMedia = block.mediaId ? media.find(item => item.id === block.mediaId) ?? null : null
   const selectedImageUrl = selectedMedia?.signedPreviewUrl ?? selectedMedia?.publicUrl ?? null
@@ -1020,7 +1044,7 @@ function BlockEditor({
     <article className={`${styles.blockCard} ${styles[`blockCard_${block.type}`]}`} data-block-type={block.type} data-block-client-id={block.clientId}>
       <div className={styles.blockTop}>
         <div className={styles.blockIdentity}>
-          <PlatformChip tone="accent">{BLOCK_LABEL[block.type]}</PlatformChip>
+          <PlatformChip tone="accent">{BLOCK_LABEL[block.type] ?? NEW_BLOCK_LABEL[block.type as keyof typeof NEW_BLOCK_LABEL] ?? block.type}</PlatformChip>
           <strong>본문 #{index + 1}</strong>
         </div>
         <div className={styles.iconActions} aria-label="블록 위치 및 삭제">
@@ -1143,6 +1167,46 @@ function BlockEditor({
         </div>
       )}
 
+      {block.type === 'quote' && (
+        <div className={styles.blockStack}>
+          <Field label="인용문"><textarea value={block.text ?? ''} onChange={event => onChange({ ...block, text: event.target.value })} rows={4} /></Field>
+          <Field label="출처명"><input value={block.metadata.attribution ?? ''} onChange={event => updateMetadata('attribution', event.target.value)} /></Field>
+          <Field label="출처 URL (선택)"><input type="url" value={block.metadata.source_url ?? ''} onChange={event => updateMetadata('source_url', event.target.value)} /></Field>
+        </div>
+      )}
+      {block.type === 'video' && (
+        <div className={styles.blockStack}>
+          <Field label="YouTube URL"><input type="url" value={block.metadata.youtube_url ?? ''} onChange={event => updateMetadata('youtube_url', event.target.value)} placeholder="https://www.youtube.com/watch?v=..." /></Field>
+          <Field label="영상 제목 (선택)"><input value={block.metadata.title ?? ''} onChange={event => updateMetadata('title', event.target.value)} /></Field>
+        </div>
+      )}
+      {block.type === 'related_post' && (
+        <Field label="발행된 관련 글">
+          <select value={block.metadata.related_post_id ?? ''} onChange={event => updateMetadata('related_post_id', event.target.value)}>
+            <option value="">글을 선택하세요</option>
+            {publishedRelatedPosts.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}
+          </select>
+        </Field>
+      )}
+      {block.type === 'place' && (
+        <div className={styles.blockStack}>
+          <Field label="장소명"><input value={block.text ?? ''} onChange={event => onChange({ ...block, text: event.target.value })} /></Field>
+          <Field label="지도 링크"><input type="url" value={block.metadata.place_url ?? ''} onChange={event => updateMetadata('place_url', event.target.value)} placeholder="Kakao, Naver 또는 Google Maps 링크" /></Field>
+        </div>
+      )}
+      {block.type === 'quiz' && (
+        <div className={styles.blockStack}>
+          <Field label="질문"><textarea value={block.text ?? ''} onChange={event => onChange({ ...block, text: event.target.value })} rows={3} /></Field>
+          <Field label="정답"><textarea value={block.metadata.answer ?? ''} onChange={event => updateMetadata('answer', event.target.value)} rows={3} /></Field>
+          <Field label="풀이 (선택)"><textarea value={block.metadata.explanation ?? ''} onChange={event => updateMetadata('explanation', event.target.value)} rows={3} /></Field>
+        </div>
+      )}
+      {block.type === 'checklist' && (
+        <div className={styles.blockStack}>
+          <Field label="제목 (선택)"><input value={block.metadata.title ?? ''} onChange={event => updateMetadata('title', event.target.value)} /></Field>
+          <Field label="항목"><textarea value={block.metadata.items ?? ''} onChange={event => updateMetadata('items', event.target.value)} rows={6} placeholder="한 줄에 한 항목씩 입력하세요" /></Field>
+        </div>
+      )}
       {block.type === 'qa' && (
         <div className={styles.qaComposer}>
           <Field label="질문">
@@ -1175,6 +1239,7 @@ export default function BlogEditorClient({
   contentAssets,
   events,
   initialQuestions,
+  publishedRelatedPosts,
 }: {
   initialPost: BlogEditorPost
   initialBlocks: BlogEditorBlock[]
@@ -1182,6 +1247,7 @@ export default function BlogEditorClient({
   contentAssets: ContentAssetPickerItem[]
   events: BlogEditorEvent[]
   initialQuestions: BlogEditorQuestion[]
+  publishedRelatedPosts: PublishedRelatedPostOption[]
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -1218,6 +1284,7 @@ export default function BlogEditorClient({
   const [assetPickerMessage, setAssetPickerMessage] = useState<{ ok: boolean; text: string } | null>(null)
   const [editorMode, setEditorMode] = useState<EditorMode>('write')
   const [discardDialogOpen, setDiscardDialogOpen] = useState(false)
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false)
   const titleRef = useRef<HTMLInputElement>(null)
   const slugRef = useRef<HTMLInputElement>(null)
   const summaryAnswerRef = useRef<HTMLTextAreaElement>(null)
@@ -1579,6 +1646,31 @@ export default function BlogEditorClient({
     })
   }
 
+  const handleArchive = () => {
+    setPublishMessage(null)
+    startTransition(async () => {
+      const result = await updateBlogPostStatus(post.id, 'archived')
+      setPublishMessage({ ok: result.ok, text: result.message, issues: result.issues })
+      if (result.ok) {
+        setPost(current => ({ ...current, status: 'archived' }))
+        setArchiveDialogOpen(false)
+        router.refresh()
+      }
+    })
+  }
+
+  const handleRestore = () => {
+    setPublishMessage(null)
+    startTransition(async () => {
+      const result = await updateBlogPostStatus(post.id, 'reviewing')
+      setPublishMessage({ ok: result.ok, text: result.message, issues: result.issues })
+      if (result.ok) {
+        setPost(current => ({ ...current, status: 'reviewing' }))
+        router.refresh()
+      }
+    })
+  }
+
   const handleSelectContentAsset = (assets: ContentAssetPickerItem[]) => {
     if (!assetPickerTarget) return
     const selectedAssets = assetPickerTarget.type === 'replace' || assetPickerTarget.type === 'cover' ? assets.slice(0, 1) : assets
@@ -1767,7 +1859,7 @@ export default function BlogEditorClient({
             </Link>
             <button type="button" onClick={handleSave} disabled={isPending || isPublished} className={styles.primaryButton}>
               <Save size={16} aria-hidden="true" />
-              {isPending ? '임시저장 중' : '임시저장'}
+              임시저장
             </button>
             <button
               type="button"
@@ -1777,8 +1869,10 @@ export default function BlogEditorClient({
               data-testid="publish-blog-post"
             >
               <Rocket size={16} aria-hidden="true" />
-              {isPublished ? '발행 완료' : isArchived ? '보관됨' : hasUnsavedEditorChanges ? '임시저장 필요' : isPending ? '발행 중' : '발행'}
+              발행
             </button>
+            <button type="button" onClick={() => setArchiveDialogOpen(true)} disabled={isPending || isArchived} className={styles.secondaryButton}>보관</button>
+            {isArchived && <button type="button" onClick={handleRestore} disabled={isPending} className={styles.primaryButton}>초안으로 복원</button>}
           </div>
         </div>
         <div className={styles.editorWorkbenchBar}>
@@ -1805,6 +1899,9 @@ export default function BlogEditorClient({
         {publishMessage && (
           <EditorStateMessage ok={publishMessage.ok} text={publishMessage.text} issues={publishMessage.issues} />
         )}
+        {hasUnsavedEditorChanges && !isPublished && !isArchived && (
+          <p className={styles.saveBeforePublish} role="status">먼저 임시저장해 주세요.</p>
+        )}
         {isPublished && (
           <div className={styles.lockNotice} role="status">
             발행된 글은 바로 저장할 수 없습니다. 수정 정책을 설계한 뒤 재검수 상태에서 편집해야 합니다.
@@ -1824,6 +1921,14 @@ export default function BlogEditorClient({
         onSelect={handleSelectContentAsset}
         onUploaded={() => router.refresh()}
       />
+      <PlatformModal
+        isOpen={archiveDialogOpen}
+        title="글을 보관할까요?"
+        onClose={() => setArchiveDialogOpen(false)}
+        footer={<><button type="button" className={styles.secondaryButton} onClick={() => setArchiveDialogOpen(false)}>취소</button><button type="button" className={styles.dangerButton} onClick={handleArchive} disabled={isPending}>보관</button></>}
+      >
+        <p>{isPublished ? '발행 글을 보관하면 현재 공개 URL과 검색 노출이 사라집니다. 글과 자산은 삭제되지 않으며, 나중에 초안으로 복원할 수 있습니다.' : '글은 삭제되지 않으며, 나중에 초안으로 복원할 수 있습니다.'}</p>
+      </PlatformModal>
 
       <div className={styles.editorLayout}>
         <main className={styles.mainEditor}>
@@ -1925,12 +2030,18 @@ export default function BlogEditorClient({
               <button type="button" onClick={() => addBlock('heading')}><Plus size={15} aria-hidden="true" /> 제목</button>
               <button type="button" onClick={() => addBlock('paragraph')}><Plus size={15} aria-hidden="true" /> 문단</button>
               <button type="button" onClick={() => openAssetPicker({ type: 'new' })}><Plus size={15} aria-hidden="true" /> 사진</button>
-              {BLOG_BODY_BLOCK_EXPANSION_ENABLED && (
+              {BLOG_BODY_BLOCK_EXPANSION_ENABLED ? (
                 <>
-                  <button type="button" onClick={() => addBlock('link_button')}><Link2 size={15} aria-hidden="true" /> 링크 버튼</button>
-                  <button type="button" onClick={() => addBlock('guide_box')}><Info size={15} aria-hidden="true" /> 안내 박스</button>
+                  <button type="button" onClick={() => addBlock('quote')}>인용구</button>
+                  <button type="button" onClick={() => addBlock('video')}>YouTube 영상</button>
+                  <button type="button" onClick={() => addBlock('related_post')}>관련 글</button>
+                  <button type="button" onClick={() => addBlock('place')}>장소/지도</button>
+                  <button type="button" onClick={() => addBlock('quiz')}>퀴즈</button>
+                  <button type="button" onClick={() => addBlock('checklist')}>체크리스트</button>
                 </>
-              )}
+              ) : <p className={styles.blockMigrationNotice}>새 확장 블록은 전용 DB 마이그레이션 적용 후 사용할 수 있습니다.</p>}
+              <button type="button" onClick={() => addBlock('link_button')}><Link2 size={15} aria-hidden="true" /> 링크 버튼</button>
+              <button type="button" onClick={() => addBlock('guide_box')}><Info size={15} aria-hidden="true" /> 안내 박스</button>
               <button type="button" onClick={() => addBlock('qa')}><Plus size={15} aria-hidden="true" /> Q&A</button>
               <button type="button" onClick={() => addBlock('cta')}><Plus size={15} aria-hidden="true" /> 상담 CTA</button>
             </div>
@@ -1953,6 +2064,7 @@ export default function BlogEditorClient({
                     onMediaChanged={handleMediaChanged}
                     onMove={(direction) => moveBlock(block.clientId, direction)}
                     onRemove={() => removeBlock(block.clientId)}
+                    publishedRelatedPosts={publishedRelatedPosts}
                   />
                 ))
               )}

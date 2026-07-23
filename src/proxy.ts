@@ -43,6 +43,9 @@ export async function proxy(request: NextRequest) {
 
   const isAdminPrivateMediaRoute = pathname.startsWith('/admin/platform/blog/media/')
   const isAdminRoute = pathname.startsWith('/admin') && !isAdminPrivateMediaRoute
+  // Private media is deliberately excluded above so its route handler can
+  // authenticate and return a non-enumerating response itself.
+  const isAdminPlatformRoute = isAdminRoute && pathname.startsWith('/admin/platform')
   const isAdminLoginRoute = pathname === '/admin/login'
   const isManagerRoute = pathname.startsWith('/manager')
   const isPortalRoute = pathname.startsWith('/portal')
@@ -94,7 +97,7 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // 1. 경로 타입 식별
-  const needsRoleLookup = isAdminRoute || isManagerRoute
+  const needsRoleLookup = isAdminPlatformRoute || isAdminRoute || isManagerRoute
 
   // 2. 로그인 여부에 따른 1차 처리 및 역할(role) 조회
   let userRole: string | null = null

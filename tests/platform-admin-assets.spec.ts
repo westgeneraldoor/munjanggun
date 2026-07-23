@@ -51,13 +51,21 @@ test('assets route uses accessible shared controls and preserves GIF intake', as
   const targetHeight = await addButton.evaluate(element => element.getBoundingClientRect().height)
   expect(targetHeight).toBeGreaterThanOrEqual(44)
 
-  const assetCards = page.locator('button[aria-pressed]')
-  await expect(assetCards).not.toHaveCount(0)
-  const firstAsset = assetCards.first()
+  const firstAsset = page.getByRole('button', { name: '상세 보기' }).first()
+  await expect(firstAsset).toBeVisible()
   await expect(firstAsset).toHaveAttribute('aria-pressed', 'false')
   await firstAsset.press('Enter')
   await expect(firstAsset).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByRole('complementary', { name: '사진 상세 정보' })).toBeVisible()
+
+  const selection = page.getByRole('checkbox', { name: /선택$/ }).first()
+  await selection.focus()
+  await page.keyboard.press('Space')
+  await expect(selection).toBeChecked()
+  await page.getByRole('button', { name: '선택한 사진 보관' }).click()
+  await expect(page.getByRole('dialog', { name: '사진 보관함으로 이동' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '사용처 확인 후 보관' })).toBeVisible()
+  await page.getByRole('button', { name: '취소' }).click()
 
   expect(consoleErrors).toEqual([])
   expect(failedResponses).toEqual([])
@@ -73,14 +81,14 @@ test('assets route has no 390px horizontal overflow and honors reduced motion', 
   await expect(page.getByLabel('사용 목적')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 
-  const assetCards = page.locator('button[aria-pressed]')
-  await expect(assetCards).not.toHaveCount(0)
-  await assetCards.first().press('Enter')
+  const firstAsset = page.getByRole('button', { name: '상세 보기' }).first()
+  await expect(firstAsset).toBeVisible()
+  await firstAsset.press('Enter')
   await expect(page.getByRole('button', { name: '목록으로' })).toBeFocused()
   await page.getByRole('button', { name: '목록으로' }).click()
-  await expect(assetCards.first()).toBeFocused()
+  await expect(firstAsset).toBeFocused()
 
-  const motion = await assetCards.first().evaluate(element => ({
+  const motion = await firstAsset.evaluate(element => ({
     query: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     duration: Number.parseFloat(getComputedStyle(element).transitionDuration),
   }))

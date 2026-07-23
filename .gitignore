@@ -39,6 +39,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Cloudflare Workers local runtime state
+.wrangler/
+
 # local Codex workspace logs
 .codex/
 

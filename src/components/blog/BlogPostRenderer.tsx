@@ -1,6 +1,15 @@
 import Link from 'next/link'
-import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, HelpCircle, Info, MapPin } from 'lucide-react'
-import { normalizeGuideBoxBlock, normalizeLinkButtonBlock } from '@/lib/content-os/blog-body-blocks'
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, HelpCircle, Info, MapPin, Quote } from 'lucide-react'
+import {
+  normalizeChecklistBlock,
+  normalizeGuideBoxBlock,
+  normalizeLinkButtonBlock,
+  normalizePlaceBlock,
+  normalizeQuizBlock,
+  normalizeQuoteBlock,
+  normalizeRelatedPostBlock,
+  normalizeVideoBlock,
+} from '@/lib/content-os/blog-body-blocks'
 import { resolvePublicBlogPresentation } from '@/lib/content-os/blog-public-presentation'
 import type { BlogRelatedPost, BlogRenderBlock, BlogRenderData, BlogRenderMedia } from '@/lib/content-os/blog-rendering'
 import { absoluteUrl } from '@/lib/content-os/site-url'
@@ -198,6 +207,83 @@ function GuideBoxBlock({ block }: { block: BlogRenderBlock }) {
   )
 }
 
+function QuoteBlock({ block }: { block: BlogRenderBlock }) {
+  const quote = normalizeQuoteBlock(block)
+  if (!quote) return null
+  return (
+    <figure className={styles.quoteBlock}>
+      <Quote size={22} aria-hidden="true" />
+      <blockquote>{quote.quote}</blockquote>
+      {(quote.attribution || quote.sourceUrl) && (
+        <figcaption>
+          {quote.sourceUrl ? <a href={quote.sourceUrl} target="_blank" rel="noreferrer">{quote.attribution || '출처 보기'}</a> : quote.attribution}
+        </figcaption>
+      )}
+    </figure>
+  )
+}
+
+function VideoBlock({ block }: { block: BlogRenderBlock }) {
+  const video = normalizeVideoBlock(block)
+  if (!video) return null
+  return (
+    <section className={styles.videoBlock} aria-label="YouTube 영상">
+      <div className={styles.videoFrame}>
+        <iframe
+          src={`https://www.youtube-nocookie.com/embed/${video.videoId}`}
+          title={block.metadata.title || '문장군 안내 영상'}
+          loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
+          sandbox="allow-scripts allow-same-origin allow-presentation"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    </section>
+  )
+}
+
+function RelatedPostBlock({ block, surface }: { block: BlogRenderBlock; surface: BlogRenderSurface }) {
+  const related = normalizeRelatedPostBlock(block)
+  if (!related) return null
+  const content = <><span>관련 글</span><strong>{related.title}</strong><ArrowRight size={16} aria-hidden="true" /></>
+  return surface === 'public-page'
+    ? <Link href={`/blog/${related.slug}`} className={styles.relatedPostBlock}>{content}</Link>
+    : <div className={styles.relatedPostBlock} aria-label={`관련 글: ${related.title}`}>{content}</div>
+}
+
+function PlaceBlock({ block, surface }: { block: BlogRenderBlock; surface: BlogRenderSurface }) {
+  const place = normalizePlaceBlock(block)
+  if (!place) return null
+  const content = <><MapPin size={18} aria-hidden="true" /><span><small>{place.provider} 지도</small><strong>{place.name}</strong></span><ArrowRight size={16} aria-hidden="true" /></>
+  return surface === 'public-page'
+    ? <a className={styles.placeBlock} href={place.href} target="_blank" rel="noreferrer">{content}</a>
+    : <div className={styles.placeBlock}>{content}</div>
+}
+
+function QuizBlock({ block }: { block: BlogRenderBlock }) {
+  const quiz = normalizeQuizBlock(block)
+  if (!quiz) return null
+  return (
+    <section className={styles.quizBlock} aria-labelledby={`quiz-${block.id}`}>
+      <span>확인 퀴즈</span>
+      <h2 id={`quiz-${block.id}`}>{quiz.question}</h2>
+      <details><summary>정답 확인</summary><p>{quiz.answer}</p>{quiz.explanation && <p>{quiz.explanation}</p>}</details>
+    </section>
+  )
+}
+
+function ChecklistBlock({ block }: { block: BlogRenderBlock }) {
+  const checklist = normalizeChecklistBlock(block)
+  if (!checklist) return null
+  return (
+    <section className={styles.checklistBlock} aria-label={checklist.title || '핵심 안내 체크리스트'}>
+      {checklist.title && <h2>{checklist.title}</h2>}
+      <ul>{checklist.items.map(item => <li key={item}><CheckCircle2 size={18} aria-hidden="true" /><span>{item}</span></li>)}</ul>
+    </section>
+  )
+}
+
 function RelatedPostCard({ post }: { post: BlogRelatedPost }) {
   return (
     <Link href={`/blog/${post.slug}`} className={styles.relatedPostCard}>
@@ -273,6 +359,13 @@ function RenderBlock({
   if (block.type === 'guide_box') {
     return <GuideBoxBlock block={block} />
   }
+
+  if (block.type === 'quote') return <QuoteBlock block={block} />
+  if (block.type === 'video') return <VideoBlock block={block} />
+  if (block.type === 'related_post') return <RelatedPostBlock block={block} surface={surface} />
+  if (block.type === 'place') return <PlaceBlock block={block} surface={surface} />
+  if (block.type === 'quiz') return <QuizBlock block={block} />
+  if (block.type === 'checklist') return <ChecklistBlock block={block} />
 
   if (block.type === 'qa') {
     const question = cleanQaQuestion(block.text)

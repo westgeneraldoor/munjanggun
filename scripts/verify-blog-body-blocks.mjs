@@ -17,6 +17,13 @@ const {
   BLOG_BODY_BLOCK_FORBIDDEN_PUBLIC_TERMS,
   normalizeGuideBoxBlock,
   normalizeLinkButtonBlock,
+  normalizeChecklistBlock,
+  normalizePlaceBlock,
+  normalizeQuoteBlock,
+  normalizeRelatedPostBlock,
+  normalizeQuizBlock,
+  normalizeVideoBlock,
+  youtubeVideoId,
 } = await import(moduleUrl)
 
 {
@@ -33,6 +40,30 @@ const {
     href: '/portal/measure/new',
     description: '무료 방문실측으로 현장 조건을 확인합니다.',
   }, 'link_button should keep a compact internal action contract')
+}
+
+{
+  assert.equal(youtubeVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), 'dQw4w9WgXcQ')
+  assert.equal(youtubeVideoId('https://youtu.be/dQw4w9WgXcQ?t=43'), 'dQw4w9WgXcQ')
+  assert.equal(youtubeVideoId('https://www.youtube.com/embed/not-an-id'), null)
+  assert.equal(normalizeVideoBlock({ text: '', metadata: { youtube_url: 'https://evil.example/embed/dQw4w9WgXcQ' } }), null)
+  assert.equal(normalizeQuoteBlock({ text: '인용문', metadata: { source_url: 'javascript:alert(1)' } }), null)
+  assert.deepEqual(
+    normalizeQuoteBlock({ text: '  현장 점검은 설치 전 확인이 중요합니다.  ', metadata: { attribution: ' 문장군 ', source_url: 'https://munjanggun.com/guide' } }),
+    { quote: '현장 점검은 설치 전 확인이 중요합니다.', attribution: '문장군', sourceUrl: 'https://munjanggun.com/guide' },
+  )
+  assert.deepEqual(normalizeChecklistBlock({ text: '', metadata: { items: '첫 항목\n\n둘째 항목' } })?.items, ['첫 항목', '둘째 항목'])
+  assert.equal(normalizeQuizBlock({ text: '질문', metadata: { answer: '정답' } })?.answer, '정답')
+  assert.equal(normalizeQuizBlock({ text: '질문', metadata: { answer: '' } }), null)
+  assert.equal(normalizePlaceBlock({ text: '문장군', metadata: { place_url: 'https://www.google.com/' } }), null)
+  assert.equal(normalizePlaceBlock({ text: '문장군', metadata: { place_url: 'https://www.google.com/maps/search/?api=1&query=munjanggun' } })?.provider, 'Google')
+  assert.equal(normalizePlaceBlock({ text: '문장군', metadata: { place_url: 'https://maps.google.com.evil.example/maps/search/?query=munjanggun' } }), null)
+  assert.equal(normalizePlaceBlock({ text: '문장군', metadata: { place_url: 'https://map.kakao.com/?q=munjanggun' } })?.provider, 'Kakao')
+  assert.deepEqual(
+    normalizeRelatedPostBlock({ text: '', metadata: { related_post_title: '공개된 관련 글', related_post_slug: 'published-related-post' } }),
+    { title: '공개된 관련 글', slug: 'published-related-post' },
+  )
+  assert.equal(normalizeRelatedPostBlock({ text: '', metadata: { related_post_title: '비공개 글', related_post_slug: '../admin' } }), null)
 }
 
 {

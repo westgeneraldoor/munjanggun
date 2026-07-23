@@ -580,6 +580,8 @@
   cursor: not-allowed;
 }
 
+.saveBeforePublish { margin: var(--space-2) 0 0; color: var(--mg-state-danger); font-weight: var(--font-bold); }
+
 .primaryButton:focus-visible,
 .publishButton:focus-visible,
 .previewButton:focus-visible,
@@ -874,6 +876,13 @@
   background: var(--mg-admin-accent-surface);
   border: var(--mg-border-width) solid var(--mg-admin-accent-border);
   border-radius: var(--radius-lg);
+}
+
+.blockMigrationNotice {
+  width: 100%;
+  margin: 0;
+  color: var(--mg-admin-accent-text);
+  font-size: var(--text-sm);
 }
 
 .blockToolbar button {
