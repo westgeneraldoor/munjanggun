@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
     viewTransition: true,
     serverActions: {
       bodySizeLimit: '128mb',
+      allowedOrigins: [
+        'munjanggun.com',
+        'hybrid-preview.munjanggun.com',
+      ],
     },
   },
   async redirects() {

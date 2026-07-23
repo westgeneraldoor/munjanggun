@@ -63,6 +63,7 @@
     "test:showroom-preview-payload": "node scripts/test-showroom-preview-payload.mjs",
     "test:showroom-rls-hardening": "node scripts/test-showroom-rls-hardening.mjs",
     "test:production-fixture-boundary": "node scripts/test-production-fixture-boundary.mjs",
+    "test:server-actions-origin": "node scripts/test-server-actions-origin-contract.mjs",
     "test:supabase-stabilization-migrations": "node scripts/test-supabase-stabilization-migrations.mjs",
     "test:official-asset-detach": "node scripts/test-official-asset-detach.mjs",
     "test:admin-shell-error": "node scripts/test-admin-shell-error.mjs",

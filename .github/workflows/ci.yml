@@ -31,6 +31,7 @@ jobs:
           npm run test:showroom-preview-payload
           npm run test:showroom-rls-hardening
           npm run test:production-fixture-boundary
+          npm run test:server-actions-origin
           npm run test:official-asset-detach
           npm run test:admin-node-list-primitives
           npm run test:admin-site-settings-primitives
