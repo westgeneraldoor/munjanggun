@@ -9,7 +9,7 @@ change `munjanggun.com`, `www`, mail records, n8n, or quotes endpoints.
 | --- | --- |
 | `/` and all other public-showroom paths | `https://munjanggun-home.pages.dev` |
 | `/_next/*`, `/api/*`, `/auth/callback`, `/login` | `https://preview.munjanggun.com` |
-| `/assets/blog-home/*`, `/assets/fonts/*`, `/images/blog-launch/*` | `https://preview.munjanggun.com` |
+| `/assets/blog-home/*`, `/assets/fonts/*`, `/images/blog-launch/*`, `/images/measure/*` | `https://preview.munjanggun.com` |
 | `/admin/*`, `/measure/*`, `/portal/*`, `/preview/*` | `https://preview.munjanggun.com` |
 
 The Worker forwards the public preview host to the app and rewrites absolute
