@@ -33,6 +33,8 @@ jobs:
           npm run test:production-fixture-boundary
           npm run test:server-actions-origin
           npm run test:content-asset-hidden-draft-references
+          npm run test:safe-internal-path
+          npm run test:measure-experience
           npm run test:official-asset-detach
           npm run test:admin-node-list-primitives
           npm run test:admin-site-settings-primitives
@@ -59,3 +61,18 @@ jobs:
         run: npm run build
       # Authenticated Playwright and live Supabase checks remain local/Preview
       # gates so this workflow never requires repository secrets.
+
+  measure-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Measure browser contract
+        run: npm run test:measure-experience-browser

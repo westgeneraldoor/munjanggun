@@ -43,6 +43,7 @@ const expectedFixtureRoutes = [
   'admin-switch',
   'blog-public-gif',
   'blog-public-gif/animated.gif',
+  'measure-form',
 ]
 
 const discoveredRoutes = []

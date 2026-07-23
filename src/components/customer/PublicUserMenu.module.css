@@ -306,6 +306,21 @@
     right: calc(var(--mg-border-width-strong) * -1);
     width: min(calc(var(--mg-layout-section) * 2 + var(--mg-space-3) + var(--mg-border-width-strong)), calc(100vw - var(--mg-space-5)));
   }
+
+  .inlineEmbedded.keepMobileLabel .loginLink,
+  .inlineEmbedded.keepMobileLabel .embeddedTrigger {
+    width: auto;
+    padding-inline: var(--mg-space-3);
+  }
+
+  .inlineEmbedded.keepMobileLabel .loginLink span,
+  .inlineEmbedded.keepMobileLabel .embeddedTrigger span {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
