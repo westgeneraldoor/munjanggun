@@ -53,7 +53,7 @@ import type {
 import { buildBlogEditorPreviewData, createStableEditorSignature } from '@/lib/content-os/blog-editor-preview'
 import {
   attachContentAssetToBlogMedia,
-  publishBlogPost,
+  publishBlogEditor,
   saveBlogEditor,
   updateBlogPostStatus,
   updateBlogMedia,
@@ -210,9 +210,6 @@ type PickerUploadItem = {
 }
 
 const MAX_UPLOAD_TOTAL_BYTES = 120 * 1024 * 1024
-const BLOG_BODY_BLOCK_EXPANSION_ENABLED =
-  process.env.NEXT_PUBLIC_BLOG_BODY_BLOCK_EXPANSION === 'enabled' &&
-  process.env.NEXT_PUBLIC_BLOG_BODY_BLOCK_EXPANSION_DB_CONFIRMED === 'enabled'
 const CATEGORY_OPTIONS: Array<{ value: BlogContentCategory; label: string }> = [
   { value: 'case_study', label: '시공사례' },
   { value: 'product_guide', label: '제품가이드' },
@@ -228,7 +225,7 @@ const STATUS_LABEL: Record<BlogPostStatus, string> = {
   needs_media: '초안',
   ready: '초안',
   published: '발행',
-  archived: '보관',
+  archived: '휴지통',
 }
 
 function getPostStatusTone(status: BlogPostStatus): PlatformStatusBadgeTone {
@@ -1252,6 +1249,7 @@ export default function BlogEditorClient({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [isAssetPending, startAssetTransition] = useTransition()
+  const [isPublishing, setIsPublishing] = useState(false)
   const [post, setPost] = useState<EditablePost>({
     id: initialPost.id,
     title: initialPost.title,
@@ -1302,6 +1300,19 @@ export default function BlogEditorClient({
     () => relatedText.split('\n').map(item => item.trim()).filter(Boolean),
     [relatedText],
   )
+  const previewBlocks = useMemo(() => blocks.map(block => {
+    if (block.type !== 'related_post') return block
+    const relatedPost = publishedRelatedPosts.find(item => item.id === block.metadata.related_post_id)
+    if (!relatedPost) return block
+    return {
+      ...block,
+      metadata: {
+        ...block.metadata,
+        related_post_title: relatedPost.title,
+        related_post_slug: relatedPost.slug,
+      },
+    }
+  }), [blocks, publishedRelatedPosts])
   const previewData = useMemo(() => buildBlogEditorPreviewData({
     post: {
       ...post,
@@ -1309,9 +1320,9 @@ export default function BlogEditorClient({
       publishedAt: initialPost.publishedAt,
       updatedAt: initialPost.updatedAt,
     },
-    blocks,
+    blocks: previewBlocks,
     media: selectableMedia,
-  }), [blocks, initialPost.publishedAt, initialPost.updatedAt, post, relatedQuestionsForPreview, selectableMedia])
+  }), [initialPost.publishedAt, initialPost.updatedAt, post, previewBlocks, relatedQuestionsForPreview, selectableMedia])
   const coverMedia = selectableMedia.find(item => item.usedAsCover) ?? null
   const coverMediaUrl = coverMedia?.signedPreviewUrl ?? coverMedia?.publicUrl ?? null
 
@@ -1633,15 +1644,18 @@ export default function BlogEditorClient({
 
   const handlePublish = () => {
     setPublishMessage(null)
-    if (hasUnsavedEditorChanges) {
-      setPublishMessage({ ok: false, text: '먼저 저장한 뒤 발행해주세요.', issues: ['발행 검수는 저장된 글을 기준으로 실행됩니다.'] })
-      return
-    }
+    setIsPublishing(true)
     startTransition(async () => {
-      const result = await publishBlogPost(post.id)
-      setPublishMessage({ ok: result.ok, text: result.message, issues: result.issues })
-      if (result.ok) {
-        router.refresh()
+      try {
+        const result = await publishBlogEditor(buildPayload())
+        setPublishMessage({ ok: result.ok, text: result.message, issues: result.issues })
+        if (result.ok) {
+          setSavedEditorSignature(currentEditorSignature)
+          setPost(current => ({ ...current, status: 'published' }))
+          router.refresh()
+        }
+      } finally {
+        setIsPublishing(false)
       }
     })
   }
@@ -1864,14 +1878,14 @@ export default function BlogEditorClient({
             <button
               type="button"
               onClick={handlePublish}
-              disabled={isPending || isPublished || isArchived || hasUnsavedEditorChanges}
+              disabled={isPending || isPublished || isArchived}
               className={styles.publishButton}
               data-testid="publish-blog-post"
             >
               <Rocket size={16} aria-hidden="true" />
-              발행
+              {isPublishing ? '발행 중' : '발행'}
             </button>
-            <button type="button" onClick={() => setArchiveDialogOpen(true)} disabled={isPending || isArchived} className={styles.secondaryButton}>보관</button>
+            <button type="button" onClick={() => setArchiveDialogOpen(true)} disabled={isPending || isArchived} className={styles.secondaryButton}>휴지통으로 이동</button>
             {isArchived && <button type="button" onClick={handleRestore} disabled={isPending} className={styles.primaryButton}>초안으로 복원</button>}
           </div>
         </div>
@@ -1900,7 +1914,7 @@ export default function BlogEditorClient({
           <EditorStateMessage ok={publishMessage.ok} text={publishMessage.text} issues={publishMessage.issues} />
         )}
         {hasUnsavedEditorChanges && !isPublished && !isArchived && (
-          <p className={styles.saveBeforePublish} role="status">먼저 임시저장해 주세요.</p>
+          <p className={styles.unsavedHint} role="status">변경 내용은 발행할 때 함께 저장됩니다.</p>
         )}
         {isPublished && (
           <div className={styles.lockNotice} role="status">
@@ -1923,11 +1937,11 @@ export default function BlogEditorClient({
       />
       <PlatformModal
         isOpen={archiveDialogOpen}
-        title="글을 보관할까요?"
+        title="글을 휴지통으로 이동할까요?"
         onClose={() => setArchiveDialogOpen(false)}
-        footer={<><button type="button" className={styles.secondaryButton} onClick={() => setArchiveDialogOpen(false)}>취소</button><button type="button" className={styles.dangerButton} onClick={handleArchive} disabled={isPending}>보관</button></>}
+        footer={<><button type="button" className={styles.secondaryButton} onClick={() => setArchiveDialogOpen(false)}>취소</button><button type="button" className={styles.dangerButton} onClick={handleArchive} disabled={isPending}>휴지통으로 이동</button></>}
       >
-        <p>{isPublished ? '발행 글을 보관하면 현재 공개 URL과 검색 노출이 사라집니다. 글과 자산은 삭제되지 않으며, 나중에 초안으로 복원할 수 있습니다.' : '글은 삭제되지 않으며, 나중에 초안으로 복원할 수 있습니다.'}</p>
+        <p>{isPublished ? '발행 글을 휴지통으로 이동하면 현재 공개 URL과 검색 노출이 사라집니다. 글과 자산은 영구삭제되지 않으며, 나중에 초안으로 복원할 수 있습니다.' : '글과 자산은 영구삭제되지 않으며, 나중에 초안으로 복원할 수 있습니다.'}</p>
       </PlatformModal>
 
       <div className={styles.editorLayout}>
@@ -2030,16 +2044,12 @@ export default function BlogEditorClient({
               <button type="button" onClick={() => addBlock('heading')}><Plus size={15} aria-hidden="true" /> 제목</button>
               <button type="button" onClick={() => addBlock('paragraph')}><Plus size={15} aria-hidden="true" /> 문단</button>
               <button type="button" onClick={() => openAssetPicker({ type: 'new' })}><Plus size={15} aria-hidden="true" /> 사진</button>
-              {BLOG_BODY_BLOCK_EXPANSION_ENABLED ? (
-                <>
-                  <button type="button" onClick={() => addBlock('quote')}>인용구</button>
-                  <button type="button" onClick={() => addBlock('video')}>YouTube 영상</button>
-                  <button type="button" onClick={() => addBlock('related_post')}>관련 글</button>
-                  <button type="button" onClick={() => addBlock('place')}>장소/지도</button>
-                  <button type="button" onClick={() => addBlock('quiz')}>퀴즈</button>
-                  <button type="button" onClick={() => addBlock('checklist')}>체크리스트</button>
-                </>
-              ) : <p className={styles.blockMigrationNotice}>새 확장 블록은 전용 DB 마이그레이션 적용 후 사용할 수 있습니다.</p>}
+              <button type="button" onClick={() => addBlock('quote')}>인용구</button>
+              <button type="button" onClick={() => addBlock('video')}>YouTube 영상</button>
+              <button type="button" onClick={() => addBlock('related_post')}>관련 글</button>
+              <button type="button" onClick={() => addBlock('place')}>장소/지도</button>
+              <button type="button" onClick={() => addBlock('quiz')}>퀴즈</button>
+              <button type="button" onClick={() => addBlock('checklist')}>체크리스트</button>
               <button type="button" onClick={() => addBlock('link_button')}><Link2 size={15} aria-hidden="true" /> 링크 버튼</button>
               <button type="button" onClick={() => addBlock('guide_box')}><Info size={15} aria-hidden="true" /> 안내 박스</button>
               <button type="button" onClick={() => addBlock('qa')}><Plus size={15} aria-hidden="true" /> Q&A</button>

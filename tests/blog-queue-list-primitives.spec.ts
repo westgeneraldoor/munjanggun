@@ -18,7 +18,7 @@ test('desktop queue keeps native table semantics and a real editor link', async 
   await expect(table).toBeVisible()
   await expect(table.getByRole('columnheader')).toHaveCount(4)
   await expect(table.getByRole('columnheader')).toHaveText(['제목', '상태', '카테고리', '수정일'])
-  await expect(page.getByRole('group', { name: '상태 필터' }).getByRole('button')).toHaveText(['전체', '초안', '발행', '보관'])
+  await expect(page.getByRole('group', { name: '상태 필터' }).getByRole('button')).toHaveText(['전체', '초안', '발행', '휴지통'])
   const rows = table.getByRole('row')
   expect(await rows.count()).toBeGreaterThan(1)
   const editorLink = table.getByRole('link', { name: /에디터 열기/ }).first()

@@ -11,7 +11,6 @@ for (const primitive of [
   'PlatformButton',
   'PlatformCheckbox',
   'PlatformField',
-  'PlatformIconButton',
   'PlatformPageHeader',
   'PlatformPanel',
   'PlatformSegmentedControl',
@@ -30,16 +29,25 @@ assert.doesNotMatch(styles, /\.(?:primaryButton|secondaryButton|errorState|empty
 assert.doesNotMatch(styles, /\.(?:uploadFields|detailForm|selectedPreviewBody)\s+(?:input|textarea)/, 'route CSS must not override shared field controls')
 assert.doesNotMatch(styles, /\.filterGrid\s+(?:label|select)|\.searchBox|\.uploadReview\s+input/, 'route CSS must not reimplement shared filter and checkbox controls')
 assert.doesNotMatch(styles, /#[0-9a-f]{3,8}|rgba?\(/i, 'route CSS must use semantic tokens instead of raw colors')
-assert.match(client, /aria-pressed=\{isSelected\}/, 'asset selection must expose its pressed state')
+assert.match(styles, /\.cardThumb\s*\{[^}]*aspect-ratio:\s*1(?:\s*\/\s*1)?/s, 'asset cards must use square image thumbnails')
+assert.match(styles, /\.cardTitle\s*\{[^}]*white-space:\s*nowrap[^}]*text-overflow:\s*ellipsis/s, 'asset cards must show a single-line truncated title')
+assert.match(client, /const SORT_OPTIONS[\s\S]*최신순[\s\S]*오래된순[\s\S]*파일명 오름차순[\s\S]*파일명 내림차순[\s\S]*용량 큰순[\s\S]*용량 작은순/, 'asset toolbar must expose all six requested sort orders')
+assert.match(client, /const \[selectionMode, setSelectionMode\]/, 'asset selection must be an explicit mode')
+assert.match(client, /selectionMode\s*\?\s*\([\s\S]*PlatformCheckbox/, 'asset checkboxes must only render in selection mode')
+assert.match(client, /shiftKey/, 'asset selection must support Shift range selection')
+assert.match(client, /onPointerDown=\{handlePointerDown\}[\s\S]*onPointerMove=\{handlePointerMove\}[\s\S]*onPointerUp=\{handlePointerUp\}/, 'asset grid must support desktop pointer-drag selection')
+assert.match(client, /현재 결과 전체 선택/, 'current results must support accessible bulk selection')
+assert.match(client, /현재 결과 전체 해제/, 'current results must support accessible bulk clear')
+assert.match(client, /visibleItems[\s\S]*더 보기/, 'large result sets must use progressive rendering')
+assert.match(client, /data-asset-card-button[\s\S]*aria-label=\{selectionMode[\s\S]*선택 해제[\s\S]*상세 보기/, 'the whole asset card must expose its current detail or selection action')
+assert.match(client, /<PlatformModal[\s\S]*closeOnBackdrop[\s\S]*showCloseButton[\s\S]*closeLabel="사진 상세 닫기"/, 'asset detail must close by backdrop, Escape, or an explicit close button')
+assert.match(client, /loading="lazy"/, 'asset thumbnails must remain viewport-near lazy loaded')
 assert.match(client, /role="status" aria-live="polite"/, 'asset detail save feedback must be announced')
-assert.match(client, /autoFocus onClick=\{onClose\}/, 'mobile detail must receive focus when the list is hidden')
-assert.match(client, /requestAnimationFrame\(\(\) => returnTarget\?\.focus\(\)\)/, 'closing mobile detail must restore card focus')
 assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/, 'asset route animation must respect reduced motion')
 assert.match(styles, /content-visibility:\s*auto/, 'large asset collections should skip off-screen rendering work')
-assert.match(client, /현재 필터 결과 전체 선택/, 'current filter results must support accessible bulk selection')
-assert.match(client, /사용처 확인 후 보관/, 'archive confirmation must state the server-side reference check')
+assert.match(client, /사용처 확인 후 휴지통으로 이동/, 'trash confirmation must state the server-side reference check')
 assert.match(client, /사용처 보기/, 'blocked archive results must provide a usage-view action')
-assert.match(client, /사진 보관함으로 복원/, 'archived assets must have a restore path')
+assert.match(client, /휴지통에서 복원/, 'trashed assets must have a restore path')
 assert.match(client, /안전한 미리보기를 불러오지 못했습니다/, 'broken image states must explain recovery')
 assert.match(actions, /archive_content_assets_safely/, 'archive actions must use the atomic server RPC')
 const archiveActionSlice = actions.slice(actions.indexOf('export async function archiveContentAssets'))

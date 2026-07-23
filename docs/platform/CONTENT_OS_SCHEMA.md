@@ -377,3 +377,17 @@ DB migration 이후 `src/types/database.ts`를 재생성한다.
 - slug 중복 차단
 - 승인되지 않은 미디어로 published 전환 차단
 - 발행 이벤트 기록 생성
+
+## 9. 2026-07-23 원자적 발행·휴지통 경계
+
+Production 적용 전 migration 코드 기준 계약:
+
+- `showroom.save_and_publish_blog_post(...)`는 post를 먼저 `FOR UPDATE`하고 `expected_updated_at`과 활성 editor lease를 확인한다.
+- 같은 transaction에서 post payload, block 교체, content asset usage, 고객 Q&A 연결, media 공개 상태, post 공개 상태, audit event를 확정한다.
+- 공개 Storage 파생본은 시도별 고유 경로에 먼저 준비한다. RPC가 rollback되면 server action이 준비한 경로를 정리한다.
+- `showroom.transition_blog_post_trash(...)`는 글 상태·발행 미디어 재검수 상태·audit event를 한 transaction에서 처리한다.
+- `showroom.permanently_delete_blog_post(...)`는 `archived` 상태와 정확한 제목 확인을 요구하고, public 파생본은 durable cleanup job으로 넘긴다.
+- 위 함수는 `SECURITY INVOKER`, 빈 `search_path`, service-role 전용 실행 권한을 사용한다.
+- `blog_posts`에 대한 authenticated 직접 `DELETE` policy와 grant는 제거한다.
+
+이 migration은 코드와 계약 검증만 포함하며 Production DB에는 별도 승인 없이 적용하지 않는다.

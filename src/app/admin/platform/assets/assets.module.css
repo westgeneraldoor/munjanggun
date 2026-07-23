@@ -11,10 +11,6 @@
   }
 }
 
-.detailCloseButton {
-  align-self: flex-end;
-}
-
 .pageHeader {
   margin-bottom: var(--space-5);
 }
@@ -309,6 +305,20 @@
   padding: var(--space-4);
 }
 
+.toolbarControls {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: end;
+}
+
+@media (min-width: 768px) {
+  .toolbarControls {
+    grid-template-columns: minmax(0, 1fr) minmax(calc(var(--mg-layout-section) + var(--mg-space-8)), calc(var(--mg-layout-section) * 2)) auto;
+  }
+}
+
 @media (min-width: 900px) {
   .filterGrid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -324,16 +334,7 @@
 }
 
 .libraryLayout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-4);
-}
-
-@media (min-width: 1180px) {
-  .libraryLayoutSelected {
-    grid-template-columns: minmax(0, 1fr) minmax(calc(var(--mg-layout-section) * 2 + var(--mg-space-8) + var(--mg-space-6) + var(--mg-space-2)), calc(var(--mg-layout-section) * 3 + var(--mg-space-7) + var(--mg-space-2)));
-    align-items: start;
-  }
+  min-width: 0;
 }
 
 .libraryList {
@@ -360,21 +361,20 @@
   gap: var(--space-3);
 }
 
+.assetGridSelecting {
+  user-select: none;
+}
+
 .assetCard {
-  appearance: none;
+  position: relative;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
-  color: inherit;
   background: var(--admin-surface);
   border: var(--mg-border-width) solid var(--admin-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--admin-shadow-sm);
-  text-align: left;
-  cursor: pointer;
   content-visibility: auto;
-  contain-intrinsic-size: 300px;
+  contain-intrinsic-size: 240px;
 }
 
 .assetCard:hover,
@@ -383,16 +383,68 @@
   box-shadow: var(--admin-shadow-md);
 }
 
-.assetCard:focus-visible {
+.cardButton:focus-visible {
   outline: var(--mg-border-width-strong) solid var(--admin-ring);
-  outline-offset: var(--admin-focus-offset);
+  outline-offset: calc(var(--admin-focus-offset) * -1);
 }
 
 .cardThumb {
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1;
   min-width: 0;
+  display: block;
   overflow: hidden;
   background: var(--admin-surface-elevated);
+}
+
+.cardButton {
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  display: block;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cardTitle {
+  min-width: 0;
+  display: block;
+  overflow: hidden;
+  padding: var(--space-3);
+  color: var(--admin-text);
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cardSelection {
+  position: absolute;
+  z-index: 2;
+  top: var(--space-2);
+  left: var(--space-2);
+  min-width: var(--mg-control-size-min);
+  min-height: var(--mg-control-size-min);
+  display: grid;
+  place-items: center;
+  padding: var(--space-2);
+  background: var(--admin-surface);
+  border: var(--mg-border-width) solid var(--admin-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.srOnly {
+  position: absolute;
+  width: var(--mg-border-width);
+  height: var(--mg-border-width);
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .thumbImage {
@@ -434,14 +486,6 @@
   font-size: var(--text-xs);
 }
 
-.cardBody {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3);
-}
-
 .selectionControls,
 .selectionBar,
 .dialogActions {
@@ -471,14 +515,13 @@
   border: var(--mg-border-width-strong) solid var(--admin-accent);
 }
 
-.modalBackdrop {
+.dragSelectionRect {
   position: fixed;
-  z-index: 100;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: var(--space-4);
-  background: color-mix(in srgb, var(--admin-text) 48%, transparent);
+  z-index: 20;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--admin-accent) 16%, transparent);
+  border: var(--mg-border-width-strong) solid var(--admin-accent);
+  border-radius: var(--radius-sm);
 }
 
 .archiveDialog {
@@ -526,34 +569,15 @@
   color: var(--mg-state-success) !important;
 }
 
-.cardBody strong {
-  color: var(--admin-text);
-  font-size: var(--text-sm);
-  line-height: 1.35;
-  overflow-wrap: anywhere;
+.loadMore {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-5);
 }
 
-.cardBody > span,
-.cardBody time {
-  color: var(--admin-text-sub);
-  font-size: var(--text-xs);
-  line-height: 1.45;
-  overflow-wrap: anywhere;
-}
-
-.cardBody time {
-  color: var(--admin-text-muted);
-  font-weight: var(--font-semibold);
-}
-
-.desktopDetail {
-  display: none;
-}
-
-@media (min-width: 1180px) {
-  .desktopDetail {
-    display: block;
-  }
+.detailModal {
+  max-height: calc(100dvh - var(--space-6));
+  overflow: auto;
 }
 
 .detailPanel {
@@ -562,13 +586,6 @@
   flex-direction: column;
   gap: var(--space-4);
   padding: var(--space-4);
-}
-
-@media (min-width: 1180px) {
-  .detailPanel {
-    position: sticky;
-    top: var(--space-5);
-  }
 }
 
 .detailPreview {
@@ -622,24 +639,10 @@
   color: var(--mg-state-danger);
 }
 
-.mobileDetail {
-  display: none;
-}
-
-@media (max-width: 1179px) {
-  .mobileDetail {
-    display: block;
-    margin-bottom: var(--space-4);
-  }
-
-  .mobileDetail + .libraryLayout {
-    display: none;
-  }
-}
-
 @media (max-width: 640px) {
   .assetGrid {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
   }
 
   .uploadPanel,
@@ -671,10 +674,6 @@
     text-align: left;
   }
 
-  .detailCloseButton {
-    width: 100%;
-  }
-
   .selectionBar {
     align-items: stretch;
   }
@@ -690,7 +689,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .progressFill,
-  .assetCard {
+  .assetCard,
+  .cardButton {
     transition: none;
   }
 }

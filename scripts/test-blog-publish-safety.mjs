@@ -17,10 +17,19 @@ assert.match(
 )
 assert.match(
   editor,
-  /disabled=\{isPending \|\| isPublished \|\| isArchived \|\| hasUnsavedEditorChanges\}/,
-  'the editor must not present an actionable publish control for archived posts',
+  /publishBlogEditor\(buildPayload\(\)\)/,
+  'publish must send the current editor payload through the atomic save-and-publish action',
 )
+assert.doesNotMatch(editor, /publishBlogPost\(post\.id\)/)
+assert.doesNotMatch(editor, /먼저 저장한 뒤 발행해주세요|먼저 임시저장해 주세요/)
+assert.doesNotMatch(editor, /disabled=\{[^}]*hasUnsavedEditorChanges[^}]*\}/)
+assert.match(editor, /발행 중/)
 assert.match(editor, /const isArchived = post\.status === 'archived'/)
+assert.match(
+  actions,
+  /export async function publishBlogPost[\s\S]*?이전 발행 방식은 더 이상 지원하지 않습니다/,
+  'the legacy id-only publication action must fail closed instead of bypassing the atomic editor payload',
+)
 assert.match(
   proxy,
   /if \(isAdminRoute && !isAdminLoginRoute && userRole !== 'administrator'\)\s*\{[\s\S]*?new URL\('\/portal', request\.url\)/,
