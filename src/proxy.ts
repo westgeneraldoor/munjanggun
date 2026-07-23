@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { getSafeInternalPath } from '@/lib/safe-internal-path'
+import { getSafeInternalPath, getSafeInternalUrl } from '@/lib/safe-internal-path'
 
 function getSafeNextPath(request: NextRequest) {
   const nextPath = `${request.nextUrl.pathname}${request.nextUrl.search}`
@@ -13,8 +13,8 @@ function getCustomerLoginUrl(request: NextRequest) {
   return loginUrl
 }
 
-function getSafeLoginNextParam(request: NextRequest) {
-  return getSafeInternalPath(request.nextUrl.searchParams.get('next'))
+function getSafeLoginRedirectUrl(request: NextRequest) {
+  return getSafeInternalUrl(request.nextUrl.searchParams.get('next'), request.url)
 }
 
 function hasSupabasePublicEnv() {
@@ -157,7 +157,7 @@ export async function proxy(request: NextRequest) {
 
     // 4.2 로그인 페이지 접근 차단
     if (isCustomerLoginRoute) {
-      return NextResponse.redirect(new URL(getSafeLoginNextParam(request), request.url))
+      return NextResponse.redirect(getSafeLoginRedirectUrl(request))
     }
     if (isAdminLoginRoute) {
       if (userRole === 'administrator') {

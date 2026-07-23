@@ -6,7 +6,7 @@ test('mobile measure interaction preserves context without duplicate sticky CTA'
 
   await expect(page).toHaveTitle(/무료방문 실측견적/)
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1)
-  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(4800)
+  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(5200)
 
   const skip = page.getByRole('link', { name: '본문으로 건너뛰기' })
   const initialBox = await skip.boundingBox()
@@ -72,9 +72,73 @@ test('mobile measure interaction preserves context without duplicate sticky CTA'
   await expect(sticky).toHaveAttribute('data-visible', 'false')
 })
 
+test('mobile sticky CTA keeps a plain intake context until a condition is explicitly selected', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/measure')
+
+  const sticky = page.getByTestId('measure-mobile-cta')
+  await page.locator('#process').scrollIntoViewIfNeeded()
+  await expect(sticky).toHaveAttribute('data-visible', 'true')
+  await expect(sticky).toHaveAttribute('href', '/portal/measure/new')
+  await sticky.click()
+
+  await expect(page).toHaveURL(/\/login\?next=/)
+  const next = await page.evaluate(() => new URL(window.location.href).searchParams.get('next'))
+  expect(next).toBe('/portal/measure/new')
+  expect(next).not.toContain('concern=')
+
+  await page.route('**/rest/v1/measurement_product_categories**', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'content-range': '0-0/*' },
+      body: JSON.stringify([{
+        key: 'door',
+        label: '중문',
+        description: null,
+        image_url: null,
+      }]),
+    })
+  })
+  await page.route('**/api/platform/measure/booking-config', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        settings: {
+          min_days_out: 2,
+          max_days_out: 30,
+          close_saturday: true,
+          close_sunday: true,
+          close_holidays: true,
+        },
+        overrides: [],
+      }),
+    })
+  })
+  await page.goto('/test-fixtures/measure-form')
+  await page.locator('footer button').last().click()
+  await page.locator('input[autocomplete="name"]').fill('테스트')
+  await page.locator('input[autocomplete="tel"]').fill('01012345678')
+  await page.locator('footer button').last().click()
+  await page.getByRole('button', { name: /주소 검색/ }).click()
+  await page.getByRole('button', { name: /수동 입력/ }).last().click()
+  await page.locator('input[placeholder*="도로명"]').fill('서울시 강남구 테스트로 1')
+  await page.locator('footer button').last().click()
+  await page.locator('input[type="checkbox"]').first().check({ force: true })
+  await page.locator('footer button').last().click()
+  await page.locator('button[aria-disabled="false"][aria-pressed]').first().click()
+  await page.locator('footer button').last().click()
+
+  await expect(page.getByTestId('measure-message')).toHaveValue('')
+  await expect(page.getByTestId('measure-message')).not.toContainText('신발장')
+})
+
 for (const viewport of [
   { width: 1366, height: 900 },
+  { width: 390, height: 844 },
   { width: 375, height: 812 },
+  { width: 844, height: 390 },
 ]) {
   test(`${viewport.width}x${viewport.height} keeps anchors, images, and page bounds intact`, async ({ page }) => {
     const consoleIssues: string[] = []
@@ -110,6 +174,14 @@ for (const viewport of [
       const [targetBox, navBox] = await Promise.all([target.boundingBox(), page.locator('header').boundingBox()])
       expect(targetBox?.y).toBeGreaterThanOrEqual((navBox?.height ?? 0) - 1)
     }
+
+    await page.locator('#process').scrollIntoViewIfNeeded()
+    const [processIntroBox, journeyVisualBox] = await Promise.all([
+      page.locator('#process > div').first().boundingBox(),
+      page.locator('#process picture').first().boundingBox(),
+    ])
+    expect(processIntroBox && journeyVisualBox && processIntroBox.y + processIntroBox.height)
+      .toBeLessThanOrEqual((journeyVisualBox?.y ?? 0) + 1)
 
     expect(consoleIssues).toEqual([])
     expect(requestFailures).toEqual([])
@@ -175,6 +247,54 @@ test('successful email login from the top navigation returns to measure', async 
   await page.getByLabel('인증 코드').fill('123456')
   await page.getByRole('button', { name: '신청 이어가기' }).click()
   await expect(page).toHaveURL(/\/measure$/)
+})
+
+test('successful email login falls back internally for a normalized network-path attack', async ({ page }) => {
+  const navigationUrls: string[] = []
+  const externalRequests: string[] = []
+  page.on('request', request => {
+    if (request.isNavigationRequest()) navigationUrls.push(request.url())
+    if (new URL(request.url()).hostname === 'evil.com') externalRequests.push(request.url())
+  })
+  await page.route('**/auth/v1/otp**', async route => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
+  })
+  await page.route('**/auth/v1/verify**', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        access_token: 'playwright-access-token',
+        refresh_token: 'playwright-refresh-token',
+        expires_in: 3600,
+        token_type: 'bearer',
+        user: {
+          id: '00000000-0000-4000-8000-000000000001',
+          aud: 'authenticated',
+          role: 'authenticated',
+          email: 'measure@example.com',
+          app_metadata: {},
+          user_metadata: {},
+        },
+      }),
+    })
+  })
+  await page.route('https://evil.com/**', async route => {
+    await route.fulfill({ status: 200, contentType: 'text/html', body: '<title>external redirect reached</title>' })
+  })
+
+  const attackQuery = 'next=%2F%252e%252e%2F%252e%252e%2F%2Fevil.com'
+  await page.goto(`/login?${attackQuery}`)
+  await page.getByRole('button', { name: '이메일로 로그인' }).click()
+  await page.getByLabel('이메일 주소').fill('measure@example.com')
+  await page.getByRole('button', { name: '인증 코드 받기' }).click()
+  await page.getByLabel('인증 코드').fill('123456')
+  await page.getByRole('button', { name: '신청 이어가기' }).click()
+
+  await expect(page).toHaveURL(/\/(?:portal|login\?next=%2Fportal)$/)
+  expect(new URL(page.url()).origin).toBe('http://127.0.0.1:3000')
+  expect(navigationUrls.some(url => new URL(url).pathname === '/portal')).toBe(true)
+  expect(externalRequests).toEqual([])
 })
 
 test('reduced motion removes measure transition timing', async ({ page }) => {

@@ -190,7 +190,7 @@ function classifyServiceRegion(addressText: string): ServiceRegion {
       label: '방문 가능 지역',
       mode: 'standard',
       title: '방문 상담 가능 지역입니다.',
-      description: '이제 가능한 방문일을 선택하면 담당자가 전날 코스를 확정해 시간 안내를 드립니다.',
+      description: '이제 가능한 방문일을 선택하면 담당자가 희망일과 지역별 방문 코스를 확인한 뒤 방문 시간을 안내드립니다.',
     }
   }
 

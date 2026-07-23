@@ -240,8 +240,8 @@ export default function VisitDatePicker({ selectedDate, onChange, regionMode = '
         <p className={styles.blockedNotice} role="status">{lastBlockedReason}</p>
       )}
       <p className={styles.timeNotice}>
-        정확한 방문 시간은 방문 전날 오후 4~5시쯤 코스를 마감한 뒤 담당자가 직접 안내드립니다.
-        전화가 부재중이면 문자라도 남겨드리고, 안내받은 시간이 맞지 않으면 일정을 변경해드립니다.
+        정확한 방문 시간은 담당자가 희망일과 지역별 방문 코스를 확인한 뒤 연락으로 안내드립니다.
+        안내받은 시간이 맞지 않으면 담당자와 일정을 조정할 수 있습니다.
       </p>
     </div>
   )

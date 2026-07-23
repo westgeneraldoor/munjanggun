@@ -236,7 +236,7 @@
 
 .process { display: grid; grid-template-columns: minmax(0, .88fr) minmax(340px, .72fr); column-gap: clamp(var(--mg-space-5), 6vw, calc(var(--mg-space-8) * 1.5)); align-items: start; }
 .processIntro { grid-column: 1; position: sticky; top: 112px; padding-bottom: var(--mg-space-5); }
-.journeyVisual { grid-column: 1; position: sticky; top: 370px; aspect-ratio: 3 / 2; border-radius: var(--mg-radius-frame); }
+.journeyVisual { grid-column: 1; position: sticky; top: clamp(448px, 52vh, 470px); aspect-ratio: 3 / 2; border-radius: var(--mg-radius-frame); }
 .journeyVisual::after { position: absolute; inset: 0; content: ''; background: linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--mg-color-ink-950) 50%, transparent)); pointer-events: none; }
 .journeyOverlay { position: absolute; z-index: 2; top: var(--mg-space-4); left: var(--mg-space-4); display: flex; align-items: center; gap: var(--mg-space-2); }
 .journeyOverlay span { width: 42px; height: 42px; display: grid; place-items: center; color: var(--mg-color-ink-950); background: var(--mg-color-forest-100); border-radius: var(--mg-radius-full); font-size: var(--mg-font-size-body); font-weight: 900; }
@@ -295,6 +295,7 @@
   .conditionBoard { grid-template-columns: 1fr; }
   .conditionImage { min-height: 440px; }
   .process { grid-template-columns: 1fr 1fr; }
+  .processIntro, .journeyVisual { position: relative; top: auto; }
   .prepare, .trustFaq { grid-template-columns: 1fr; }
   .photoVisual { min-height: 420px; }
 }

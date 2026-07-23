@@ -93,6 +93,7 @@ const faqs = [
 
 export default function MeasureExperience() {
   const [activeCondition, setActiveCondition] = useState(0)
+  const [selectedConditionId, setSelectedConditionId] = useState<(typeof conditions)[number]['id'] | null>(null)
   const [activeHotspot, setActiveHotspot] = useState(0)
   const [activeJourney, setActiveJourney] = useState(0)
   const [heroVisible, setHeroVisible] = useState(true)
@@ -101,7 +102,9 @@ export default function MeasureExperience() {
   const finalCtaRef = useRef<HTMLAnchorElement>(null)
   const journeyRefs = useRef<Array<HTMLElement | null>>([])
   const condition = conditions[activeCondition]
-  const applicationHref = `/portal/measure/new?concern=${condition.id}`
+  const applicationHref = selectedConditionId
+    ? `/portal/measure/new?concern=${selectedConditionId}`
+    : '/portal/measure/new'
   const showMobileCta = !heroVisible && !finalVisible
 
   useEffect(() => {
@@ -133,6 +136,7 @@ export default function MeasureExperience() {
 
   const selectCondition = (index: number) => {
     setActiveCondition(index)
+    setSelectedConditionId(conditions[index].id)
     setActiveHotspot(0)
   }
 

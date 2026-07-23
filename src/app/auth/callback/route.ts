@@ -2,15 +2,15 @@ import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 import { logError } from '@/lib/logger'
 import { Database } from '@/types/database'
-import { getSafeInternalPath } from '@/lib/safe-internal-path'
+import { getSafeInternalUrl } from '@/lib/safe-internal-path'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl
   const code = searchParams.get('code')
-  const next = getSafeInternalPath(searchParams.get('next'))
+  const redirectUrl = getSafeInternalUrl(searchParams.get('next'), origin)
 
   if (code) {
-    const response = NextResponse.redirect(new URL(next, origin))
+    const response = NextResponse.redirect(redirectUrl)
 
     try {
       const supabase = createServerClient<Database, 'platform'>(
