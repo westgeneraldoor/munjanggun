@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { ViewTransition } from 'react';
 import { Playfair_Display } from "next/font/google";
-import { hasPublicShowroomEnv } from "@/lib/supabase/public";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicShowroomClient, hasPublicShowroomEnv } from "@/lib/supabase/public";
 import { getSiteUrl } from "@/lib/content-os/site-url";
 import "./globals.css";
 
@@ -31,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
     }
   }
 
-  const supabase = await createClient()
+  const supabase = createPublicShowroomClient()
   const { data: siteSettings } = await supabase
     .schema('showroom')
     .from('site_settings')

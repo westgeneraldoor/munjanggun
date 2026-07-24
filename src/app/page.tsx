@@ -1,6 +1,5 @@
 import { Metadata } from 'next'
-import { hasPublicShowroomEnv } from '@/lib/supabase/public'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicShowroomClient, hasPublicShowroomEnv } from '@/lib/supabase/public'
 import NodeCard from '@/components/customer/NodeCard'
 import HomeHeroV2 from '@/components/customer/HomeHeroV2'
 import { getOptimalCols } from '@/lib/grid-utils'
@@ -19,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
     }
   }
 
-  const supabase = await createClient()
+  const supabase = createPublicShowroomClient()
   const showroomDb = supabase.schema('showroom')
 
   const { data: siteSettings } = await showroomDb
@@ -34,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export const revalidate = 0
+export const revalidate = 60
 
 export default async function Home() {
   if (!hasPublicShowroomEnv()) {
@@ -52,7 +51,7 @@ export default async function Home() {
     )
   }
 
-  const supabase = await createClient()
+  const supabase = createPublicShowroomClient()
   const showroomDb = supabase.schema('showroom')
 
   // Fetch site settings
