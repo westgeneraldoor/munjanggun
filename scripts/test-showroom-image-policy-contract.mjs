@@ -141,6 +141,16 @@ assert.doesNotMatch(
 
 assert.match(migration, /UNIQUE\s*\(\s*source_bucket,\s*source_object_path\s*\)/i)
 assert.match(migration, /UNIQUE\s*\(\s*source_id,\s*variant,\s*recipe_version\s*\)/i)
+assert.match(
+  migration,
+  /CONSTRAINT\s+image_derivatives_recipe_target_width_check\s+CHECK\s*\([\s\S]*recipe_version\s*<>\s*1[\s\S]*variant\s*=\s*'thumbnail'\s+AND\s+target_width\s*=\s*192[\s\S]*variant\s*=\s*'card'\s+AND\s+target_width\s*=\s*960[\s\S]*variant\s*=\s*'display'\s+AND\s+target_width\s*=\s*1600[\s\S]*variant\s*=\s*'large'\s+AND\s+target_width\s*=\s*2560/i,
+  'recipe version 1 must have one database-enforced canonical target width per variant',
+)
+assert.match(
+  migration,
+  /IF\s+v_recipe_version\s*=\s*1[\s\S]*v_target_width\s*<>\s*CASE\s+v_variant[\s\S]*RAISE EXCEPTION[\s\S]*recipe version 1 target width mismatch/i,
+  'the service-role commit function must reject noncanonical recipe version 1 payloads before writing',
+)
 assert.match(migration, /ON CONFLICT\s*\(\s*source_bucket,\s*source_object_path\s*\)/i)
 assert.match(migration, /source object checksum changed at the same bucket\/path/i)
 assert.match(

@@ -50,6 +50,15 @@ CREATE TABLE showroom.image_derivatives (
     CHECK (transform_status IN ('ready', 'skipped', 'failed')),
   CONSTRAINT image_derivatives_recipe_positive CHECK (recipe_version > 0),
   CONSTRAINT image_derivatives_target_width_positive CHECK (target_width > 0),
+  CONSTRAINT image_derivatives_recipe_target_width_check CHECK (
+    recipe_version <> 1
+    OR (
+      (variant = 'thumbnail' AND target_width = 192)
+      OR (variant = 'card' AND target_width = 960)
+      OR (variant = 'display' AND target_width = 1600)
+      OR (variant = 'large' AND target_width = 2560)
+    )
+  ),
   CONSTRAINT image_derivatives_width_positive CHECK (width IS NULL OR width > 0),
   CONSTRAINT image_derivatives_height_positive CHECK (height IS NULL OR height > 0),
   CONSTRAINT image_derivatives_size_positive CHECK (size_bytes IS NULL OR size_bytes > 0),
@@ -258,6 +267,8 @@ DECLARE
   v_source_id UUID;
   v_item JSONB;
   v_variant TEXT;
+  v_recipe_version INTEGER;
+  v_target_width INTEGER;
   v_status TEXT;
 BEGIN
   IF p_source IS NULL OR jsonb_typeof(p_source) <> 'object' THEN
@@ -315,12 +326,28 @@ BEGIN
   FOR v_item IN SELECT value FROM jsonb_array_elements(p_derivatives)
   LOOP
     v_variant := v_item ->> 'variant';
+    v_recipe_version := (v_item ->> 'recipe_version')::INTEGER;
+    v_target_width := (v_item ->> 'target_width')::INTEGER;
     v_status := v_item ->> 'transform_status';
 
     IF v_variant NOT IN ('thumbnail', 'card', 'display', 'large')
       OR v_status NOT IN ('ready', 'skipped', 'failed')
     THEN
       RAISE EXCEPTION 'invalid derivative variant or status';
+    END IF;
+
+    IF v_recipe_version = 1
+      AND v_target_width <> CASE v_variant
+        WHEN 'thumbnail' THEN 192
+        WHEN 'card' THEN 960
+        WHEN 'display' THEN 1600
+        WHEN 'large' THEN 2560
+      END
+    THEN
+      RAISE EXCEPTION
+        'recipe version 1 target width mismatch for variant %: expected canonical width, got %',
+        v_variant,
+        v_target_width;
     END IF;
 
     INSERT INTO showroom.image_derivatives (
@@ -343,8 +370,8 @@ BEGIN
     VALUES (
       v_source_id,
       v_variant,
-      (v_item ->> 'recipe_version')::INTEGER,
-      (v_item ->> 'target_width')::INTEGER,
+      v_recipe_version,
+      v_target_width,
       v_status,
       NULLIF(v_item ->> 'skip_reason', ''),
       NULLIF(v_item ->> 'derivative_bucket', ''),
@@ -469,9 +496,11 @@ GRANT EXECUTE ON FUNCTION showroom.resolve_preview_image_derivatives(TEXT, TEXT[
 COMMENT ON TABLE showroom.image_sources IS
   'Stable showroom image source ledger keyed by immutable Storage bucket and object path.';
 COMMENT ON TABLE showroom.image_derivatives IS
-  'Stored, recipe-versioned showroom image variants. Missing or skipped variants fall back to the source URL.';
+  'Stored, recipe-versioned showroom image variants. Recipe version 1 enforces target widths thumbnail=192, card=960, display=1600, and large=2560; its shared transformer WebP quality contract is thumbnail=76, card=80, display=84, and large=86. Missing or skipped variants fall back to the source URL.';
+COMMENT ON CONSTRAINT image_derivatives_recipe_target_width_check ON showroom.image_derivatives IS
+  'Recipe version 1 canonical target widths: thumbnail=192, card=960, display=1600, large=2560. The target width contract is independent of nullable actual dimensions; a no-upscale skip retains the canonical target width and uses the source fallback.';
 COMMENT ON FUNCTION showroom.commit_image_derivatives(JSONB, JSONB) IS
-  'Service-role-only atomic metadata commit. Storage objects are uploaded separately with upsert disabled.';
+  'Service-role-only atomic metadata commit. Recipe version 1 validates canonical target widths and relies on the shared transformer quality contract thumbnail=76, card=80, display=84, large=86; WebP quality cannot be independently verified from metadata. Storage objects are uploaded separately with upsert disabled.';
 COMMENT ON FUNCTION showroom.resolve_preview_image_derivatives(TEXT, TEXT[]) IS
   'Intentional anon SECURITY DEFINER preview exception: returns ready recipe-versioned rows only for a valid unexpired token, at most 100 caller-supplied candidate URLs, and media owned by the token node (its node image, hero, gallery, or direct child node image); no broad lookup is permitted; execute is granted only to anon after revoking PUBLIC, authenticated, and service_role.';
 

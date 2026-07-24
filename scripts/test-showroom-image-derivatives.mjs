@@ -207,6 +207,21 @@ assert.match(migration, /CHECK\s*\(\s*variant\s+IN\s*\(\s*'thumbnail',\s*'card',
 assert.match(migration, /CHECK\s*\(\s*transform_status\s+IN\s*\(\s*'ready',\s*'skipped',\s*'failed'\s*\)\s*\)/i)
 assert.match(migration, /UNIQUE\s*\(\s*source_bucket,\s*source_object_path\s*\)/i)
 assert.match(migration, /UNIQUE\s*\(\s*source_id,\s*variant,\s*recipe_version\s*\)/i)
+assert.match(
+  migration,
+  /recipe_version\s*<>\s*1[\s\S]*variant\s*=\s*'thumbnail'\s+AND\s+target_width\s*=\s*192[\s\S]*variant\s*=\s*'card'\s+AND\s+target_width\s*=\s*960[\s\S]*variant\s*=\s*'display'\s+AND\s+target_width\s*=\s*1600[\s\S]*variant\s*=\s*'large'\s+AND\s+target_width\s*=\s*2560/i,
+  'recipe version 1 must enforce the canonical target width for every variant in the database',
+)
+assert.match(
+  migration,
+  /v_recipe_version\s*=\s*1[\s\S]*v_target_width\s*<>\s*CASE\s+v_variant[\s\S]*WHEN\s+'thumbnail'\s+THEN\s+192[\s\S]*WHEN\s+'card'\s+THEN\s+960[\s\S]*WHEN\s+'display'\s+THEN\s+1600[\s\S]*WHEN\s+'large'\s+THEN\s+2560[\s\S]*RAISE EXCEPTION[\s\S]*recipe version 1 target width mismatch/i,
+  'the commit RPC must reject a noncanonical recipe version 1 variant/target-width payload',
+)
+assert.match(
+  migration,
+  /shared transformer WebP quality contract is thumbnail=76, card=80, display=84, and large=86/i,
+  'the recipe version 1 WebP quality contract must stay documented without inventing a database quality column',
+)
 assert.doesNotMatch(
   migration,
   /UNIQUE\s*\(\s*derivative_bucket,\s*derivative_object_path\s*\)/i,
