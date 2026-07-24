@@ -78,7 +78,7 @@ function chunks<T>(items: T[], size: number) {
 function isDerivativeSchemaUnavailable(error: unknown) {
   if (typeof error !== 'object' || error === null || !('code' in error)) return false
   const code = (error as { code?: unknown }).code
-  return code === 'PGRST202' || code === 'PGRST205'
+  return code === 'PGRST202' || code === 'PGRST205' || code === '42501'
 }
 
 function applyRows(

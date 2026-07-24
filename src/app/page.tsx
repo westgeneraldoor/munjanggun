@@ -6,8 +6,14 @@ import { getOptimalCols } from '@/lib/grid-utils'
 import CTABar from '@/components/customer/CTABar'
 import ScrollRestorer from '@/components/customer/ScrollRestorer'
 import ScrollAnimationWrapper from '@/components/customer/ScrollAnimationWrapper'
+import DescendantGallery from '@/components/customer/DescendantGallery'
 import { EMPTY_STATE_TITLE, EMPTY_STATE_SUBTITLE } from '@/lib/constants'
 import { loadShowroomImageSources } from '@/lib/showroom/image-sources'
+import { logError } from '@/lib/logger'
+import {
+  ROOT_DESCENDANT_GALLERY_ID,
+  loadRenderableRootDescendantGalleryPage,
+} from '@/lib/showroom/descendant-gallery-data'
 import styles from './page.module.css'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -53,6 +59,10 @@ export default async function Home() {
 
   const supabase = createPublicShowroomClient()
   const showroomDb = supabase.schema('showroom')
+  const rootGalleryResult = loadRenderableRootDescendantGalleryPage().catch(error => {
+    logError('Failed to load the root showroom gallery.', error)
+    return null
+  })
 
   // Fetch site settings
   const { data: siteSettings } = await showroomDb
@@ -76,6 +86,8 @@ export default async function Home() {
     ...node,
     image_source: node.image_url ? imageSources[node.image_url] : undefined,
   }))
+  const rootGallery = await rootGalleryResult
+  const rootGalleryDescription = '문 하나가 공간의 첫인상을 바꾸는 순간들. 문장군이 완성한 실제 현장을 천천히 둘러보세요.'
 
   const heroHasContent = Boolean(siteSettings?.hero_title || siteSettings?.hero_subtitle || siteSettings?.hero_description)
 
@@ -106,6 +118,18 @@ export default async function Home() {
             <p className={styles.emptyText}>{EMPTY_STATE_TITLE}</p>
             <p className={styles.emptySubtext}>{EMPTY_STATE_SUBTITLE}</p>
           </div>
+        )}
+        {rootGallery && rootGallery.total > 0 && (
+          <DescendantGallery
+            key={ROOT_DESCENDANT_GALLERY_ID}
+            nodeId={ROOT_DESCENDANT_GALLERY_ID}
+            galleryScope="root"
+            description={rootGalleryDescription}
+            initialItems={rootGallery.items}
+            initialNextOffset={rootGallery.nextOffset}
+            initialHasMore={rootGallery.hasMore}
+            initialSnapshot={rootGallery.snapshot}
+          />
         )}
       </div>
 

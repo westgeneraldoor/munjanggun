@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type MouseEvent } from 'react'
 import Link from 'next/link'
+import { requestShowroomScrollReset } from '@/components/customer/ScrollRestorer'
 import ShowroomImage from '@/components/showroom/ShowroomImage'
 import type { ShowroomImageSource } from '@/lib/showroom/image-sources'
 import styles from './NodeCard.module.css'
@@ -27,10 +28,27 @@ export default function NodeCard({ node, basePath = '', textPosition = 'overlay'
   const isBelow = textPosition === 'below'
   const href = basePath ? `${basePath}/${node.slug}` : `/${node.slug}`
 
+  const handleNavigationClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.shiftKey
+    ) {
+      return
+    }
+
+    requestShowroomScrollReset(href)
+  }
+
   return (
     <Link
       href={href}
+      scroll={false}
       className={`${styles.card} ${isBelow ? styles.cardBelow : ''}`}
+      onClick={handleNavigationClick}
     >
       <div className={`${styles.imageWrapper} ${isBelow ? styles.imageWrapperBelow : ''}`}>
         {node.image_url ? (

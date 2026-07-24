@@ -32,6 +32,7 @@ jobs:
           npm run test:showroom-rls-hardening
           npm run test:showroom-image-derivatives
           npm run test:showroom-image-policy-contract
+          npm run test:showroom-descendant-gallery
           npm run test:production-fixture-boundary
           npm run test:server-actions-origin
           npm run test:content-asset-hidden-draft-references
