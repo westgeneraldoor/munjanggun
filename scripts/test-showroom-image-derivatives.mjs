@@ -22,9 +22,14 @@ const {
 
 assert.equal(SHOWROOM_IMAGE_RECIPE_VERSION, 1)
 assert.deepEqual(
-  Object.fromEntries(Object.entries(SHOWROOM_IMAGE_VARIANT_SPECS).map(([variant, spec]) => [variant, spec.width])),
-  { thumbnail: 192, card: 960, display: 1600, large: 2560 },
-  'the four variants must be tied to the measured UI delivery widths',
+  SHOWROOM_IMAGE_VARIANT_SPECS,
+  {
+    thumbnail: { width: 192, quality: 76 },
+    card: { width: 960, quality: 80 },
+    display: { width: 1600, quality: 84 },
+    large: { width: 2560, quality: 86 },
+  },
+  'the four variants must preserve the canonical measured widths and WebP qualities',
 )
 
 const source = await sharp({
