@@ -21,6 +21,8 @@ type PublicUserMenuProps = {
   tone?: 'dark' | 'light' | 'hero'
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  showLabelOnMobile?: boolean
+  disablePrefetch?: boolean
 }
 
 const HIDDEN_PATH_PREFIXES = [
@@ -48,6 +50,8 @@ export default function PublicUserMenu({
   tone = 'dark',
   open: controlledOpen,
   onOpenChange,
+  showLabelOnMobile = false,
+  disablePrefetch = false,
 }: PublicUserMenuProps) {
   const pathname = usePathname()
   const router = useRouter()
@@ -75,6 +79,7 @@ export default function PublicUserMenu({
   const containerClassName = [
     styles.container,
     isInline ? styles.inlineEmbedded : variant === 'blog' ? styles.blogEmbedded : '',
+    showLabelOnMobile ? styles.keepMobileLabel : '',
     isInline ? '' : tone === 'hero' ? styles.blogHero : tone === 'light' ? styles.blogLight : styles.blogDark,
   ].filter(Boolean).join(' ')
 
@@ -196,7 +201,7 @@ export default function PublicUserMenu({
   if (!profile) {
     return (
       <div className={containerClassName}>
-        <Link href={loginHref} className={styles.loginLink} id="public-login-link">
+        <Link href={loginHref} prefetch={disablePrefetch ? false : undefined} className={styles.loginLink} id="public-login-link">
           <LogIn size={17} aria-hidden="true" />
           <span>로그인</span>
         </Link>
@@ -257,16 +262,16 @@ export default function PublicUserMenu({
               <span className={styles.identityName}>{profile.displayName}</span>
               {profile.email && <span className={styles.identityEmail}>{profile.email}</span>}
             </div>
-            <Link href="/portal" className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
+            <Link href="/portal" prefetch={disablePrefetch ? false : undefined} className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
               <UserRound size={16} aria-hidden="true" />
               <span>마이페이지</span>
             </Link>
-            <Link href="/portal/measure/new" className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
+            <Link href="/portal/measure/new" prefetch={disablePrefetch ? false : undefined} className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
               <ClipboardList size={16} aria-hidden="true" />
               <span>무료방문견적 신청</span>
             </Link>
             {isAdministrator && (
-              <Link href="/admin/platform" className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
+              <Link href="/admin/platform" prefetch={disablePrefetch ? false : undefined} className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
                 <ShieldCheck size={16} aria-hidden="true" />
                 <span>플랫폼 어드민</span>
               </Link>
@@ -304,16 +309,16 @@ export default function PublicUserMenu({
             <span className={styles.identityName}>{profile.displayName}</span>
             {profile.email && <span className={styles.identityEmail}>{profile.email}</span>}
           </div>
-          <Link href="/portal" className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
+          <Link href="/portal" prefetch={disablePrefetch ? false : undefined} className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
             <UserRound size={16} aria-hidden="true" />
             <span>마이페이지</span>
           </Link>
-          <Link href="/portal/measure/new" className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
+          <Link href="/portal/measure/new" prefetch={disablePrefetch ? false : undefined} className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
             <ClipboardList size={16} aria-hidden="true" />
             <span>무료방문견적 신청</span>
           </Link>
           {isAdministrator && (
-            <Link href="/admin/platform" className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
+            <Link href="/admin/platform" prefetch={disablePrefetch ? false : undefined} className={styles.menuItem} role="menuitem" onClick={() => setMenuOpen(false)}>
               <ShieldCheck size={16} aria-hidden="true" />
               <span>플랫폼 어드민</span>
             </Link>
