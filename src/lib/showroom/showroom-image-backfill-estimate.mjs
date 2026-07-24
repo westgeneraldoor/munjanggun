@@ -37,11 +37,18 @@ export function createShowroomBackfillEstimate(existingReadyObjectPaths = []) {
       bytes: 0,
       averageBytes: 0,
       maxBytes: 0,
+      selectedRecords: 0,
+      originalFallbackRecords: 0,
+      selectedBytes: 0,
+      selectedAverageBytes: 0,
+      selectedMaxBytes: 0,
       newUniqueFiles: 0,
       newBytes: 0,
     }]),
   )
+  let sourceCount = 0
   let sourceBytes = 0
+  let sourceMaxBytes = 0
   let readyDerivativeRecords = 0
   let skippedVariantRecords = 0
   let newDerivativeRecords = 0
@@ -49,9 +56,12 @@ export function createShowroomBackfillEstimate(existingReadyObjectPaths = []) {
 
   return {
     add(transformed, states = new Map()) {
+      sourceCount += 1
       sourceBytes += transformed.original.sizeBytes
+      sourceMaxBytes = Math.max(sourceMaxBytes, transformed.original.sizeBytes)
 
       for (const [variant, derivative] of Object.entries(transformed.variants)) {
+        variants[variant].selectedRecords += 1
         const state = states.get(variant)
         const stateIsComplete = state?.status === 'ready' || state?.status === 'skipped'
         if (!stateIsComplete) pendingVariantWrites += 1
@@ -60,6 +70,12 @@ export function createShowroomBackfillEstimate(existingReadyObjectPaths = []) {
         if (derivative.status === 'skipped') {
           skippedVariantRecords += 1
           variants[variant].skippedRecords += 1
+          variants[variant].originalFallbackRecords += 1
+          variants[variant].selectedBytes += transformed.original.sizeBytes
+          variants[variant].selectedMaxBytes = Math.max(
+            variants[variant].selectedMaxBytes,
+            transformed.original.sizeBytes,
+          )
           continue
         }
 
@@ -69,6 +85,11 @@ export function createShowroomBackfillEstimate(existingReadyObjectPaths = []) {
         )
         readyDerivativeRecords += 1
         variants[variant].readyRecords += 1
+        variants[variant].selectedBytes += derivative.sizeBytes
+        variants[variant].selectedMaxBytes = Math.max(
+          variants[variant].selectedMaxBytes,
+          derivative.sizeBytes,
+        )
         outputObjects.set(objectPath, derivative.sizeBytes)
         variantObjects[variant].set(objectPath, derivative.sizeBytes)
         if (!existingObjects.has(objectPath)) {
@@ -88,12 +109,18 @@ export function createShowroomBackfillEstimate(existingReadyObjectPaths = []) {
           ? 0
           : Math.round(variants[variant].bytes / sizes.length)
         variants[variant].maxBytes = sizes.length === 0 ? 0 : Math.max(...sizes)
+        variants[variant].selectedAverageBytes = variants[variant].selectedRecords === 0
+          ? 0
+          : Math.round(variants[variant].selectedBytes / variants[variant].selectedRecords)
         variants[variant].newUniqueFiles = newSizes.length
         variants[variant].newBytes = newSizes.reduce((total, sizeBytes) => total + sizeBytes, 0)
       }
 
       return {
+        sourceCount,
         sourceBytes,
+        sourceAverageBytes: sourceCount === 0 ? 0 : Math.round(sourceBytes / sourceCount),
+        sourceMaxBytes,
         readyDerivativeRecords,
         skippedVariantRecords,
         outputDerivativeFiles: outputObjects.size,

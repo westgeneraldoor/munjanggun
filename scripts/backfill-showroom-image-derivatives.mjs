@@ -462,7 +462,10 @@ if (options.dryRun) {
 
   const estimated = estimate.snapshot()
   Object.assign(summary, {
+    estimatedSourceCount: estimated.sourceCount,
     estimatedSourceBytes: estimated.sourceBytes,
+    estimatedSourceAverageBytes: estimated.sourceAverageBytes,
+    estimatedSourceMaxBytes: estimated.sourceMaxBytes,
     estimatedReadyDerivativeRecords: estimated.readyDerivativeRecords,
     estimatedSkippedVariantRecords: estimated.skippedVariantRecords,
     estimatedOutputDerivativeFiles: estimated.outputDerivativeFiles,
