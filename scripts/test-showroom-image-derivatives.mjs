@@ -34,8 +34,8 @@ assert.deepEqual(
 
 const source = await sharp({
   create: {
-    width: 2000,
-    height: 1000,
+    width: 3000,
+    height: 1800,
     channels: 3,
     background: { r: 121, g: 83, b: 57 },
   },
@@ -44,23 +44,23 @@ const transformed = await transformShowroomImage(source, 'image/png')
 const repeatedTransform = await transformShowroomImage(source, 'image/png')
 
 assert.deepEqual(transformed.original.buffer, source, 'the original bytes must be preserved exactly')
-assert.equal(transformed.original.width, 2000)
-assert.equal(transformed.original.height, 1000)
+assert.equal(transformed.original.width, 3000)
+assert.equal(transformed.original.height, 1800)
 assert.equal(transformed.variants.thumbnail.status, 'ready')
 assert.equal(transformed.variants.thumbnail.width, 192)
 assert.equal(transformed.variants.card.status, 'ready')
 assert.equal(transformed.variants.card.width, 960)
 assert.equal(transformed.variants.display.status, 'ready')
 assert.equal(transformed.variants.display.width, 1600)
-assert.equal(transformed.variants.large.status, 'skipped')
-assert.equal(transformed.variants.large.skipReason, 'no-upscale')
+assert.equal(transformed.variants.large.status, 'ready')
+assert.equal(transformed.variants.large.width, 2560)
 
 for (const variant of Object.values(transformed.variants)) {
   if (variant.status !== 'ready') continue
   assert.equal(variant.mimeType, 'image/webp')
   assert.ok(variant.sizeBytes > 0)
-  assert.ok(variant.width <= 2000)
-  assert.ok(variant.height <= 1000)
+  assert.ok(variant.width <= 3000)
+  assert.ok(variant.height <= 1800)
 }
 assert.deepEqual(
   Object.fromEntries(Object.entries(repeatedTransform.variants).map(([variant, result]) => [
