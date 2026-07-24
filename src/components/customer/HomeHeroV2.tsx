@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-import Image from 'next/image'
+import ShowroomImage from '@/components/showroom/ShowroomImage'
+import type { ShowroomImageSource } from '@/lib/showroom/image-sources'
 import styles from './HomeHeroV2.module.css'
 
 interface HomeHeroV2Props {
@@ -15,8 +16,8 @@ interface HomeHeroV2Props {
     hero_slide_interval?: number
     hero_slide_transition?: string | null
   }
-  desktopMedia: { image_url: string; display_order: number }[]
-  mobileMedia: { image_url: string; display_order: number }[]
+  desktopMedia: { image_url: string; display_order: number; image_source?: ShowroomImageSource }[]
+  mobileMedia: { image_url: string; display_order: number; image_source?: ShowroomImageSource }[]
 }
 
 export default function HomeHeroV2({ settings, desktopMedia, mobileMedia }: HomeHeroV2Props) {
@@ -68,7 +69,7 @@ export default function HomeHeroV2({ settings, desktopMedia, mobileMedia }: Home
   }, [mobileMedia.length, slideInterval, mobileVideoUrl])
 
   const renderMedia = (
-    mediaArray: { image_url: string; display_order: number }[],
+    mediaArray: { image_url: string; display_order: number; image_source?: ShowroomImageSource }[],
     currentIndex: number,
     prevIndex: number
   ) => {
@@ -98,12 +99,12 @@ export default function HomeHeroV2({ settings, desktopMedia, mobileMedia }: Home
             )
           }}
         >
-          <Image
-            src={item.image_url}
+          <ShowroomImage
+            source={item.image_source ?? item.image_url}
+            purpose="large"
             alt="Home Hero Background"
             fill
             priority={idx === 0}
-            quality={85}
             sizes="100vw"
             className={styles.image}
             style={{ objectFit: 'cover' }}

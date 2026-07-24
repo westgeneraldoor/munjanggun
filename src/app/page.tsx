@@ -8,6 +8,7 @@ import CTABar from '@/components/customer/CTABar'
 import ScrollRestorer from '@/components/customer/ScrollRestorer'
 import ScrollAnimationWrapper from '@/components/customer/ScrollAnimationWrapper'
 import { EMPTY_STATE_TITLE, EMPTY_STATE_SUBTITLE } from '@/lib/constants'
+import { loadShowroomImageSources } from '@/lib/showroom/image-sources'
 import styles from './page.module.css'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -75,6 +76,19 @@ export default async function Home() {
     .eq('status', 'published')
     .order('display_order')
 
+  const imageSources = await loadShowroomImageSources(supabase, [
+    ...(siteHeroMedia ?? []).map(media => media.image_url),
+    ...(rootNodes ?? []).map(node => node.image_url),
+  ])
+  const siteHeroWithSources = (siteHeroMedia ?? []).map(media => ({
+    ...media,
+    image_source: imageSources[media.image_url],
+  }))
+  const rootNodesWithSources = (rootNodes ?? []).map(node => ({
+    ...node,
+    image_source: node.image_url ? imageSources[node.image_url] : undefined,
+  }))
+
   const heroHasContent = (siteHeroMedia && siteHeroMedia.length > 0) || siteSettings?.hero_video_url || siteSettings?.hero_mobile_video_url || siteSettings?.hero_title || siteSettings?.hero_subtitle || siteSettings?.hero_description
 
   return (
@@ -84,15 +98,15 @@ export default async function Home() {
       {siteSettings?.hero_enabled && heroHasContent && (
         <HomeHeroV2
           settings={siteSettings}
-          desktopMedia={siteHeroMedia?.filter(m => m.device_type === 'desktop' && m.media_type === 'image') || []}
-          mobileMedia={siteHeroMedia?.filter(m => m.device_type === 'mobile' && m.media_type === 'image') || []}
+          desktopMedia={siteHeroWithSources.filter(m => m.device_type === 'desktop' && m.media_type === 'image')}
+          mobileMedia={siteHeroWithSources.filter(m => m.device_type === 'mobile' && m.media_type === 'image')}
         />
       )}
 
       <div className={styles.content}>
-        {(rootNodes || []).length > 0 ? (
-          <div className={styles.nodeGrid} data-cols={getOptimalCols(rootNodes?.length || 0)}>
-            {(rootNodes || []).map((node, idx) => (
+        {rootNodesWithSources.length > 0 ? (
+          <div className={styles.nodeGrid} data-cols={getOptimalCols(rootNodesWithSources.length)}>
+            {rootNodesWithSources.map((node, idx) => (
               <ScrollAnimationWrapper key={node.id} delay={idx * 150}>
                 <NodeCard 
                   node={node} 

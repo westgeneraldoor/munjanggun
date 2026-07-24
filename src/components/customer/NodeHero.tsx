@@ -1,13 +1,17 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
+import ShowroomImage from '@/components/showroom/ShowroomImage'
+import {
+  resolveShowroomImageUrl,
+  type ShowroomImageSource,
+} from '@/lib/showroom/image-sources'
 import styles from './NodeHero.module.css'
 
 interface NodeHeroProps {
-  desktopMedia: { image_url: string; display_order: number }[]
-  mobileMedia: { image_url: string; display_order: number }[]
+  desktopMedia: { image_url: string; display_order: number; image_source?: ShowroomImageSource }[]
+  mobileMedia: { image_url: string; display_order: number; image_source?: ShowroomImageSource }[]
   title?: string | null
   subtitle?: string | null
   description?: string | null
@@ -74,8 +78,11 @@ export default function NodeHero({
   const hasMobile = mobileMedia.length > 0 || !!mobileVideoUrl
   const hasMedia = hasDesktop || hasMobile
 
-  const currentImage = (desktopMedia.length > 0 ? desktopMedia[currentDesktopSlide].image_url : null) || 
-                       (mobileMedia.length > 0 ? mobileMedia[currentMobileSlide].image_url : null)
+  const currentMedia = (desktopMedia.length > 0 ? desktopMedia[currentDesktopSlide] : null)
+    || (mobileMedia.length > 0 ? mobileMedia[currentMobileSlide] : null)
+  const currentImage = currentMedia
+    ? resolveShowroomImageUrl(currentMedia.image_source ?? currentMedia.image_url, 'large')
+    : null
 
   const handleBrightness = useCallback((theme: 'light' | 'dark') => {
     setTextTheme(theme)
@@ -121,7 +128,7 @@ export default function NodeHero({
   const hasText = !!(title || subtitle || description)
 
   const renderMedia = (
-    mediaArray: { image_url: string; display_order: number }[],
+    mediaArray: { image_url: string; display_order: number; image_source?: ShowroomImageSource }[],
     currentIndex: number,
     prevIndex: number
   ) => {
@@ -151,12 +158,12 @@ export default function NodeHero({
             )
           }}
         >
-          <Image
-            src={item.image_url}
+          <ShowroomImage
+            source={item.image_source ?? item.image_url}
+            purpose="large"
             alt={title || '히어로 이미지'}
             fill
             priority={idx === 0}
-            quality={85}
             sizes="100vw"
             className={styles.image}
           />

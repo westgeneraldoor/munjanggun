@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
+import ShowroomImage from '@/components/showroom/ShowroomImage'
+import type { ShowroomImageSource } from '@/lib/showroom/image-sources'
 import styles from './NodeCard.module.css'
 
 interface NodeCardProps {
@@ -13,6 +14,7 @@ interface NodeCardProps {
     tagline: string | null
     card_subtitle: string | null
     image_url: string | null
+    image_source?: ShowroomImageSource
     type?: string
   }
   basePath?: string
@@ -32,8 +34,9 @@ export default function NodeCard({ node, basePath = '', textPosition = 'overlay'
     >
       <div className={`${styles.imageWrapper} ${isBelow ? styles.imageWrapperBelow : ''}`}>
         {node.image_url ? (
-          <Image
-            src={node.image_url}
+          <ShowroomImage
+            source={node.image_source ?? node.image_url}
+            purpose="card"
             alt={`${node.name} 이미지`}
             fill
             sizes="(max-width: 768px) 50vw, 33vw"

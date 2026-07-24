@@ -182,6 +182,12 @@
     height: 100dvh;
   }
 
+  .splitImageFrame {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
   .splitImage {
     object-fit: cover;
     animation: kenburns 20s ease-in-out infinite alternate;
