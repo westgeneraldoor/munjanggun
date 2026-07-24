@@ -12,6 +12,11 @@ const STALE_TTL_SECONDS = 300
 const CACHE_TTL_SECONDS = FRESH_TTL_SECONDS + STALE_TTL_SECONDS
 const CACHE_NAME = 'munjanggun-showroom-html'
 
+function isShowroomPath(request: Request) {
+  const { pathname } = new URL(request.url)
+  return pathname === '/middle-door' || pathname.startsWith('/middle-door/')
+}
+
 function isAnonymousDocumentRequest(request: Request) {
   const url = new URL(request.url)
   const accept = request.headers.get('accept') ?? ''
@@ -142,6 +147,13 @@ async function refreshDocument(request: Request, cacheKey: Request, env: Env) {
 
 const worker = {
   async fetch(request: Request, env: Env, ctx: WorkerExecutionContext): Promise<Response> {
+    // The route wildcard is intentionally broad enough to include query-string
+    // requests (such as Next RSC navigations). Keep the proxy itself narrow so
+    // lookalike paths continue to be served by the existing Pages origin.
+    if (!isShowroomPath(request)) {
+      return fetch(request)
+    }
+
     if (!isAnonymousDocumentRequest(request)) {
       const upstream = await fetchAndPrepare(request, env)
       return withPublicHeaders(upstream, 'BYPASS', env.APP_ORIGIN, env.PUBLIC_ORIGIN)
