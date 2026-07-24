@@ -14,6 +14,11 @@ const {
   buildShowroomDerivativeObjectPath,
   transformShowroomImage,
 } = derivativeModule
+const {
+  createShowroomBackfillEstimate,
+  shouldProcessShowroomBackfillState,
+  showroomBackfillStateComplete,
+} = await import('../src/lib/showroom/showroom-image-backfill-estimate.mjs')
 
 assert.equal(SHOWROOM_IMAGE_RECIPE_VERSION, 1)
 assert.deepEqual(
@@ -113,6 +118,60 @@ assert.equal(
   'derivative paths must be deterministic and immutable per recipe',
 )
 
+const duplicateReady = {
+  status: 'ready',
+  sizeBytes: 100,
+}
+const estimate = createShowroomBackfillEstimate([
+  buildShowroomDerivativeObjectPath(hash, 'thumbnail'),
+])
+const estimateTransform = {
+  original: { sizeBytes: 1_000, checksumSha256: hash },
+  variants: {
+    thumbnail: duplicateReady,
+    card: { status: 'skipped' },
+    display: { status: 'skipped' },
+    large: { status: 'skipped' },
+  },
+}
+estimate.add(estimateTransform, new Map([
+  ['thumbnail', {
+    status: 'ready',
+    derivativeObjectPath: buildShowroomDerivativeObjectPath(hash, 'thumbnail'),
+    sizeBytes: 100,
+  }],
+  ['card', { status: 'skipped' }],
+]))
+estimate.add(estimateTransform, new Map())
+const estimateSummary = estimate.snapshot()
+assert.equal(estimateSummary.readyDerivativeRecords, 2)
+assert.equal(estimateSummary.outputDerivativeFiles, 1)
+assert.equal(estimateSummary.outputDerivativeBytes, 100)
+assert.equal(estimateSummary.newDerivativeFiles, 0)
+assert.equal(estimateSummary.newDerivativeBytes, 0)
+assert.equal(estimateSummary.newDerivativeRecords, 6)
+assert.equal(estimateSummary.pendingVariantWrites, 6)
+assert.equal(estimateSummary.variants.thumbnail.readyRecords, 2)
+assert.equal(estimateSummary.variants.thumbnail.uniqueFiles, 1)
+assert.equal(estimateSummary.variants.thumbnail.newUniqueFiles, 0)
+
+const completeStates = new Map([
+  ['thumbnail', { status: 'ready' }],
+  ['card', { status: 'ready' }],
+  ['display', { status: 'skipped' }],
+  ['large', { status: 'skipped' }],
+])
+assert.equal(showroomBackfillStateComplete(completeStates), true)
+assert.equal(shouldProcessShowroomBackfillState(completeStates), false)
+assert.equal(
+  shouldProcessShowroomBackfillState(completeStates, { metadataRefreshRequired: true }),
+  true,
+  'a canonical source URL change must refresh metadata even when all variants are complete',
+)
+const failedStates = new Map([['thumbnail', { status: 'failed' }]])
+assert.equal(shouldProcessShowroomBackfillState(failedStates), false)
+assert.equal(shouldProcessShowroomBackfillState(failedStates, { retryFailed: true }), true)
+
 await assert.rejects(
   () => transformShowroomImage(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>'), 'image/svg+xml'),
   /Unsupported image MIME type/,
@@ -166,6 +225,20 @@ assert.match(backfill, /SUPABASE_PROJECT_REF/)
 assert.match(backfill, /options\.confirmProject\s*!==\s*projectRef/)
 assert.match(backfill, /PRODUCTION_PROJECT_REF/)
 assert.match(backfill, /production[\s\S]{0,160}(?:refus|prohibit|block)/i)
+assert.match(backfill, /downloadAndTransform/)
+assert.match(backfill, /estimatedReadyDerivativeRecords/)
+assert.match(backfill, /estimatedOutputDerivativeFiles/)
+assert.match(backfill, /estimatedOutputDerivativeBytes/)
+assert.match(backfill, /estimatedNewDerivativeFiles/)
+assert.match(backfill, /estimatedNewDerivativeBytes/)
+assert.match(backfill, /estimatedVariants/)
+assert.match(backfill, /if\s*\(identities\.length\s*===\s*0\)/)
+assert.match(backfill, /sourceIdentitySha256/)
+assert.match(
+  backfill,
+  /if\s*\(options\.dryRun\)[\s\S]*estimate\.add[\s\S]*\}\s*else\s*\{[\s\S]*processSource/,
+  'dry-run estimation and apply mutations must stay in separate execution branches',
+)
 assert.match(backfill, /retry\s*\(\s*async\s*\(\)\s*=>\s*\{[\s\S]*commit_image_derivatives/)
 assert.doesNotMatch(backfill, /\.remove\(/, 'backfill must never delete originals or derivatives')
 

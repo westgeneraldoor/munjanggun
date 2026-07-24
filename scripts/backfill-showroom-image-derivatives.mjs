@@ -13,6 +13,11 @@ import {
   SHOWROOM_IMAGE_VARIANT_SPECS,
   transformShowroomImage,
 } from '../src/lib/showroom/showroom-image-derivatives.mjs'
+import {
+  createShowroomBackfillEstimate,
+  shouldProcessShowroomBackfillState,
+  showroomBackfillStateComplete,
+} from '../src/lib/showroom/showroom-image-backfill-estimate.mjs'
 
 const PRODUCTION_PROJECT_REF = 'cebafroyvmllbyivevjd'
 const DERIVATIVE_BUCKET = 'showroom-images'
@@ -157,48 +162,68 @@ function isMissingRelation(error) {
     || /image_sources|schema cache|does not exist/i.test(error?.message ?? '')
 }
 
-async function existingStates(sourceUrls) {
-  const result = new Map()
-  for (let offset = 0; offset < sourceUrls.length; offset += 100) {
-    const urlChunk = sourceUrls.slice(offset, offset + 100)
-    const { data: sources, error: sourceError } = await supabase
+function identityKey(identity) {
+  return `${identity.bucket}\u0000${identity.objectPath}`
+}
+
+async function existingStateInventory(identities) {
+  const statesByIdentity = new Map()
+  const sourceUrlsByIdentity = new Map()
+  const existingReadyObjectPaths = new Set()
+  if (identities.length === 0) {
+    return { statesByIdentity, sourceUrlsByIdentity, existingReadyObjectPaths }
+  }
+  const identityKeys = new Set(identities.map(identityKey))
+  const buckets = [...new Set(identities.map(identity => identity.bucket))]
+  let sources
+  try {
+    sources = await fetchAll(() => supabase
       .from('image_sources')
-      .select('id,source_url')
-      .in('source_url', urlChunk)
-    if (sourceError) {
-      if (isMissingRelation(sourceError)) return result
-      throw sourceError
+      .select('id,source_bucket,source_object_path,source_url')
+      .in('source_bucket', buckets)
+      .order('id'))
+  } catch (error) {
+    if (isMissingRelation(error)) {
+      return { statesByIdentity, sourceUrlsByIdentity, existingReadyObjectPaths }
     }
-    if (!sources || sources.length === 0) continue
-    const byId = new Map(sources.map(source => [source.id, source.source_url]))
+    throw error
+  }
+  for (const source of sources) {
+    const key = identityKey({
+      bucket: source.source_bucket,
+      objectPath: source.source_object_path,
+    })
+    if (identityKeys.has(key)) sourceUrlsByIdentity.set(key, source.source_url)
+  }
+  for (let offset = 0; offset < sources.length; offset += 100) {
+    const sourceChunk = sources.slice(offset, offset + 100)
+    const byId = new Map(sourceChunk.map(source => [source.id, identityKey({
+      bucket: source.source_bucket,
+      objectPath: source.source_object_path,
+    })]))
     const { data: derivatives, error: derivativeError } = await supabase
       .from('image_derivatives')
-      .select('source_id,variant,recipe_version,transform_status')
+      .select('source_id,variant,recipe_version,transform_status,derivative_object_path,size_bytes')
       .in('source_id', [...byId.keys()])
       .eq('recipe_version', SHOWROOM_IMAGE_RECIPE_VERSION)
     if (derivativeError) throw derivativeError
     for (const derivative of derivatives ?? []) {
-      const sourceUrl = byId.get(derivative.source_id)
-      if (!sourceUrl) continue
-      const states = result.get(sourceUrl) ?? new Map()
-      states.set(derivative.variant, derivative.transform_status)
-      result.set(sourceUrl, states)
+      const key = byId.get(derivative.source_id)
+      if (!key) continue
+      if (derivative.transform_status === 'ready' && derivative.derivative_object_path) {
+        existingReadyObjectPaths.add(derivative.derivative_object_path)
+      }
+      if (!identityKeys.has(key)) continue
+      const states = statesByIdentity.get(key) ?? new Map()
+      states.set(derivative.variant, {
+        status: derivative.transform_status,
+        derivativeObjectPath: derivative.derivative_object_path,
+        sizeBytes: derivative.size_bytes,
+      })
+      statesByIdentity.set(key, states)
     }
   }
-  return result
-}
-
-function alreadyComplete(states) {
-  return Object.keys(SHOWROOM_IMAGE_VARIANT_SPECS).every(variant => (
-    states?.get(variant) === 'ready' || states?.get(variant) === 'skipped'
-  ))
-}
-
-function shouldProcess(states) {
-  if (!states || states.size === 0) return true
-  if (alreadyComplete(states)) return false
-  const hasFailed = [...states.values()].includes('failed')
-  return !hasFailed || options.retryFailed
+  return { statesByIdentity, sourceUrlsByIdentity, existingReadyObjectPaths }
 }
 
 async function retry(operation, attempts = 3) {
@@ -245,7 +270,7 @@ async function uploadImmutable(path, derivative) {
   return bucket.getPublicUrl(path).data.publicUrl
 }
 
-async function processSource(identity) {
+async function downloadAndTransform(identity) {
   const blob = await retry(async () => {
     const { data, error } = await supabase.storage.from(identity.bucket).download(identity.objectPath)
     if (error || !data) throw error ?? new Error('Source download failed.')
@@ -258,7 +283,11 @@ async function processSource(identity) {
     ? blobMimeType
     : detectContentAssetMimeType(sourceBuffer)
   if (!declaredMimeType) throw new Error('Source MIME type could not be detected.')
-  const transformed = await transformShowroomImage(sourceBuffer, declaredMimeType)
+  return transformShowroomImage(sourceBuffer, declaredMimeType)
+}
+
+async function processSource(identity) {
+  const transformed = await downloadAndTransform(identity)
   const derivatives = []
   let failed = false
 
@@ -334,15 +363,29 @@ const parsed = references.map(reference => ({
 const supported = parsed.filter(reference => reference.identity)
 const unsupportedCount = parsed.length - supported.length
 const identities = [...new Map(supported.map(reference => [
-  reference.sourceUrl,
+  identityKey(reference.identity),
   reference.identity,
 ])).values()]
-const states = await existingStates(identities.map(identity => identity.sourceUrl))
-const pending = identities.filter(identity => shouldProcess(states.get(identity.sourceUrl)))
+const {
+  statesByIdentity: states,
+  sourceUrlsByIdentity,
+  existingReadyObjectPaths,
+} = await existingStateInventory(identities)
+const metadataRefreshRequired = identity => {
+  const existingSourceUrl = sourceUrlsByIdentity.get(identityKey(identity))
+  return Boolean(existingSourceUrl && existingSourceUrl !== identity.sourceUrl)
+}
+const pending = identities.filter(identity => shouldProcessShowroomBackfillState(
+  states.get(identityKey(identity)),
+  {
+    retryFailed: options.retryFailed,
+    metadataRefreshRequired: metadataRefreshRequired(identity),
+  },
+))
 const deferredFailed = identities.filter(identity => {
-  const sourceStates = states.get(identity.sourceUrl)
+  const sourceStates = states.get(identityKey(identity))
   return sourceStates
-    && [...sourceStates.values()].includes('failed')
+    && [...sourceStates.values()].some(state => state.status === 'failed')
     && !options.retryFailed
 }).length
 
@@ -353,9 +396,17 @@ const summary = {
   references: references.length,
   nodeReferences: references.filter(reference => reference.kind === 'node').length,
   galleryReferences: references.filter(reference => reference.kind === 'gallery').length,
-  distinctSourceUrls: identities.length,
+  distinctSourceUrls: new Set(supported.map(reference => reference.sourceUrl)).size,
+  distinctSourceObjects: identities.length,
   unsupportedSourceUrls: unsupportedCount,
-  alreadyComplete: identities.filter(identity => alreadyComplete(states.get(identity.sourceUrl))).length,
+  alreadyComplete: identities.filter(identity => (
+    showroomBackfillStateComplete(states.get(identityKey(identity)))
+    && !metadataRefreshRequired(identity)
+  )).length,
+  metadataRefreshPending: identities.filter(identity => (
+    showroomBackfillStateComplete(states.get(identityKey(identity)))
+    && metadataRefreshRequired(identity)
+  )).length,
   deferredFailed,
   pending: pending.length,
   attempted: 0,
@@ -363,25 +414,80 @@ const summary = {
   failed: 0,
 }
 
-if (!options.dryRun) {
-  const queue = pending.slice(0, options.limit)
+async function runWorkers(queue, worker) {
   let cursor = 0
   const workers = Array.from({ length: Math.min(options.concurrency, queue.length) }, async () => {
     while (cursor < queue.length) {
       const index = cursor
       cursor += 1
-      summary.attempted += 1
-      try {
-        const result = await processSource(queue[index])
-        if (result === 'completed') summary.completed += 1
-        else summary.failed += 1
-      } catch {
-        summary.failed += 1
-      }
+      await worker(queue[index])
     }
   })
   await Promise.all(workers)
 }
 
+const queue = pending.slice(0, options.limit)
+if (options.dryRun) {
+  const estimate = createShowroomBackfillEstimate(existingReadyObjectPaths)
+
+  Object.assign(summary, {
+    estimateScope: queue.length === pending.length ? 'all-pending' : 'limited-sample',
+    estimateAttempted: 0,
+    estimateSucceeded: 0,
+    estimateFailed: 0,
+    estimateFailureSamples: [],
+  })
+
+  await runWorkers(queue, async identity => {
+    summary.estimateAttempted += 1
+    if (summary.estimateAttempted % 100 === 0) {
+      process.stderr.write(
+        `[dry-run] inspected ${summary.estimateAttempted}/${queue.length} pending sources\n`,
+      )
+    }
+    try {
+      const transformed = await downloadAndTransform(identity)
+      summary.estimateSucceeded += 1
+      estimate.add(transformed, states.get(identityKey(identity)))
+    } catch (error) {
+      summary.estimateFailed += 1
+      if (summary.estimateFailureSamples.length < 10) {
+        summary.estimateFailureSamples.push({
+          sourceIdentitySha256: sha256Hex(Buffer.from(identityKey(identity))),
+          errorCode: String(error?.code ?? error?.statusCode ?? error?.name ?? 'unknown'),
+        })
+      }
+    }
+  })
+
+  const estimated = estimate.snapshot()
+  Object.assign(summary, {
+    estimatedSourceBytes: estimated.sourceBytes,
+    estimatedReadyDerivativeRecords: estimated.readyDerivativeRecords,
+    estimatedSkippedVariantRecords: estimated.skippedVariantRecords,
+    estimatedOutputDerivativeFiles: estimated.outputDerivativeFiles,
+    estimatedOutputDerivativeBytes: estimated.outputDerivativeBytes,
+    estimatedNewDerivativeRecords: estimated.newDerivativeRecords,
+    estimatedPendingVariantWrites: estimated.pendingVariantWrites,
+    estimatedNewDerivativeFiles: estimated.newDerivativeFiles,
+    estimatedNewDerivativeBytes: estimated.newDerivativeBytes,
+    estimatedVariants: estimated.variants,
+  })
+} else {
+  await runWorkers(queue, async identity => {
+    summary.attempted += 1
+    try {
+      const result = await processSource(identity)
+      if (result === 'completed') summary.completed += 1
+      else summary.failed += 1
+    } catch {
+      summary.failed += 1
+    }
+  })
+}
+
 process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`)
-if (!options.dryRun && summary.failed > 0) process.exitCode = 1
+if (
+  (!options.dryRun && summary.failed > 0)
+  || (options.dryRun && summary.estimateFailed > 0)
+) process.exitCode = 1
