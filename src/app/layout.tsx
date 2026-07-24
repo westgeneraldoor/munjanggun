@@ -3,7 +3,6 @@ import { ViewTransition } from 'react';
 import { Playfair_Display } from "next/font/google";
 import { hasPublicShowroomEnv } from "@/lib/supabase/public";
 import { createClient } from "@/lib/supabase/server";
-import PublicUserMenu from "@/components/customer/PublicUserMenu";
 import { getSiteUrl } from "@/lib/content-os/site-url";
 import "./globals.css";
 
@@ -63,7 +62,6 @@ export default function RootLayout({
     <html lang="ko" className={playfairDisplay.variable}>
       <body>
         <ViewTransition>
-          <PublicUserMenu />
           {children}
         </ViewTransition>
       </body>

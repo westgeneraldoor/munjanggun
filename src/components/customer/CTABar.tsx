@@ -6,14 +6,14 @@ import { Share2, Check, Home } from 'lucide-react'
 import { logError } from '@/lib/logger'
 import styles from './CTABar.module.css'
 
+const NAVER_RESERVATION_URL = 'https://booking.naver.com/booking/5/bizes/654913/items/6032347'
+
 interface CTABarProps {
-  reservationUrl: string | null
   storeUrl: string | null
   hideUntilScroll?: boolean
-  measureHref?: string
 }
 
-export default function CTABar({ storeUrl, hideUntilScroll = false, measureHref = '/portal/measure/new' }: CTABarProps) {
+export default function CTABar({ storeUrl, hideUntilScroll = false }: CTABarProps) {
   const [isVisible, setIsVisible] = useState(!hideUntilScroll)
   const [shared, setShared] = useState(false)
 
@@ -69,12 +69,12 @@ export default function CTABar({ storeUrl, hideUntilScroll = false, measureHref 
       <Link href="/" className={styles.homeButton} aria-label="홈으로 이동">
         <Home size={20} />
       </Link>
-      <Link
-        href={measureHref}
+      <a
+        href={NAVER_RESERVATION_URL}
         className={`${styles.button} ${styles.primary}`}
       >
         무료방문견적
-      </Link>
+      </a>
       {storeUrl && (
         <a
           href={storeUrl}

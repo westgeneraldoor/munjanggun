@@ -167,7 +167,6 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
       </div>
       
       <CTABar
-        reservationUrl={settings?.reservation_url || null}
         storeUrl={settings?.store_url || null}
       />
     </main>
@@ -264,7 +263,6 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
       
       <ScrollToTop />
       <CTABar
-        reservationUrl={settings?.reservation_url || null}
         storeUrl={settings?.store_url || null}
       />
     </main>
