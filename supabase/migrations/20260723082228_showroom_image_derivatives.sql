@@ -337,12 +337,12 @@ BEGIN
     END IF;
 
     IF v_recipe_version = 1
-      AND v_target_width <> CASE v_variant
+      AND v_target_width <> (CASE v_variant
         WHEN 'thumbnail' THEN 192
         WHEN 'card' THEN 960
         WHEN 'display' THEN 1600
         WHEN 'large' THEN 2560
-      END
+      END)
     THEN
       RAISE EXCEPTION
         'recipe version 1 target width mismatch for variant %: expected canonical width, got %',

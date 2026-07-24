@@ -214,7 +214,7 @@ assert.match(
 )
 assert.match(
   migration,
-  /v_recipe_version\s*=\s*1[\s\S]*v_target_width\s*<>\s*CASE\s+v_variant[\s\S]*WHEN\s+'thumbnail'\s+THEN\s+192[\s\S]*WHEN\s+'card'\s+THEN\s+960[\s\S]*WHEN\s+'display'\s+THEN\s+1600[\s\S]*WHEN\s+'large'\s+THEN\s+2560[\s\S]*RAISE EXCEPTION[\s\S]*recipe version 1 target width mismatch/i,
+  /v_recipe_version\s*=\s*1[\s\S]*v_target_width\s*<>\s*\(\s*CASE\s+v_variant[\s\S]*WHEN\s+'thumbnail'\s+THEN\s+192[\s\S]*WHEN\s+'card'\s+THEN\s+960[\s\S]*WHEN\s+'display'\s+THEN\s+1600[\s\S]*WHEN\s+'large'\s+THEN\s+2560[\s\S]*RAISE EXCEPTION[\s\S]*recipe version 1 target width mismatch/i,
   'the commit RPC must reject a noncanonical recipe version 1 variant/target-width payload',
 )
 assert.match(

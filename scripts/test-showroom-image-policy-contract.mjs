@@ -148,7 +148,7 @@ assert.match(
 )
 assert.match(
   migration,
-  /IF\s+v_recipe_version\s*=\s*1[\s\S]*v_target_width\s*<>\s*CASE\s+v_variant[\s\S]*RAISE EXCEPTION[\s\S]*recipe version 1 target width mismatch/i,
+  /IF\s+v_recipe_version\s*=\s*1[\s\S]*v_target_width\s*<>\s*\(\s*CASE\s+v_variant[\s\S]*RAISE EXCEPTION[\s\S]*recipe version 1 target width mismatch/i,
   'the service-role commit function must reject noncanonical recipe version 1 payloads before writing',
 )
 assert.match(migration, /ON CONFLICT\s*\(\s*source_bucket,\s*source_object_path\s*\)/i)
