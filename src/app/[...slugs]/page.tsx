@@ -10,12 +10,18 @@ import NodeGallery from '@/components/customer/NodeGallery'
 import ScrollAnimationWrapper from '@/components/customer/ScrollAnimationWrapper'
 import Breadcrumb from '@/components/customer/Breadcrumb'
 import ScrollRestorer from '@/components/customer/ScrollRestorer'
+import DescendantGallery from '@/components/customer/DescendantGallery'
 import { getOptimalCols } from '@/lib/grid-utils'
+import { logError } from '@/lib/logger'
 import { createPublicShowroomClient } from '@/lib/supabase/public'
 import { EMPTY_STATE_TITLE, EMPTY_STATE_SUBTITLE, GALLERY_SECTION_TITLE } from '@/lib/constants'
 import { buildShareDescription } from '@/lib/share'
 import { BreadcrumbItem, NodeRow, resolveSlugChain } from '@/lib/nodes'
 import { loadShowroomImageSources } from '@/lib/showroom/image-sources'
+import {
+  decorateDescendantGalleryItems,
+  loadDescendantGalleryPage,
+} from '@/lib/showroom/descendant-gallery-data'
 import styles from './page.module.css'
 
 export const revalidate = 60
@@ -74,8 +80,12 @@ export default async function CatchAllPage(
 async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow; slugPath: string[]; breadcrumbItems: BreadcrumbItem[] }) {
   const supabase = createPublicShowroomClient()
   const showroomDb = supabase.schema('showroom')
+  const descendantGalleryResult = loadDescendantGalleryPage(node.id).catch(error => {
+    logError('Failed to load the descendant showroom gallery.', error)
+    return null
+  })
 
-  const [heroMediaResult, childrenResult, settingsResult] = await Promise.all([
+  const [heroMediaResult, childrenResult, settingsResult, descendantGallery] = await Promise.all([
     showroomDb
       .from('hero_media')
       .select('*')
@@ -92,6 +102,7 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
       .select('reservation_url, store_url')
       .eq('id', 'singleton')
       .single(),
+    descendantGalleryResult,
   ])
 
   const heroMedia = heroMediaResult.data
@@ -100,6 +111,7 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
   const imageSources = await loadShowroomImageSources(supabase, [
     ...(heroMedia ?? []).map(media => media.image_url),
     ...(children ?? []).map(child => child.image_url),
+    ...(descendantGallery?.items ?? []).map(item => item.imageUrl),
   ])
   const heroMediaWithSources = (heroMedia ?? []).map(media => ({
     ...media,
@@ -109,6 +121,9 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
     ...child,
     image_source: child.image_url ? imageSources[child.image_url] : undefined,
   }))
+  const descendantGalleryItems = descendantGallery
+    ? decorateDescendantGalleryItems(descendantGallery.items, imageSources)
+    : []
 
   const basePath = '/' + slugPath.join('/')
   const heroHasContent = (heroMedia && heroMedia.length > 0) || node.hero_video_url || node.hero_mobile_video_url || node.hero_title || node.hero_subtitle || node.hero_description
@@ -167,6 +182,17 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
             <p className={styles.emptyText}>{EMPTY_STATE_TITLE}</p>
             <p className={styles.emptySubtext}>{EMPTY_STATE_SUBTITLE}</p>
           </div>
+        )}
+        {descendantGallery && descendantGallery.total > 0 && (
+          <DescendantGallery
+            key={node.id}
+            nodeId={node.id}
+            description={`${node.name}이 공간에 놓였을 때의 표정. 실제 현장에서 완성된 소재와 비율을 살펴보세요.`}
+            initialItems={descendantGalleryItems}
+            initialNextOffset={descendantGallery.nextOffset}
+            initialHasMore={descendantGallery.hasMore}
+            initialSnapshot={descendantGallery.snapshot}
+          />
         )}
       </div>
       

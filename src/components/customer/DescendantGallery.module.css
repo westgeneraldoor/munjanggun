@@ -1,0 +1,242 @@
+.section {
+  align-self: center;
+  width: 100%;
+  max-width: 1160px;
+  margin-inline: auto;
+  margin-top: var(--space-16);
+  padding-bottom: calc(var(--space-12) + 80px);
+}
+
+.header {
+  margin-bottom: var(--space-6);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-5);
+}
+
+.headerCopy {
+  max-width: 58ch;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--text-lg);
+  font-weight: var(--font-medium);
+  letter-spacing: -0.015em;
+  line-height: var(--leading-tight);
+}
+
+.description {
+  max-width: 58ch;
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-sub);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+.grid,
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.card {
+  min-width: 0;
+  margin: 0;
+  animation: descendant-gallery-enter var(--duration-normal) var(--ease-out) both;
+}
+
+.imageButton {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.imageButton:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: var(--space-1);
+}
+
+.imageFrame {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-elevated);
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.image {
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+}
+
+.cardMeta {
+  margin-top: var(--space-2);
+}
+
+.optionName {
+  display: block;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  line-height: var(--leading-tight);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color var(--transition-fast);
+}
+
+.imageButton:active .imageFrame {
+  transform: scale(0.985);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imageButton:hover .imageFrame {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .imageButton:hover .image {
+    transform: scale(1.025);
+  }
+
+  .imageButton:hover:active .imageFrame {
+    transform: scale(0.985);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .imageButton:hover + .cardMeta .optionName {
+    color: var(--color-accent);
+  }
+}
+
+.optionBreadcrumb {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: var(--space-1);
+  color: var(--color-text-sub);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.skeletonGrid {
+  margin-top: var(--space-3);
+}
+
+.skeleton {
+  aspect-ratio: 3 / 4;
+  background-color: var(--color-surface-elevated);
+  animation: descendant-gallery-pulse var(--duration-normal) ease-in-out infinite alternate;
+}
+
+.loadError {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  color: var(--color-text-sub);
+  font-size: var(--text-sm);
+}
+
+.loadError p {
+  margin: 0;
+}
+
+.retryButton {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font: inherit;
+}
+
+.retryButton:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: var(--space-1);
+}
+
+.sentinel {
+  min-height: 1px;
+}
+
+@media (min-width: 768px) {
+  .section {
+    margin-top: var(--space-20);
+  }
+
+  .title {
+    font-size: var(--text-xl);
+  }
+
+  .grid,
+  .skeletonGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1180px) {
+  .grid,
+  .skeletonGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .skeleton,
+  .imageFrame,
+  .image,
+  .optionName {
+    animation: none;
+    transition: none;
+  }
+
+  .imageButton:active .imageFrame,
+  .imageButton:hover .imageFrame,
+  .imageButton:hover:active .imageFrame,
+  .imageButton:hover .image {
+    transform: none;
+  }
+}
+
+@keyframes descendant-gallery-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-2));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes descendant-gallery-pulse {
+  from {
+    opacity: 0.55;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

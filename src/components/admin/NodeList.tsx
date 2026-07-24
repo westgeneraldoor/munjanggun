@@ -15,6 +15,7 @@ import {
 import { createShowroomClient } from '@/lib/supabase/client'
 import ShowroomImage from '@/components/showroom/ShowroomImage'
 import { resolveAdminShowroomImageSources } from '@/app/admin/nodes/image-actions'
+import { refreshShowroomCatalogCache } from '@/app/admin/nodes/catalog-revalidation'
 import type { ShowroomImageSourceMap } from '@/lib/showroom/image-sources'
 import { logError } from '@/lib/logger'
 import ConfirmModal from '@/components/admin/ConfirmModal'
@@ -205,6 +206,7 @@ export default function NodeList() {
         .maybeSingle()
       if (error) throw error
       if (!data) throw new Error('status update affected no rows')
+      await refreshShowroomCatalogCache()
       router.refresh()
     } catch (error) {
       logError('상태 변경 실패:', error)
@@ -238,6 +240,7 @@ export default function NodeList() {
       })
       if (error) throw error
       if (data !== updated.length) throw new Error('node reorder affected an unexpected row count')
+      await refreshShowroomCatalogCache()
     } catch (error) {
       logError('순서 변경 실패:', error)
       if (currentParentRef.current === parentAtStart) {
@@ -267,6 +270,7 @@ export default function NodeList() {
         .maybeSingle()
       if (error) throw error
       if (!data) throw new Error('node delete affected no rows')
+      await refreshShowroomCatalogCache()
       await fetchNodes(currentParentId)
       setIsDeleteModalOpen(false)
       setDeletingNode(null)

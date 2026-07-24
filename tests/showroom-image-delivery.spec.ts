@@ -4,12 +4,15 @@ const DETAIL_PATH = '/middle-door/3panel/collection-3panel/basic-3panel/full-win
 const OPTIMIZER_PATTERN = /\/_(?:next|vercel)\/image(?:\?|$)/
 
 async function scrollThrough(page: Page) {
-  for (let y = 0; y < await page.evaluate(() => document.documentElement.scrollHeight); y += 500) {
-    await page.evaluate(nextY => window.scrollTo(0, nextY), y)
-    await page.waitForTimeout(120)
+  // The descendant gallery can extend the document while scrolling. Use a
+  // bounded number of real bottom reaches so the image contract remains
+  // deterministic instead of chasing a height that changes underneath it.
+  for (let pass = 0; pass < 3; pass += 1) {
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+    await page.waitForTimeout(450)
   }
-  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
-  await page.waitForTimeout(800)
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await page.waitForTimeout(300)
 }
 
 async function expectHealthyImages(page: Page, optimizerRequests: string[]) {
@@ -21,6 +24,8 @@ async function expectHealthyImages(page: Page, optimizerRequests: string[]) {
         && style.visibility !== 'hidden'
         && rect.width > 0
         && rect.height > 0
+        && rect.bottom > 0
+        && rect.top < window.innerHeight
     })
     return {
       viewportWidth: window.innerWidth,

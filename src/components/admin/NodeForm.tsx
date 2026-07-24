@@ -24,6 +24,7 @@ import HeroConfigurator, { type HeroMedia } from './HeroConfigurator'
 import GalleryManager, { type GalleryPhoto } from './GalleryManager'
 import styles from './NodeForm.module.css'
 import { useUploadPendingTracker } from './useUploadPendingTracker'
+import { refreshShowroomCatalogCache } from '@/app/admin/nodes/catalog-revalidation'
 
 type NodeRow = Database['showroom']['Tables']['nodes']['Row']
 type HeroMediaRow = Database['showroom']['Tables']['hero_media']['Row']
@@ -294,6 +295,7 @@ export default function NodeForm({
       })
 
       if (saveError) throw new Error(saveError.message)
+      await refreshShowroomCatalogCache()
       setSuccess(true)
       router.refresh()
     } catch (err: unknown) {
