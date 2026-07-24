@@ -169,22 +169,25 @@ $$;
 REVOKE ALL ON FUNCTION private.is_public_showroom_image_url(TEXT) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION private.is_public_showroom_image_url(TEXT) TO anon, authenticated;
 
-CREATE POLICY image_sources_public_select
+CREATE POLICY image_sources_anon_select
 ON showroom.image_sources
 FOR SELECT
-TO anon, authenticated
+TO anon
 USING (private.is_public_showroom_image_url(source_url));
 
-CREATE POLICY image_sources_administrator_select
+CREATE POLICY image_sources_authenticated_select
 ON showroom.image_sources
 FOR SELECT
 TO authenticated
-USING ((SELECT platform_private.is_admin()));
+USING (
+  (SELECT platform_private.is_admin())
+  OR private.is_public_showroom_image_url(source_url)
+);
 
-CREATE POLICY image_derivatives_public_select
+CREATE POLICY image_derivatives_anon_select
 ON showroom.image_derivatives
 FOR SELECT
-TO anon, authenticated
+TO anon
 USING (
   transform_status = 'ready'
   AND EXISTS (
@@ -195,11 +198,22 @@ USING (
   )
 );
 
-CREATE POLICY image_derivatives_administrator_select
+CREATE POLICY image_derivatives_authenticated_select
 ON showroom.image_derivatives
 FOR SELECT
 TO authenticated
-USING ((SELECT platform_private.is_admin()));
+USING (
+  (SELECT platform_private.is_admin())
+  OR (
+    transform_status = 'ready'
+    AND EXISTS (
+      SELECT 1
+      FROM showroom.image_sources AS source
+      WHERE source.id = source_id
+        AND private.is_public_showroom_image_url(source.source_url)
+    )
+  )
+);
 
 GRANT SELECT (id, source_url) ON showroom.image_sources TO anon;
 GRANT SELECT (id, source_url) ON showroom.image_sources TO authenticated;
@@ -458,5 +472,7 @@ COMMENT ON TABLE showroom.image_derivatives IS
   'Stored, recipe-versioned showroom image variants. Missing or skipped variants fall back to the source URL.';
 COMMENT ON FUNCTION showroom.commit_image_derivatives(JSONB, JSONB) IS
   'Service-role-only atomic metadata commit. Storage objects are uploaded separately with upsert disabled.';
+COMMENT ON FUNCTION showroom.resolve_preview_image_derivatives(TEXT, TEXT[]) IS
+  'Intentional anon SECURITY DEFINER preview exception: returns ready recipe-versioned rows only for a valid unexpired token, at most 100 caller-supplied candidate URLs, and media owned by the token node (its node image, hero, gallery, or direct child node image); no broad lookup is permitted; execute is granted only to anon after revoking PUBLIC, authenticated, and service_role.';
 
 NOTIFY pgrst, 'reload schema';

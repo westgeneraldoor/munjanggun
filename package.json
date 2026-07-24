@@ -63,6 +63,7 @@
     "test:showroom-preview-payload": "node scripts/test-showroom-preview-payload.mjs",
     "test:showroom-rls-hardening": "node scripts/test-showroom-rls-hardening.mjs",
     "test:showroom-image-derivatives": "node scripts/test-showroom-image-derivatives.mjs",
+    "test:showroom-image-policy-contract": "node scripts/test-showroom-image-policy-contract.mjs",
     "test:showroom-image-delivery-browser": "playwright test tests/showroom-image-delivery.spec.ts",
     "test:production-fixture-boundary": "node scripts/test-production-fixture-boundary.mjs",
     "test:server-actions-origin": "node scripts/test-server-actions-origin-contract.mjs",
