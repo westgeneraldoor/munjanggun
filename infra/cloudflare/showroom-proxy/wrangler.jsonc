@@ -6,11 +6,7 @@
   "workers_dev": false,
   "routes": [
     {
-      "pattern": "munjanggun.com/middle-door",
-      "zone_name": "munjanggun.com"
-    },
-    {
-      "pattern": "munjanggun.com/middle-door/*",
+      "pattern": "munjanggun.com/middle-door*",
       "zone_name": "munjanggun.com"
     }
   ],
