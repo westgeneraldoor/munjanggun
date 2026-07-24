@@ -19,6 +19,10 @@ import { loadShowroomImageSources } from '@/lib/showroom/image-sources'
 import styles from './page.module.css'
 
 export const revalidate = 60
+// Public showroom documents have no viewer-specific state. Rendering them as
+// ISR keeps the Vercel origin cacheable for the apex proxy while protected
+// routes continue to use their own dynamic boundaries.
+export const dynamic = 'force-static'
 
 export async function generateMetadata(
   props: { params: Promise<{ slugs: string[] }> }

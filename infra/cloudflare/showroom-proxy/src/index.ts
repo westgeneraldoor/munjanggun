@@ -106,7 +106,13 @@ function prepareCacheEntry(response: Response, createdAt: number) {
 
 function upstreamRequest(request: Request, appOrigin: string, publicOrigin: string) {
   const incomingUrl = new URL(request.url)
-  const target = new URL(`${incomingUrl.pathname}${incomingUrl.search}`, appOrigin)
+  // Next canonicalizes showroom documents without a trailing slash. Fetch the
+  // canonical origin path directly so the public `/middle-door/` route remains
+  // a 200 response on the apex host instead of exposing the origin redirect.
+  const originPath = incomingUrl.pathname.length > 1 && incomingUrl.pathname.endsWith('/')
+    ? incomingUrl.pathname.slice(0, -1)
+    : incomingUrl.pathname
+  const target = new URL(`${originPath}${incomingUrl.search}`, appOrigin)
   const proxied = new Request(target, request)
   const publicUrl = new URL(publicOrigin)
 
