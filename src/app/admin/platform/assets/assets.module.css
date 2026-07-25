@@ -371,6 +371,16 @@
   user-select: none;
 }
 
+.dragSelectionRect {
+  position: fixed;
+  z-index: 20;
+  pointer-events: none;
+  background: var(--mg-admin-accent-surface);
+  border: var(--mg-border-width-strong) solid var(--admin-accent);
+  border-radius: var(--radius-md);
+  opacity: 0.72;
+}
+
 .assetCard {
   position: relative;
   min-width: 0;
@@ -458,6 +468,8 @@
   height: 100%;
   display: block;
   object-fit: cover;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .thumbPlaceholder {

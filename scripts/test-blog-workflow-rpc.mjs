@@ -163,5 +163,16 @@ assert.match(actions, /reason\.like\.trashed_blog_post:%/)
 assert.match(actions, /reason\.like\.retired_blog_publication:%/)
 assert.match(actions, /\.rpc\('permanently_delete_blog_post'/)
 assert.match(actions, /\.rpc\('transition_blog_post_trash'/)
+assert.match(migration, /RAISE EXCEPTION 'blog post is already in trash'/, 'the trash transition must preserve its duplicate-state domain error for a concurrent caller')
+assert.match(
+  actions,
+  /if \(trashTransitionError\)[\s\S]*?글을 휴지통으로 이동하지 못했습니다\. 새로고침 후 다시 시도해주세요\./,
+  'the editor must replace a duplicate trash RPC error with a friendly Korean recovery message',
+)
+assert.doesNotMatch(
+  actions.match(/if \(trashTransitionError\)[\s\S]*?const transition =/s)?.[0] ?? '',
+  /trashTransitionError\.message/,
+  'the duplicate trash RPC message must never be passed through to the editor UI',
+)
 
 console.log('atomic blog publish and destructive-action RPC contracts passed')

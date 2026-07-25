@@ -333,7 +333,7 @@
 }
 
 @media (min-width: 980px) {
-  .mobileList {
+  .mobileList[data-platform-list] {
     display: none;
   }
 }

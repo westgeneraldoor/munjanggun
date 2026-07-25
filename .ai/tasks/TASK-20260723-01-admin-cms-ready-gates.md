@@ -2,13 +2,13 @@
 
 ## 작업 정보
 
-- 상태: 작업 중
+- 상태: 검수 중
 - 현재 역할: 작업자
 - 검수 필요: 예
 - 현재 반복 이슈: PR 병합 충돌과 런타임 상태 전이·서버 쿼리 회귀
 - 동일 이슈 시도 횟수: 0
 - 생성일: 2026-07-23
-- 최근 수정일: 2026-07-23
+- 최근 수정일: 2026-07-25
 
 ## 원래 요청
 
@@ -112,6 +112,20 @@ PR #84를 유지한 채 사진보관함의 검색·필터·정렬·페이지 분
 - 새 migration은 코드에만 있으며 Production DB에 적용하지 않았다.
 - 위 두 외부 게이트가 해소될 때까지 PR #84는 Draft이고 Ready 전환할 수 없다.
 
+### 2026-07-25 후속 작업 결과
+
+- 1366px에서 사진보관함 카드·키보드·체크박스 Shift 범위 선택, 이미지 내부 시작 마우스 드래그 선택과 가시 선택 사각형을 실제 인증 로컬 UI로 재현·수정했다.
+- 표준 UUID가 잘못된 정규식 때문에 archive/restore RPC 전에 거부되던 결함을 수정했다. 연결된 로컬 블로그 사진은 실제 RPC 응답의 사용처를 모달에 표시하고, `사용처 보기`가 해당 영역으로 포커스를 옮기는 것을 확인했다.
+- 390px 터치에서 두 사진을 선택하고 overflow가 없음을 확인했다. 블로그 큐는 980px 이상에서 모바일 목록을 숨기고 979px 이하에서 표를 숨기는 DOM·가시성 계약을 추가했다.
+- blog trash 동시 전이의 도메인 오류는 UI에 원문을 노출하지 않고 복구 안내 문구로 바꾸는 정적 RPC 계약을 추가했다.
+- 실제 로컬 Postgres 17/Supabase 체인 재구축 뒤 PostgREST REST 200을 확인했고, 인증 브라우저 4개 테스트와 CI 정적 계약, `next typegen`, TypeScript, lint, production build를 통과했다. Production에는 접속하거나 변경하지 않았다.
+
+### 다음 검수 인계
+
+- 검수 대상: 이번 커밋의 사진보관함 범위/드래그/휴지통 UX, 390px 터치 선택, 블로그 큐 980px 경계 가시성, blog trash 오류 문구 계약.
+- 재현 명령: `PLAYWRIGHT_BASE_URL=http://127.0.0.1:3100 PLAYWRIGHT_LOCAL_FIXTURES=1 npx playwright test tests/platform-admin-assets.spec.ts tests/blog-queue-list-primitives.spec.ts --workers=1`.
+- 남은 승인 게이트: 독립 코드 검수, Draft PR #84 유지 상태에서 사용자 승인 후 Ready/병합 여부 결정, Production 미적용 상태 유지. 실제 동시 요청 레이스의 화면 재현은 별도 테스트용 경쟁 주입 환경이 필요하며, 이번에는 원문 비노출 정적 계약만 확인했다.
+
 ## 검수 결과
 
 ### 판정
@@ -169,3 +183,9 @@ PR #84를 유지한 채 사진보관함의 검색·필터·정렬·페이지 분
 - 역할: 작업자
 - 변경 내용: 사용자 재검수 오더로 작업을 재개하고 P1-a(merge conflict), P1-b(검색 focus), P1-c(발행 후 revision), P2(facet 범위·쿼리 비용)를 현재 범위에 추가
 - 검증: 사용자 제공 코드 위치·재현 조건을 작업 기준으로 등록, Production·Ready·PR merge·force push 금지 유지
+- 역할: 작업자
+- 변경 내용: 실제 인증 로컬 UI에서 사진보관함 Shift 범위·드래그·터치 선택과 archive 사용처 표시를 복구하고, 블로그 큐 desktop/mobile 중복 목록을 수정
+- 검증: 로컬 Postgres 17/Supabase 체인·PostgREST REST 200, Playwright 4/4, CI 정적 계약, next typegen, TypeScript, lint, production build
+- 역할: 작업자
+- 변경 내용: 작업 카드를 검수 중으로 전환하고 독립 검수·사용자 Ready/병합 승인 게이트를 기록
+- 검증: Draft PR #84·기존 브랜치 유지, Production/다른 worktree/root dirty 파일 미변경

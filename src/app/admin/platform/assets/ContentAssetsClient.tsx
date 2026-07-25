@@ -9,6 +9,7 @@ import {
   useTransition,
   type ChangeEvent,
   type FormEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
@@ -457,6 +458,7 @@ function AssetThumbnail({ item }: { item: ContentAssetLibraryItem }) {
     <img
       src={`${image}${image.includes('?') ? '&' : '?'}retry=${attempt}`}
       alt={item.title || item.description || '보관함 사진'}
+      draggable={false}
       loading="lazy"
       className={styles.thumbImage}
       onError={() => { setFailed(true); void explainImageFailure() }}
@@ -496,14 +498,15 @@ function ArchiveDialog({
   onComplete: (result: ArchiveContentAssetsResult) => void
 }) {
   const [result, setResult] = useState<ArchiveContentAssetsResult | null>(null)
-  const [isPending, startTransition] = useTransition()
+  const [isPending, setIsPending] = useState(false)
   const blocked = result?.results.filter(item => item.reason === 'in_use') ?? []
   const changed = result?.results.filter(item => item.changed) ?? []
   const items = selection.kind === 'items' ? selection.items : []
   const targetCount = selection.kind === 'items' ? selection.items.length : selection.totalCount
 
-  function submit() {
-    startTransition(async () => {
+  async function submit() {
+    setIsPending(true)
+    try {
       const next = selection.kind === 'query'
         ? await archiveContentAssetSearchResults(selection.query, selection.totalCount, selection.selectionToken, restore)
         : restore
@@ -511,7 +514,9 @@ function ArchiveDialog({
           : await archiveContentAssets(items.map(item => item.id))
       setResult(next)
       onComplete(next)
-    })
+    } finally {
+      setIsPending(false)
+    }
   }
 
   return (
@@ -674,6 +679,7 @@ export default function ContentAssetsClient({
   const [selectedId, setSelectedId] = useState('')
   const [dragRect, setDragRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null)
   const selectionAnchorRef = useRef('')
+  const checkboxRangeSelectionRef = useRef('')
   const suppressCardClickRef = useRef(false)
   const lastServerQueryKeyRef = useRef(queryKey)
   const externalSearchNavigationRef = useRef(false)
@@ -774,10 +780,11 @@ export default function ContentAssetsClient({
 
   function toggleActionSelection(id: string, range = false) {
     if (allResultsSelected) return
+    const selectionAnchorId = selectionAnchorRef.current
     setSelectedForAction(current => {
       const next = new Set(current)
-      if (range && selectionAnchorRef.current) {
-        const anchorIndex = pageItems.findIndex(item => item.id === selectionAnchorRef.current)
+      if (range && selectionAnchorId) {
+        const anchorIndex = pageItems.findIndex(item => item.id === selectionAnchorId)
         const targetIndex = pageItems.findIndex(item => item.id === id)
         if (anchorIndex >= 0 && targetIndex >= 0) {
           const start = Math.min(anchorIndex, targetIndex)
@@ -841,6 +848,22 @@ export default function ContentAssetsClient({
     setSelectedId(item.id)
   }
 
+  function handleCardKeyDown(item: ContentAssetLibraryItem, event: ReactKeyboardEvent<HTMLButtonElement>) {
+    if (!selectionMode || !event.shiftKey || (event.key !== 'Enter' && event.key !== ' ')) return
+    event.preventDefault()
+    toggleActionSelection(item.id, true)
+  }
+
+  function handleCardCheckboxClick(id: string, event: ReactMouseEvent<HTMLInputElement>) {
+    checkboxRangeSelectionRef.current = event.shiftKey ? id : ''
+  }
+
+  function handleCardCheckboxChange(id: string) {
+    const range = checkboxRangeSelectionRef.current === id
+    checkboxRangeSelectionRef.current = ''
+    toggleActionSelection(id, range)
+  }
+
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
     if (!selectionMode || event.pointerType !== 'mouse' || event.button !== 0) return
     const target = event.target as HTMLElement
@@ -853,7 +876,6 @@ export default function ContentAssetsClient({
       baseSelection: event.ctrlKey || event.metaKey ? new Set(selectedForAction) : new Set(),
       active: false,
     }
-    event.currentTarget.setPointerCapture(event.pointerId)
   }
 
   function handlePointerMove(event: ReactPointerEvent<HTMLDivElement>) {
@@ -861,8 +883,11 @@ export default function ContentAssetsClient({
     if (!drag || drag.pointerId !== event.pointerId) return
     const deltaX = event.clientX - drag.startX
     const deltaY = event.clientY - drag.startY
-    if (!drag.active && Math.hypot(deltaX, deltaY) < 8) return
-    drag.active = true
+    if (!drag.active) {
+      if (Math.hypot(deltaX, deltaY) < 8) return
+      drag.active = true
+      event.currentTarget.setPointerCapture(event.pointerId)
+    }
     event.preventDefault()
 
     const left = Math.min(drag.startX, event.clientX)
@@ -928,7 +953,7 @@ export default function ContentAssetsClient({
       })
       setAllResultsSelection(null)
       if (result.results.some(item => item.changed && item.assetId === selectedId)) closeDetail()
-      router.refresh()
+      if (changedIds.size > 0) router.refresh()
     }
   }
 
@@ -1082,6 +1107,7 @@ export default function ContentAssetsClient({
                         : `${displayAssetTitle(item)} 상세 보기`}
                       aria-pressed={selectionMode ? isSelected : undefined}
                       onClick={event => handleCardClick(item, event)}
+                      onKeyDown={event => handleCardKeyDown(item, event)}
                     >
                       <span className={styles.cardThumb}>
                         <AssetThumbnail item={item} />
@@ -1093,7 +1119,8 @@ export default function ContentAssetsClient({
                       <PlatformCheckbox
                         checked={isSelected}
                         disabled={allResultsSelected}
-                        onChange={() => toggleActionSelection(item.id)}
+                        onClick={event => handleCardCheckboxClick(item.id, event)}
+                        onChange={() => handleCardCheckboxChange(item.id)}
                       >
                           <span className={styles.srOnly}>{displayAssetTitle(item, index)} 선택</span>
                       </PlatformCheckbox>
@@ -1102,6 +1129,14 @@ export default function ContentAssetsClient({
                   </article>
                 )
               })}
+              {dragRect ? (
+                <div
+                  aria-hidden="true"
+                  className={styles.dragSelectionRect}
+                  data-selection-drag-rect
+                  style={dragRect}
+                />
+              ) : null}
               </div>
             </>
           ) : null}
@@ -1122,7 +1157,6 @@ export default function ContentAssetsClient({
           </PlatformButton>
         </PlatformPanel>
       ) : null}
-      {dragRect ? <div className={styles.dragSelectionRect} style={dragRect} aria-hidden="true" /> : null}
       {selectedItem ? (
         <PlatformModal
           isOpen

@@ -18,6 +18,7 @@ import { assetLibraryRpcArgs, type AssetLibraryQuery } from './query-state'
 
 const MAX_FILES_PER_UPLOAD = 12
 const MAX_UPLOAD_TOTAL_BYTES = 120 * 1024 * 1024
+const CONTENT_ASSET_ID_PATTERN = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i
 
 type ContentAssetInsert = Database['showroom']['Tables']['content_assets']['Insert']
 type ContentAssetFileInsert = Database['showroom']['Tables']['content_asset_files']['Insert']
@@ -641,7 +642,7 @@ export async function prepareContentAssetSearchSelection(
 export async function archiveContentAssets(assetIds: string[]): Promise<ArchiveContentAssetsResult> {
   try {
     const actorId = await requireAdministrator()
-    const ids = [...new Set(assetIds.filter(value => /^[0-9a-f]{8}-[0-9a-f-]{35}$/i.test(value)))].slice(0, 300)
+    const ids = [...new Set(assetIds.filter(value => CONTENT_ASSET_ID_PATTERN.test(value)))].slice(0, 300)
     if (ids.length === 0) return { ok: false, message: '휴지통으로 이동할 사진을 선택해 주세요.', results: [] }
 
     const { data, error } = await invokeArchiveRpc(ids, actorId, false)
@@ -668,7 +669,7 @@ export async function archiveContentAssets(assetIds: string[]): Promise<ArchiveC
 export async function restoreContentAssets(assetIds: string[]): Promise<ArchiveContentAssetsResult> {
   try {
     const actorId = await requireAdministrator()
-    const ids = [...new Set(assetIds.filter(value => /^[0-9a-f]{8}-[0-9a-f-]{35}$/i.test(value)))].slice(0, 300)
+    const ids = [...new Set(assetIds.filter(value => CONTENT_ASSET_ID_PATTERN.test(value)))].slice(0, 300)
     if (ids.length === 0) return { ok: false, message: '복원할 사진을 선택해 주세요.', results: [] }
 
     const { data, error } = await invokeArchiveRpc(ids, actorId, true)
