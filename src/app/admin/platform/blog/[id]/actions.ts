@@ -90,6 +90,7 @@ export type PublishBlogPostResult = {
   ok: boolean
   message: string
   publishedAt?: string
+  updatedAt?: string
   slug?: string
   issues?: string[]
   code?: 'stale_revision' | 'publication_unknown'
@@ -104,6 +105,7 @@ export type UpdateBlogPostStatusResult = {
   ok: boolean
   message: string
   status?: BlogPostStatus
+  updatedAt?: string
   issues?: string[]
 }
 
@@ -567,7 +569,7 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
     }
     editorLease = { postId: payload.postId, actorId, token: leaseToken }
 
-    const updatedAt = new Date().toISOString()
+    const requestedUpdatedAt = new Date().toISOString()
     const postUpdate: Database['showroom']['Tables']['blog_posts']['Update'] = {
       title: payload.post.title.trim(),
       slug: payload.post.slug.trim(),
@@ -584,7 +586,7 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
       product_type: cleanText(payload.post.productType),
       ai_citation_ready: payload.post.aiCitationReady,
       media_missing_reason: cleanText(payload.post.mediaMissingReason),
-      updated_at: updatedAt,
+      updated_at: requestedUpdatedAt,
     }
 
     const { data: updatedPostData, error: postError } = await showroomAdmin
@@ -592,13 +594,13 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
       .update(postUpdate as never)
       .eq('id', payload.postId)
       .eq('status', currentPost.status)
-      .select('id')
+      .select('id, updated_at')
 
     if (postError) {
       return { ok: false, message: '글 기본 정보를 저장하지 못했습니다.' }
     }
 
-    const updatedPostRows = (updatedPostData ?? []) as Array<{ id: string }>
+    const updatedPostRows = (updatedPostData ?? []) as Array<{ id: string; updated_at: string }>
     if (updatedPostRows.length !== 1) {
       return {
         ok: false,
@@ -795,7 +797,7 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
     return {
       ok: true,
       message: '현재 내용을 임시저장했습니다. 이 저장본을 기준으로 바로 발행할 수 있습니다.',
-      updatedAt,
+      updatedAt: updatedPostRows[0].updated_at,
       blockIds: savedBlockIds,
     }
   } catch {
@@ -1611,6 +1613,7 @@ type PublicationResolution =
   | {
     kind: 'published'
     publishedAt: string | null
+    updatedAt: string | null
     retiredPublicPaths: string[]
     retiredCleanupJobId: string | null
   }
@@ -1631,6 +1634,7 @@ async function resolveAmbiguousPublication(
   const attempt = data as {
     status?: string
     published_at?: string | null
+    updated_at?: string | null
     object_paths?: string[]
     retired_public_paths?: string[]
     retired_cleanup_job_id?: string | null
@@ -1639,6 +1643,7 @@ async function resolveAmbiguousPublication(
     return {
       kind: 'published',
       publishedAt: attempt.published_at ?? null,
+      updatedAt: attempt.updated_at ?? null,
       retiredPublicPaths: attempt.retired_public_paths ?? [],
       retiredCleanupJobId: attempt.retired_cleanup_job_id ?? null,
     }
@@ -1777,6 +1782,7 @@ export async function publishBlogEditor(
             ? '발행은 완료됐습니다. 교체된 이전 공개 사진 정리는 재시도 대기열에 남겼습니다.'
             : '발행 응답이 지연됐지만 DB에서 완료 상태를 확인했습니다.',
           publishedAt: resolution.publishedAt ?? publishedAt,
+          updatedAt: resolution.updatedAt ?? undefined,
           slug: payload.post.slug.trim(),
         }
       }
@@ -1801,6 +1807,7 @@ export async function publishBlogEditor(
     uploadedPaths = []
     const committedPublication = publishData as {
       published_at?: string
+      updated_at?: string
       retired_public_paths?: string[]
       retired_cleanup_job_id?: string | null
     } | null
@@ -1816,6 +1823,7 @@ export async function publishBlogEditor(
         ? '현재 편집 내용을 저장하고 발행했습니다. 교체된 이전 공개 사진 정리는 재시도 대기열에 남겼습니다.'
         : '현재 편집 내용을 저장하고 발행했습니다.',
       publishedAt: committedPublication?.published_at ?? publishedAt,
+      updatedAt: committedPublication?.updated_at,
       slug: payload.post.slug.trim(),
     }
   } catch (error) {
@@ -1839,6 +1847,7 @@ export async function publishBlogEditor(
               ? '발행은 완료됐습니다. 교체된 이전 공개 사진 정리는 재시도 대기열에 남겼습니다.'
               : '발행 응답이 지연됐지만 DB에서 완료 상태를 확인했습니다.',
             publishedAt: resolution.publishedAt ?? undefined,
+            updatedAt: resolution.updatedAt ?? undefined,
             slug: payload.post.slug.trim(),
           }
         }
@@ -1939,6 +1948,7 @@ export async function updateBlogPostStatus(
       }
 
       const transition = trashTransitionData as {
+        changed_at?: string
         public_paths?: string[]
         cleanup_job_id?: string | null
       } | null
@@ -1959,6 +1969,7 @@ export async function updateBlogPostStatus(
             : '글을 휴지통으로 이동하고 공개 사진을 정리했습니다.'
           : '글을 초안으로 복원했습니다.',
         status: toStatus,
+        updatedAt: transition?.changed_at,
       }
     }
 
@@ -1985,13 +1996,13 @@ export async function updateBlogPostStatus(
       .update(updatePayload as never)
       .eq('id', post.id)
       .eq('status', post.status)
-      .select('id, status')
+      .select('id, status, updated_at')
 
     if (updateError) {
       return { ok: false, message: '글 상태를 저장하지 못했습니다.' }
     }
 
-    const updatedRows = (updatedPostData ?? []) as Array<{ id: string; status: BlogPostStatus }>
+    const updatedRows = (updatedPostData ?? []) as Array<{ id: string; status: BlogPostStatus; updated_at: string }>
     if (updatedRows.length !== 1) {
       return { ok: false, message: '글 상태가 바뀌었습니다. 새로고침 후 다시 시도해주세요.' }
     }
@@ -2033,6 +2044,7 @@ export async function updateBlogPostStatus(
       ok: true,
       message: '상태를 변경했습니다.',
       status: toStatus,
+      updatedAt: updatedRows[0].updated_at,
     }
   } catch {
     return {

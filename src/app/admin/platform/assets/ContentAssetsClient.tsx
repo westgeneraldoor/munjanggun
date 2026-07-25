@@ -37,6 +37,7 @@ import {
 import {
   archiveContentAssetSearchResults,
   archiveContentAssets,
+  prepareContentAssetSearchSelection,
   restoreContentAssets,
   updateContentAsset,
   uploadContentAssets,
@@ -112,6 +113,12 @@ type SelectedUpload = {
 type LifecycleSelection =
   | { kind: 'items'; items: ContentAssetLibraryItem[] }
   | { kind: 'query'; query: AssetLibraryQuery; totalCount: number; selectionToken: string }
+
+type AllResultsSelection = {
+  queryKey: string
+  totalCount: number
+  selectionToken: string
+}
 
 const FILTER_LABELS: Record<FilterKey, string> = {
   category: '분류',
@@ -639,7 +646,6 @@ export default function ContentAssetsClient({
   initialItems,
   query,
   totalCount,
-  selectionToken,
   totalPages,
   filterOptions,
   tagOptions,
@@ -648,26 +654,28 @@ export default function ContentAssetsClient({
   initialItems: ContentAssetLibraryItem[]
   query: AssetLibraryQuery
   totalCount: number
-  selectionToken: string
   totalPages: number
   filterOptions: AssetLibraryFilterOptions
   tagOptions: ContentAssetTagOption[]
   loadError: string | null
 }) {
   const router = useRouter()
+  const queryKey = assetLibraryQueryKey(query)
   const [isPagePending, startPageTransition] = useTransition()
-  const [libraryItems, setLibraryItems] = useState(initialItems)
+  const serverItemsKey = initialItems.map(item => `${item.id}:${item.updatedAt}`).join('|')
+  const [optimisticallyRemoved, setOptimisticallyRemoved] = useState<{ serverItemsKey: string; ids: Set<string> } | null>(null)
   const [uploadOpen, setUploadOpen] = useState(false)
   const [searchDraft, setSearchDraft] = useState(query.search)
   const [selectionMode, setSelectionMode] = useState(false)
   const [selectedForAction, setSelectedForAction] = useState<Set<string>>(() => new Set())
-  const [allResultsSelected, setAllResultsSelected] = useState(false)
+  const [allResultsSelection, setAllResultsSelection] = useState<AllResultsSelection | null>(null)
   const [lifecycleSelection, setLifecycleSelection] = useState<LifecycleSelection | null>(null)
   const [lifecycleResult, setLifecycleResult] = useState<ArchiveContentAssetsResult | null>(null)
   const [selectedId, setSelectedId] = useState('')
   const [dragRect, setDragRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null)
   const selectionAnchorRef = useRef('')
   const suppressCardClickRef = useRef(false)
+  const lastServerQueryKeyRef = useRef(queryKey)
   const dragSelectionRef = useRef<{
     pointerId: number
     startX: number
@@ -676,14 +684,22 @@ export default function ContentAssetsClient({
     active: boolean
   } | null>(null)
 
+  const locallyRemovedIds = optimisticallyRemoved?.serverItemsKey === serverItemsKey
+    ? optimisticallyRemoved.ids
+    : new Set<string>()
+  const libraryItems = initialItems.filter(item => !locallyRemovedIds.has(item.id))
   const pageItems = libraryItems
-  const queryKey = assetLibraryQueryKey(query)
   const normalizedSearchDraft = searchDraft.trim().replace(/\s+/g, ' ').slice(0, 120)
   const selectionScopeStable = normalizedSearchDraft === query.search && !isPagePending
+  const allResultsSelected = Boolean(allResultsSelection)
 
   const selectedItem = selectedId
     ? libraryItems.find(item => item.id === selectedId) ?? null
     : null
+
+  useEffect(() => {
+    lastServerQueryKeyRef.current = queryKey
+  }, [queryKey])
 
   useEffect(() => {
     const nextSearch = normalizedSearchDraft
@@ -701,7 +717,7 @@ export default function ContentAssetsClient({
     const nextSearch = value.trim().replace(/\s+/g, ' ').slice(0, 120)
     if (nextSearch === query.search) return
     setSelectedForAction(new Set())
-    setAllResultsSelected(false)
+    setAllResultsSelection(null)
     setSelectionMode(false)
     setLifecycleSelection(null)
     selectionAnchorRef.current = ''
@@ -715,7 +731,7 @@ export default function ContentAssetsClient({
       page: patch.page ?? 1,
     }
     setSelectedForAction(new Set())
-    setAllResultsSelected(false)
+    setAllResultsSelection(null)
     setSelectionMode(false)
     selectionAnchorRef.current = ''
     closeDetail()
@@ -752,7 +768,7 @@ export default function ContentAssetsClient({
   }
 
   function selectCurrentPage() {
-    setAllResultsSelected(false)
+    setAllResultsSelection(null)
     setSelectedForAction(new Set(pageItems.map(item => item.id)))
   }
 
@@ -763,14 +779,30 @@ export default function ContentAssetsClient({
   }
 
   function selectAllResults() {
+    if (totalCount < 1 || !selectionScopeStable) return
+    const requestedQueryKey = queryKey
     setSelectedForAction(new Set())
-    setAllResultsSelected(true)
     selectionAnchorRef.current = ''
+    startPageTransition(async () => {
+      const result = await prepareContentAssetSearchSelection(query)
+      if (lastServerQueryKeyRef.current !== requestedQueryKey) return
+      if (!result.ok || !result.selectionToken || !result.totalCount) {
+        setAllResultsSelection(null)
+        setLifecycleResult({ ok: false, message: result.message, results: [] })
+        return
+      }
+      setAllResultsSelection({
+        queryKey: requestedQueryKey,
+        totalCount: result.totalCount,
+        selectionToken: result.selectionToken,
+      })
+      setLifecycleResult({ ok: true, message: result.message, results: [] })
+    })
   }
 
   function clearAllResultsSelection() {
     setSelectedForAction(new Set())
-    setAllResultsSelected(false)
+    setAllResultsSelection(null)
     selectionAnchorRef.current = ''
   }
 
@@ -845,29 +877,37 @@ export default function ContentAssetsClient({
   }
 
   function requestAllResultsLifecycle() {
-    if (totalCount < 1 || !selectionScopeStable) return
+    if (!allResultsSelection || allResultsSelection.queryKey !== queryKey || !selectionScopeStable) return
     closeDetail()
-    setLifecycleSelection({ kind: 'query', query, totalCount, selectionToken })
+    setLifecycleSelection({
+      kind: 'query',
+      query,
+      totalCount: allResultsSelection.totalCount,
+      selectionToken: allResultsSelection.selectionToken,
+    })
   }
 
   function completeLifecycle(result: ArchiveContentAssetsResult) {
     setLifecycleResult(result)
     if (result.ok) {
       const changedIds = new Set(result.results.filter(item => item.changed).map(item => item.assetId))
-      setLibraryItems(current => current.filter(item => !changedIds.has(item.id)))
+      setOptimisticallyRemoved(current => ({
+        serverItemsKey,
+        ids: new Set([...(current?.serverItemsKey === serverItemsKey ? current.ids : []), ...changedIds]),
+      }))
       setSelectedForAction(current => {
         const next = new Set(current)
         result.results.filter(item => item.changed).forEach(item => next.delete(item.assetId))
         return next
       })
-      setAllResultsSelected(false)
+      setAllResultsSelection(null)
       if (result.results.some(item => item.changed && item.assetId === selectedId)) closeDetail()
       router.refresh()
     }
   }
 
   const actionItems = pageItems.filter(item => selectedForAction.has(item.id))
-  const actionCount = allResultsSelected ? totalCount : actionItems.length
+  const actionCount = allResultsSelection?.totalCount ?? actionItems.length
 
   return (
     <div className={styles.page}>
@@ -922,7 +962,7 @@ export default function ContentAssetsClient({
               setSelectionMode(next)
               if (!next) {
                 setSelectedForAction(new Set())
-                setAllResultsSelected(false)
+                setAllResultsSelection(null)
                 selectionAnchorRef.current = ''
               } else {
                 closeDetail()
@@ -977,7 +1017,7 @@ export default function ContentAssetsClient({
               {!allResultsSelected ? (
                 <PlatformButton type="button" variant="ghost" size="sm" onClick={clearCurrentPageSelection} disabled={actionItems.length === 0}>현재 페이지 전체 해제</PlatformButton>
               ) : null}
-              <PlatformButton type="button" variant={allResultsSelected ? 'primary' : 'secondary'} size="sm" onClick={selectAllResults} disabled={!selectionScopeStable}>검색 결과 전체 선택 ({totalCount}장)</PlatformButton>
+              <PlatformButton type="button" variant={allResultsSelected ? 'primary' : 'secondary'} size="sm" onClick={selectAllResults} disabled={!selectionScopeStable || allResultsSelected}>검색 결과 전체 선택 ({totalCount}장)</PlatformButton>
               {allResultsSelected ? <PlatformButton type="button" variant="ghost" size="sm" onClick={clearAllResultsSelection}>검색 결과 전체 해제</PlatformButton> : null}
               <span role="status" aria-live="polite">{actionCount}장 선택</span>
             </div>
@@ -1052,7 +1092,7 @@ export default function ContentAssetsClient({
       </div>
       {selectionMode && actionCount > 0 ? (
         <PlatformPanel as="section" className={styles.selectionBar} aria-label="선택한 사진 작업">
-          <strong>{allResultsSelected ? `검색 결과 전체 ${totalCount}장 선택` : `현재 페이지 ${actionItems.length}장 선택`}</strong>
+          <strong>{allResultsSelected ? `검색 결과 전체 ${actionCount}장 선택` : `현재 페이지 ${actionItems.length}장 선택`}</strong>
           <PlatformButton type="button" variant={query.view === 'archived' ? 'primary' : 'danger'} disabled={!selectionScopeStable} onClick={() => allResultsSelected ? requestAllResultsLifecycle() : requestLifecycle(actionItems)}>
             {query.view === 'archived' ? '선택한 사진 복원' : '선택한 사진 휴지통으로 이동'}
           </PlatformButton>

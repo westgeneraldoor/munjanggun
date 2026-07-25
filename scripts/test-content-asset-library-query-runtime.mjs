@@ -89,7 +89,9 @@ await db.exec(`
 await db.exec(migration)
 
 const tagId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+const archivedTagId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
 await db.query(`INSERT INTO showroom.content_asset_tags(id, name) VALUES ($1, '대표 태그')`, [tagId])
+await db.query(`INSERT INTO showroom.content_asset_tags(id, name) VALUES ($1, '휴지통 전용 태그')`, [archivedTagId])
 
 for (let index = 1; index <= 110; index += 1) {
   const id = `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`
@@ -136,6 +138,11 @@ for (let index = 1; index <= 110; index += 1) {
   }
 }
 
+await db.query(
+  `INSERT INTO showroom.content_asset_tag_links(asset_id, tag_id) VALUES ($1, $2)`,
+  ['00000000-0000-4000-8000-000000000106', archivedTagId],
+)
+
 async function list(args = {}) {
   const defaults = {
     p_search: null,
@@ -159,11 +166,34 @@ async function list(args = {}) {
   return result.rows[0].payload
 }
 
+async function prepareAllResultsSelection(args = {}) {
+  const defaults = {
+    p_search: null,
+    p_view: 'active',
+    p_category: null,
+    p_product_type: null,
+    p_space_type: null,
+    p_region: null,
+    p_usage_purpose: null,
+    p_tag_id: null,
+    p_sort: 'newest',
+    p_page: 1,
+    p_page_size: 48,
+  }
+  const values = { ...defaults, ...args }
+  const result = await db.query(`
+    SELECT showroom.prepare_content_asset_search_results_selection(
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+    ) AS payload
+  `, Object.values(values))
+  return result.rows[0].payload
+}
+
 const first = await list()
 const second = await list({ p_page: 2 })
 const third = await list({ p_page: 3 })
 assert.equal(first.totalCount, 105)
-assert.match(first.selectionToken, /^[0-9a-f]{32}$/)
+assert.equal(first.selectionToken, undefined, 'ordinary page reads must not hash the complete matching result set')
 assert.equal(first.assetIds.length, 48)
 assert.equal(second.assetIds.length, 48)
 assert.equal(third.assetIds.length, 9)
@@ -184,6 +214,16 @@ assert.equal(fileNameSearch.assetIds[0], '00000000-0000-4000-8000-000000000088')
 const tagSearch = await list({ p_tag_id: tagId })
 assert.equal(tagSearch.totalCount, 1)
 assert.equal(tagSearch.assetIds[0], '00000000-0000-4000-8000-000000000073')
+assert.deepEqual(tagSearch.facets.tags.map(tag => tag.id), [tagId], 'tag facets must respect the active tag filter')
+
+const categoryValue = (
+  await db.query(`SELECT category FROM showroom.content_assets WHERE id = $1`, ['00000000-0000-4000-8000-000000000073'])
+).rows[0].category
+const categorySearch = await list({ p_category: categoryValue })
+assert.deepEqual(categorySearch.facets.categories, [categoryValue], 'facets must respect the active metadata filter')
+
+const archived = await list({ p_view: 'archived' })
+assert.deepEqual(archived.facets.tags.map(tag => tag.id), [archivedTagId], 'facets must not show active-view values in the trash view')
 
 const regionFilter = await list({ p_region: '동탄' })
 assert.equal(regionFilter.totalCount, 35)
@@ -199,12 +239,37 @@ assert.equal(nameDescending.assetIds[0], '00000000-0000-4000-8000-000000000073')
 const oldest = await list({ p_sort: 'oldest' })
 assert.deepEqual(oldest.assetIds, first.assetIds, 'equal timestamps must fall back to ascending asset id')
 
+await db.query(
+  `UPDATE showroom.content_asset_events
+   SET metadata = jsonb_build_object('file_name', 'projection-refresh.jpg')
+   WHERE asset_id = $1`,
+  ['00000000-0000-4000-8000-000000000001'],
+)
+const refreshedFileName = await list({ p_search: 'projection-refresh.jpg' })
+assert.deepEqual(refreshedFileName.assetIds, ['00000000-0000-4000-8000-000000000001'], 'event writes must refresh the server search projection')
+
+await db.query(
+  `UPDATE showroom.content_asset_files
+   SET size_bytes = 9999999
+   WHERE asset_id = $1 AND file_role = 'original'`,
+  ['00000000-0000-4000-8000-000000000105'],
+)
+assert.equal((await list({ p_sort: 'sizeDesc' })).assetIds[0], '00000000-0000-4000-8000-000000000105', 'file writes must refresh the server size projection')
+
+await db.query(`UPDATE showroom.content_asset_tags SET name = 'projection-tag-refresh' WHERE id = $1`, [tagId])
+const refreshedTagName = await list({ p_search: 'projection-tag-refresh' })
+assert.deepEqual(refreshedTagName.assetIds, ['00000000-0000-4000-8000-000000000073'], 'tag writes must refresh the server search projection')
+
+const selectedAll = await prepareAllResultsSelection()
+assert.equal(selectedAll.totalCount, 105)
+assert.match(selectedAll.selectionToken, /^[0-9a-f]{32}$/)
+
 const actorId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
 const changedResult = await db.query(`
   SELECT showroom.archive_content_asset_search_results_safely(
     NULL, 'active', NULL, NULL, NULL, NULL, NULL, NULL, 104, $1, $2, FALSE
   ) AS payload
-`, [first.selectionToken, actorId])
+`, [selectedAll.selectionToken, actorId])
 assert.equal(changedResult.rows[0].payload.ok, false)
 assert.equal(changedResult.rows[0].payload.currentCount, 105)
 assert.equal(
@@ -224,7 +289,7 @@ const sameCountReplacement = await db.query(`
   SELECT showroom.archive_content_asset_search_results_safely(
     NULL, 'active', NULL, NULL, NULL, NULL, NULL, NULL, 105, $1, $2, FALSE
   ) AS payload
-`, [first.selectionToken, actorId])
+`, [selectedAll.selectionToken, actorId])
 assert.equal(sameCountReplacement.rows[0].payload.ok, false)
 assert.equal(sameCountReplacement.rows[0].payload.reason, 'result_set_changed')
 assert.equal(
@@ -244,7 +309,7 @@ const archiveResult = await db.query(`
   SELECT showroom.archive_content_asset_search_results_safely(
     NULL, 'active', NULL, NULL, NULL, NULL, NULL, NULL, 105, $1, $2, FALSE
   ) AS payload
-`, [first.selectionToken, actorId])
+`, [selectedAll.selectionToken, actorId])
 assert.equal(archiveResult.rows[0].payload.ok, true)
 assert.equal(archiveResult.rows[0].payload.results.length, 105)
 assert.equal(

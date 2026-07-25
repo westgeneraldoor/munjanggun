@@ -83,6 +83,13 @@ export type ArchiveContentAssetsResult = {
   results: ArchiveContentAssetItemResult[]
 }
 
+export type PrepareContentAssetSearchSelectionResult = {
+  ok: boolean
+  message: string
+  totalCount?: number
+  selectionToken?: string
+}
+
 function cleanText(value: FormDataEntryValue | string | null | undefined) {
   const text = typeof value === 'string' ? value.trim() : ''
   return text.length > 0 ? text : null
@@ -599,6 +606,36 @@ async function invokeArchiveSearchResultsRpc(
     p_actor_id: actorId,
     p_restore: restore,
   })
+}
+
+async function invokePrepareSearchSelectionRpc(query: AssetLibraryQuery) {
+  const showroom = createShowroomAdminClient() as unknown as {
+    rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>
+  }
+  return showroom.rpc('prepare_content_asset_search_results_selection', assetLibraryRpcArgs(query))
+}
+
+export async function prepareContentAssetSearchSelection(
+  query: AssetLibraryQuery,
+): Promise<PrepareContentAssetSearchSelectionResult> {
+  try {
+    await requireAdministrator()
+    const { data, error } = await invokePrepareSearchSelectionRpc(query)
+    if (error || !data || typeof data !== 'object') {
+      return { ok: false, message: '검색 결과를 다시 확인하지 못했습니다.' }
+    }
+
+    const payload = data as Record<string, unknown>
+    const totalCount = Number(payload.totalCount)
+    const selectionToken = typeof payload.selectionToken === 'string' ? payload.selectionToken : ''
+    if (!Number.isSafeInteger(totalCount) || totalCount < 1 || !/^[0-9a-f]{32}$/.test(selectionToken)) {
+      return { ok: false, message: '검색 결과가 바뀌었거나 선택 범위를 확인할 수 없습니다. 새로고침 후 다시 선택해 주세요.' }
+    }
+
+    return { ok: true, message: `${totalCount}장의 검색 결과를 선택했습니다.`, totalCount, selectionToken }
+  } catch {
+    return { ok: false, message: '검색 결과 전체를 선택하는 중 오류가 발생했습니다. 다시 시도해 주세요.' }
+  }
 }
 
 export async function archiveContentAssets(assetIds: string[]): Promise<ArchiveContentAssetsResult> {

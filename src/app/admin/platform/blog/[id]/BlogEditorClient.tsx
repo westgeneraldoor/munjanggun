@@ -1668,7 +1668,8 @@ export default function BlogEditorClient({
       try {
         const result = await publishBlogEditor(buildPayload())
         setPublishMessage({ ok: result.ok, text: result.message, issues: result.issues, code: result.code })
-        if (result.ok) {
+        if (result.ok && result.updatedAt) {
+          setCurrentRevision(result.updatedAt)
           setSavedEditorSignature(currentEditorSignature)
           setPost(current => ({ ...current, status: 'published' }))
           router.refresh()
@@ -1684,7 +1685,8 @@ export default function BlogEditorClient({
     startTransition(async () => {
       const result = await updateBlogPostStatus(post.id, 'archived')
       setPublishMessage({ ok: result.ok, text: result.message, issues: result.issues })
-      if (result.ok) {
+      if (result.ok && result.updatedAt) {
+        setCurrentRevision(result.updatedAt)
         setPost(current => ({ ...current, status: 'archived' }))
         setArchiveDialogOpen(false)
         router.refresh()
@@ -1697,7 +1699,8 @@ export default function BlogEditorClient({
     startTransition(async () => {
       const result = await updateBlogPostStatus(post.id, 'reviewing')
       setPublishMessage({ ok: result.ok, text: result.message, issues: result.issues })
-      if (result.ok) {
+      if (result.ok && result.updatedAt) {
+        setCurrentRevision(result.updatedAt)
         setPost(current => ({ ...current, status: 'reviewing' }))
         router.refresh()
       }

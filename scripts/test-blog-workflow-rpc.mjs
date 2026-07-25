@@ -52,6 +52,11 @@ assert.match(migration, /'retired_blog_publication:' \|\| p_publication_attempt_
 assert.match(migration, /retired_cleanup_job_id = v_retired_cleanup_job_id/i)
 assert.match(migration, /status = 'published'[\s\S]*?WHERE attempt\.id = p_publication_attempt_id/i)
 assert.match(migration, /status = 'published'::showroom\.blog_post_status/i)
+assert.match(
+  migration,
+  /UPDATE showroom\.blog_posts AS post[\s\S]*RETURNING post\.updated_at INTO v_persisted_updated_at[\s\S]*'updated_at', v_persisted_updated_at/i,
+  'one-click publish must return the database-authoritative revision after any timestamp trigger runs',
+)
 assert.match(migration, /INSERT INTO showroom\.blog_post_events/i)
 assert.match(
   migration,
@@ -71,6 +76,11 @@ assert.match(
 )
 assert.match(migration, /'moved_to_trash'/i)
 assert.match(migration, /'restored_from_trash'/i)
+assert.match(
+  migration,
+  /UPDATE showroom\.blog_posts AS post[\s\S]*RETURNING post\.updated_at INTO v_changed_at[\s\S]*'changed_at', v_changed_at/i,
+  'trash and restore must return the database-authoritative revision after any timestamp trigger runs',
+)
 assert.match(migration, /state = 'trash_pending'/i)
 assert.match(migration, /'trashed_blog_post:' \|\| p_post_id::TEXT/i)
 assert.equal(
@@ -104,6 +114,8 @@ assert.match(
 )
 
 assert.match(actions, /export async function publishBlogEditor\s*\(\s*payload: SaveBlogEditorPayload/)
+assert.match(actions, /committedPublication\?\.updated_at/, 'publish action must surface the canonical RPC revision')
+assert.match(actions, /transition\?\.changed_at/, 'trash and restore action must surface the canonical RPC revision')
 assert.match(actions, /\.rpc\('save_and_publish_blog_post'/)
 assert.match(actions, /publicationAttemptId = randomUUID\(\)/)
 assert.match(actions, /createPublicationAttempt\(/)

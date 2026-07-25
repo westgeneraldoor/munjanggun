@@ -266,6 +266,7 @@ DECLARE
   v_post_status showroom.blog_post_status;
   v_post_slug TEXT;
   v_post_updated_at TIMESTAMPTZ;
+  v_persisted_updated_at TIMESTAMPTZ;
   v_block JSONB;
   v_attempt_paths TEXT[];
   v_retired_public_paths TEXT[] := ARRAY[]::TEXT[];
@@ -748,7 +749,8 @@ BEGIN
     updated_at = v_published_at
   WHERE post.id = p_post_id
     AND post.status = v_post_status
-    AND post.updated_at = p_expected_updated_at;
+    AND post.updated_at = p_expected_updated_at
+  RETURNING post.updated_at INTO v_persisted_updated_at;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'blog post changed during publication';
   END IF;
@@ -795,6 +797,7 @@ BEGIN
     'post_id', p_post_id,
     'slug', p_post ->> 'slug',
     'published_at', v_published_at,
+    'updated_at', v_persisted_updated_at,
     'retired_public_paths', pg_catalog.to_jsonb(v_retired_public_paths),
     'retired_cleanup_job_id', v_retired_cleanup_job_id
   );
@@ -834,6 +837,11 @@ BEGIN
   RETURN pg_catalog.jsonb_build_object(
     'status', v_attempt.status,
     'post_id', v_attempt.post_id,
+    'updated_at', (
+      SELECT post.updated_at
+      FROM showroom.blog_posts AS post
+      WHERE post.id = v_attempt.post_id
+    ),
     'object_paths', pg_catalog.to_jsonb(v_attempt.object_paths),
     'retired_public_paths', COALESCE(
       (
@@ -976,7 +984,8 @@ BEGIN
     END,
     updated_at = v_changed_at
   WHERE post.id = p_post_id
-    AND post.status = v_from_status;
+    AND post.status = v_from_status
+  RETURNING post.updated_at INTO v_changed_at;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'blog post changed during trash transition';
   END IF;

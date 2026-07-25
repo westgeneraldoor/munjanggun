@@ -15,12 +15,22 @@ assert.match(
   /type SaveBlogEditorResult[\s\S]*updatedAt\?: string[\s\S]*code\?: 'stale_revision'/,
   'draft save results must return the exact persisted revision and a typed stale conflict',
 )
+assert.match(
+  actions,
+  /type PublishBlogPostResult[\s\S]*updatedAt\?: string/,
+  'publish results must return the exact persisted post revision',
+)
+assert.match(
+  actions,
+  /type UpdateBlogPostStatusResult[\s\S]*updatedAt\?: string/,
+  'archive and restore results must return the exact persisted post revision',
+)
 assert.match(actions, /blockIds\?: string\[\]/)
 assert.match(actions, /savedBlockIds\.push\(savedBlockId\)[\s\S]*blockIds: savedBlockIds/)
 assert.match(
   actions,
-  /const updatedAt = new Date\(\)\.toISOString\(\)[\s\S]*updated_at: updatedAt[\s\S]*현재 내용을 임시저장했습니다[\s\S]*updatedAt,[\s\S]*blockIds: savedBlockIds/,
-  'draft save must return the same timestamp written to blog_posts.updated_at',
+  /const requestedUpdatedAt = new Date\(\)\.toISOString\(\)[\s\S]*updated_at: requestedUpdatedAt[\s\S]*select\('id, updated_at'\)[\s\S]*현재 내용을 임시저장했습니다[\s\S]*updatedAt: updatedPostRows\[0\]\.updated_at,[\s\S]*blockIds: savedBlockIds/,
+  'draft save must return the revision that the database actually persisted, not a client clock value',
 )
 assert.match(
   editor,
@@ -43,6 +53,21 @@ assert.match(
   editor,
   /result\.ok && result\.updatedAt[\s\S]*setCurrentRevision\(result\.updatedAt\)[\s\S]*setSavedEditorSignature/,
   'a successful draft save must acknowledge the persisted revision before marking the editor clean',
+)
+assert.match(
+  editor,
+  /const result = await publishBlogEditor\(buildPayload\(\)\)[\s\S]*result\.ok && result\.updatedAt[\s\S]*setCurrentRevision\(result\.updatedAt\)[\s\S]*setPost/,
+  'a successful atomic publish must acknowledge its persisted revision before refresh preserves client state',
+)
+assert.match(
+  editor,
+  /const result = await updateBlogPostStatus\(post\.id, 'archived'\)[\s\S]*result\.ok && result\.updatedAt[\s\S]*setCurrentRevision\(result\.updatedAt\)[\s\S]*setPost/,
+  'archive must acknowledge its persisted revision before the next edit can save',
+)
+assert.match(
+  editor,
+  /const result = await updateBlogPostStatus\(post\.id, 'reviewing'\)[\s\S]*result\.ok && result\.updatedAt[\s\S]*setCurrentRevision\(result\.updatedAt\)[\s\S]*setPost/,
+  'restore must acknowledge its persisted revision before the next edit can save',
 )
 assert.match(
   editor,

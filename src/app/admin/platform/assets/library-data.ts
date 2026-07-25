@@ -25,10 +25,14 @@ export type AssetLibraryFilterOptions = {
   usagePurpose: string[]
 }
 
+type AssetLibraryTagFacet = {
+  id: string
+  name: string
+}
+
 type AssetLibraryRpcPayload = {
   assetIds: string[]
   totalCount: number
-  selectionToken: string
   page: number
   pageSize: number
   totalPages: number
@@ -38,11 +42,23 @@ type AssetLibraryRpcPayload = {
     spaceTypes: string[]
     regions: string[]
     usagePurposes: string[]
+    tags: AssetLibraryTagFacet[]
   }
 }
 
 function stringArray(value: unknown) {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []
+}
+
+function tagFacetArray(value: unknown): AssetLibraryTagFacet[] {
+  if (!Array.isArray(value)) return []
+  return value.flatMap(item => {
+    if (!item || typeof item !== 'object') return []
+    const record = item as Record<string, unknown>
+    return typeof record.id === 'string' && typeof record.name === 'string'
+      ? [{ id: record.id, name: record.name }]
+      : []
+  })
 }
 
 function parseRpcPayload(value: unknown, fallbackPage: number): AssetLibraryRpcPayload | null {
@@ -55,13 +71,11 @@ function parseRpcPayload(value: unknown, fallbackPage: number): AssetLibraryRpcP
   const page = Number(payload.page)
   const pageSize = Number(payload.pageSize)
   const totalPages = Number(payload.totalPages)
-  const selectionToken = typeof payload.selectionToken === 'string' ? payload.selectionToken : ''
-  if (![totalCount, page, pageSize, totalPages].every(Number.isSafeInteger) || !/^[0-9a-f]{32}$/.test(selectionToken)) return null
+  if (![totalCount, page, pageSize, totalPages].every(Number.isSafeInteger)) return null
 
   return {
     assetIds: stringArray(payload.assetIds),
     totalCount: Math.max(0, totalCount),
-    selectionToken,
     page: Math.max(1, page || fallbackPage),
     pageSize: Math.max(1, pageSize || ASSET_LIBRARY_SERVER_PAGE_SIZE),
     totalPages: Math.max(1, totalPages),
@@ -71,6 +85,7 @@ function parseRpcPayload(value: unknown, fallbackPage: number): AssetLibraryRpcP
       spaceTypes: stringArray(facets.spaceTypes),
       regions: stringArray(facets.regions),
       usagePurposes: stringArray(facets.usagePurposes),
+      tags: tagFacetArray(facets.tags),
     },
   }
 }
@@ -101,7 +116,6 @@ function fileSummary(assetId: string, files: AssetFileRow[], role: 'web' | 'thum
 export async function loadAssetLibraryServerPage(
   showroomAdmin: ShowroomAdmin,
   query: AssetLibraryQuery,
-  includeTagOptions = false,
 ) {
   const listResult = await invokeAssetLibraryListRpc(showroomAdmin, query)
   const listing = listResult.error ? null : parseRpcPayload(listResult.data, query.page)
@@ -115,7 +129,7 @@ export async function loadAssetLibraryServerPage(
   const assetsById = new Map(((assetResult.data ?? []) as AssetRow[]).map(asset => [asset.id, asset]))
   const assets = assetIds.map(id => assetsById.get(id)).filter((asset): asset is AssetRow => Boolean(asset))
 
-  const [fileResult, tagResult, tagLinkResult] = await Promise.all([
+  const [fileResult, tagLinkResult] = await Promise.all([
     assetIds.length > 0
       ? showroomAdmin
         .from('content_asset_files')
@@ -123,10 +137,6 @@ export async function loadAssetLibraryServerPage(
         .in('asset_id', assetIds)
         .in('file_role', ['web', 'thumbnail'])
       : Promise.resolve({ data: [], error: null }),
-    showroomAdmin
-      .from('content_asset_tags')
-      .select('id, name, slug, tag_group, created_at')
-      .order('name', { ascending: true }),
     assetIds.length > 0
       ? showroomAdmin
         .from('content_asset_tag_links')
@@ -136,8 +146,15 @@ export async function loadAssetLibraryServerPage(
   ])
 
   const files = (fileResult.data ?? []) as AssetFileRow[]
-  const tags = (tagResult.data ?? []) as TagRow[]
   const tagLinks = (tagLinkResult.data ?? []) as TagLinkRow[]
+  const tagIds = [...new Set(tagLinks.map(link => link.tag_id))]
+  const tagResult = tagIds.length > 0
+    ? await showroomAdmin
+      .from('content_asset_tags')
+      .select('id, name, slug, tag_group, created_at')
+      .in('id', tagIds)
+    : { data: [], error: null }
+  const tags = (tagResult.data ?? []) as TagRow[]
   const filesByAsset = files.reduce<Record<string, AssetFileRow[]>>((acc, file) => {
     acc[file.asset_id] = [...(acc[file.asset_id] ?? []), file]
     return acc
@@ -173,9 +190,7 @@ export async function loadAssetLibraryServerPage(
     }
   })
 
-  const tagOptions: ContentAssetTagOption[] = includeTagOptions
-    ? tags.map(tag => ({ id: tag.id, name: tag.name }))
-    : []
+  const tagOptions: ContentAssetTagOption[] = listing?.facets.tags ?? []
   const filterOptions: AssetLibraryFilterOptions = {
     category: listing?.facets.categories ?? [],
     productType: listing?.facets.productTypes ?? [],
@@ -189,7 +204,6 @@ export async function loadAssetLibraryServerPage(
     tagOptions,
     filterOptions,
     totalCount: listing?.totalCount ?? 0,
-    selectionToken: listing?.selectionToken ?? '',
     page: listing?.page ?? query.page,
     pageSize: listing?.pageSize ?? ASSET_LIBRARY_SERVER_PAGE_SIZE,
     totalPages: listing?.totalPages ?? 1,

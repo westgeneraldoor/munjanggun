@@ -5,8 +5,10 @@ import { PGlite } from '@electric-sql/pglite'
 
 const projectRoot = path.resolve(import.meta.dirname, '..')
 const readMigration = name => readFile(path.join(projectRoot, 'supabase/migrations', name), 'utf8')
-const [hiddenAllowlist, workflowMigration, assetTrashMigration] = await Promise.all([
+const timestampMillis = value => new Date(value).getTime()
+const [hiddenAllowlist, leaseMigration, workflowMigration, assetTrashMigration] = await Promise.all([
   readMigration('20260723062040_allow_hidden_content_asset_draft_references.sql'),
+  readMigration('20260720005052_atomic_official_asset_blog_placement.sql'),
   readMigration('20260723070030_admin_cms_atomic_publish_trash_and_revision.sql'),
   readMigration('20260723070034_preserve_content_asset_trash_state_v2.sql'),
 ])
@@ -185,6 +187,7 @@ await db.exec(`
   GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA showroom TO authenticated;
 `)
 
+await db.exec(leaseMigration.slice(0, leaseMigration.indexOf('CREATE OR REPLACE FUNCTION showroom.reconcile_blog_editor_save_lease')))
 await db.exec(hiddenAllowlist)
 await db.exec(workflowMigration)
 await db.exec(assetTrashMigration)
@@ -402,6 +405,20 @@ const retiredPostId = '00000000-0000-0000-0000-000000000070'
 const retiredAttemptId = '00000000-0000-0000-0000-000000000071'
 const retiredObjectPath = `${retiredPostId}/previous/public.webp`
 await db.exec(`
+  CREATE OR REPLACE FUNCTION showroom.force_post_revision()
+  RETURNS TRIGGER
+  LANGUAGE plpgsql
+  AS $$
+  BEGIN
+    NEW.updated_at = clock_timestamp();
+    RETURN NEW;
+  END;
+  $$;
+  CREATE TRIGGER force_post_revision
+    BEFORE UPDATE ON showroom.blog_posts
+    FOR EACH ROW EXECUTE FUNCTION showroom.force_post_revision();
+`)
+await db.exec(`
   INSERT INTO showroom.blog_posts(id, title, slug, status, category, updated_at)
     VALUES (
       '${retiredPostId}', '교체 사진 정리 계약 글', 'retired-cleanup-contract',
@@ -461,6 +478,58 @@ const retiredPublication = await db.query(
 )
 assert.deepEqual(retiredPublication.rows[0].result.retired_public_paths, [retiredObjectPath])
 assert.ok(retiredPublication.rows[0].result.retired_cleanup_job_id)
+const publishedRevision = (
+  await db.query(`SELECT updated_at FROM showroom.blog_posts WHERE id = $1`, [retiredPostId])
+).rows[0].updated_at
+assert.equal(
+  timestampMillis(retiredPublication.rows[0].result.updated_at),
+  timestampMillis(publishedRevision),
+  'publish must return the post revision after a database timestamp trigger runs',
+)
+assert.notEqual(
+  publishedRevision,
+  '2026-07-23T07:10:01.000Z',
+  'the test trigger must prove client/RPC clock values are not treated as authoritative',
+)
+const archivedPublication = await db.query(
+  `SELECT showroom.transition_blog_post_trash($1, $2, FALSE) AS result`,
+  [retiredPostId, adminId],
+)
+const archivedRevision = (
+  await db.query(`SELECT updated_at FROM showroom.blog_posts WHERE id = $1`, [retiredPostId])
+).rows[0].updated_at
+assert.equal(
+  timestampMillis(archivedPublication.rows[0].result.changed_at),
+  timestampMillis(archivedRevision),
+  'archive must return the post revision after a database timestamp trigger runs',
+)
+const restoredPublication = await db.query(
+  `SELECT showroom.transition_blog_post_trash($1, $2, TRUE) AS result`,
+  [retiredPostId, adminId],
+)
+const restoredRevision = (
+  await db.query(`SELECT updated_at FROM showroom.blog_posts WHERE id = $1`, [retiredPostId])
+).rows[0].updated_at
+assert.equal(
+  timestampMillis(restoredPublication.rows[0].result.changed_at),
+  timestampMillis(restoredRevision),
+  'restore must return the post revision after a database timestamp trigger runs',
+)
+await db.query(
+  `SELECT showroom.acquire_blog_editor_save_lease($1, $2, $3, $4)`,
+  [retiredPostId, adminId, '00000000-0000-0000-0000-000000000074', restoredRevision],
+)
+await db.query(
+  `SELECT showroom.release_blog_editor_save_lease($1, $2, $3)`,
+  [retiredPostId, adminId, '00000000-0000-0000-0000-000000000074'],
+)
+await assert.rejects(
+  db.query(
+    `SELECT showroom.acquire_blog_editor_save_lease($1, $2, $3, $4)`,
+    [retiredPostId, adminId, '00000000-0000-0000-0000-000000000075', archivedRevision],
+  ),
+  /blog post changed since the editor loaded/,
+)
 assert.equal(
   (
     await db.query(
