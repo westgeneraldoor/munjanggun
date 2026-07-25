@@ -28,6 +28,7 @@ jobs:
       - name: Static and unit contracts
         run: |
           npm run test:supabase-stabilization-migrations
+          npm run test:showroom-schema-bootstrap
           npm run test:showroom-preview-payload
           npm run test:showroom-rls-hardening
           npm run test:showroom-image-derivatives
@@ -64,6 +65,32 @@ jobs:
         run: npm run build
       # Authenticated Playwright and live Supabase checks remain local/Preview
       # gates so this workflow never requires repository secrets.
+
+  migration-chain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Start isolated local PostgreSQL 17
+        run: >
+          npx --yes --package supabase@2.109.1 supabase start
+          -x gotrue,realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+          --ignore-health-check
+      - name: Apply every tracked migration to an empty database
+        run: npx --yes --package supabase@2.109.1 supabase db reset --local --no-seed
+      - name: Assert the 18 typed showroom tables exist after the migration chain
+        run: >
+          npx --yes --package supabase@2.109.1 supabase db query --local
+          --file supabase/tests/verify-showroom-table-count.sql
+
+      - name: List showroom tables after the migration chain
+        run: >
+          npx --yes --package supabase@2.109.1 supabase db query --local
+          --file supabase/tests/list-showroom-tables.sql
 
   measure-browser:
     runs-on: ubuntu-latest

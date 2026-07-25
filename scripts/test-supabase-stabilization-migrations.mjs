@@ -21,6 +21,7 @@ const expectedRemoteAlignedMigrations = [
   '20260715235349_fix_private_derivative_rpc_role_cast.sql',
   '20260720005042_automate_blog_source_provenance.sql',
   '20260720005052_atomic_official_asset_blog_placement.sql',
+  '20260720074000_showroom_schema_bootstrap.sql',
   '20260720074812_atomic_node_reorder.sql',
   '20260720074843_atomic_site_settings_save.sql',
   '20260720074917_atomic_node_save.sql',
@@ -31,6 +32,7 @@ const expectedRemoteAlignedMigrations = [
   '20260721013710_restrict_showroom_preview_and_fix_asset_rls.sql',
   '20260721015552_enforce_content_asset_public_derivative_boundary.sql',
   '20260721044929_restrict_showroom_image_storage_to_administrators.sql',
+  '20260721044937_restore_search_index_view.sql',
   '20260721044938_secure_search_index_view.sql',
   '20260721044952_add_missing_blog_body_block_types.sql',
 ]
