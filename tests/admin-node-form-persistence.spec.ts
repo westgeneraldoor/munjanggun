@@ -10,13 +10,12 @@ test('node save is atomic, retains failed edits, and remains usable at 390px', a
   let releaseUpload!: () => void
   const uploadGate = new Promise<void>(resolve => { releaseUpload = resolve })
 
-  await page.route('**/storage/v1/object/**', async route => {
-    await uploadGate
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ Key: 'showroom-images/nodes/basic-product/test.png' }),
-    })
+  await page.route('**/test-fixtures/admin-node-form', async route => {
+    const request = route.request()
+    if (request.method() === 'POST' && request.headers()['next-action']) {
+      await uploadGate
+    }
+    await route.continue()
   })
 
   await page.route('**/rest/v1/**', async route => {

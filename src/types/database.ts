@@ -77,6 +77,9 @@ export type ContentAssetFileRole = 'original' | 'web' | 'thumbnail'
 
 export type ContentAssetTransformStatus = 'pending' | 'ready' | 'failed'
 
+export type ShowroomImageVariant = 'thumbnail' | 'card' | 'display' | 'large'
+export type ShowroomImageTransformStatus = 'ready' | 'skipped' | 'failed'
+
 export type ContentAssetUsageContext =
   | 'blog_post'
   | 'blog_block'
@@ -317,6 +320,114 @@ export interface Database {
           display_order?: number
           created_at?: string
         }
+      }
+      image_sources: {
+        Row: {
+          id: string
+          source_bucket: string
+          source_object_path: string
+          source_url: string
+          source_mime_type: string
+          source_size_bytes: number
+          source_width: number
+          source_height: number
+          source_checksum_sha256: string
+          created_at: string
+          updated_at: string
+          last_verified_at: string
+        }
+        Insert: {
+          id?: string
+          source_bucket: string
+          source_object_path: string
+          source_url: string
+          source_mime_type: string
+          source_size_bytes: number
+          source_width: number
+          source_height: number
+          source_checksum_sha256: string
+          created_at?: string
+          updated_at?: string
+          last_verified_at?: string
+        }
+        Update: {
+          id?: string
+          source_bucket?: string
+          source_object_path?: string
+          source_url?: string
+          source_mime_type?: string
+          source_size_bytes?: number
+          source_width?: number
+          source_height?: number
+          source_checksum_sha256?: string
+          created_at?: string
+          updated_at?: string
+          last_verified_at?: string
+        }
+        Relationships: []
+      }
+      image_derivatives: {
+        Row: {
+          id: string
+          source_id: string
+          variant: ShowroomImageVariant
+          recipe_version: number
+          target_width: number
+          transform_status: ShowroomImageTransformStatus
+          skip_reason: string | null
+          derivative_bucket: string | null
+          derivative_object_path: string | null
+          public_url: string | null
+          mime_type: string | null
+          width: number | null
+          height: number | null
+          size_bytes: number | null
+          checksum_sha256: string | null
+          transform_error: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          source_id: string
+          variant: ShowroomImageVariant
+          recipe_version: number
+          target_width: number
+          transform_status: ShowroomImageTransformStatus
+          skip_reason?: string | null
+          derivative_bucket?: string | null
+          derivative_object_path?: string | null
+          public_url?: string | null
+          mime_type?: string | null
+          width?: number | null
+          height?: number | null
+          size_bytes?: number | null
+          checksum_sha256?: string | null
+          transform_error?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          source_id?: string
+          variant?: ShowroomImageVariant
+          recipe_version?: number
+          target_width?: number
+          transform_status?: ShowroomImageTransformStatus
+          skip_reason?: string | null
+          derivative_bucket?: string | null
+          derivative_object_path?: string | null
+          public_url?: string | null
+          mime_type?: string | null
+          width?: number | null
+          height?: number | null
+          size_bytes?: number | null
+          checksum_sha256?: string | null
+          transform_error?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       preview_tokens: {
         Row: {
@@ -807,11 +918,31 @@ export interface Database {
       }
     }
     Functions: {
+      commit_image_derivatives: {
+        Args: {
+          p_source: Json
+          p_derivatives: Json
+        }
+        Returns: string
+      }
       get_preview_payload: {
         Args: {
           p_token: string
         }
         Returns: Json
+      }
+      resolve_preview_image_derivatives: {
+        Args: {
+          p_token: string
+          p_source_urls: string[]
+        }
+        Returns: Array<{
+          source_url: string
+          variant: string
+          public_url: string
+          width: number
+          height: number
+        }>
       }
       register_approved_manuscript: {
         Args: {

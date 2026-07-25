@@ -1,13 +1,24 @@
 'use client'
 
+import Link from 'next/link'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
-import Image from 'next/image'
-import { useEffect, useRef, useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { requestShowroomScrollReset } from '@/components/customer/ScrollRestorer'
+import ShowroomImage from '@/components/showroom/ShowroomImage'
+import {
+  resolveShowroomImageUrl,
+  type ShowroomImageSource,
+} from '@/lib/showroom/image-sources'
 import styles from './ImageLightbox.module.css'
 
 interface Photo {
+  id?: string
   image_url: string
+  image_source?: ShowroomImageSource
   caption: string | null
+  option_name?: string
+  option_href?: string
+  option_breadcrumb?: string[]
 }
 
 interface ImageLightboxProps {
@@ -16,6 +27,12 @@ interface ImageLightboxProps {
   isOpen: boolean
   onClose: () => void
   onIndexChange: (index: number) => void
+}
+
+function focusableElements(container: HTMLElement) {
+  return Array.from(container.querySelectorAll<HTMLElement>(
+    'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+  )).filter(element => !element.hasAttribute('disabled'))
 }
 
 export default function ImageLightbox({
@@ -27,46 +44,44 @@ export default function ImageLightbox({
 }: ImageLightboxProps) {
   const touchStartX = useRef(0)
   const touchEndX = useRef(0)
+  const dialogRef = useRef<HTMLDivElement | null>(null)
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null)
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null)
+  const scrollPositionRef = useRef(0)
+  const isNavigatingToOptionRef = useRef(false)
   const [swipeOffset, setSwipeOffset] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
   const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null)
-  const [imgLoaded, setImgLoaded] = useState(false)
+  const [loadedPhotoKey, setLoadedPhotoKey] = useState<string | null>(null)
 
   const total = photos.length
+  const currentPhotoKey = photos[currentIndex]?.id ?? String(currentIndex)
+  const imgLoaded = loadedPhotoKey === currentPhotoKey
 
-  // 사진 변경 시 로드 상태 리셋
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setImgLoaded(false)
-  }, [currentIndex])
-
-  // 슬라이드 애니메이션 종료 후 클래스 제거
-  useEffect(() => {
-    if (slideDirection) {
-      const timer = setTimeout(() => setSlideDirection(null), 350)
-      return () => clearTimeout(timer)
-    }
+    if (!slideDirection) return
+    const timer = setTimeout(() => setSlideDirection(null), 250)
+    return () => clearTimeout(timer)
   }, [slideDirection])
 
-  // 인접 사진 프리로드 (Next.js 최적화 URL 기반)
   useEffect(() => {
     if (!isOpen) return
     const links: HTMLLinkElement[] = []
 
-    const preload = (src: string) => {
-      const nextUrl = `/_next/image?url=${encodeURIComponent(src)}&w=1080&q=85`
+    const preload = (photo: Photo) => {
+      const src = resolveShowroomImageUrl(photo.image_source ?? photo.image_url, 'large')
       const link = document.createElement('link')
       link.rel = 'prefetch'
       link.as = 'image'
-      link.href = nextUrl
+      link.href = src
       document.head.appendChild(link)
       links.push(link)
     }
 
-    if (currentIndex > 0) preload(photos[currentIndex - 1].image_url)
-    if (currentIndex < total - 1) preload(photos[currentIndex + 1].image_url)
+    if (currentIndex > 0) preload(photos[currentIndex - 1])
+    if (currentIndex < total - 1) preload(photos[currentIndex + 1])
 
-    return () => { links.forEach(l => l.remove()) }
+    return () => links.forEach(link => link.remove())
   }, [isOpen, currentIndex, photos, total])
 
   const goToPrev = useCallback(() => {
@@ -74,7 +89,7 @@ export default function ImageLightbox({
       setIsAnimating(true)
       setSlideDirection('right')
       onIndexChange(currentIndex - 1)
-      setTimeout(() => setIsAnimating(false), 350)
+      setTimeout(() => setIsAnimating(false), 250)
     }
   }, [currentIndex, isAnimating, onIndexChange])
 
@@ -83,60 +98,90 @@ export default function ImageLightbox({
       setIsAnimating(true)
       setSlideDirection('left')
       onIndexChange(currentIndex + 1)
-      setTimeout(() => setIsAnimating(false), 350)
+      setTimeout(() => setIsAnimating(false), 250)
     }
   }, [currentIndex, total, isAnimating, onIndexChange])
 
-  // 키보드 네비게이션
   useEffect(() => {
     if (!isOpen) return
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-      if (e.key === 'ArrowLeft') goToPrev()
-      if (e.key === 'ArrowRight') goToNext()
+    const previousOverflow = document.body.style.overflow
+    previouslyFocusedRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null
+    scrollPositionRef.current = window.scrollY
+    document.body.style.overflow = 'hidden'
+    const focusFrame = window.requestAnimationFrame(() => closeButtonRef.current?.focus())
+
+    return () => {
+      window.cancelAnimationFrame(focusFrame)
+      document.body.style.overflow = previousOverflow
+      if (!isNavigatingToOptionRef.current) {
+        window.scrollTo(0, scrollPositionRef.current)
+        window.requestAnimationFrame(() => previouslyFocusedRef.current?.focus({ preventScroll: true }))
+      }
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        onClose()
+      }
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        goToPrev()
+      }
+      if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        goToNext()
+      }
+      if (event.key !== 'Tab') return
+
+      const dialog = dialogRef.current
+      if (!dialog) return
+      const focusable = focusableElements(dialog)
+      if (focusable.length === 0) {
+        event.preventDefault()
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose, goToPrev, goToNext])
 
-  // 스크롤 잠금
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen])
-
-  // 터치 스와이프
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX
-    touchEndX.current = e.touches[0].clientX
+  const handleTouchStart = (event: React.TouchEvent) => {
+    touchStartX.current = event.touches[0].clientX
+    touchEndX.current = event.touches[0].clientX
     setSwipeOffset(0)
   }
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX
-    const diff = touchEndX.current - touchStartX.current
-    const atStart = currentIndex === 0 && diff > 0
-    const atEnd = currentIndex === total - 1 && diff < 0
-    setSwipeOffset(atStart || atEnd ? diff * 0.3 : diff)
+  const handleTouchMove = (event: React.TouchEvent) => {
+    touchEndX.current = event.touches[0].clientX
+    const difference = touchEndX.current - touchStartX.current
+    const atStart = currentIndex === 0 && difference > 0
+    const atEnd = currentIndex === total - 1 && difference < 0
+    setSwipeOffset(atStart || atEnd ? difference * 0.3 : difference)
   }
 
   const handleTouchEnd = () => {
-    const diff = touchEndX.current - touchStartX.current
-    const threshold = 60
-
-    if (diff > threshold) {
-      goToPrev()
-    } else if (diff < -threshold) {
-      goToNext()
-    }
+    const difference = touchEndX.current - touchStartX.current
+    if (difference > 60) goToPrev()
+    if (difference < -60) goToNext()
     setSwipeOffset(0)
   }
 
@@ -145,83 +190,115 @@ export default function ImageLightbox({
   const currentPhoto = photos[currentIndex]
   if (!currentPhoto) return null
 
-  // 슬라이드 애니메이션 클래스 결정
   const slideClass = slideDirection === 'left'
     ? styles.slideFromRight
     : slideDirection === 'right'
       ? styles.slideFromLeft
       : ''
+  const photoLabel = currentPhoto.option_name ?? currentPhoto.caption ?? `시공사진 ${currentIndex + 1}`
+  const optionBreadcrumb = currentPhoto.option_breadcrumb?.filter(Boolean).join(' › ')
 
   return (
     <div
       className={styles.overlay}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onClick={onClose}
+      onClick={event => {
+        if (event.target === event.currentTarget) onClose()
+      }}
     >
-      {/* 닫기 버튼 */}
-      <button className={styles.closeButton} onClick={onClose} aria-label="닫기">
-        <X size={24} />
-      </button>
-
-      {/* 이미지 영역 */}
       <div
-        className={`${styles.imageContainer} ${slideClass}`}
-        style={{
-          transform: swipeOffset !== 0 ? `translateX(${swipeOffset}px)` : undefined,
-          transition: swipeOffset === 0 ? undefined : 'none',
-        }}
-        onClick={(e) => e.stopPropagation()}
+        className={styles.dialog}
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${photoLabel} 크게 보기`}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
-        <Image
-          key={currentIndex}
-          src={currentPhoto.image_url}
-          alt={currentPhoto.caption || `시공 사진 ${currentIndex + 1}`}
-          fill
-          quality={85}
-          sizes="100vw"
-          className={`${styles.image} ${imgLoaded ? styles.imageLoaded : ''}`}
-          onLoad={() => setImgLoaded(true)}
-        />
-      </div>
-
-      {/* 좌우 화살표 (모바일 + 데스크톱 모두 표시) */}
-      {currentIndex > 0 && (
         <button
-          className={`${styles.navButton} ${styles.prevButton}`}
-          onClick={(e) => {
-            e.stopPropagation()
-            goToPrev()
-          }}
-          aria-label="이전 사진"
+          className={styles.closeButton}
+          type="button"
+          onClick={onClose}
+          aria-label="닫기"
+          ref={closeButtonRef}
         >
-          <ChevronLeft size={24} />
+          <X size={24} />
         </button>
-      )}
-      {currentIndex < total - 1 && (
-        <button
-          className={`${styles.navButton} ${styles.nextButton}`}
-          onClick={(e) => {
-            e.stopPropagation()
-            goToNext()
-          }}
-          aria-label="다음 사진"
-        >
-          <ChevronRight size={24} />
-        </button>
-      )}
 
-      {/* 하단 인디케이터 + 캡션 */}
-      <div className={styles.bottomInfo} onClick={(e) => e.stopPropagation()}>
-        {currentPhoto.caption && (
-          <p className={styles.caption}>{currentPhoto.caption}</p>
+        <div
+          className={`${styles.imageContainer} ${slideClass}`}
+          style={{
+            transform: swipeOffset !== 0 ? `translateX(${swipeOffset}px)` : undefined,
+            transition: swipeOffset === 0 ? undefined : 'none',
+          }}
+        >
+          <ShowroomImage
+            key={currentPhotoKey}
+            source={currentPhoto.image_source ?? currentPhoto.image_url}
+            purpose="large"
+            alt={photoLabel}
+            fill
+            sizes="100vw"
+            className={`${styles.image} ${imgLoaded ? styles.imageLoaded : ''}`}
+            onLoad={() => setLoadedPhotoKey(currentPhotoKey)}
+          />
+        </div>
+
+        {currentIndex > 0 && (
+          <button
+            className={`${styles.navButton} ${styles.prevButton}`}
+            type="button"
+            onClick={goToPrev}
+            aria-label="이전 사진"
+          >
+            <ChevronLeft size={24} />
+          </button>
         )}
-        {total > 1 && (
-          <span className={styles.counter}>
-            {currentIndex + 1} / {total}
-          </span>
+        {currentIndex < total - 1 && (
+          <button
+            className={`${styles.navButton} ${styles.nextButton}`}
+            type="button"
+            onClick={goToNext}
+            aria-label="다음 사진"
+          >
+            <ChevronRight size={24} />
+          </button>
         )}
+
+        <div className={styles.bottomInfo}>
+          <p className={styles.caption}>{photoLabel}</p>
+          {optionBreadcrumb && (
+            <p className={styles.optionBreadcrumb} title={optionBreadcrumb}>
+              {optionBreadcrumb}
+            </p>
+          )}
+          {currentPhoto.option_href && (
+            <Link
+              className={styles.optionLink}
+              href={currentPhoto.option_href}
+              scroll={false}
+              onClick={event => {
+                if (
+                  event.button !== 0
+                  || event.metaKey
+                  || event.ctrlKey
+                  || event.shiftKey
+                  || event.altKey
+                ) return
+
+                isNavigatingToOptionRef.current = true
+                requestShowroomScrollReset(currentPhoto.option_href!)
+              }}
+            >
+              이 옵션 보기
+            </Link>
+          )}
+          {total > 1 && (
+            <span className={styles.counter}>
+              {currentIndex + 1} / {total}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   )

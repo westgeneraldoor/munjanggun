@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import {
   ChevronDown,
   ChevronUp,
@@ -14,6 +13,10 @@ import {
   Trash2,
 } from 'lucide-react'
 import { createShowroomClient } from '@/lib/supabase/client'
+import ShowroomImage from '@/components/showroom/ShowroomImage'
+import { resolveAdminShowroomImageSources } from '@/app/admin/nodes/image-actions'
+import { refreshShowroomCatalogCache } from '@/app/admin/nodes/catalog-revalidation'
+import type { ShowroomImageSourceMap } from '@/lib/showroom/image-sources'
 import { logError } from '@/lib/logger'
 import ConfirmModal from '@/components/admin/ConfirmModal'
 import NodeAddModal from '@/components/admin/NodeAddModal'
@@ -68,6 +71,7 @@ function readSessionNavigation(): { parentId: string | null; breadcrumb: Breadcr
 export default function NodeList() {
   const [currentParentId, setCurrentParentId] = useState<string | null>(null)
   const [nodes, setNodes] = useState<Node[]>([])
+  const [imageSources, setImageSources] = useState<ShowroomImageSourceMap>({})
   const [breadcrumb, setBreadcrumb] = useState<BreadcrumbItem[]>([])
   const [isSessionRestored, setIsSessionRestored] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -123,6 +127,7 @@ export default function NodeList() {
     setIsLoading(true)
     setLoadError(null)
     setNodes([])
+    setImageSources({})
 
     try {
       let query = supabase
@@ -137,8 +142,16 @@ export default function NodeList() {
 
       const { data, error } = await query
       if (error) throw error
+      const nextNodes = (data ?? []) as Node[]
       if (requestId !== fetchRequestRef.current) return
-      setNodes((data ?? []) as Node[])
+      setNodes(nextNodes)
+      void resolveAdminShowroomImageSources(
+        nextNodes.flatMap(node => node.image_url ? [node.image_url] : []),
+      ).then(nextImageSources => {
+        if (requestId === fetchRequestRef.current) setImageSources(nextImageSources)
+      }).catch(error => {
+        logError('노드 이미지 파생본 조회 실패:', error)
+      })
     } catch (error) {
       if (requestId !== fetchRequestRef.current) return
       logError('노드 로딩 실패:', error)
@@ -193,6 +206,7 @@ export default function NodeList() {
         .maybeSingle()
       if (error) throw error
       if (!data) throw new Error('status update affected no rows')
+      await refreshShowroomCatalogCache()
       router.refresh()
     } catch (error) {
       logError('상태 변경 실패:', error)
@@ -226,6 +240,7 @@ export default function NodeList() {
       })
       if (error) throw error
       if (data !== updated.length) throw new Error('node reorder affected an unexpected row count')
+      await refreshShowroomCatalogCache()
     } catch (error) {
       logError('순서 변경 실패:', error)
       if (currentParentRef.current === parentAtStart) {
@@ -255,6 +270,7 @@ export default function NodeList() {
         .maybeSingle()
       if (error) throw error
       if (!data) throw new Error('node delete affected no rows')
+      await refreshShowroomCatalogCache()
       await fetchNodes(currentParentId)
       setIsDeleteModalOpen(false)
       setDeletingNode(null)
@@ -416,7 +432,14 @@ export default function NodeList() {
               </div>
 
               {node.image_url ? (
-                <Image className={styles.thumbnail} src={node.image_url} alt={`${node.name} 대표 이미지`} width={48} height={48} />
+                <ShowroomImage
+                  className={styles.thumbnail}
+                  source={imageSources[node.image_url] ?? node.image_url}
+                  purpose="thumbnail"
+                  alt={`${node.name} 대표 이미지`}
+                  width={48}
+                  height={48}
+                />
               ) : (
                 <div className={styles.thumbnailPlaceholder} aria-hidden="true">
                   <ImageIcon />

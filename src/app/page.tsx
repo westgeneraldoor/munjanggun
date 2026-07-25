@@ -1,13 +1,19 @@
 import { Metadata } from 'next'
-import { hasPublicShowroomEnv } from '@/lib/supabase/public'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicShowroomClient, hasPublicShowroomEnv } from '@/lib/supabase/public'
 import NodeCard from '@/components/customer/NodeCard'
 import HomeHeroV2 from '@/components/customer/HomeHeroV2'
 import { getOptimalCols } from '@/lib/grid-utils'
 import CTABar from '@/components/customer/CTABar'
 import ScrollRestorer from '@/components/customer/ScrollRestorer'
 import ScrollAnimationWrapper from '@/components/customer/ScrollAnimationWrapper'
+import DescendantGallery from '@/components/customer/DescendantGallery'
 import { EMPTY_STATE_TITLE, EMPTY_STATE_SUBTITLE } from '@/lib/constants'
+import { loadShowroomImageSources } from '@/lib/showroom/image-sources'
+import { logError } from '@/lib/logger'
+import {
+  ROOT_DESCENDANT_GALLERY_ID,
+  loadRenderableRootDescendantGalleryPage,
+} from '@/lib/showroom/descendant-gallery-data'
 import styles from './page.module.css'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -18,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
     }
   }
 
-  const supabase = await createClient()
+  const supabase = createPublicShowroomClient()
   const showroomDb = supabase.schema('showroom')
 
   const { data: siteSettings } = await showroomDb
@@ -33,7 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export const revalidate = 0
+export const revalidate = 60
 
 export default async function Home() {
   if (!hasPublicShowroomEnv()) {
@@ -46,13 +52,17 @@ export default async function Home() {
           </div>
         </div>
 
-        <CTABar reservationUrl={null} storeUrl={null} />
+        <CTABar storeUrl={null} />
       </main>
     )
   }
 
-  const supabase = await createClient()
+  const supabase = createPublicShowroomClient()
   const showroomDb = supabase.schema('showroom')
+  const rootGalleryResult = loadRenderableRootDescendantGalleryPage().catch(error => {
+    logError('Failed to load the root showroom gallery.', error)
+    return null
+  })
 
   // Fetch site settings
   const { data: siteSettings } = await showroomDb
@@ -60,12 +70,6 @@ export default async function Home() {
     .select('*')
     .eq('id', 'singleton')
     .single()
-
-  // Fetch site hero media
-  const { data: siteHeroMedia } = await showroomDb
-    .from('site_hero_media')
-    .select('*')
-    .order('display_order', { ascending: true })
 
   // Fetch published root nodes
   const { data: rootNodes } = await showroomDb
@@ -75,7 +79,17 @@ export default async function Home() {
     .eq('status', 'published')
     .order('display_order')
 
-  const heroHasContent = (siteHeroMedia && siteHeroMedia.length > 0) || siteSettings?.hero_video_url || siteSettings?.hero_mobile_video_url || siteSettings?.hero_title || siteSettings?.hero_subtitle || siteSettings?.hero_description
+  const imageSources = await loadShowroomImageSources(supabase, [
+    ...(rootNodes ?? []).map(node => node.image_url),
+  ])
+  const rootNodesWithSources = (rootNodes ?? []).map(node => ({
+    ...node,
+    image_source: node.image_url ? imageSources[node.image_url] : undefined,
+  }))
+  const rootGallery = await rootGalleryResult
+  const rootGalleryDescription = '문 하나가 공간의 첫인상을 바꾸는 순간들. 문장군이 완성한 실제 현장을 천천히 둘러보세요.'
+
+  const heroHasContent = Boolean(siteSettings?.hero_title || siteSettings?.hero_subtitle || siteSettings?.hero_description)
 
   return (
     <main className={styles.main}>
@@ -84,15 +98,13 @@ export default async function Home() {
       {siteSettings?.hero_enabled && heroHasContent && (
         <HomeHeroV2
           settings={siteSettings}
-          desktopMedia={siteHeroMedia?.filter(m => m.device_type === 'desktop' && m.media_type === 'image') || []}
-          mobileMedia={siteHeroMedia?.filter(m => m.device_type === 'mobile' && m.media_type === 'image') || []}
         />
       )}
 
       <div className={styles.content}>
-        {(rootNodes || []).length > 0 ? (
-          <div className={styles.nodeGrid} data-cols={getOptimalCols(rootNodes?.length || 0)}>
-            {(rootNodes || []).map((node, idx) => (
+        {rootNodesWithSources.length > 0 ? (
+          <div className={styles.nodeGrid} data-cols={getOptimalCols(rootNodesWithSources.length)}>
+            {rootNodesWithSources.map((node, idx) => (
               <ScrollAnimationWrapper key={node.id} delay={idx * 150}>
                 <NodeCard 
                   node={node} 
@@ -107,10 +119,21 @@ export default async function Home() {
             <p className={styles.emptySubtext}>{EMPTY_STATE_SUBTITLE}</p>
           </div>
         )}
+        {rootGallery && rootGallery.total > 0 && (
+          <DescendantGallery
+            key={ROOT_DESCENDANT_GALLERY_ID}
+            nodeId={ROOT_DESCENDANT_GALLERY_ID}
+            galleryScope="root"
+            description={rootGalleryDescription}
+            initialItems={rootGallery.items}
+            initialNextOffset={rootGallery.nextOffset}
+            initialHasMore={rootGallery.hasMore}
+            initialSnapshot={rootGallery.snapshot}
+          />
+        )}
       </div>
 
       <CTABar
-        reservationUrl={siteSettings?.reservation_url || null}
         storeUrl={siteSettings?.store_url || null}
       />
     </main>

@@ -7,6 +7,10 @@ import { logError } from '@/lib/logger'
 import { generateSlug, validateSlug } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/types/database'
+import type {
+  ShowroomImageSource,
+  ShowroomImageSourceMap,
+} from '@/lib/showroom/image-sources'
 import {
   PlatformButton,
   PlatformField,
@@ -20,6 +24,7 @@ import HeroConfigurator, { type HeroMedia } from './HeroConfigurator'
 import GalleryManager, { type GalleryPhoto } from './GalleryManager'
 import styles from './NodeForm.module.css'
 import { useUploadPendingTracker } from './useUploadPendingTracker'
+import { refreshShowroomCatalogCache } from '@/app/admin/nodes/catalog-revalidation'
 
 type NodeRow = Database['showroom']['Tables']['nodes']['Row']
 type HeroMediaRow = Database['showroom']['Tables']['hero_media']['Row']
@@ -42,6 +47,7 @@ interface NodeFormProps {
   heroMedia: HeroMediaRow[]
   galleryPhotos: GalleryPhotoRow[]
   childCount: number
+  initialImageSources: ShowroomImageSourceMap
 }
 
 const CARD_POSITION_OPTIONS = [
@@ -64,6 +70,7 @@ export default function NodeForm({
   heroMedia: initialHeroMedia,
   galleryPhotos: initialGalleryPhotos,
   childCount,
+  initialImageSources,
 }: NodeFormProps) {
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
@@ -74,6 +81,7 @@ export default function NodeForm({
   const [status, setStatus] = useState<'draft' | 'published'>(node.status as 'draft' | 'published')
   const [type, setType] = useState<'listing' | 'detail'>(node.type as 'listing' | 'detail')
   const [imageUrl, setImageUrl] = useState<string | null>(node.image_url)
+  const [imageSources, setImageSources] = useState(initialImageSources)
   const [heroEnabled, setHeroEnabled] = useState(node.hero_enabled)
   const [heroVideoUrl, setHeroVideoUrl] = useState(node.hero_video_url || '')
   const [heroMobileVideoUrl, setHeroMobileVideoUrl] = useState(node.hero_mobile_video_url || '')
@@ -132,6 +140,10 @@ export default function NodeForm({
     clearSaveFeedback()
     setGalleryPhotos(previous => typeof update === 'function' ? update(previous) : update)
   }, [clearSaveFeedback])
+
+  const handleImageSourceReady = useCallback((source: ShowroomImageSource) => {
+    setImageSources(previous => ({ ...previous, [source.originalUrl]: source }))
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -283,6 +295,7 @@ export default function NodeForm({
       })
 
       if (saveError) throw new Error(saveError.message)
+      await refreshShowroomCatalogCache()
       setSuccess(true)
       router.refresh()
     } catch (err: unknown) {
@@ -372,6 +385,8 @@ export default function NodeForm({
           folderPath={`nodes/${slug || 'temp'}`}
           onUploadComplete={url => { clearSaveFeedback(); setImageUrl(url) }}
           currentImageUrl={imageUrl || undefined}
+          currentImageSource={imageUrl ? imageSources[imageUrl] : undefined}
+          onImageSourceReady={handleImageSourceReady}
           onDelete={() => { clearSaveFeedback(); setImageUrl(null) }}
           compressionMaxDimension={1600}
           compressionQuality={0.8}
@@ -405,6 +420,8 @@ export default function NodeForm({
                 onVideoUrlChange={value => { clearSaveFeedback(); setHeroVideoUrl(value) }}
                 onMobileVideoUrlChange={value => { clearSaveFeedback(); setHeroMobileVideoUrl(value) }}
                 onUploadStateChange={onUploadStateChange}
+                imageSources={imageSources}
+                onImageSourceReady={handleImageSourceReady}
                 disabled={isLoading || hasPendingUploads}
               />
               <PlatformField
@@ -488,6 +505,8 @@ export default function NodeForm({
               onPhotosChange={handleGalleryPhotosChange}
               nodeSlug={slug}
               onUploadStateChange={onUploadStateChange}
+              imageSources={imageSources}
+              onImageSourceReady={handleImageSourceReady}
               disabled={isLoading || hasPendingUploads}
             />
           </div>

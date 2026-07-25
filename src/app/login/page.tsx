@@ -2,10 +2,11 @@
 
 import React, { use, useState } from 'react'
 import Link from 'next/link'
-import { Mail, MessageCircle, X } from 'lucide-react'
+import { ArrowLeft, Mail, MessageCircle } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import MunjanggunWordmark from '@/app/blog/BlogBrandWordmark'
 import { logError } from '@/lib/logger'
+import { getSafeInternalPath } from '@/lib/safe-internal-path'
 import styles from './login.module.css'
 
 type Step = 'main' | 'email_input' | 'otp_input'
@@ -40,9 +41,20 @@ export default function LoginPage({ searchParams }: PageProps) {
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   const requestedNext = typeof resolvedParams.next === 'string' ? resolvedParams.next : '/portal'
-  const nextParam = requestedNext.startsWith('/') && !requestedNext.startsWith('//')
-    ? requestedNext
-    : '/portal'
+  const nextParam = getSafeInternalPath(requestedNext)
+  const parsedNext = new URL(nextParam, 'https://munjanggun.local')
+  const isMeasurePath = parsedNext.pathname === '/portal/measure/new'
+  const isMeasureExplainerReturn = parsedNext.pathname === '/measure'
+  const isBlogQuestionReturn = isMeasurePath && parsedNext.searchParams.get('source') === 'blog-question'
+  const requestedPost = parsedNext.searchParams.get('post')
+  const safePost = requestedPost && /^[a-z0-9][a-z0-9-]{0,119}$/i.test(requestedPost) ? requestedPost : null
+  const isMeasureReturn = (isMeasurePath && !isBlogQuestionReturn) || isMeasureExplainerReturn
+  const isBlogReturn = isBlogQuestionReturn || parsedNext.pathname === '/blog' || parsedNext.pathname.startsWith('/blog/')
+  const returnContext = isMeasureReturn
+    ? { href: '/measure', label: '실측견적 안내로 돌아가기' }
+    : isBlogReturn
+      ? { href: isBlogQuestionReturn && safePost ? `/blog/${encodeURIComponent(safePost)}` : '/blog', label: isBlogQuestionReturn ? '블로그 글로 돌아가기' : '문장군 블로그로 돌아가기' }
+      : { href: '/', label: '문장군 홈으로 돌아가기' }
 
   const handleKakaoLogin = async () => {
     setLoading(true)
@@ -140,16 +152,17 @@ export default function LoginPage({ searchParams }: PageProps) {
   return (
     <div className={styles.container} data-mg-theme="portal">
       <div className={styles.card}>
-        <Link href="/blog" className={styles.closeLink} aria-label="문장군 블로그로 돌아가기">
-          <X size={20} aria-hidden="true" />
+        <Link href={returnContext.href} prefetch={false} className={styles.contextLink}>
+          <ArrowLeft size={18} aria-hidden="true" />
+          {returnContext.label}
         </Link>
         <MunjanggunWordmark label="MY" className={styles.wordmark} />
 
         {step === 'main' && (
           <>
-            <h1 className={styles.title}>문장군에 오신 것을 환영합니다</h1>
+            <h1 className={styles.title}>{isMeasureReturn ? '무료방문 실측견적 신청을 이어갈게요' : '문장군에 오신 것을 환영합니다'}</h1>
             <p className={styles.description}>
-              로그인하시면 무료방문견적 신청, 견적 확인, AS 접수 등 모든 서비스를 이용할 수 있습니다.
+              로그인하시면 무료방문 실측견적 신청, 견적 확인, A/S 접수 등 모든 서비스를 이용할 수 있습니다.
             </p>
 
             <div className={styles.reassurance}>
@@ -165,7 +178,7 @@ export default function LoginPage({ searchParams }: PageProps) {
                 aria-label="카카오로 로그인"
               >
                 <MessageCircle className={styles.kakaoIcon} size={20} aria-hidden="true" />
-                {loading ? '카카오 연결 중...' : '카카오로 10초 만에 시작'}
+                {loading ? '카카오 연결 중...' : '카카오로 간편하게 시작'}
               </button>
 
               <div className={styles.divider}>

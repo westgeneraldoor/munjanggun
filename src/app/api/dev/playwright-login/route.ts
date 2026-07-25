@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient, User } from '@supabase/supabase-js'
 import { Database } from '@/types/database'
 import { logError } from '@/lib/logger'
+import { getSafeInternalPath } from '@/lib/safe-internal-path'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,9 +51,7 @@ function getLocalRedirectOrigin(request: NextRequest, requestUrl: URL) {
 
 function getSafeNext(rawNext: string | null, role: string) {
   const fallback = role === 'administrator' ? '/admin/platform' : '/portal'
-  if (!rawNext) return fallback
-  if (!rawNext.startsWith('/') || rawNext.startsWith('//')) return fallback
-  return rawNext
+  return getSafeInternalPath(rawNext, fallback)
 }
 
 async function findUserByEmail(email: string) {

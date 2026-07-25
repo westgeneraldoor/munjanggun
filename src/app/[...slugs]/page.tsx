@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
+import ShowroomImage from '@/components/showroom/ShowroomImage'
 import NodeCard from '@/components/customer/NodeCard'
 import NodeHero from '@/components/customer/NodeHero'
 import CTABar from '@/components/customer/CTABar'
@@ -10,14 +10,25 @@ import NodeGallery from '@/components/customer/NodeGallery'
 import ScrollAnimationWrapper from '@/components/customer/ScrollAnimationWrapper'
 import Breadcrumb from '@/components/customer/Breadcrumb'
 import ScrollRestorer from '@/components/customer/ScrollRestorer'
+import DescendantGallery from '@/components/customer/DescendantGallery'
 import { getOptimalCols } from '@/lib/grid-utils'
+import { logError } from '@/lib/logger'
 import { createPublicShowroomClient } from '@/lib/supabase/public'
 import { EMPTY_STATE_TITLE, EMPTY_STATE_SUBTITLE, GALLERY_SECTION_TITLE } from '@/lib/constants'
 import { buildShareDescription } from '@/lib/share'
 import { BreadcrumbItem, NodeRow, resolveSlugChain } from '@/lib/nodes'
+import { loadShowroomImageSources } from '@/lib/showroom/image-sources'
+import {
+  decorateDescendantGalleryItems,
+  loadDescendantGalleryPage,
+} from '@/lib/showroom/descendant-gallery-data'
 import styles from './page.module.css'
 
 export const revalidate = 60
+// Public showroom documents have no viewer-specific state. Rendering them as
+// ISR keeps the Vercel origin cacheable for the apex proxy while protected
+// routes continue to use their own dynamic boundaries.
+export const dynamic = 'force-static'
 
 export async function generateMetadata(
   props: { params: Promise<{ slugs: string[] }> }
@@ -67,9 +78,14 @@ export default async function CatchAllPage(
 }
 
 async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow; slugPath: string[]; breadcrumbItems: BreadcrumbItem[] }) {
-  const showroomDb = createPublicShowroomClient().schema('showroom')
+  const supabase = createPublicShowroomClient()
+  const showroomDb = supabase.schema('showroom')
+  const descendantGalleryResult = loadDescendantGalleryPage(node.id).catch(error => {
+    logError('Failed to load the descendant showroom gallery.', error)
+    return null
+  })
 
-  const [heroMediaResult, childrenResult, settingsResult] = await Promise.all([
+  const [heroMediaResult, childrenResult, settingsResult, descendantGallery] = await Promise.all([
     showroomDb
       .from('hero_media')
       .select('*')
@@ -86,11 +102,28 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
       .select('reservation_url, store_url')
       .eq('id', 'singleton')
       .single(),
+    descendantGalleryResult,
   ])
 
   const heroMedia = heroMediaResult.data
   const children = childrenResult.data
   const settings = settingsResult.data
+  const imageSources = await loadShowroomImageSources(supabase, [
+    ...(heroMedia ?? []).map(media => media.image_url),
+    ...(children ?? []).map(child => child.image_url),
+    ...(descendantGallery?.items ?? []).map(item => item.imageUrl),
+  ])
+  const heroMediaWithSources = (heroMedia ?? []).map(media => ({
+    ...media,
+    image_source: imageSources[media.image_url],
+  }))
+  const childrenWithSources = (children ?? []).map(child => ({
+    ...child,
+    image_source: child.image_url ? imageSources[child.image_url] : undefined,
+  }))
+  const descendantGalleryItems = descendantGallery
+    ? decorateDescendantGalleryItems(descendantGallery.items, imageSources)
+    : []
 
   const basePath = '/' + slugPath.join('/')
   const heroHasContent = (heroMedia && heroMedia.length > 0) || node.hero_video_url || node.hero_mobile_video_url || node.hero_title || node.hero_subtitle || node.hero_description
@@ -102,8 +135,8 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
       {/* 히어로 (있으면) */}
       {node.hero_enabled && heroHasContent && (
         <NodeHero 
-          desktopMedia={heroMedia?.filter(m => m.device_type === 'desktop' && m.media_type === 'image') || []}
-          mobileMedia={heroMedia?.filter(m => m.device_type === 'mobile' && m.media_type === 'image') || []}
+          desktopMedia={heroMediaWithSources.filter(m => m.device_type === 'desktop' && m.media_type === 'image')}
+          mobileMedia={heroMediaWithSources.filter(m => m.device_type === 'mobile' && m.media_type === 'image')}
           title={node.hero_title || node.name} 
           subtitle={node.hero_subtitle} 
           description={node.hero_description} 
@@ -132,9 +165,9 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
         )}
         
         {/* 자식 카드 그리드 */}
-        {children && children.length > 0 ? (
-          <div className={styles.nodeGrid} data-cols={getOptimalCols(children.length)}>
-            {children.map((child, idx) => (
+        {childrenWithSources.length > 0 ? (
+          <div className={styles.nodeGrid} data-cols={getOptimalCols(childrenWithSources.length)}>
+            {childrenWithSources.map((child, idx) => (
               <ScrollAnimationWrapper key={child.id} delay={Math.min(idx * 40, 160)}>
                 <NodeCard 
                   node={child} 
@@ -150,10 +183,20 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
             <p className={styles.emptySubtext}>{EMPTY_STATE_SUBTITLE}</p>
           </div>
         )}
+        {descendantGallery && descendantGallery.total > 0 && (
+          <DescendantGallery
+            key={node.id}
+            nodeId={node.id}
+            description={`${node.name}이 공간에 놓였을 때의 표정. 실제 현장에서 완성된 소재와 비율을 살펴보세요.`}
+            initialItems={descendantGalleryItems}
+            initialNextOffset={descendantGallery.nextOffset}
+            initialHasMore={descendantGallery.hasMore}
+            initialSnapshot={descendantGallery.snapshot}
+          />
+        )}
       </div>
       
       <CTABar
-        reservationUrl={settings?.reservation_url || null}
         storeUrl={settings?.store_url || null}
       />
     </main>
@@ -161,7 +204,8 @@ async function ListingPage({ node, slugPath, breadcrumbItems }: { node: NodeRow;
 }
 
 async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumbItems: BreadcrumbItem[] }) {
-  const showroomDb = createPublicShowroomClient().schema('showroom')
+  const supabase = createPublicShowroomClient()
+  const showroomDb = supabase.schema('showroom')
 
   const [photosResult, settingsResult] = await Promise.all([
     showroomDb
@@ -178,6 +222,15 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
 
   const photos = photosResult.data
   const settings = settingsResult.data
+  const imageSources = await loadShowroomImageSources(supabase, [
+    node.image_url,
+    ...(photos ?? []).map(photo => photo.image_url),
+  ])
+  const nodeImageSource = node.image_url ? imageSources[node.image_url] : undefined
+  const photosWithSources = (photos ?? []).map(photo => ({
+    ...photo,
+    image_source: imageSources[photo.image_url],
+  }))
 
   return (
     <main className={styles.main}>
@@ -186,8 +239,9 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
       <div className={styles.mobileHero}>
         {node.image_url && (
           <div className={styles.mobileDetailImageWrap}>
-            <Image
-              src={node.image_url}
+            <ShowroomImage
+              source={nodeImageSource ?? node.image_url}
+              purpose="display"
               alt={node.name}
               fill
               className={styles.mobileDetailImage}
@@ -202,14 +256,17 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
         {/* 데스크탑 좌측 이미지 */}
         <div className={styles.splitLeft}>
           {node.image_url && (
-            <Image
-              src={node.image_url}
-              alt={node.name}
-              fill
-              className={styles.splitImage}
-              sizes="(min-width: 768px) 50vw, 100vw"
-              priority
-            />
+            <div className={styles.splitImageFrame}>
+              <ShowroomImage
+                source={nodeImageSource ?? node.image_url}
+                purpose="display"
+                alt={node.name}
+                fill
+                className={styles.splitImage}
+                sizes="(min-width: 768px) 50vw, 100vw"
+                priority
+              />
+            </div>
           )}
         </div>
 
@@ -222,13 +279,13 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
           <NodeInfo node={node} />
           
           {/* 갤러리 */}
-          {photos && photos.length > 0 && (
+          {photosWithSources.length > 0 && (
             <div className={styles.gallerySection}>
               <ScrollAnimationWrapper delay={0}>
                 <hr className={styles.galleryDivider} />
                 <h2 className={styles.galleryTitle}>{GALLERY_SECTION_TITLE}</h2>
               </ScrollAnimationWrapper>
-              <NodeGallery photos={photos} nodeName={node.name} />
+              <NodeGallery photos={photosWithSources} nodeName={node.name} />
             </div>
           )}
         </div>
@@ -236,7 +293,6 @@ async function DetailPage({ node, breadcrumbItems }: { node: NodeRow; breadcrumb
       
       <ScrollToTop />
       <CTABar
-        reservationUrl={settings?.reservation_url || null}
         storeUrl={settings?.store_url || null}
       />
     </main>

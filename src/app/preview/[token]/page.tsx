@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
 import { createPublicShowroomClient, hasPublicShowroomEnv } from '@/lib/supabase/public'
 import styles from './preview.module.css'
-import Image from 'next/image'
+import ShowroomImage from '@/components/showroom/ShowroomImage'
+import { loadShowroomImageSources } from '@/lib/showroom/image-sources'
 import type { Database } from '@/types/database'
 
 type NodeRow = Database['showroom']['Tables']['nodes']['Row']
@@ -77,6 +78,11 @@ export default async function PreviewPage(props: PageProps) {
   const heroMedia = previewData.heroMedia ?? []
   const childNodes = previewData.childNodes ?? []
   const galleryPhotos = previewData.galleryPhotos ?? []
+  const imageSources = await loadShowroomImageSources(supabase, [
+    node.image_url,
+    ...heroMedia.map(media => media.image_url),
+    ...galleryPhotos.map(photo => photo.image_url),
+  ], { previewToken: token })
 
   return (
     <main className={styles.main}>
@@ -99,7 +105,13 @@ export default async function PreviewPage(props: PageProps) {
           <div className={styles.coverSection}>
             <h3 className={styles.coverHeading}>대표 이미지</h3>
             <div className={styles.coverFrame}>
-              <Image className={styles.coverImage} src={node.image_url} alt={node.name} fill />
+              <ShowroomImage
+                className={styles.coverImage}
+                source={imageSources[node.image_url] ?? node.image_url}
+                purpose="display"
+                alt={node.name}
+                fill
+              />
             </div>
           </div>
         )}
@@ -113,7 +125,13 @@ export default async function PreviewPage(props: PageProps) {
             <div className={styles.heroGrid}>
               {heroMedia.map(m => (
                 <div key={m.id} className={styles.heroFrame}>
-                  <Image className={styles.gridImage} src={m.image_url} alt="" fill />
+                  <ShowroomImage
+                    className={styles.gridImage}
+                    source={imageSources[m.image_url] ?? m.image_url}
+                    purpose="display"
+                    alt=""
+                    fill
+                  />
                 </div>
               ))}
             </div>
@@ -133,7 +151,13 @@ export default async function PreviewPage(props: PageProps) {
             <div className={styles.galleryGrid}>
               {galleryPhotos.map(p => (
                 <div key={p.id} className={styles.galleryFrame}>
-                  <Image className={styles.gridImage} src={p.image_url} alt={p.caption || ''} fill />
+                  <ShowroomImage
+                    className={styles.gridImage}
+                    source={imageSources[p.image_url] ?? p.image_url}
+                    purpose="display"
+                    alt={p.caption || ''}
+                    fill
+                  />
                 </div>
               ))}
             </div>

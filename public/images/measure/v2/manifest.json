@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "disclosure": "설명용 생성 이미지 · 실제 고객 또는 실제 시공 사례가 아닙니다.",
+  "assets": [
+    { "id": "hero", "aspectRatio": "4:5", "widths": [480, 720, 960], "formats": ["avif", "webp"], "alt": "현관에서 레이저와 줄자로 설치 폭을 확인하는 손" },
+    { "id": "cabinet", "aspectRatio": "3:2", "widths": [640, 960, 1440], "formats": ["avif", "webp"], "alt": "현관문 옆 열린 신발장과 문틀 사이 공간" },
+    { "id": "finish", "aspectRatio": "3:2", "widths": [640, 960, 1440], "formats": ["avif", "webp"], "alt": "현관 벽 스위치와 천장 몰딩을 가리키는 손" },
+    { "id": "level", "aspectRatio": "3:2", "widths": [640, 960, 1440], "formats": ["avif", "webp"], "alt": "현관 바닥 단차를 확인하는 레이저 수평기와 자" },
+    { "id": "photo-guide", "aspectRatio": "3:2", "widths": [640, 960, 1440], "formats": ["avif", "webp"], "alt": "현관 전체가 들어오도록 휴대전화로 사진을 찍는 손" },
+    { "id": "consultation", "aspectRatio": "3:2", "widths": [640, 960, 1440], "formats": ["avif", "webp"], "alt": "중문 구조 도면과 마감 샘플을 함께 살펴보는 상담 장면" }
+  ]
+}

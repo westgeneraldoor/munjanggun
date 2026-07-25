@@ -5,6 +5,10 @@ import { ArrowUp, ArrowDown, Trash2, ChevronDown, ChevronUp } from 'lucide-react
 import ImageUploader from './ImageUploader'
 import styles from './HeroConfigurator.module.css'
 import type { UploadStateChange } from './useUploadPendingTracker'
+import type {
+  ShowroomImageSource,
+  ShowroomImageSourceMap,
+} from '@/lib/showroom/image-sources'
 
 export interface HeroMedia {
   id?: string
@@ -24,6 +28,8 @@ interface HeroConfiguratorProps {
   onMobileVideoUrlChange?: (url: string) => void
   onUploadStateChange?: UploadStateChange
   disabled?: boolean
+  imageSources?: ShowroomImageSourceMap
+  onImageSourceReady?: (source: ShowroomImageSource) => void
 }
 
 export default function HeroConfigurator({ 
@@ -36,6 +42,8 @@ export default function HeroConfigurator({
   onMobileVideoUrlChange,
   onUploadStateChange,
   disabled = false,
+  imageSources = {},
+  onImageSourceReady,
 }: HeroConfiguratorProps) {
   const instanceId = useId().replaceAll(':', '')
   const desktopImagePanelId = `${instanceId}-desktop-image-panel`
@@ -160,6 +168,8 @@ export default function HeroConfigurator({
                         updateMedia(newDesktop, mobileImages)
                       }}
                       currentImageUrl={media.image_url}
+                      currentImageSource={imageSources[media.image_url]}
+                      onImageSourceReady={onImageSourceReady}
                       onDelete={() => handleRemoveDesktop(index)}
                       compressionMaxDimension={1920}
                       compressionQuality={0.8}
@@ -181,6 +191,7 @@ export default function HeroConfigurator({
                   compressionMaxDimension={1920}
                   compressionQuality={0.8}
                   onUploadStateChange={onUploadStateChange}
+                  onImageSourceReady={onImageSourceReady}
                   disabled={disabled}
                   onMultiUploadComplete={(urls) => {
                     const newItems: HeroMedia[] = urls.map((url, i) => ({
@@ -243,6 +254,8 @@ export default function HeroConfigurator({
                         updateMedia(desktopImages, newMobile)
                       }}
                       currentImageUrl={media.image_url}
+                      currentImageSource={imageSources[media.image_url]}
+                      onImageSourceReady={onImageSourceReady}
                       onDelete={() => handleRemoveMobile(index)}
                       compressionMaxDimension={1200}
                       compressionQuality={0.8}
@@ -264,6 +277,7 @@ export default function HeroConfigurator({
                   compressionMaxDimension={1200}
                   compressionQuality={0.8}
                   onUploadStateChange={onUploadStateChange}
+                  onImageSourceReady={onImageSourceReady}
                   disabled={disabled}
                   onMultiUploadComplete={(urls) => {
                     const newItems: HeroMedia[] = urls.map((url, i) => ({

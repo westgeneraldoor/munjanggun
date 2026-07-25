@@ -1,0 +1,17 @@
+{
+  "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
+  "name": "munjanggun-showroom-proxy",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-24",
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "munjanggun.com/middle-door*",
+      "zone_name": "munjanggun.com"
+    }
+  ],
+  "vars": {
+    "APP_ORIGIN": "https://munjanggun.vercel.app",
+    "PUBLIC_ORIGIN": "https://munjanggun.com"
+  }
+}

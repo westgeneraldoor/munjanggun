@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { createShowroomClient } from '@/lib/supabase/client'
+import { refreshShowroomCatalogCache } from '@/app/admin/nodes/catalog-revalidation'
 import { logError } from '@/lib/logger'
 import { PlatformButton, PlatformModal } from '@/components/platform/ui'
 import styles from './NodeMoveModal.module.css'
@@ -118,6 +119,7 @@ function NodeMoveModalContent({ node, onClose, onSuccess }: Omit<NodeMoveModalPr
 
       if (updateError) throw updateError
 
+      await refreshShowroomCatalogCache()
       onSuccess()
     } catch (err) {
       logError('노드 이동 실패:', err)
