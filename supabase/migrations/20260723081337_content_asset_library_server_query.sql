@@ -89,7 +89,7 @@ $$;
 CREATE OR REPLACE FUNCTION showroom.refresh_content_asset_library_projection_from_asset()
 RETURNS TRIGGER
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path = ''
 AS $$
 BEGIN
@@ -101,7 +101,7 @@ $$;
 CREATE OR REPLACE FUNCTION showroom.refresh_content_asset_library_projection_from_file()
 RETURNS TRIGGER
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path = ''
 AS $$
 BEGIN
@@ -113,7 +113,7 @@ $$;
 CREATE OR REPLACE FUNCTION showroom.refresh_content_asset_library_projection_from_event()
 RETURNS TRIGGER
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path = ''
 AS $$
 BEGIN
@@ -125,7 +125,7 @@ $$;
 CREATE OR REPLACE FUNCTION showroom.refresh_content_asset_library_projection_from_tag_link()
 RETURNS TRIGGER
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path = ''
 AS $$
 BEGIN
@@ -137,7 +137,7 @@ $$;
 CREATE OR REPLACE FUNCTION showroom.refresh_content_asset_library_projection_from_tag()
 RETURNS TRIGGER
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE

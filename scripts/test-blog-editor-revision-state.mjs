@@ -12,20 +12,35 @@ const editor = await readFile(
 
 assert.match(
   actions,
-  /type SaveBlogEditorResult[\s\S]*updatedAt\?: string[\s\S]*code\?: 'stale_revision'/,
+  /type SaveBlogEditorResult[\s\S]*ok: true[\s\S]*updatedAt: string[\s\S]*blockIds: string\[\][\s\S]*ok: false[\s\S]*code\?: 'stale_revision'/,
   'draft save results must return the exact persisted revision and a typed stale conflict',
 )
 assert.match(
   actions,
-  /type PublishBlogPostResult[\s\S]*updatedAt\?: string/,
+  /type PublishBlogPostResult[\s\S]*ok: true[\s\S]*updatedAt: string[\s\S]*ok: false/,
   'publish results must return the exact persisted post revision',
 )
 assert.match(
   actions,
-  /type UpdateBlogPostStatusResult[\s\S]*updatedAt\?: string/,
+  /type UpdateBlogPostStatusResult[\s\S]*ok: true[\s\S]*updatedAt: string[\s\S]*ok: false[\s\S]*code\?: 'revision_unknown'/,
   'archive and restore results must return the exact persisted post revision',
 )
-assert.match(actions, /blockIds\?: string\[\]/)
+assert.match(
+  editor,
+  /setPublishMessage\(\{ ok: result\.ok, text: result\.message, issues: result\.issues, code: result\.code \}\)[\s\S]*handleRestore[\s\S]*setPublishMessage\(\{ ok: result\.ok, text: result\.message, issues: result\.issues, code: result\.code \}\)/,
+  'archive and restore must preserve revision-recovery codes for the inline reload action',
+)
+assert.match(
+  editor,
+  /publishMessage\.code === 'revision_unknown'/,
+  'unknown status-transition revisions must offer the latest-revision recovery action',
+)
+assert.match(
+  actions,
+  /if \(trashTransitionError\) \{[\s\S]*code: 'revision_unknown'/,
+  'ambiguous archive or restore RPC failures must also direct the editor to reload the current revision',
+)
+assert.match(actions, /blockIds: string\[\]/)
 assert.match(actions, /savedBlockIds\.push\(savedBlockId\)[\s\S]*blockIds: savedBlockIds/)
 assert.match(
   actions,
@@ -51,22 +66,22 @@ assert.match(
 assert.match(editor, /currentEditorSignature = createEditorContentSignature\(buildPayload\(\)\)/)
 assert.match(
   editor,
-  /result\.ok && result\.updatedAt[\s\S]*setCurrentRevision\(result\.updatedAt\)[\s\S]*setSavedEditorSignature/,
+  /if \(result\.ok\) \{[\s\S]*setCurrentRevision\(result\.updatedAt\)[\s\S]*setSavedEditorSignature/,
   'a successful draft save must acknowledge the persisted revision before marking the editor clean',
 )
 assert.match(
   editor,
-  /const result = await publishBlogEditor\(buildPayload\(\)\)[\s\S]*result\.ok && result\.updatedAt[\s\S]*setCurrentRevision\(result\.updatedAt\)[\s\S]*setPost/,
+  /const result = await publishBlogEditor\(buildPayload\(\)\)[\s\S]*if \(result\.ok\) \{[\s\S]*setCurrentRevision\(result\.updatedAt\)[\s\S]*setPost/,
   'a successful atomic publish must acknowledge its persisted revision before refresh preserves client state',
 )
 assert.match(
   editor,
-  /const result = await updateBlogPostStatus\(post\.id, 'archived'\)[\s\S]*result\.ok && result\.updatedAt[\s\S]*setCurrentRevision\(result\.updatedAt\)[\s\S]*setPost/,
+  /const result = await updateBlogPostStatus\(post\.id, 'archived'\)[\s\S]*if \(result\.ok\) \{[\s\S]*setCurrentRevision\(result\.updatedAt\)[\s\S]*setPost/,
   'archive must acknowledge its persisted revision before the next edit can save',
 )
 assert.match(
   editor,
-  /const result = await updateBlogPostStatus\(post\.id, 'reviewing'\)[\s\S]*result\.ok && result\.updatedAt[\s\S]*setCurrentRevision\(result\.updatedAt\)[\s\S]*setPost/,
+  /const result = await updateBlogPostStatus\(post\.id, 'reviewing'\)[\s\S]*if \(result\.ok\) \{[\s\S]*setCurrentRevision\(result\.updatedAt\)[\s\S]*setPost/,
   'restore must acknowledge its persisted revision before the next edit can save',
 )
 assert.match(
@@ -78,6 +93,11 @@ assert.match(
   editor,
   /publishMessage\.code === 'stale_revision' \|\| publishMessage\.code === 'publication_unknown'[\s\S]*window\.location\.reload\(\)/,
   'publish conflicts and ambiguous outcomes must offer the same inline reload recovery',
+)
+assert.match(
+  actions,
+  /typeof updatedPostRows\[0\]\.updated_at !== 'string'[\s\S]*code: 'stale_revision'/,
+  'an acknowledged save without a readable revision must keep the editor inline and offer latest-revision recovery',
 )
 
 console.log('blog editor revision state contract passed')

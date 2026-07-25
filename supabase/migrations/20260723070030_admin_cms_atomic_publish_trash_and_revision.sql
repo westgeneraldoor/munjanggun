@@ -824,24 +824,44 @@ SET search_path = ''
 AS $$
 DECLARE
   v_attempt showroom.blog_publication_attempts%ROWTYPE;
+  v_post showroom.blog_posts%ROWTYPE;
+  v_post_id UUID;
 BEGIN
+  -- Read the parent key without a row lock first. Every post-state writer
+  -- locks blog_posts before its publication attempt, so resolver must take
+  -- the same post -> attempt order to avoid a staged-attempt deadlock.
+  SELECT attempt.post_id
+  INTO v_post_id
+  FROM showroom.blog_publication_attempts AS attempt
+  WHERE attempt.id = p_publication_attempt_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'publication attempt does not exist';
+  END IF;
+
+  SELECT post.*
+  INTO v_post
+  FROM showroom.blog_posts AS post
+  WHERE post.id = v_post_id
+  FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'publication attempt post does not exist';
+  END IF;
+
   SELECT attempt.*
   INTO v_attempt
   FROM showroom.blog_publication_attempts AS attempt
   WHERE attempt.id = p_publication_attempt_id
+    AND attempt.post_id = v_post.id
   FOR UPDATE;
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'publication attempt does not exist';
+    RAISE EXCEPTION 'publication attempt changed during recovery';
   END IF;
 
   RETURN pg_catalog.jsonb_build_object(
     'status', v_attempt.status,
     'post_id', v_attempt.post_id,
-    'updated_at', (
-      SELECT post.updated_at
-      FROM showroom.blog_posts AS post
-      WHERE post.id = v_attempt.post_id
-    ),
+    'post_status', v_post.status,
+    'updated_at', v_post.updated_at,
     'object_paths', pg_catalog.to_jsonb(v_attempt.object_paths),
     'retired_public_paths', COALESCE(
       (

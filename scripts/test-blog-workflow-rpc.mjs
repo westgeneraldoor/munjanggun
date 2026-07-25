@@ -68,6 +68,11 @@ assert.match(
 )
 
 assert.match(migration, /CREATE OR REPLACE FUNCTION showroom\.transition_blog_post_trash\s*\(/i)
+assert.match(
+  migration,
+  /CREATE OR REPLACE FUNCTION showroom\.resolve_blog_publication_attempt[\s\S]*?SELECT attempt\.post_id[\s\S]*?FROM showroom\.blog_posts AS post[\s\S]*?FOR UPDATE[\s\S]*?SELECT attempt\.\*[\s\S]*?FOR UPDATE[\s\S]*?'post_status', v_post\.status/i,
+  'ambiguous publication recovery must lock and return the current post status with its revision',
+)
 assert.match(migration, /FROM showroom\.blog_media AS media[\s\S]*?FOR UPDATE/i)
 assert.match(
   migration,
@@ -114,7 +119,7 @@ assert.match(
 )
 
 assert.match(actions, /export async function publishBlogEditor\s*\(\s*payload: SaveBlogEditorPayload/)
-assert.match(actions, /committedPublication\?\.updated_at/, 'publish action must surface the canonical RPC revision')
+assert.match(actions, /typeof committedPublication\.updated_at !== 'string'/, 'publish success must reject a malformed response that lacks the canonical revision')
 assert.match(actions, /transition\?\.changed_at/, 'trash and restore action must surface the canonical RPC revision')
 assert.match(actions, /\.rpc\('save_and_publish_blog_post'/)
 assert.match(actions, /publicationAttemptId = randomUUID\(\)/)
@@ -130,6 +135,7 @@ assert.match(
 )
 assert.match(actions, /updatedRows\.length !== 1/)
 assert.match(actions, /\.rpc\('resolve_blog_publication_attempt'/)
+assert.match(actions, /attempt\.post_status === 'published'/, 'ambiguous recovery must not force a published client state after a competing status transition')
 assert.match(
   actions,
   /if \(publishError\)[\s\S]*?resolveAmbiguousPublication[\s\S]*?resolution\.kind === 'published'/,

@@ -5,7 +5,6 @@ import { PGlite } from '@electric-sql/pglite'
 
 const projectRoot = path.resolve(import.meta.dirname, '..')
 const readMigration = name => readFile(path.join(projectRoot, 'supabase/migrations', name), 'utf8')
-const timestampMillis = value => new Date(value).getTime()
 const [hiddenAllowlist, leaseMigration, workflowMigration, assetTrashMigration] = await Promise.all([
   readMigration('20260723062040_allow_hidden_content_asset_draft_references.sql'),
   readMigration('20260720005052_atomic_official_asset_blog_placement.sql'),
@@ -14,6 +13,14 @@ const [hiddenAllowlist, leaseMigration, workflowMigration, assetTrashMigration] 
 ])
 
 const db = new PGlite()
+async function timestampWithMicroseconds(value) {
+  return (
+    await db.query(
+      `SELECT to_char($1::timestamptz, 'YYYY-MM-DD HH24:MI:SS.USOF') AS value`,
+      [value],
+    )
+  ).rows[0].value
+}
 await db.exec(`
   CREATE ROLE anon;
   CREATE ROLE authenticated;
@@ -482,15 +489,20 @@ const publishedRevision = (
   await db.query(`SELECT updated_at FROM showroom.blog_posts WHERE id = $1`, [retiredPostId])
 ).rows[0].updated_at
 assert.equal(
-  timestampMillis(retiredPublication.rows[0].result.updated_at),
-  timestampMillis(publishedRevision),
-  'publish must return the post revision after a database timestamp trigger runs',
+  await timestampWithMicroseconds(retiredPublication.rows[0].result.updated_at),
+  await timestampWithMicroseconds(publishedRevision),
+  'publish must return the exact database revision after a database timestamp trigger runs',
 )
 assert.notEqual(
   publishedRevision,
   '2026-07-23T07:10:01.000Z',
   'the test trigger must prove client/RPC clock values are not treated as authoritative',
 )
+const resolvedPublished = (
+  await db.query(`SELECT showroom.resolve_blog_publication_attempt($1) AS result`, [retiredAttemptId])
+).rows[0].result
+assert.equal(resolvedPublished.status, 'published')
+assert.equal(resolvedPublished.post_status, 'published')
 const archivedPublication = await db.query(
   `SELECT showroom.transition_blog_post_trash($1, $2, FALSE) AS result`,
   [retiredPostId, adminId],
@@ -499,10 +511,15 @@ const archivedRevision = (
   await db.query(`SELECT updated_at FROM showroom.blog_posts WHERE id = $1`, [retiredPostId])
 ).rows[0].updated_at
 assert.equal(
-  timestampMillis(archivedPublication.rows[0].result.changed_at),
-  timestampMillis(archivedRevision),
-  'archive must return the post revision after a database timestamp trigger runs',
+  await timestampWithMicroseconds(archivedPublication.rows[0].result.changed_at),
+  await timestampWithMicroseconds(archivedRevision),
+  'archive must return the exact database revision after a database timestamp trigger runs',
 )
+const resolvedAfterArchive = (
+  await db.query(`SELECT showroom.resolve_blog_publication_attempt($1) AS result`, [retiredAttemptId])
+).rows[0].result
+assert.equal(resolvedAfterArchive.status, 'published')
+assert.equal(resolvedAfterArchive.post_status, 'archived', 'ambiguous recovery must expose a competing post transition instead of forcing published client state')
 const restoredPublication = await db.query(
   `SELECT showroom.transition_blog_post_trash($1, $2, TRUE) AS result`,
   [retiredPostId, adminId],
@@ -511,9 +528,9 @@ const restoredRevision = (
   await db.query(`SELECT updated_at FROM showroom.blog_posts WHERE id = $1`, [retiredPostId])
 ).rows[0].updated_at
 assert.equal(
-  timestampMillis(restoredPublication.rows[0].result.changed_at),
-  timestampMillis(restoredRevision),
-  'restore must return the post revision after a database timestamp trigger runs',
+  await timestampWithMicroseconds(restoredPublication.rows[0].result.changed_at),
+  await timestampWithMicroseconds(restoredRevision),
+  'restore must return the exact database revision after a database timestamp trigger runs',
 )
 await db.query(
   `SELECT showroom.acquire_blog_editor_save_lease($1, $2, $3, $4)`,

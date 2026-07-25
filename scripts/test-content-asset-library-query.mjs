@@ -14,6 +14,20 @@ assert.match(migration, /library_sort_name/i, 'file-name sorting must use an ass
 assert.match(migration, /library_sort_size_bytes/i, 'file-size sorting must use an asset-row projection, not correlated file aggregates')
 assert.match(migration, /library_search_text/i, 'search must use a maintained asset-row projection')
 assert.match(migration, /refresh_content_asset_library_projection/i, 'file, metadata, and tag writes must refresh the asset projection')
+assert.match(migration, /CREATE OR REPLACE FUNCTION showroom\.refresh_content_asset_library_projection\(\s*p_asset_id UUID[\s\S]*?SECURITY INVOKER/i, 'the projection helper remains service-role-only and does not broaden direct caller privileges')
+for (const triggerFunction of [
+  'refresh_content_asset_library_projection_from_asset',
+  'refresh_content_asset_library_projection_from_file',
+  'refresh_content_asset_library_projection_from_event',
+  'refresh_content_asset_library_projection_from_tag_link',
+  'refresh_content_asset_library_projection_from_tag',
+]) {
+  assert.match(
+    migration,
+    new RegExp(`CREATE OR REPLACE FUNCTION showroom\\.${triggerFunction}\\(\\)[\\s\\S]*?SECURITY DEFINER[\\s\\S]*?SET search_path = ''`, 'i'),
+    `${triggerFunction} must recompute protected projections with the function owner when an authorized authenticated write fires its trigger`,
+  )
+}
 assert.match(migration, /gin_trgm_ops/i, 'the search projection must receive a trigram index when the extension is available')
 assert.match(migration, /ORDER BY[\s\S]*asset_id/i, 'every sort must include a deterministic asset-id tie breaker')
 assert.match(migration, /LIMIT[\s\S]*OFFSET/i, 'the database must return bounded pages')

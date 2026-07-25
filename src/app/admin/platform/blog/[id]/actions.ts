@@ -54,10 +54,14 @@ export type SaveBlogEditorPayload = {
 }
 
 export type SaveBlogEditorResult = {
-  ok: boolean
+  ok: true
   message: string
-  updatedAt?: string
-  blockIds?: string[]
+  updatedAt: string
+  blockIds: string[]
+  code?: undefined
+} | {
+  ok: false
+  message: string
   code?: 'stale_revision'
 }
 
@@ -87,11 +91,16 @@ export type AttachContentAssetResult = {
 }
 
 export type PublishBlogPostResult = {
-  ok: boolean
+  ok: true
   message: string
-  publishedAt?: string
-  updatedAt?: string
-  slug?: string
+  publishedAt: string
+  updatedAt: string
+  slug: string
+  issues?: string[]
+  code?: undefined
+} | {
+  ok: false
+  message: string
   issues?: string[]
   code?: 'stale_revision' | 'publication_unknown'
 }
@@ -102,11 +111,17 @@ export type PermanentlyDeleteBlogPostResult = {
 }
 
 export type UpdateBlogPostStatusResult = {
-  ok: boolean
+  ok: true
   message: string
-  status?: BlogPostStatus
-  updatedAt?: string
+  status: BlogPostStatus
+  updatedAt: string
   issues?: string[]
+  code?: never
+} | {
+  ok: false
+  message: string
+  issues?: string[]
+  code?: 'revision_unknown'
 }
 
 export type UpdateBlogMediaPayload = {
@@ -606,6 +621,13 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
         ok: false,
         message: '글 상태가 바뀌었습니다. 최신본을 다시 불러온 뒤 변경 내용을 확인해주세요.',
         code: 'stale_revision',
+      }
+    }
+    if (typeof updatedPostRows[0].updated_at !== 'string') {
+      return {
+        ok: false,
+        code: 'stale_revision',
+        message: '임시저장은 처리됐지만 최신 revision 응답을 확인하지 못했습니다. 최신본 다시 불러오기로 상태를 확인해 주세요.',
       }
     }
 
@@ -1612,8 +1634,8 @@ async function markPublicationAttemptAfterCleanup(
 type PublicationResolution =
   | {
     kind: 'published'
-    publishedAt: string | null
-    updatedAt: string | null
+    publishedAt: string
+    updatedAt: string
     retiredPublicPaths: string[]
     retiredCleanupJobId: string | null
   }
@@ -1633,17 +1655,23 @@ async function resolveAmbiguousPublication(
 
   const attempt = data as {
     status?: string
+    post_status?: string
     published_at?: string | null
     updated_at?: string | null
     object_paths?: string[]
     retired_public_paths?: string[]
     retired_cleanup_job_id?: string | null
   }
-  if (attempt.status === 'published') {
+  if (
+    attempt.status === 'published'
+    && attempt.post_status === 'published'
+    && typeof attempt.published_at === 'string'
+    && typeof attempt.updated_at === 'string'
+  ) {
     return {
       kind: 'published',
-      publishedAt: attempt.published_at ?? null,
-      updatedAt: attempt.updated_at ?? null,
+      publishedAt: attempt.published_at,
+      updatedAt: attempt.updated_at,
       retiredPublicPaths: attempt.retired_public_paths ?? [],
       retiredCleanupJobId: attempt.retired_cleanup_job_id ?? null,
     }
@@ -1781,8 +1809,8 @@ export async function publishBlogEditor(
           message: cleanupPending
             ? '발행은 완료됐습니다. 교체된 이전 공개 사진 정리는 재시도 대기열에 남겼습니다.'
             : '발행 응답이 지연됐지만 DB에서 완료 상태를 확인했습니다.',
-          publishedAt: resolution.publishedAt ?? publishedAt,
-          updatedAt: resolution.updatedAt ?? undefined,
+          publishedAt: resolution.publishedAt,
+          updatedAt: resolution.updatedAt,
           slug: payload.post.slug.trim(),
         }
       }
@@ -1803,7 +1831,6 @@ export async function publishBlogEditor(
           : '글이 변경되었거나 발행 안전 검사를 통과하지 못했습니다. 최신본을 다시 불러와 확인해주세요.',
       }
     }
-
     uploadedPaths = []
     const committedPublication = publishData as {
       published_at?: string
@@ -1811,6 +1838,17 @@ export async function publishBlogEditor(
       retired_public_paths?: string[]
       retired_cleanup_job_id?: string | null
     } | null
+    if (
+      typeof committedPublication?.published_at !== 'string'
+      || typeof committedPublication.updated_at !== 'string'
+    ) {
+      revalidateBlogEditorPaths(payload.postId, [currentPost.slug, payload.post.slug], true)
+      return {
+        ok: false,
+        message: '발행은 처리됐지만 최신 revision 응답을 확인하지 못했습니다. 최신본 다시 불러오기로 상태를 확인해 주세요.',
+        code: 'publication_unknown',
+      }
+    }
     const cleanupPending = await cleanupTrackedPublicObjects(
       showroomAdmin,
       committedPublication?.retired_public_paths ?? [],
@@ -1822,8 +1860,8 @@ export async function publishBlogEditor(
       message: cleanupPending
         ? '현재 편집 내용을 저장하고 발행했습니다. 교체된 이전 공개 사진 정리는 재시도 대기열에 남겼습니다.'
         : '현재 편집 내용을 저장하고 발행했습니다.',
-      publishedAt: committedPublication?.published_at ?? publishedAt,
-      updatedAt: committedPublication?.updated_at,
+      publishedAt: committedPublication.published_at,
+      updatedAt: committedPublication.updated_at,
       slug: payload.post.slug.trim(),
     }
   } catch (error) {
@@ -1846,8 +1884,8 @@ export async function publishBlogEditor(
             message: cleanupPending
               ? '발행은 완료됐습니다. 교체된 이전 공개 사진 정리는 재시도 대기열에 남겼습니다.'
               : '발행 응답이 지연됐지만 DB에서 완료 상태를 확인했습니다.',
-            publishedAt: resolution.publishedAt ?? undefined,
-            updatedAt: resolution.updatedAt ?? undefined,
+            publishedAt: resolution.publishedAt,
+            updatedAt: resolution.updatedAt,
             slug: payload.post.slug.trim(),
           }
         }
@@ -1941,6 +1979,7 @@ export async function updateBlogPostStatus(
       if (trashTransitionError) {
         return {
           ok: false,
+          code: 'revision_unknown',
           message: toStatus === 'archived'
             ? '글을 휴지통으로 이동하지 못했습니다. 새로고침 후 다시 시도해주세요.'
             : '글을 휴지통에서 복원하지 못했습니다. 새로고침 후 다시 시도해주세요.',
@@ -1961,6 +2000,13 @@ export async function updateBlogPostStatus(
         : false
 
       revalidateBlogEditorPaths(post.id, [post.slug], post.status === 'published')
+      if (typeof transition?.changed_at !== 'string') {
+        return {
+          ok: false,
+          code: 'revision_unknown',
+          message: '상태 변경은 처리됐지만 최신 revision 응답을 확인하지 못했습니다. 최신본 다시 불러오기로 상태를 확인해 주세요.',
+        }
+      }
       return {
         ok: true,
         message: toStatus === 'archived'
@@ -1969,7 +2015,7 @@ export async function updateBlogPostStatus(
             : '글을 휴지통으로 이동하고 공개 사진을 정리했습니다.'
           : '글을 초안으로 복원했습니다.',
         status: toStatus,
-        updatedAt: transition?.changed_at,
+        updatedAt: transition.changed_at,
       }
     }
 
@@ -2005,6 +2051,13 @@ export async function updateBlogPostStatus(
     const updatedRows = (updatedPostData ?? []) as Array<{ id: string; status: BlogPostStatus; updated_at: string }>
     if (updatedRows.length !== 1) {
       return { ok: false, message: '글 상태가 바뀌었습니다. 새로고침 후 다시 시도해주세요.' }
+    }
+    if (typeof updatedRows[0].updated_at !== 'string') {
+    return {
+      ok: false,
+      code: 'revision_unknown',
+      message: '상태 변경은 처리됐지만 최신 revision 응답을 확인하지 못했습니다. 최신본 다시 불러오기로 상태를 확인해 주세요.',
+    }
     }
 
     const { error: eventError } = await showroomAdmin

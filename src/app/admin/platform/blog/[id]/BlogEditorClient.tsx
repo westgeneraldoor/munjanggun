@@ -1287,7 +1287,7 @@ export default function BlogEditorClient({
     ok: boolean
     text: string
     issues?: string[]
-    code?: 'stale_revision' | 'publication_unknown'
+    code?: 'stale_revision' | 'publication_unknown' | 'revision_unknown'
   } | null>(null)
   const [editorMedia, setEditorMedia] = useState<BlogEditorMedia[]>(media)
   const [readerQuestions, setReaderQuestions] = useState<BlogEditorQuestion[]>(initialQuestions)
@@ -1649,7 +1649,7 @@ export default function BlogEditorClient({
     startTransition(async () => {
       const result = await saveBlogEditor(buildPayload())
       setSaveMessage({ ok: result.ok, text: result.message, code: result.code })
-      if (result.ok && result.updatedAt) {
+      if (result.ok) {
         const savedBlocks = result.blockIds?.length === blocks.length
           ? blocks.map((block, index) => ({ ...block, id: result.blockIds?.[index] ?? block.id }))
           : blocks
@@ -1668,7 +1668,7 @@ export default function BlogEditorClient({
       try {
         const result = await publishBlogEditor(buildPayload())
         setPublishMessage({ ok: result.ok, text: result.message, issues: result.issues, code: result.code })
-        if (result.ok && result.updatedAt) {
+        if (result.ok) {
           setCurrentRevision(result.updatedAt)
           setSavedEditorSignature(currentEditorSignature)
           setPost(current => ({ ...current, status: 'published' }))
@@ -1684,8 +1684,8 @@ export default function BlogEditorClient({
     setPublishMessage(null)
     startTransition(async () => {
       const result = await updateBlogPostStatus(post.id, 'archived')
-      setPublishMessage({ ok: result.ok, text: result.message, issues: result.issues })
-      if (result.ok && result.updatedAt) {
+      setPublishMessage({ ok: result.ok, text: result.message, issues: result.issues, code: result.code })
+      if (result.ok) {
         setCurrentRevision(result.updatedAt)
         setPost(current => ({ ...current, status: 'archived' }))
         setArchiveDialogOpen(false)
@@ -1698,8 +1698,8 @@ export default function BlogEditorClient({
     setPublishMessage(null)
     startTransition(async () => {
       const result = await updateBlogPostStatus(post.id, 'reviewing')
-      setPublishMessage({ ok: result.ok, text: result.message, issues: result.issues })
-      if (result.ok && result.updatedAt) {
+      setPublishMessage({ ok: result.ok, text: result.message, issues: result.issues, code: result.code })
+      if (result.ok) {
         setCurrentRevision(result.updatedAt)
         setPost(current => ({ ...current, status: 'reviewing' }))
         router.refresh()
@@ -1942,7 +1942,7 @@ export default function BlogEditorClient({
         {publishMessage && (
           <>
             <EditorStateMessage ok={publishMessage.ok} text={publishMessage.text} issues={publishMessage.issues} />
-            {publishMessage.code === 'stale_revision' || publishMessage.code === 'publication_unknown' ? (
+            {publishMessage.code === 'stale_revision' || publishMessage.code === 'publication_unknown' || publishMessage.code === 'revision_unknown' ? (
               <button type="button" className={styles.secondaryButton} onClick={() => window.location.reload()}>
                 최신본 다시 불러오기
               </button>

@@ -676,6 +676,8 @@ export default function ContentAssetsClient({
   const selectionAnchorRef = useRef('')
   const suppressCardClickRef = useRef(false)
   const lastServerQueryKeyRef = useRef(queryKey)
+  const externalSearchNavigationRef = useRef(false)
+  const searchNavigationEpochRef = useRef(0)
   const dragSelectionRef = useRef<{
     pointerId: number
     startX: number
@@ -691,7 +693,10 @@ export default function ContentAssetsClient({
   const pageItems = libraryItems
   const normalizedSearchDraft = searchDraft.trim().replace(/\s+/g, ' ').slice(0, 120)
   const selectionScopeStable = normalizedSearchDraft === query.search && !isPagePending
-  const allResultsSelected = Boolean(allResultsSelection)
+  const currentAllResultsSelection = allResultsSelection?.queryKey === queryKey
+    ? allResultsSelection
+    : null
+  const allResultsSelected = Boolean(currentAllResultsSelection)
 
   const selectedItem = selectedId
     ? libraryItems.find(item => item.id === selectedId) ?? null
@@ -702,9 +707,28 @@ export default function ContentAssetsClient({
   }, [queryKey])
 
   useEffect(() => {
+    const handlePopState = () => {
+      externalSearchNavigationRef.current = true
+      searchNavigationEpochRef.current += 1
+      lastServerQueryKeyRef.current = ''
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  useEffect(() => {
+    if (!externalSearchNavigationRef.current) return
+    externalSearchNavigationRef.current = false
+    const timer = window.setTimeout(() => setSearchDraft(query.search), 0)
+    return () => window.clearTimeout(timer)
+  }, [query.search])
+
+  useEffect(() => {
     const nextSearch = normalizedSearchDraft
     if (nextSearch === query.search) return
+    const navigationEpoch = searchNavigationEpochRef.current
     const timer = window.setTimeout(() => {
+      if (searchNavigationEpochRef.current !== navigationEpoch) return
       startPageTransition(() => {
         router.replace(buildAssetLibraryUrl({ ...query, search: nextSearch, page: 1 }), { scroll: false })
       })
@@ -722,6 +746,7 @@ export default function ContentAssetsClient({
     setLifecycleSelection(null)
     selectionAnchorRef.current = ''
     setSelectedId('')
+    lastServerQueryKeyRef.current = assetLibraryQueryKey({ ...query, search: nextSearch, page: 1 })
   }
 
   function navigateQuery(patch: Partial<AssetLibraryQuery>, replace = true) {
@@ -735,6 +760,7 @@ export default function ContentAssetsClient({
     setSelectionMode(false)
     selectionAnchorRef.current = ''
     closeDetail()
+    lastServerQueryKeyRef.current = assetLibraryQueryKey(nextQuery)
     startPageTransition(() => {
       const href = buildAssetLibraryUrl(nextQuery)
       if (replace) router.replace(href, { scroll: false })
@@ -877,13 +903,13 @@ export default function ContentAssetsClient({
   }
 
   function requestAllResultsLifecycle() {
-    if (!allResultsSelection || allResultsSelection.queryKey !== queryKey || !selectionScopeStable) return
+    if (!currentAllResultsSelection || !selectionScopeStable) return
     closeDetail()
     setLifecycleSelection({
       kind: 'query',
       query,
-      totalCount: allResultsSelection.totalCount,
-      selectionToken: allResultsSelection.selectionToken,
+      totalCount: currentAllResultsSelection.totalCount,
+      selectionToken: currentAllResultsSelection.selectionToken,
     })
   }
 
@@ -907,7 +933,7 @@ export default function ContentAssetsClient({
   }
 
   const actionItems = pageItems.filter(item => selectedForAction.has(item.id))
-  const actionCount = allResultsSelection?.totalCount ?? actionItems.length
+  const actionCount = currentAllResultsSelection?.totalCount ?? actionItems.length
 
   return (
     <div className={styles.page}>
@@ -991,15 +1017,13 @@ export default function ContentAssetsClient({
               />
             ))}
           </div>
-          {tagOptions.length > 0 ? (
-            <PlatformSegmentedControl
-              className={styles.tagFilters}
-              label="태그 필터"
-              value={query.tagId}
-              onChange={value => navigateQuery({ tagId: value })}
-              items={[{ value: '', label: '전체 태그' }, ...tagOptions.map(tag => ({ value: tag.id, label: tag.name }))]}
-            />
-          ) : null}
+          <PlatformSegmentedControl
+            className={styles.tagFilters}
+            label="태그 필터"
+            value={query.tagId}
+            onChange={value => navigateQuery({ tagId: value })}
+            items={[{ value: '', label: '전체 태그' }, ...tagOptions.map(tag => ({ value: tag.id, label: tag.name }))]}
+          />
         </details>
       </PlatformPanel>
 
