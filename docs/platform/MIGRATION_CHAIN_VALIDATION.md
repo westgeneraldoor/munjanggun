@@ -4,7 +4,7 @@
 
 The repository must be able to rebuild an empty local Supabase/PostgreSQL 17 database by applying every file in `supabase/migrations` in lexical version order. This is a repository-chain guarantee, not evidence of any Production database mutation.
 
-The secretless CI `migration-chain` job starts an isolated local Supabase stack, runs `supabase db reset --local --no-seed`, then asserts and lists the rebuilt tables with the two SQL files in `supabase/tests/`. The CLI's reset output is intentionally preserved in the job log, so a failure identifies the migration that failed.
+The secretless CI `migration-chain` job starts an isolated local Supabase stack including Auth, Kong, and PostgREST, runs `supabase db reset --local --no-seed`, then asserts and lists the rebuilt tables with the two SQL files in `supabase/tests/`. It also performs an anonymous `showroom.nodes` REST request and prints the PostgREST container log, so a schema-cache failure identifies the failing schema or object in the job log. The CLI's reset output is intentionally preserved as well, so a migration failure identifies the migration that failed.
 
 The assertion checks the 18 tables represented by `src/types/database.ts`, which is the stated recovery contract. The tracked `showroom.blog_editor_save_leases` table is a service-RPC implementation detail created by `20260720005052_atomic_official_asset_blog_placement.sql` and is not represented in that type contract; therefore the rebuilt physical schema currently lists 19 tables. The assertion detects any missing typed table without incorrectly rejecting that tracked internal table.
 
@@ -13,13 +13,20 @@ The assertion checks the 18 tables represented by `src/types/database.ts`, which
 From this repository, use the Supabase CLI version pinned by CI:
 
 ```powershell
-npx --yes --package supabase@2.109.1 supabase start -x gotrue,realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor --ignore-health-check
+npx --yes --package supabase@2.109.1 supabase start -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor --ignore-health-check
 npx --yes --package supabase@2.109.1 supabase db reset --local --no-seed
 npx --yes --package supabase@2.109.1 supabase db query --local --file supabase/tests/verify-showroom-table-count.sql
 npx --yes --package supabase@2.109.1 supabase db query --local --file supabase/tests/list-showroom-tables.sql
+node scripts/verify-postgrest-migration-chain.mjs
 ```
 
 The local project ID is `migration-chain-recovery`, so these commands do not select or mutate a linked or Production project. Do not add `--linked`, `--db-url`, or `supabase db push` to this validation flow.
+
+## Colorbook schema boundary
+
+`20260602073953_include_platform_in_postgrest_schemas.sql` already configures PostgREST with `colorbook`. A 2026-07-25 read-only Production REST probe confirmed that `colorbook.installation_photos` still exists. Current application source uses `showroom` and `platform`; the only tracked colorbook reader is the unregistered manual `scripts/compress-existing-photos.mjs` legacy maintenance script.
+
+`20260602073000_colorbook_schema_bootstrap.sql` therefore creates only `colorbook` with `CREATE SCHEMA IF NOT EXISTS`, before the existing PostgREST configuration migration. It preserves the existing Production schema and unblocks an empty rebuild's schema cache, but deliberately does not invent the untracked v1 tables, columns, policies, grants, or data. Recovering those legacy table definitions requires a separately approved read-only Production schema comparison.
 
 ## What PGlite tests prove
 

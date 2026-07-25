@@ -29,6 +29,8 @@ jobs:
         run: |
           npm run test:supabase-stabilization-migrations
           npm run test:showroom-schema-bootstrap
+          npm run test:colorbook-schema-bootstrap
+          npm run test:postgrest-migration-chain-contract
           npm run test:showroom-preview-payload
           npm run test:showroom-rls-hardening
           npm run test:showroom-image-derivatives
@@ -75,10 +77,10 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - name: Start isolated local PostgreSQL 17
+      - name: Start isolated local PostgreSQL 17 with PostgREST
         run: >
           npx --yes --package supabase@2.109.1 supabase start
-          -x gotrue,realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+          -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
           --ignore-health-check
       - name: Apply every tracked migration to an empty database
         run: npx --yes --package supabase@2.109.1 supabase db reset --local --no-seed
@@ -91,6 +93,31 @@ jobs:
         run: >
           npx --yes --package supabase@2.109.1 supabase db query --local
           --file supabase/tests/list-showroom-tables.sql
+
+      - name: Verify PostgREST schema cache and REST
+        run: |
+          node scripts/verify-postgrest-migration-chain.mjs
+          container="$(docker ps --filter 'name=^/supabase_rest_' --format '{{.Names}}' | head -n 1)"
+          if [ -z "$container" ]; then
+            echo "::error::PostgREST container not found"
+            exit 1
+          fi
+          if ! docker logs --tail 250 "$container" 2>&1 | grep -q "Schema cache loaded"; then
+            echo "::error::PostgREST did not report a successful schema cache load"
+            docker logs --tail 250 "$container"
+            exit 1
+          fi
+
+      - name: Show PostgREST logs
+        if: always()
+        run: |
+          container="$(docker ps --filter 'name=^/supabase_rest_' --format '{{.Names}}' | head -n 1)"
+          if [ -z "$container" ]; then
+            echo "::error::PostgREST container not found"
+            docker ps --format '{{.Names}} {{.Status}}'
+            exit 1
+          fi
+          docker logs --tail 250 "$container"
 
   measure-browser:
     runs-on: ubuntu-latest

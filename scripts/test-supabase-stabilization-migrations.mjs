@@ -7,6 +7,7 @@ const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 const migrationNames = await readdir(path.join(projectRoot, 'supabase', 'migrations'))
 
 const expectedRemoteAlignedMigrations = [
+  '20260602073000_colorbook_schema_bootstrap.sql',
   '20260604020221_platform_category_images.sql',
   '20260604023543_add_measurement_referrer.sql',
   '20260604090635_measurement_contact_region_flow.sql',
