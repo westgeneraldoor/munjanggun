@@ -1,0 +1,69 @@
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- link "첫 번째 상담 링크":
+  - /url: https://example.com/first
+  - heading "첫 번째 상담 링크" [level=2]
+- link "두 번째 상담 링크":
+  - /url: https://example.com/second
+  - heading "두 번째 상담 링크" [level=2]
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- link "URL litt.ly/munjanggun.com/page1":
+  - /url: https://litt.ly/munjanggun.com/page1
+  - generic: URL
+  - text: litt.ly/munjanggun.com/page1
+- button:
+- generic: 페이지 추가
+- text: 홈화면
+- text: 페이지
+- button "페이지" [disabled]:
+  - generic: 페이지
+- button "디자인":
+  - generic: 디자인
+- button "분석":
+  - generic: 분석
+- button "관리":
+  - generic: 관리
+- button "마케팅":
+  - generic: 마케팅
+- generic: 프로필
+- button:
+- button:
+- button "ON OFF 단일 링크":
+  - generic: "ON"
+  - generic: "OFF"
+  - switch [checked]
+  - generic: 단일 링크
+- button "강조":
+  - generic: 강조
+- button "예약":
+  - generic: 예약
+- button:
+- generic: 연결 URL*
+- textbox "https://": https://example.com/first
+- generic: 이미지
+- generic: 대표문구*
+- textbox "대표문구":
+  - /placeholder: 버튼에 문구가 노출됩니다
+  - text: 첫 번째 상담 링크
+- generic: 레이아웃
+- radio "작은 카드" [checked] [active]
+- generic: 작은 카드
+- radio "중간 카드"
+- generic: 중간 카드
+- radio "큰 카드"
+- generic: 큰 카드
+- button "옵션 보기":
+  - generic: 옵션 보기
+- button:
+- button "단일 링크 두 번째 상담 링크":
+  - generic: 단일 링크
+  - generic: 두 번째 상담 링크
+- button:
+- button "+블럭 추가": +블럭 추가
+- button:
+- img "Live Chat Button"
+- generic: You have moved the item from position 2 to position 1

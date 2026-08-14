@@ -1,0 +1,1 @@
+Page.captureScreenshot timed out twice: tab.screenshot and CDP JPEG.

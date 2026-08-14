@@ -1,0 +1,259 @@
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- generic: 국내 판매 블록이 생성될 위치입니다.
+- generic: 수익계좌 및 판매자 정보를 등록해 주세요
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- link "URL litt.ly/munjanggun.com/page1":
+  - /url: https://litt.ly/munjanggun.com/page1
+  - generic: URL
+  - text: litt.ly/munjanggun.com/page1
+- button:
+- generic: 페이지 추가
+- text: 홈화면
+- text: 페이지
+- button "페이지" [disabled]:
+  - generic: 페이지
+- button "디자인":
+  - generic: 디자인
+- button "분석":
+  - generic: 분석
+- button "관리":
+  - generic: 관리
+- button "마케팅":
+  - generic: 마케팅
+- generic: 프로필
+- button:
+- button:
+- button "ON OFF 강의 판매":
+  - generic: "ON"
+  - generic: "OFF"
+  - switch [checked]
+  - generic: 강의 판매
+- button "강조":
+  - generic: 강조
+- button "예약":
+  - generic: 예약
+- button:
+- generic: 대표문구*
+- textbox "대표문구":
+  - /placeholder: 판매 블럭 제목을 입력하세요
+- generic: 이미지
+- generic: 상세문구*
+- button "미리보기" [disabled]
+- radio "심플뷰" [checked]
+- generic: 심플뷰
+- radio "디테일뷰"
+- generic: 디테일뷰
+- textbox "거래 조건과 상품설명, 교환 및 환불 규정 등을 자세히 입력해주세요. 최대 3,000자까지 입력할 수 있습니다.":
+  - /placeholder: "거래 조건과 상품설명, 교환 및 환불 규정 등을 자세히 입력해주세요.\n최대 3,000자까지 입력할 수 있습니다."
+- generic: 강의 목록*
+- button "+강의 등록": +강의 등록
+- generic: 전달 메세지
+- 'textbox "구매 완료시, 구매자만 볼 수 있게 전달되는 메시지입니다. (ex: 단톡방 링크 및 비번, 사용 방법, 오시는 길 안내, 안내사항 등)"':
+  - /placeholder: "구매 완료시, 구매자만 볼 수 있게 전달되는 메시지입니다.\n(ex: 단톡방 링크 및 비번, 사용 방법, 오시는 길 안내, 안내사항 등)"
+- generic: 계좌 연결*
+- text: 상품 판매를 하기 위해서는 계좌 연결이 필수입니다.
+- button "+수익계좌 등록": +수익계좌 등록
+- button "옵션 보기":
+  - generic: 옵션 보기
+- button "+블럭 추가": +블럭 추가
+- button:
+- dialog [active]:
+  - generic: 강의명
+  - generic: 목차
+  - button "1. 00:00:00" [disabled]:
+    - generic: "1."
+    - generic: 00:00:00
+  - button "2. 00:00:00" [disabled]:
+    - generic: "2."
+    - generic: 00:00:00
+  - button "3. 00:00:00" [disabled]:
+    - generic: "3."
+    - generic: 00:00:00
+  - button "4. 00:00:00" [disabled]:
+    - generic: "4."
+    - generic: 00:00:00
+  - button "5. 00:00:00" [disabled]:
+    - generic: "5."
+    - generic: 00:00:00
+  - button "6. 00:00:00" [disabled]:
+    - generic: "6."
+    - generic: 00:00:00
+  - button "7. 00:00:00" [disabled]:
+    - generic: "7."
+    - generic: 00:00:00
+  - button "8. 00:00:00" [disabled]:
+    - generic: "8."
+    - generic: 00:00:00
+  - button "9. 00:00:00" [disabled]:
+    - generic: "9."
+    - generic: 00:00:00
+  - button "10. 00:00:00" [disabled]:
+    - generic: "10."
+    - generic: 00:00:00
+  - button "11. 00:00:00" [disabled]:
+    - generic: "11."
+    - generic: 00:00:00
+  - button "12. 00:00:00" [disabled]:
+    - generic: "12."
+    - generic: 00:00:00
+  - button "13. 00:00:00" [disabled]:
+    - generic: "13."
+    - generic: 00:00:00
+  - button "14. 00:00:00" [disabled]:
+    - generic: "14."
+    - generic: 00:00:00
+  - button "15. 00:00:00" [disabled]:
+    - generic: "15."
+    - generic: 00:00:00
+  - button "16. 00:00:00" [disabled]:
+    - generic: "16."
+    - generic: 00:00:00
+  - button "17. 00:00:00" [disabled]:
+    - generic: "17."
+    - generic: 00:00:00
+  - button "18. 00:00:00" [disabled]:
+    - generic: "18."
+    - generic: 00:00:00
+  - button "19. 00:00:00" [disabled]:
+    - generic: "19."
+    - generic: 00:00:00
+  - button "20. 00:00:00" [disabled]:
+    - generic: "20."
+    - generic: 00:00:00
+  - button "21. 00:00:00" [disabled]:
+    - generic: "21."
+    - generic: 00:00:00
+  - button "22. 00:00:00" [disabled]:
+    - generic: "22."
+    - generic: 00:00:00
+  - button "23. 00:00:00" [disabled]:
+    - generic: "23."
+    - generic: 00:00:00
+  - button "24. 00:00:00" [disabled]:
+    - generic: "24."
+    - generic: 00:00:00
+  - button "25. 00:00:00" [disabled]:
+    - generic: "25."
+    - generic: 00:00:00
+  - button "26. 00:00:00" [disabled]:
+    - generic: "26."
+    - generic: 00:00:00
+  - button "27. 00:00:00" [disabled]:
+    - generic: "27."
+    - generic: 00:00:00
+  - button "28. 00:00:00" [disabled]:
+    - generic: "28."
+    - generic: 00:00:00
+  - button "29. 00:00:00" [disabled]:
+    - generic: "29."
+    - generic: 00:00:00
+  - button "30. 00:00:00" [disabled]:
+    - generic: "30."
+    - generic: 00:00:00
+  - button "31. 00:00:00" [disabled]:
+    - generic: "31."
+    - generic: 00:00:00
+  - button "32. 00:00:00" [disabled]:
+    - generic: "32."
+    - generic: 00:00:00
+  - button "33. 00:00:00" [disabled]:
+    - generic: "33."
+    - generic: 00:00:00
+  - button "34. 00:00:00" [disabled]:
+    - generic: "34."
+    - generic: 00:00:00
+  - button "35. 00:00:00" [disabled]:
+    - generic: "35."
+    - generic: 00:00:00
+  - button "36. 00:00:00" [disabled]:
+    - generic: "36."
+    - generic: 00:00:00
+  - button "37. 00:00:00" [disabled]:
+    - generic: "37."
+    - generic: 00:00:00
+  - button "38. 00:00:00" [disabled]:
+    - generic: "38."
+    - generic: 00:00:00
+  - button "39. 00:00:00" [disabled]:
+    - generic: "39."
+    - generic: 00:00:00
+  - button "40. 00:00:00" [disabled]:
+    - generic: "40."
+    - generic: 00:00:00
+  - button "41. 00:00:00" [disabled]:
+    - generic: "41."
+    - generic: 00:00:00
+  - button "42. 00:00:00" [disabled]:
+    - generic: "42."
+    - generic: 00:00:00
+  - button "43. 00:00:00" [disabled]:
+    - generic: "43."
+    - generic: 00:00:00
+  - button "44. 00:00:00" [disabled]:
+    - generic: "44."
+    - generic: 00:00:00
+  - button "45. 00:00:00" [disabled]:
+    - generic: "45."
+    - generic: 00:00:00
+  - button "46. 00:00:00" [disabled]:
+    - generic: "46."
+    - generic: 00:00:00
+  - button "47. 00:00:00" [disabled]:
+    - generic: "47."
+    - generic: 00:00:00
+  - button "48. 00:00:00" [disabled]:
+    - generic: "48."
+    - generic: 00:00:00
+  - button "49. 00:00:00" [disabled]:
+    - generic: "49."
+    - generic: 00:00:00
+  - button "50. 00:00:00" [disabled]:
+    - generic: "50."
+    - generic: 00:00:00
+  - generic: 강의자료
+  - button "1." [disabled]:
+    - generic: "1."
+  - button "2." [disabled]:
+    - generic: "2."
+  - button "3." [disabled]:
+    - generic: "3."
+  - button "4." [disabled]:
+    - generic: "4."
+  - button "5." [disabled]:
+    - generic: "5."
+  - button "6." [disabled]:
+    - generic: "6."
+  - button "7." [disabled]:
+    - generic: "7."
+  - button "8." [disabled]:
+    - generic: "8."
+  - button "9." [disabled]:
+    - generic: "9."
+  - button "10." [disabled]:
+    - generic: "10."
+  - generic: 강의 등록
+  - button:
+  - generic: 강의명*
+  - textbox "강의명":
+    - /placeholder: 강의명을 입력해 주세요
+  - generic: 판매가*
+  - spinbutton: "0"
+  - generic: 원
+  - generic: 동영상 업로드*
+  - button "+ 파일첨부": + 파일첨부
+  - button "+ URL 첨부": + URL 첨부
+  - checkbox "강의자료 업로드"
+  - generic: 강의자료 업로드
+  - checkbox "할인 및 프로모션"
+  - generic: 할인 및 프로모션
+  - checkbox "재고 수량"
+  - generic: 재고 수량
+  - checkbox "요청사항"
+  - generic: 요청사항
+  - button "취소"
+  - button "등록" [disabled]

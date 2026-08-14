@@ -1,0 +1,19 @@
+{
+  "status": "BLOCKED",
+  "researchDisposition": "NON_BLOCKING_UNVERIFIED",
+  "implementationGate": "DOES_NOT_BLOCK_PROTOTYPE",
+  "browserError": {
+    "code": -32000,
+    "message": "Not allowed"
+  },
+  "requiredUserAction": null,
+  "decision": "Research ended after the same denial persisted with Codex Chrome upload permission set to Always allow. Do not retry unless implementation comparison later requires it.",
+  "observedAt": "2026-08-14T02:00:03.199Z",
+  "lastRetriedAtKst": "2026-08-14T11:33:31.6243327+09:00",
+  "verifiedAttempts": {
+    "gallerySetFiles": 4,
+    "fileShareSetFiles": 1,
+    "groupLinkBlockedByRequiredImage": true,
+    "clipboardPasteFallback": "UNSAFE_ABORTED_BEFORE_APPLY_AND_BLOCK_DELETED"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 2,
+  "validatedAt": "2026-08-14T02:54:25.271Z",
+  "passed": true,
+  "counts": {
+    "screenshots": 59,
+    "raw": 56,
+    "measurements": 2
+  },
+  "invalidImages": [],
+  "invalidJson": [],
+  "emptyRaw": [],
+  "duplicateHashes": [
+    {
+      "hash": "ed7b165c27654fed164ed1dbeb2cf651add5ab235cfadb3b7cd23cf926c990c3",
+      "paths": [
+        "screenshots/CP-UPLOAD-012-cleaned.jpg",
+        "screenshots/CP-VIDEO-019-deleted-clean.jpg"
+      ]
+    },
+    {
+      "hash": "e3d685ed125a788688f0bfb2fb0d75271993a11adda9ef855b0ebdb3265b9efa",
+      "paths": [
+        "raw/CP-DESIGN-009-share-hidden-paywall-dom.txt",
+        "raw/CP-DESIGN-010-custom-logo-paywall-dom.txt"
+      ]
+    },
+    {
+      "hash": "4eb4e2e16cc9527ec34e34742b445622ef09afab5b6854f4c3d94a1ce4b15691",
+      "paths": [
+        "raw/CP-FINAL-001-page1-clean-dom.txt",
+        "raw/CP-PAGE-005-restored-dom.txt",
+        "raw/CP-PAGE-EMPTY-001-dom.txt",
+        "raw/CP-TEXT-009-deleted-dom.txt",
+        "raw/CP-VIDEO-010-deleted-dom.txt"
+      ]
+    },
+    {
+      "hash": "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2",
+      "paths": [
+        "raw/CP-FINAL-002-clipboard-abort-clean-dom.txt",
+        "raw/CP-SINGLE-004-cleaned-dom.txt"
+      ]
+    },
+    {
+      "hash": "1ed62fd3d95aacaca6f6faa0bda6956a1aab142856a6e53503e0dbf870256660",
+      "paths": [
+        "raw/CP-TEXT-004-public-desktop-dom.txt",
+        "raw/CP-TEXT-006-public-mobile-collapsed-dom.txt"
+      ]
+    },
+    {
+      "hash": "bc713ca913456512744faa0417d01252839ae239921beea7d38d31aa386f931d",
+      "paths": [
+        "raw/CP-TEXT-005-public-desktop-expanded-dom.txt",
+        "raw/CP-TEXT-007-public-mobile-expanded-dom.txt"
+      ]
+    }
+  ],
+  "imageFormats": {
+    "jpeg": 59
+  }
+}

@@ -48,3 +48,31 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Littly research artifacts that contain private browser chrome or live account metrics.
+# Canonical originals are preserved in a Codex-private folder outside this repository.
+/docs/littly-clone/evidence/supplemental-screenshots/user-provided/01-page-editor-profile.png
+/docs/littly-clone/evidence/supplemental-screenshots/user-provided/02-music-editor-soundcloud.png
+/docs/littly-clone/evidence/supplemental-screenshots/global-ui/20260813-007-manage-root.jpg
+/docs/littly-clone/evidence/supplemental-screenshots/global-ui/20260813-008-marketing-root.jpg
+/docs/littly-clone/full-product-research/screenshots/analytics/
+/docs/littly-clone/full-product-research/screenshots/manage/
+/docs/littly-clone/full-product-research/screenshots/marketing/
+/docs/littly-clone/full-product-research/raw/*ANALYTICS*
+/docs/littly-clone/full-product-research/raw/*MANAGE*
+/docs/littly-clone/full-product-research/raw/*MARKETING*
+/docs/littly-clone/full-product-research/measurements/*ANALYTICS*
+/docs/littly-clone/full-product-research/measurements/*MANAGE*
+/docs/littly-clone/full-product-research/measurements/*MARKETING*
+/docs/littly-clone/full-product-research/completion-pass/screenshots/CP-MARKETING-*
+/docs/littly-clone/full-product-research/completion-pass/raw/CP-MARKETING-*
+/docs/littly-clone/direct-research/dom/DIR-054-analysis*
+/docs/littly-clone/direct-research/dom/DIR-055-manage*
+/docs/littly-clone/direct-research/dom/DIR-056-marketing*
+/docs/littly-clone/direct-research/dom/DIR-064-manage-customer-detail*
+/docs/littly-clone/direct-research/dom/DIR-062-analysis-period*
+/docs/littly-clone/direct-research/dom/DIR-063-analysis-fullview*
+/docs/littly-clone/direct-research/dom/DIR-065-marketing-email*
+/docs/littly-clone/direct-research/dom/DIR-066-marketing-instagram*
+/docs/littly-clone/direct-research/dom/DIR-067-analysis-period-options.json
+/docs/littly-clone/direct-research/dom/DIR-068-analysis-period-popup.json

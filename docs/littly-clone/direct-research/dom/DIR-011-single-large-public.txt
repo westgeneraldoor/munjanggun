@@ -1,0 +1,10 @@
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- link "직접조사 단일 링크":
+  - /url: https://example.com/direct-single
+  - heading "직접조사 단일 링크" [level=2]
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >

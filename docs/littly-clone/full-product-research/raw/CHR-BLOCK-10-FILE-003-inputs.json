@@ -1,0 +1,10 @@
+[
+  {
+    "accept": "image/jpeg, image/png, image/gif",
+    "multiple": null
+  },
+  {
+    "accept": "*",
+    "multiple": ""
+  }
+]

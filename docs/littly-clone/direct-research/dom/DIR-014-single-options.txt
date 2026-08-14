@@ -1,0 +1,69 @@
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- link "직접조사 단일 링크":
+  - /url: https://example.com/direct-single
+  - heading "직접조사 단일 링크" [level=2]
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- link "URL litt.ly/munjanggun.com/page1":
+  - /url: https://litt.ly/munjanggun.com/page1
+  - generic: URL
+  - text: litt.ly/munjanggun.com/page1
+- button:
+- generic: 페이지 추가
+- text: 홈화면
+- text: 페이지
+- button "페이지" [disabled]:
+  - generic: 페이지
+- button "디자인":
+  - generic: 디자인
+- button "분석":
+  - generic: 분석
+- button "관리":
+  - generic: 관리
+- button "마케팅":
+  - generic: 마케팅
+- generic: 프로필
+- button:
+- button:
+- button "ON OFF 단일 링크":
+  - generic: "ON"
+  - generic: "OFF"
+  - switch [checked]
+  - generic: 단일 링크
+- button "강조":
+  - generic: 강조
+- button "예약":
+  - generic: 예약
+- button:
+- generic: 연결 URL*
+- textbox "https://": https://example.com/direct-single
+- generic: 이미지
+- generic: 대표문구*
+- textbox "대표문구":
+  - /placeholder: 버튼에 문구가 노출됩니다
+  - text: 직접조사 단일 링크
+- generic: 레이아웃
+- radio "작은 카드"
+- generic: 작은 카드
+- radio "중간 카드"
+- generic: 중간 카드
+- radio "큰 카드" [checked]
+- generic: 큰 카드
+- button "옵션 접기" [active]:
+  - generic: 옵션 접기
+- generic: 강조 태그
+- textbox "입력 후 엔터를 눌러 추가"
+- button "# Ai생성": "# Ai생성"
+- generic: 판매가격
+- textbox
+- generic: 원
+- generic: 정가
+- textbox
+- generic: 원
+- button "+블럭 추가": +블럭 추가
+- button:
+- img "Live Chat Button"

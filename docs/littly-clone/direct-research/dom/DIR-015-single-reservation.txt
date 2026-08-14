@@ -1,0 +1,142 @@
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- link "직접조사 단일 링크":
+  - /url: https://example.com/direct-single
+  - heading "직접조사 단일 링크" [level=2]
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- link "URL litt.ly/munjanggun.com/page1":
+  - /url: https://litt.ly/munjanggun.com/page1
+  - generic: URL
+  - text: litt.ly/munjanggun.com/page1
+- button:
+- generic: 페이지 추가
+- text: 홈화면
+- text: 페이지
+- button "페이지" [disabled]:
+  - generic: 페이지
+- button "디자인":
+  - generic: 디자인
+- button "분석":
+  - generic: 분석
+- button "관리":
+  - generic: 관리
+- button "마케팅":
+  - generic: 마케팅
+- generic: 프로필
+- button:
+- button:
+- button "ON OFF 단일 링크":
+  - generic: "ON"
+  - generic: "OFF"
+  - switch [checked]
+  - generic: 단일 링크
+- button "강조":
+  - generic: 강조
+- button "예약":
+  - generic: 예약
+- button:
+- generic: 연결 URL*
+- textbox "https://": https://example.com/direct-single
+- generic: 이미지
+- generic: 대표문구*
+- textbox "대표문구":
+  - /placeholder: 버튼에 문구가 노출됩니다
+  - text: 직접조사 단일 링크
+- generic: 레이아웃
+- radio "작은 카드"
+- generic: 작은 카드
+- radio "중간 카드"
+- generic: 중간 카드
+- radio "큰 카드" [checked]
+- generic: 큰 카드
+- button "옵션 접기":
+  - generic: 옵션 접기
+- generic: 강조 태그
+- textbox "입력 후 엔터를 눌러 추가"
+- button "# Ai생성": "# Ai생성"
+- generic: 판매가격
+- textbox
+- generic: 원
+- generic: 정가
+- textbox
+- generic: 원
+- button "+블럭 추가": +블럭 추가
+- button:
+- dialog [active]:
+  - generic: "ON"
+  - generic: "OFF"
+  - switch
+  - tooltip "OFF 버튼을 클릭하면 예약기능이 활성화됩니다.":
+    - generic: OFF 버튼을 클릭하면 예약기능이 활성화됩니다.
+  - generic: 예약 설정
+  - button:
+  - generic: 공개 설정
+  - radio "공개" [checked] [disabled]
+  - generic: 공개
+  - radio "숨김" [disabled]
+  - generic: 숨김
+  - radio "공개~숨김" [disabled]
+  - generic: 공개~숨김
+  - generic: 공개 날짜
+  - textbox "2026.08.13 목요일" [disabled]
+  - generic: 16시
+  - combobox [disabled]
+  - button "«" [disabled]
+  - button "‹" [disabled]
+  - button "2026년 8월"
+  - button "›"
+  - button "»"
+  - generic: 월
+  - generic: 화
+  - generic: 수
+  - generic: 목
+  - generic: 금
+  - generic: 토
+  - generic: 일
+  - button "2026년 7월 27일" [disabled]: "27"
+  - button "2026년 7월 28일" [disabled]: "28"
+  - button "2026년 7월 29일" [disabled]: "29"
+  - button "2026년 7월 30일" [disabled]: "30"
+  - button "2026년 7월 31일" [disabled]: "31"
+  - button "2026년 8월 1일" [disabled]: "1"
+  - button "2026년 8월 2일" [disabled]: "2"
+  - button "2026년 8월 3일" [disabled]: "3"
+  - button "2026년 8월 4일" [disabled]: "4"
+  - button "2026년 8월 5일" [disabled]: "5"
+  - button "2026년 8월 6일" [disabled]: "6"
+  - button "2026년 8월 7일" [disabled]: "7"
+  - button "2026년 8월 8일" [disabled]: "8"
+  - button "2026년 8월 9일" [disabled]: "9"
+  - button "2026년 8월 10일" [disabled]: "10"
+  - button "2026년 8월 11일" [disabled]: "11"
+  - button "2026년 8월 12일" [disabled]: "12"
+  - button "2026년 8월 13일" [disabled]: "13"
+  - button "2026년 8월 14일" [disabled]: "14"
+  - button "2026년 8월 15일" [disabled]: "15"
+  - button "2026년 8월 16일" [disabled]: "16"
+  - button "2026년 8월 17일" [disabled]: "17"
+  - button "2026년 8월 18일" [disabled]: "18"
+  - button "2026년 8월 19일" [disabled]: "19"
+  - button "2026년 8월 20일" [disabled]: "20"
+  - button "2026년 8월 21일" [disabled]: "21"
+  - button "2026년 8월 22일" [disabled]: "22"
+  - button "2026년 8월 23일" [disabled]: "23"
+  - button "2026년 8월 24일" [disabled]: "24"
+  - button "2026년 8월 25일" [disabled]: "25"
+  - button "2026년 8월 26일" [disabled]: "26"
+  - button "2026년 8월 27일" [disabled]: "27"
+  - button "2026년 8월 28일" [disabled]: "28"
+  - button "2026년 8월 29일" [disabled]: "29"
+  - button "2026년 8월 30일" [disabled]: "30"
+  - button "2026년 8월 31일" [disabled]: "31"
+  - button "2026년 9월 1일" [disabled]: "1"
+  - button "2026년 9월 2일" [disabled]: "2"
+  - button "2026년 9월 3일" [disabled]: "3"
+  - button "2026년 9월 4일" [disabled]: "4"
+  - button "2026년 9월 5일" [disabled]: "5"
+  - button "2026년 9월 6일" [disabled]: "6"
+  - button "완료": 완료

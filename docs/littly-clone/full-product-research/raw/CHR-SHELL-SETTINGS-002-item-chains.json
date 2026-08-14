@@ -1,0 +1,585 @@
+[
+  {
+    "chain": [
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 24,
+        "html": "<div class=\"text-16 font-medium\">커스텀 도메인</div>",
+        "role": null,
+        "tag": "DIV",
+        "text": "커스텀 도메인",
+        "w": 84.171875,
+        "x": 607,
+        "y": 461
+      },
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 24,
+        "html": "<div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">커스텀 도메인</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] flex h-[18px] w-[59px] items-center space-x-[1px] p-[5px] text-9 font-medium\"><svg aria-hidden=\"true\" focusable=\"false\" data-prefix=\"far\" data-icon=\"crown\" class=\"svg-inline--fa fa-crown \" role=\"img\" xmlns=",
+        "role": null,
+        "tag": "DIV",
+        "text": "커스텀 도메인 업그레이드",
+        "w": 436.75,
+        "x": 607,
+        "y": 461
+      },
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">커스텀 도메인</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] flex h-[18px] w-[59px] items-center space-x-[1px] p-[5px] text-9 font-medium\"><svg a",
+        "role": null,
+        "tag": "DIV",
+        "text": "커스텀 도메인 업그레이드",
+        "w": 485,
+        "x": 595,
+        "y": 450
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"flex flex-col rounded-[5px] bg-white toggled:text-gray3\"><div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">커스텀 도메인</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] flex h-[18px] w",
+        "role": null,
+        "tag": "DIV",
+        "text": "커스텀 도메인 업그레이드",
+        "w": 485,
+        "x": 595,
+        "y": 450
+      }
+    ],
+    "t": "커스텀 도메인"
+  },
+  {
+    "chain": [
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 24,
+        "html": "<div class=\"text-16 font-medium\">파비콘</div>",
+        "role": null,
+        "tag": "DIV",
+        "text": "파비콘",
+        "w": 40.578125,
+        "x": 607,
+        "y": 517
+      },
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 24,
+        "html": "<div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">파비콘</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] flex h-[18px] w-[59px] items-center space-x-[1px] p-[5px] text-9 font-medium\"><svg aria-hidden=\"true\" focusable=\"false\" data-prefix=\"far\" data-icon=\"crown\" class=\"svg-inline--fa fa-crown \" role=\"img\" xmlns=\"htt",
+        "role": null,
+        "tag": "DIV",
+        "text": "파비콘 업그레이드",
+        "w": 436.75,
+        "x": 607,
+        "y": 517
+      },
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">파비콘</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] flex h-[18px] w-[59px] items-center space-x-[1px] p-[5px] text-9 font-medium\"><svg aria-",
+        "role": null,
+        "tag": "DIV",
+        "text": "파비콘 업그레이드",
+        "w": 485,
+        "x": 595,
+        "y": 506
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"flex flex-col rounded-[5px] bg-white toggled:text-gray3\"><div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">파비콘</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] flex h-[18px] w-[59",
+        "role": null,
+        "tag": "DIV",
+        "text": "파비콘 업그레이드",
+        "w": 485,
+        "x": 595,
+        "y": 506
+      }
+    ],
+    "t": "파비콘"
+  },
+  {
+    "chain": [
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 24,
+        "html": "<div class=\"text-16 font-medium\">SNS 공유 데이터 (ex. 카카오톡 공유)</div>",
+        "role": null,
+        "tag": "DIV",
+        "text": "SNS 공유 데이터 (ex. 카카오톡 공유)",
+        "w": 220.984375,
+        "x": 607,
+        "y": 573
+      },
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 24,
+        "html": "<div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">SNS 공유 데이터 (ex. 카카오톡 공유)</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] flex h-[18px] w-[59px] items-center space-x-[1px] p-[5px] text-9 font-medium\"><svg aria-hidden=\"true\" focusable=\"false\" data-prefix=\"far\" data-icon=\"crown\" class=\"svg-inline--fa fa-crown \" ",
+        "role": null,
+        "tag": "DIV",
+        "text": "SNS 공유 데이터 (ex. 카카오톡 공유) 업그레이드",
+        "w": 436.75,
+        "x": 607,
+        "y": 573
+      },
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">SNS 공유 데이터 (ex. 카카오톡 공유)</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] flex h-[18px] w-[59px] items-center space-x-[1px] p-[5px] text-9 fo",
+        "role": null,
+        "tag": "DIV",
+        "text": "SNS 공유 데이터 (ex. 카카오톡 공유) 업그레이드",
+        "w": 485,
+        "x": 595,
+        "y": 562
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"flex flex-col rounded-[5px] bg-white toggled:text-gray3\"><div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">SNS 공유 데이터 (ex. 카카오톡 공유)</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3",
+        "role": null,
+        "tag": "DIV",
+        "text": "SNS 공유 데이터 (ex. 카카오톡 공유) 업그레이드",
+        "w": 485,
+        "x": 595,
+        "y": 562
+      }
+    ],
+    "t": "SNS 공유 데이터 (ex. 카카오톡 공유)"
+  },
+  {
+    "chain": [
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"flex flex-col rounded-[5px] bg-white toggled:text-gray3\"><div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">구독정보</div><a data-tooltip-id=\"guide-tooltip\" data-tooltip-content=\"페이지 상단에 구독하기 버튼을 생성하여 고객의 개인정보를 수집합니다\" class=\"flex items-center\"><svg aria-hidden=\"true\" focusable=\"false\" data-prefix=\"far\" data-icon=\"circle-info\" class=\"s",
+        "role": null,
+        "tag": "DIV",
+        "text": "구독정보",
+        "w": 485,
+        "x": 595,
+        "y": 618
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 742,
+        "html": "<div class=\"flex flex-col space-y-[10px]\"><div class=\"flex flex-col rounded-[5px] bg-white toggled:text-gray3\"><div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">페이지 주소</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0",
+        "role": null,
+        "tag": "DIV",
+        "text": "페이지 주소 업그레이드 litt.ly/ 저장 커스텀 도메인 업그레이드 파비콘 업그레이드 SNS 공유 데이터 (ex. 카카오톡 공유) 업그레이드 구독정보 공개/비공개 QR코드 글로벌 언어 제공 업그레이드 마케팅 연결 업그레이드 검색 및 AI 노출 (SEO/GEO) 업그레이드 링크 연결 방",
+        "w": 485,
+        "x": 595,
+        "y": 314
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 793,
+        "html": "<div class=\"overflow-y-auto pb-[1px] mx-[-20px] flex-1 px-[20px] dt:mx-[-25px] dt:px-[25px]\" style=\"--background-color: #F5F5F8; --background-text-color: #000000; --button-color: #000000; --button-text-color: #FFFFFF; --shadow-color: rgba(23, 29, 46, 0.08); --block-background-color: #FFFFFF; --block-text-color: #000000; --block-text-color--unchecked: #8D929F; --block-shape: 14px; --button-shape: 14px; --user-font-family: SUIT,sans-serif; --desktop-ring-color: #F6F6F9; --desktop-background-color:",
+        "role": null,
+        "tag": "DIV",
+        "text": "🧐 체계적인 성과를 비교하고 싶다면? 마케팅 프로들은 벌써 연결했어요! 커스텀 도메인부터 정밀한 데이터 추적까지 GA와 픽셀을 연결해 콘텐츠별 유입 분석 플랜 알아보기 페이지 주소 업그레이드 litt.ly/ 저장 커스텀 도메인 업그레이드 파비콘 업그레이드 SNS 공유 데이터 (ex. ",
+        "w": 550,
+        "x": 570,
+        "y": 88
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 896,
+        "html": "<div class=\"flex w-full flex-col undefined p-[20px] dt:p-[25px]\"><div class=\"flex shrink-0 flex-col\"><div class=\"flex items-center space-x-[15px] pb-[20px] dt:pb-[25px]\"><div class=\"flex-1 truncate text-16 font-semibold dt:text-18\">페이지 설정</div><button class=\"group relative flex h-[25px] w-[25px] items-center justify-center\"><div class=\" absolute inset-x-[-6px] inset-y-[-6px] hidden h-[37px] w-[37px] rounded-full bg-black/[0.05] group-hover:block \"></div><svg aria-hidden=\"true\" focusable=\"false\" ",
+        "role": null,
+        "tag": "DIV",
+        "text": "페이지 설정 🧐 체계적인 성과를 비교하고 싶다면? 마케팅 프로들은 벌써 연결했어요! 커스텀 도메인부터 정밀한 데이터 추적까지 GA와 픽셀을 연결해 콘텐츠별 유입 분석 플랜 알아보기 페이지 주소 업그레이드 litt.ly/ 저장 커스텀 도메인 업그레이드 파비콘 업그레이드 SNS 공유 데이",
+        "w": 550,
+        "x": 570,
+        "y": 10
+      }
+    ],
+    "t": "구독정보"
+  },
+  {
+    "chain": [
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"flex flex-col rounded-[5px] bg-white toggled:text-gray3\"><div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">공개/비공개</div><a data-tooltip-id=\"guide-tooltip\" data-tooltip-content=\"설정한 비밀번호를 입력한 고객만 페이지 내용을 볼 수 있습니다\" class=\"flex items-center\"><svg aria-hidden=\"true\" focusable=\"false\" data-prefix=\"far\" data-icon=\"circle-info\" class=\"sv",
+        "role": null,
+        "tag": "DIV",
+        "text": "공개/비공개",
+        "w": 485,
+        "x": 595,
+        "y": 674
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 742,
+        "html": "<div class=\"flex flex-col space-y-[10px]\"><div class=\"flex flex-col rounded-[5px] bg-white toggled:text-gray3\"><div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">페이지 주소</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0",
+        "role": null,
+        "tag": "DIV",
+        "text": "페이지 주소 업그레이드 litt.ly/ 저장 커스텀 도메인 업그레이드 파비콘 업그레이드 SNS 공유 데이터 (ex. 카카오톡 공유) 업그레이드 구독정보 공개/비공개 QR코드 글로벌 언어 제공 업그레이드 마케팅 연결 업그레이드 검색 및 AI 노출 (SEO/GEO) 업그레이드 링크 연결 방",
+        "w": 485,
+        "x": 595,
+        "y": 314
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 793,
+        "html": "<div class=\"overflow-y-auto pb-[1px] mx-[-20px] flex-1 px-[20px] dt:mx-[-25px] dt:px-[25px]\" style=\"--background-color: #F5F5F8; --background-text-color: #000000; --button-color: #000000; --button-text-color: #FFFFFF; --shadow-color: rgba(23, 29, 46, 0.08); --block-background-color: #FFFFFF; --block-text-color: #000000; --block-text-color--unchecked: #8D929F; --block-shape: 14px; --button-shape: 14px; --user-font-family: SUIT,sans-serif; --desktop-ring-color: #F6F6F9; --desktop-background-color:",
+        "role": null,
+        "tag": "DIV",
+        "text": "🧐 체계적인 성과를 비교하고 싶다면? 마케팅 프로들은 벌써 연결했어요! 커스텀 도메인부터 정밀한 데이터 추적까지 GA와 픽셀을 연결해 콘텐츠별 유입 분석 플랜 알아보기 페이지 주소 업그레이드 litt.ly/ 저장 커스텀 도메인 업그레이드 파비콘 업그레이드 SNS 공유 데이터 (ex. ",
+        "w": 550,
+        "x": 570,
+        "y": 88
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 896,
+        "html": "<div class=\"flex w-full flex-col undefined p-[20px] dt:p-[25px]\"><div class=\"flex shrink-0 flex-col\"><div class=\"flex items-center space-x-[15px] pb-[20px] dt:pb-[25px]\"><div class=\"flex-1 truncate text-16 font-semibold dt:text-18\">페이지 설정</div><button class=\"group relative flex h-[25px] w-[25px] items-center justify-center\"><div class=\" absolute inset-x-[-6px] inset-y-[-6px] hidden h-[37px] w-[37px] rounded-full bg-black/[0.05] group-hover:block \"></div><svg aria-hidden=\"true\" focusable=\"false\" ",
+        "role": null,
+        "tag": "DIV",
+        "text": "페이지 설정 🧐 체계적인 성과를 비교하고 싶다면? 마케팅 프로들은 벌써 연결했어요! 커스텀 도메인부터 정밀한 데이터 추적까지 GA와 픽셀을 연결해 콘텐츠별 유입 분석 플랜 알아보기 페이지 주소 업그레이드 litt.ly/ 저장 커스텀 도메인 업그레이드 파비콘 업그레이드 SNS 공유 데이",
+        "w": 550,
+        "x": 570,
+        "y": 10
+      }
+    ],
+    "t": "공개/비공개"
+  },
+  {
+    "chain": [
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"flex flex-col rounded-[5px] bg-white toggled:text-gray3\"><div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">QR코드</div></div><svg aria-hidden=\"true\" focusable=\"false\" data-prefix=\"fas\" data-icon=\"chevron-down\" class=\"svg-inline--fa fa-chevron-down text-[14px] text-gray4 group-disabled:text-gray3\" role=\"img\" xmlns=\"http://www.w3.org",
+        "role": null,
+        "tag": "DIV",
+        "text": "QR코드",
+        "w": 485,
+        "x": 595,
+        "y": 730
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 742,
+        "html": "<div class=\"flex flex-col space-y-[10px]\"><div class=\"flex flex-col rounded-[5px] bg-white toggled:text-gray3\"><div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">페이지 주소</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0",
+        "role": null,
+        "tag": "DIV",
+        "text": "페이지 주소 업그레이드 litt.ly/ 저장 커스텀 도메인 업그레이드 파비콘 업그레이드 SNS 공유 데이터 (ex. 카카오톡 공유) 업그레이드 구독정보 공개/비공개 QR코드 글로벌 언어 제공 업그레이드 마케팅 연결 업그레이드 검색 및 AI 노출 (SEO/GEO) 업그레이드 링크 연결 방",
+        "w": 485,
+        "x": 595,
+        "y": 314
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 793,
+        "html": "<div class=\"overflow-y-auto pb-[1px] mx-[-20px] flex-1 px-[20px] dt:mx-[-25px] dt:px-[25px]\" style=\"--background-color: #F5F5F8; --background-text-color: #000000; --button-color: #000000; --button-text-color: #FFFFFF; --shadow-color: rgba(23, 29, 46, 0.08); --block-background-color: #FFFFFF; --block-text-color: #000000; --block-text-color--unchecked: #8D929F; --block-shape: 14px; --button-shape: 14px; --user-font-family: SUIT,sans-serif; --desktop-ring-color: #F6F6F9; --desktop-background-color:",
+        "role": null,
+        "tag": "DIV",
+        "text": "🧐 체계적인 성과를 비교하고 싶다면? 마케팅 프로들은 벌써 연결했어요! 커스텀 도메인부터 정밀한 데이터 추적까지 GA와 픽셀을 연결해 콘텐츠별 유입 분석 플랜 알아보기 페이지 주소 업그레이드 litt.ly/ 저장 커스텀 도메인 업그레이드 파비콘 업그레이드 SNS 공유 데이터 (ex. ",
+        "w": 550,
+        "x": 570,
+        "y": 88
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 896,
+        "html": "<div class=\"flex w-full flex-col undefined p-[20px] dt:p-[25px]\"><div class=\"flex shrink-0 flex-col\"><div class=\"flex items-center space-x-[15px] pb-[20px] dt:pb-[25px]\"><div class=\"flex-1 truncate text-16 font-semibold dt:text-18\">페이지 설정</div><button class=\"group relative flex h-[25px] w-[25px] items-center justify-center\"><div class=\" absolute inset-x-[-6px] inset-y-[-6px] hidden h-[37px] w-[37px] rounded-full bg-black/[0.05] group-hover:block \"></div><svg aria-hidden=\"true\" focusable=\"false\" ",
+        "role": null,
+        "tag": "DIV",
+        "text": "페이지 설정 🧐 체계적인 성과를 비교하고 싶다면? 마케팅 프로들은 벌써 연결했어요! 커스텀 도메인부터 정밀한 데이터 추적까지 GA와 픽셀을 연결해 콘텐츠별 유입 분석 플랜 알아보기 페이지 주소 업그레이드 litt.ly/ 저장 커스텀 도메인 업그레이드 파비콘 업그레이드 SNS 공유 데이",
+        "w": 550,
+        "x": 570,
+        "y": 10
+      }
+    ],
+    "t": "QR코드"
+  },
+  {
+    "chain": [
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 24,
+        "html": "<div class=\"text-16 font-medium\">글로벌 언어 제공</div>",
+        "role": null,
+        "tag": "DIV",
+        "text": "글로벌 언어 제공",
+        "w": 100.71875,
+        "x": 607,
+        "y": 797
+      },
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 24,
+        "html": "<div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">글로벌 언어 제공</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] flex h-[18px] w-[59px] items-center space-x-[1px] p-[5px] text-9 font-medium\"><svg aria-hidden=\"true\" focusable=\"false\" data-prefix=\"far\" data-icon=\"crown\" class=\"svg-inline--fa fa-crown \" role=\"img\" xmln",
+        "role": null,
+        "tag": "DIV",
+        "text": "글로벌 언어 제공 업그레이드",
+        "w": 436.75,
+        "x": 607,
+        "y": 797
+      },
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">글로벌 언어 제공</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] flex h-[18px] w-[59px] items-center space-x-[1px] p-[5px] text-9 font-medium\"><svg",
+        "role": null,
+        "tag": "DIV",
+        "text": "글로벌 언어 제공 업그레이드",
+        "w": 485,
+        "x": 595,
+        "y": 786
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"flex flex-col rounded-[5px] bg-white toggled:text-gray3\"><div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">글로벌 언어 제공</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] flex h-[18px]",
+        "role": null,
+        "tag": "DIV",
+        "text": "글로벌 언어 제공 업그레이드",
+        "w": 485,
+        "x": 595,
+        "y": 786
+      }
+    ],
+    "t": "글로벌 언어 제공"
+  },
+  {
+    "chain": [
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 24,
+        "html": "<div class=\"text-16 font-medium\">마케팅 연결</div>",
+        "role": null,
+        "tag": "DIV",
+        "text": "마케팅 연결",
+        "w": 70.640625,
+        "x": 607,
+        "y": 853
+      },
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 24,
+        "html": "<div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">마케팅 연결</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] flex h-[18px] w-[59px] items-center space-x-[1px] p-[5px] text-9 font-medium\"><svg aria-hidden=\"true\" focusable=\"false\" data-prefix=\"far\" data-icon=\"crown\" class=\"svg-inline--fa fa-crown \" role=\"img\" xmlns=\"",
+        "role": null,
+        "tag": "DIV",
+        "text": "마케팅 연결 업그레이드",
+        "w": 436.75,
+        "x": 607,
+        "y": 853
+      },
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">마케팅 연결</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] flex h-[18px] w-[59px] items-center space-x-[1px] p-[5px] text-9 font-medium\"><svg ar",
+        "role": null,
+        "tag": "DIV",
+        "text": "마케팅 연결 업그레이드",
+        "w": 485,
+        "x": 595,
+        "y": 842
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"flex flex-col rounded-[5px] bg-white toggled:text-gray3\"><div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">마케팅 연결</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] flex h-[18px] w-",
+        "role": null,
+        "tag": "DIV",
+        "text": "마케팅 연결 업그레이드",
+        "w": 485,
+        "x": 595,
+        "y": 842
+      }
+    ],
+    "t": "마케팅 연결"
+  },
+  {
+    "chain": [
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 24,
+        "html": "<div class=\"text-16 font-medium\">검색 및 AI 노출 (SEO/GEO)</div>",
+        "role": null,
+        "tag": "DIV",
+        "text": "검색 및 AI 노출 (SEO/GEO)",
+        "w": 168.0625,
+        "x": 607,
+        "y": 909
+      },
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 24,
+        "html": "<div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">검색 및 AI 노출 (SEO/GEO)</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] flex h-[18px] w-[59px] items-center space-x-[1px] p-[5px] text-9 font-medium\"><svg aria-hidden=\"true\" focusable=\"false\" data-prefix=\"far\" data-icon=\"crown\" class=\"svg-inline--fa fa-crown \" role",
+        "role": null,
+        "tag": "DIV",
+        "text": "검색 및 AI 노출 (SEO/GEO) 업그레이드",
+        "w": 436.75,
+        "x": 607,
+        "y": 909
+      },
+      {
+        "cursor": "pointer",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">검색 및 AI 노출 (SEO/GEO)</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] flex h-[18px] w-[59px] items-center space-x-[1px] p-[5px] text-9 font-m",
+        "role": null,
+        "tag": "DIV",
+        "text": "검색 및 AI 노출 (SEO/GEO) 업그레이드",
+        "w": 485,
+        "x": 595,
+        "y": 898
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"flex flex-col rounded-[5px] bg-white toggled:text-gray3\"><div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">검색 및 AI 노출 (SEO/GEO)</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0.3] fl",
+        "role": null,
+        "tag": "DIV",
+        "text": "검색 및 AI 노출 (SEO/GEO) 업그레이드",
+        "w": 485,
+        "x": 595,
+        "y": 898
+      }
+    ],
+    "t": "검색 및 AI 노출 (SEO/GEO)"
+  },
+  {
+    "chain": [
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"flex flex-col rounded-[5px] bg-white toggled:text-gray3\"><div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">링크 연결 방식</div><a data-tooltip-id=\"guide-tooltip\" data-tooltip-content=\"링크를 클릭했을 때 새 창에서 열리는지 설정할 수 있습니다.\" class=\"flex items-center\"><svg aria-hidden=\"true\" focusable=\"false\" data-prefix=\"far\" data-icon=\"circle-info\" class=\"s",
+        "role": null,
+        "tag": "DIV",
+        "text": "링크 연결 방식",
+        "w": 485,
+        "x": 595,
+        "y": 954
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 742,
+        "html": "<div class=\"flex flex-col space-y-[10px]\"><div class=\"flex flex-col rounded-[5px] bg-white toggled:text-gray3\"><div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">페이지 주소</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0",
+        "role": null,
+        "tag": "DIV",
+        "text": "페이지 주소 업그레이드 litt.ly/ 저장 커스텀 도메인 업그레이드 파비콘 업그레이드 SNS 공유 데이터 (ex. 카카오톡 공유) 업그레이드 구독정보 공개/비공개 QR코드 글로벌 언어 제공 업그레이드 마케팅 연결 업그레이드 검색 및 AI 노출 (SEO/GEO) 업그레이드 링크 연결 방",
+        "w": 485,
+        "x": 595,
+        "y": 314
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 793,
+        "html": "<div class=\"overflow-y-auto pb-[1px] mx-[-20px] flex-1 px-[20px] dt:mx-[-25px] dt:px-[25px]\" style=\"--background-color: #F5F5F8; --background-text-color: #000000; --button-color: #000000; --button-text-color: #FFFFFF; --shadow-color: rgba(23, 29, 46, 0.08); --block-background-color: #FFFFFF; --block-text-color: #000000; --block-text-color--unchecked: #8D929F; --block-shape: 14px; --button-shape: 14px; --user-font-family: SUIT,sans-serif; --desktop-ring-color: #F6F6F9; --desktop-background-color:",
+        "role": null,
+        "tag": "DIV",
+        "text": "🧐 체계적인 성과를 비교하고 싶다면? 마케팅 프로들은 벌써 연결했어요! 커스텀 도메인부터 정밀한 데이터 추적까지 GA와 픽셀을 연결해 콘텐츠별 유입 분석 플랜 알아보기 페이지 주소 업그레이드 litt.ly/ 저장 커스텀 도메인 업그레이드 파비콘 업그레이드 SNS 공유 데이터 (ex. ",
+        "w": 550,
+        "x": 570,
+        "y": 88
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 896,
+        "html": "<div class=\"flex w-full flex-col undefined p-[20px] dt:p-[25px]\"><div class=\"flex shrink-0 flex-col\"><div class=\"flex items-center space-x-[15px] pb-[20px] dt:pb-[25px]\"><div class=\"flex-1 truncate text-16 font-semibold dt:text-18\">페이지 설정</div><button class=\"group relative flex h-[25px] w-[25px] items-center justify-center\"><div class=\" absolute inset-x-[-6px] inset-y-[-6px] hidden h-[37px] w-[37px] rounded-full bg-black/[0.05] group-hover:block \"></div><svg aria-hidden=\"true\" focusable=\"false\" ",
+        "role": null,
+        "tag": "DIV",
+        "text": "페이지 설정 🧐 체계적인 성과를 비교하고 싶다면? 마케팅 프로들은 벌써 연결했어요! 커스텀 도메인부터 정밀한 데이터 추적까지 GA와 픽셀을 연결해 콘텐츠별 유입 분석 플랜 알아보기 페이지 주소 업그레이드 litt.ly/ 저장 커스텀 도메인 업그레이드 파비콘 업그레이드 SNS 공유 데이",
+        "w": 550,
+        "x": 570,
+        "y": 10
+      }
+    ],
+    "t": "링크 연결 방식"
+  },
+  {
+    "chain": [
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 46,
+        "html": "<div class=\"flex flex-col rounded-[5px] bg-white toggled:text-gray3\"><div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer dt:hover:bg-[#F5F5F5]\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">Tiktok 외부 브라우저 열기 팝업 노출</div></div><svg aria-hidden=\"true\" focusable=\"false\" data-prefix=\"fas\" data-icon=\"chevron-down\" class=\"svg-inline--fa fa-chevron-down text-[14px] text-gray4 group-disabled:text-gray3\" role=\"img\" xmlns",
+        "role": null,
+        "tag": "DIV",
+        "text": "Tiktok 외부 브라우저 열기 팝업 노출",
+        "w": 485,
+        "x": 595,
+        "y": 1010
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 742,
+        "html": "<div class=\"flex flex-col space-y-[10px]\"><div class=\"flex flex-col rounded-[5px] bg-white toggled:text-gray3\"><div class=\"group flex h-[46px] items-center space-x-[12px] rounded-[5px] px-[12px] cursor-pointer\"><div class=\"flex flex-1 items-center space-x-[5px]\"><div class=\"text-16 font-medium\">페이지 주소</div><div><button class=\"group/button relative isolate shrink-0 justify-center overflow-hidden active:enabled:scale-[0.98] rounded-[5px] bg-black text-white disabled:bg-gray4 disabled:text-white/[0",
+        "role": null,
+        "tag": "DIV",
+        "text": "페이지 주소 업그레이드 litt.ly/ 저장 커스텀 도메인 업그레이드 파비콘 업그레이드 SNS 공유 데이터 (ex. 카카오톡 공유) 업그레이드 구독정보 공개/비공개 QR코드 글로벌 언어 제공 업그레이드 마케팅 연결 업그레이드 검색 및 AI 노출 (SEO/GEO) 업그레이드 링크 연결 방",
+        "w": 485,
+        "x": 595,
+        "y": 314
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 793,
+        "html": "<div class=\"overflow-y-auto pb-[1px] mx-[-20px] flex-1 px-[20px] dt:mx-[-25px] dt:px-[25px]\" style=\"--background-color: #F5F5F8; --background-text-color: #000000; --button-color: #000000; --button-text-color: #FFFFFF; --shadow-color: rgba(23, 29, 46, 0.08); --block-background-color: #FFFFFF; --block-text-color: #000000; --block-text-color--unchecked: #8D929F; --block-shape: 14px; --button-shape: 14px; --user-font-family: SUIT,sans-serif; --desktop-ring-color: #F6F6F9; --desktop-background-color:",
+        "role": null,
+        "tag": "DIV",
+        "text": "🧐 체계적인 성과를 비교하고 싶다면? 마케팅 프로들은 벌써 연결했어요! 커스텀 도메인부터 정밀한 데이터 추적까지 GA와 픽셀을 연결해 콘텐츠별 유입 분석 플랜 알아보기 페이지 주소 업그레이드 litt.ly/ 저장 커스텀 도메인 업그레이드 파비콘 업그레이드 SNS 공유 데이터 (ex. ",
+        "w": 550,
+        "x": 570,
+        "y": 88
+      },
+      {
+        "cursor": "auto",
+        "disabled": false,
+        "h": 896,
+        "html": "<div class=\"flex w-full flex-col undefined p-[20px] dt:p-[25px]\"><div class=\"flex shrink-0 flex-col\"><div class=\"flex items-center space-x-[15px] pb-[20px] dt:pb-[25px]\"><div class=\"flex-1 truncate text-16 font-semibold dt:text-18\">페이지 설정</div><button class=\"group relative flex h-[25px] w-[25px] items-center justify-center\"><div class=\" absolute inset-x-[-6px] inset-y-[-6px] hidden h-[37px] w-[37px] rounded-full bg-black/[0.05] group-hover:block \"></div><svg aria-hidden=\"true\" focusable=\"false\" ",
+        "role": null,
+        "tag": "DIV",
+        "text": "페이지 설정 🧐 체계적인 성과를 비교하고 싶다면? 마케팅 프로들은 벌써 연결했어요! 커스텀 도메인부터 정밀한 데이터 추적까지 GA와 픽셀을 연결해 콘텐츠별 유입 분석 플랜 알아보기 페이지 주소 업그레이드 litt.ly/ 저장 커스텀 도메인 업그레이드 파비콘 업그레이드 SNS 공유 데이",
+        "w": 550,
+        "x": 570,
+        "y": 10
+      }
+    ],
+    "t": "Tiktok 외부 브라우저 열기 팝업 노출"
+  }
+]

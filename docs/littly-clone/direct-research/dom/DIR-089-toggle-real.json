@@ -1,0 +1,17 @@
+{
+  "visCount": 1,
+  "checkedBefore": {
+    "aria": "true",
+    "checked": true
+  },
+  "checkedOff": {
+    "aria": "false",
+    "checked": false
+  },
+  "checkedOn": {
+    "aria": "true",
+    "checked": true
+  },
+  "offPublicHas": false,
+  "onPublicHas": true
+}

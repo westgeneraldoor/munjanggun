@@ -1,0 +1,22 @@
+- generic: munjanggun.com
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- iframe
+- iframe:
+  - generic "YouTube 동영상 플레이어"
+  - button "동영상 재생":
+  - button "재생 컨트롤 숨기기"
+  - link "Big Buck Bunny":
+    - /url: https://www.youtube.com/watch?v=YE7VzlLtp-4
+  - link "Blender":
+    - /url: /channel/UCSMOQeBJ2RAnuFungnQOxLg
+    - generic: Blender
+  - button "thumbnail-image":
+    - img "thumbnail-image"
+  - generic: Blender
+  - generic: 구독자 124만명
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >

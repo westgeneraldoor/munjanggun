@@ -1,0 +1,21 @@
+- generic: 🌟 하나의 계정으로 여러 페이지를 운영해요!
+- generic: 하나의 유료 계정으로 모든 페이지에 프리미엄 기능 적용! 하나의 계정으로 모든 브랜드 페이지를 한꺼번에 관리!
+- generic: 언제든지 구독 해지 가능!
+- generic: 모든 페이지에 ‘커스텀 도메인’ 연결
+- generic: 모든 페이지에 ‘커스텀 로고’ 적용
+- button "플랜 알아보기":
+  - text: 플랜 알아보기
+- generic: 관리할 페이지를 선택하세요!
+- button "옵션":
+  - generic: 옵션
+- button "페이지 추가하기 1/1" [disabled]:
+  - generic: 페이지 추가하기 1/1
+- generic: new page
+- button:
+- link "munjanggun.com":
+  - /url: https://litt.ly/munjanggun.com
+- button [disabled]:
+- button:
+- button:
+- link:
+  - /url: https://start.litt.ly

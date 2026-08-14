@@ -1,0 +1,110 @@
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- link "URL litt.ly/munjanggun.com/page1":
+  - /url: https://litt.ly/munjanggun.com/page1
+  - generic: URL
+  - text: litt.ly/munjanggun.com/page1
+- button:
+- generic: 페이지 추가
+- text: 홈화면
+- text: 페이지
+- button "페이지":
+  - generic: 페이지
+- button "디자인" [disabled]:
+  - generic: 디자인
+- button "분석":
+  - generic: 분석
+- button "관리":
+  - generic: 관리
+- button "마케팅":
+  - generic: 마케팅
+- generic: 🎨 나만의 커스텀 디자인 강화!
+- generic: 기본 폰트 외에도, 수 많은 폰트 제공
+- generic: 하단 리틀리 로고 삭제후, 커스텀 로고 적용!
+- generic: 후속 유료 디자인 기능, 다수 대기중
+- button "플랜 알아보기":
+  - text: 플랜 알아보기
+- text: 페이지 디자인
+- button "추천 디자인 제작":
+  - generic: 추천 디자인 제작
+- generic: 배경색
+- button
+- button
+- button
+- button "#E8ECEF":
+  - generic: "#E8ECEF"
+- generic: 사진 업로드
+- generic: 버튼색
+- button
+- button
+- button
+- button
+- button
+- button
+- button
+- button "#010102":
+  - generic: "#010102"
+- radio "부분 적용" [checked]
+- generic: 부분 적용
+- radio "전체 적용"
+- generic: 전체 적용
+- generic: 버튼 모양
+- button [disabled]
+- button
+- button
+- generic: 버튼 액션
+- button [disabled]:
+- button:
+- button:
+- button:
+- button:
+- generic: 폰트
+- button "안녕하세요!" [disabled]:
+  - generic: 안녕하세요!
+- button "안녕하세요!":
+  - generic: 안녕하세요!
+- button "안녕하세요!":
+  - generic: 안녕하세요!
+- button "안녕하세요!":
+  - generic: 안녕하세요!
+- button "안녕하세요!":
+  - generic: 안녕하세요!
+- button "안녕하세요!":
+  - generic: 안녕하세요!
+- button "안녕하세요!":
+  - generic: 안녕하세요!
+- button "안녕하세요!":
+  - generic: 안녕하세요!
+- button "-" [disabled]:
+  - generic: "-"
+- generic: 더 많은 폰트 찾아보기
+- combobox
+- generic: 상단메뉴
+- radio
+- radio "yourname" [checked]
+- generic: yourname
+- button "비공개":
+  - generic: 비공개
+- generic: 공유/구독 버튼
+- button "노출" [disabled]:
+  - generic: 노출
+- button "비공개":
+  - generic: 비공개
+- button "공유":
+  - generic: 공유
+- button "구독":
+  - generic: 구독
+- generic: 로고
+- button "로고" [disabled]:
+  - generic: 로고
+- button "내 로고":
+  - generic: 내 로고
+- button "로고 삭제":
+  - generic: 로고 삭제
+- button:
+- img "Live Chat Button"

@@ -1,0 +1,18 @@
+{
+  "slider": {
+    "min": null,
+    "max": null,
+    "step": null,
+    "value": null,
+    "ariaMin": "0",
+    "ariaMax": "100",
+    "ariaNow": "50",
+    "ariaText": null
+  },
+  "spin": {
+    "min": null,
+    "max": null,
+    "step": null,
+    "value": "50"
+  }
+}

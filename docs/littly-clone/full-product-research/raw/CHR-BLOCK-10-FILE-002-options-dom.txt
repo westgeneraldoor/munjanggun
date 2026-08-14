@@ -1,0 +1,59 @@
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- generic: 파일공유 블록이 생성될 위치입니다.
+- generic: 파일을 하나 이상 추가해 주세요
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- link "URL litt.ly/munjanggun.com/page1":
+  - /url: https://litt.ly/munjanggun.com/page1
+  - generic: URL
+  - text: litt.ly/munjanggun.com/page1
+- button:
+- generic: 페이지 추가
+- text: 홈화면
+- text: 페이지
+- button "페이지" [disabled]:
+  - generic: 페이지
+- button "디자인":
+  - generic: 디자인
+- button "분석":
+  - generic: 분석
+- button "관리":
+  - generic: 관리
+- button "마케팅":
+  - generic: 마케팅
+- generic: 프로필
+- button:
+- button:
+- button "ON OFF 파일 공유":
+  - generic: "ON"
+  - generic: "OFF"
+  - switch [checked]
+  - generic: 파일 공유
+- button "예약":
+  - generic: 예약
+- button:
+- generic: 대표문구*
+- textbox "대표문구":
+  - /placeholder: 자유로운 주제 문구 입력
+- generic: 이미지
+- generic: 상세설명
+- textbox "상세설명":
+  - /placeholder: 추가 설명을 남길 수 있습니다
+- generic: 파일 업로드*
+- button "+ 파일첨부": + 파일첨부
+- button "옵션 접기" [active]:
+  - generic: 옵션 접기
+- generic: 수집 고객정보
+- checkbox "이메일"
+- generic: 이메일
+- checkbox "휴대폰번호"
+- generic: 휴대폰번호
+- checkbox "이름"
+- generic: 이름
+- button "+블럭 추가": +블럭 추가
+- button:
+- img "Live Chat Button"

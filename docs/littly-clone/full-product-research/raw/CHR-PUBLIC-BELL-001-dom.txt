@@ -1,0 +1,47 @@
+- button:
+- button:
+- heading "문장군" [level=1]
+- heading "문이 바뀌는 체험을 아름답게" [level=2]
+- generic: 홈화면
+- generic: 페이지
+- link "네이버예약 무료방문실측 견적상담":
+  - /url: https://booking.naver.com/booking/5/bizes/654913/items/6032347
+  - generic: 네이버예약
+  - heading "무료방문실측 견적상담" [level=2]
+- link "네이버 브랜드스토어 문장군 스토어":
+  - /url: https://brand.naver.com/munjanggun
+  - generic: 네이버
+  - generic: 브랜드스토어
+  - heading "문장군 스토어" [level=2]
+- link "현관중문 슬라이딩 3연동중문 아파트 시공설치/베이직 풀윈도우 투명강화유리 35% 550,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/4610364765
+  - generic: 현관중문 슬라이딩 3연동중문 아파트 시공설치/베이직 풀윈도우 투명강화유리
+  - generic: 35%
+  - generic: 550,000원
+- link "슬라이딩 양개형중문 미서기 4연동중문 아파트 현관 거실 부엌 확장형 드레스룸 시공설치 30% 950,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/12404021912
+  - generic: 슬라이딩 양개형중문 미서기 4연동중문 아파트 현관 거실 부엌 확장형 드레스룸 시공설치
+  - generic: 30%
+  - generic: 950,000원
+- link "[올인원시공] 겨울철 난방비 잡는 프리미엄 현관문 단열 방화문 시공 도어교체 34% 390,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/11819259996
+  - generic: "[올인원시공] 겨울철 난방비 잡는 프리미엄 현관문 단열 방화문 시공 도어교체"
+  - generic: 34%
+  - generic: 390,000원
+- link "자동문 현관중문 3연동 슬라이딩 자동중문 아파트 시공설치/베이직 풀윈도우 화이트 34% 990,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/11390026743
+  - generic: 자동문 현관중문 3연동 슬라이딩 자동중문 아파트 시공설치/베이직 풀윈도우 화이트
+  - generic: 34%
+  - generic: 990,000원
+- generic: 더보기
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- dialog [active]:
+  - button:
+  - generic: munjanggun.com 구독하기
+  - generic: 중요한 소식을 빠르게 만나보세요!
+  - textbox
+  - generic: 이메일을 적어주세요
+  - generic: "*"
+  - button "구독" [disabled]
+  - generic: "[필수] 개인정보 수집 및 이용과 광고성 정보 수신 동의"

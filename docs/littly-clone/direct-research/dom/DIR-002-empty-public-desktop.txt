@@ -1,0 +1,10 @@
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- link "코어-A 단일 링크 테스트":
+  - /url: https://example.com/core-a-single-link
+  - heading "코어-A 단일 링크 테스트" [level=2]
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >

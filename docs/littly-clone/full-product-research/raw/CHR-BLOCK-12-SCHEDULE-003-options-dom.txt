@@ -1,0 +1,55 @@
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- generic: 일정 블록이 생성될 위치입니다.
+- generic: 일정을 하나 이상 추가해 주세요
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- link "URL litt.ly/munjanggun.com/page1":
+  - /url: https://litt.ly/munjanggun.com/page1
+  - generic: URL
+  - text: litt.ly/munjanggun.com/page1
+- button:
+- generic: 페이지 추가
+- text: 홈화면
+- text: 페이지
+- button "페이지" [disabled]:
+  - generic: 페이지
+- button "디자인":
+  - generic: 디자인
+- button "분석":
+  - generic: 분석
+- button "관리":
+  - generic: 관리
+- button "마케팅":
+  - generic: 마케팅
+- generic: 프로필
+- button:
+- button:
+- button "ON OFF 일정":
+  - generic: "ON"
+  - generic: "OFF"
+  - switch [checked]
+  - generic: 일정
+- button "예약":
+  - generic: 예약
+- button:
+- generic: 대표문구
+- textbox "대표문구":
+  - /placeholder: 달력 상단에 문구가 노출됩니다.
+- generic: 일정 목록*
+- button "+ 일정 추가": + 일정 추가
+- generic: 자동 알림 기능
+- switch [disabled]
+- button "옵션 접기" [active]:
+  - generic: 옵션 접기
+- generic: 레이아웃
+- radio "캘린더 리스트" [checked]
+- generic: 캘린더 리스트
+- radio "리스트"
+- generic: 리스트
+- button "+블럭 추가": +블럭 추가
+- button:
+- img "Live Chat Button"

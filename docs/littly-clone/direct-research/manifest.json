@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 2,
+  "status": "COMPLETE_WITH_SAFE_BOUNDARIES",
+  "stage": "RESEARCH_COMPLETE",
+  "startedAt": "2026-08-13T07:39:45.842Z",
+  "updatedAt": "2026-08-13T17:27:21.9918907+09:00",
+  "scope": {
+    "globalAreas": 5,
+    "pageLifecycleUnits": 1,
+    "actualBlockTypes": 24,
+    "totalResearchUnits": 30
+  },
+  "artifacts": {
+    "directEvidenceFiles": 142,
+    "directEvidenceBytes": 337149,
+    "screenshotFiles": 50,
+    "screenshotBytes": 4682075,
+    "report": "../DIRECT_RESEARCH_REPORT.md",
+    "matrix": "../IMPLEMENTATION_MATRIX.md",
+    "htmlReview": "../review/index.html"
+  },
+  "items": [
+    { "id": "G01", "name": "page", "status": "VERIFIED_PARTIAL", "evidence": ["DIR-052", "DIR-058", "DIR-059", "DIR-060"] },
+    { "id": "G02", "name": "design", "status": "VERIFIED_PARTIAL", "evidence": ["DIR-053", "DIR-061"] },
+    { "id": "G03", "name": "analytics", "status": "PARTIAL", "evidence": ["DIR-054", "DIR-062", "DIR-063", "DIR-067", "DIR-068"] },
+    { "id": "G04", "name": "manage", "status": "PARTIAL", "evidence": ["DIR-055", "DIR-064"] },
+    { "id": "G05", "name": "marketing", "status": "PARTIAL", "evidence": ["DIR-056", "DIR-065", "DIR-066"] },
+    { "id": "B01", "name": "page-lifecycle", "status": "VERIFIED_PARTIAL", "evidence": ["DIR-001", "DIR-002", "DIR-003", "DIR-069"] },
+    { "id": "B02", "name": "single-link", "status": "VERIFIED", "evidence": ["DIR-005", "DIR-006", "DIR-007", "DIR-008", "DIR-009", "DIR-010", "DIR-011", "DIR-013", "DIR-014", "DIR-015", "DIR-016", "DIR-020", "DIR-021", "DIR-022"] },
+    { "id": "B03", "name": "group-link", "status": "VERIFIED_PARTIAL", "evidence": ["DIR-023", "DIR-024", "DIR-025"] },
+    { "id": "B04", "name": "sns", "status": "PARTIAL", "evidence": ["DIR-026", "DIR-027", "DIR-028"] },
+    { "id": "B05", "name": "video", "status": "PARTIAL", "evidence": ["DIR-029"] },
+    { "id": "B06", "name": "text", "status": "VERIFIED", "evidence": ["DIR-030", "DIR-085", "DIR-086", "DIR-087", "DIR-088", "DIR-089"] },
+    { "id": "B07", "name": "gallery", "status": "PARTIAL", "evidence": ["DIR-040"] },
+    { "id": "B08", "name": "spacer", "status": "VERIFIED_PARTIAL", "evidence": ["DIR-033"] },
+    { "id": "B09", "name": "music", "status": "VERIFIED", "evidence": ["DIR-034", "evidence/music", "supplemental/music-detailed"] },
+    { "id": "B10", "name": "map", "status": "PARTIAL", "evidence": ["DIR-035"] },
+    { "id": "B11", "name": "file-share", "status": "PARTIAL", "evidence": ["DIR-036"] },
+    { "id": "B12", "name": "inquiry", "status": "VERIFIED_PARTIAL", "evidence": ["DIR-037", "DIR-070"] },
+    { "id": "B13", "name": "schedule", "status": "VERIFIED_PARTIAL", "evidence": ["DIR-038", "DIR-071"] },
+    { "id": "B14", "name": "customer-info", "status": "PARTIAL", "evidence": ["DIR-039"] },
+    { "id": "B15", "name": "contact", "status": "VERIFIED_PARTIAL", "evidence": ["DIR-041", "DIR-073"] },
+    { "id": "B16", "name": "notice", "status": "VERIFIED_PARTIAL", "evidence": ["DIR-042"] },
+    { "id": "B17", "name": "search", "status": "VERIFIED_PARTIAL", "evidence": ["DIR-043"] },
+    { "id": "B18", "name": "guestbook", "status": "VERIFIED_PARTIAL", "evidence": ["DIR-044", "DIR-072"] },
+    { "id": "B19", "name": "domestic-sale", "status": "VERIFIED_PARTIAL", "evidence": ["DIR-045", "DIR-074", "DIR-077", "DIR-078", "DIR-079", "DIR-082", "DIR-083"] },
+    { "id": "B20", "name": "global-sale", "status": "PARTIAL", "evidence": ["DIR-046", "DIR-075", "DIR-080"] },
+    { "id": "B21", "name": "sponsorship", "status": "PARTIAL", "evidence": ["DIR-047"] },
+    { "id": "B22", "name": "reservation", "status": "VERIFIED_PARTIAL", "evidence": ["DIR-048", "DIR-076", "DIR-081", "DIR-084"] },
+    { "id": "B23", "name": "advertising", "status": "PARTIAL", "evidence": ["DIR-049"] },
+    { "id": "B24", "name": "membership", "status": "PARTIAL", "evidence": ["DIR-050"] },
+    { "id": "B25", "name": "smartstore", "status": "VERIFIED_PARTIAL", "evidence": ["DIR-051"] }
+  ],
+  "cleanup": {
+    "status": "VERIFIED",
+    "evidenceIds": ["DIR-057", "DIR-069", "DIR-090", "DIR-091", "DIR-092", "DIR-093", "DIR-094"],
+    "ownedBrowserTabs": 0,
+    "page1TestBlocks": 0,
+    "homeTestMarkers": 0,
+    "legitimateHomeBlocksPreserved": true
+  },
+  "unknowns": [
+    "Real gallery and file uploads",
+    "Real customer submission and customer-row actions",
+    "Real email, SMS, and Instagram DM delivery",
+    "Revenue account, seller registration, payment, refund, and settlement",
+    "Exact analytics period dropdown values under the current custom combobox",
+    "Mobile editor behavior",
+    "Keyboard-only drag and full accessibility behavior"
+  ],
+  "contradictions": [
+    { "claim": "25 block types", "resolution": "Corrected to 24 after direct full picker inventory" },
+    { "claim": "ARIA switch click toggles visibility", "resolution": "Hidden input click did not toggle; visible react-switch surface did and was verified on public page" },
+    { "claim": "Direct screenshots are available for every state", "resolution": "CDP capture timed out; direct DOM/a11y plus provenance-labelled supplemental screenshots are retained" },
+    { "claim": "Delete success can be judged immediately", "resolution": "Fresh-session re-entry is required; final cleanup used new tabs and server-state checks" }
+  ]
+}

@@ -1,0 +1,130 @@
+[
+  {
+    "aria": null,
+    "checked": false,
+    "disabled": false,
+    "i": 0,
+    "name": "",
+    "rect": {
+      "h": 0,
+      "w": 0,
+      "x": 895,
+      "y": 664
+    },
+    "tag": "INPUT",
+    "type": "radio",
+    "value": "on"
+  },
+  {
+    "aria": null,
+    "checked": true,
+    "disabled": false,
+    "i": 1,
+    "name": "",
+    "rect": {
+      "h": 0,
+      "w": 0,
+      "x": 988.515625,
+      "y": 664
+    },
+    "tag": "INPUT",
+    "type": "radio",
+    "value": "on"
+  },
+  {
+    "aria": null,
+    "checked": false,
+    "disabled": false,
+    "i": 2,
+    "name": "",
+    "rect": {
+      "h": 24,
+      "w": 453,
+      "x": 905,
+      "y": 1226
+    },
+    "tag": "INPUT",
+    "type": "text",
+    "value": ""
+  },
+  {
+    "aria": null,
+    "checked": false,
+    "disabled": false,
+    "i": 3,
+    "name": "autocomplete",
+    "rect": {
+      "h": 0,
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    "tag": "INPUT",
+    "type": "hidden",
+    "value": ""
+  },
+  {
+    "aria": null,
+    "checked": false,
+    "disabled": false,
+    "i": 4,
+    "name": "",
+    "rect": {
+      "h": 0,
+      "w": 0,
+      "x": 895,
+      "y": 1371
+    },
+    "tag": "INPUT",
+    "type": "radio",
+    "value": "on"
+  },
+  {
+    "aria": null,
+    "checked": true,
+    "disabled": false,
+    "i": 5,
+    "name": "",
+    "rect": {
+      "h": 0,
+      "w": 0,
+      "x": 1066.328125,
+      "y": 1371
+    },
+    "tag": "INPUT",
+    "type": "radio",
+    "value": "on"
+  },
+  {
+    "aria": null,
+    "checked": true,
+    "disabled": false,
+    "i": 6,
+    "name": "",
+    "rect": {
+      "h": 0,
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    "tag": "INPUT",
+    "type": "radio",
+    "value": "on"
+  },
+  {
+    "aria": null,
+    "checked": false,
+    "disabled": false,
+    "i": 7,
+    "name": "",
+    "rect": {
+      "h": 0,
+      "w": 0,
+      "x": 0,
+      "y": 0
+    },
+    "tag": "INPUT",
+    "type": "radio",
+    "value": "on"
+  }
+]

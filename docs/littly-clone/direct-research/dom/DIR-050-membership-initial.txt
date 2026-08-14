@@ -1,0 +1,65 @@
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- generic: 멤버십 블록이 생성될 위치입니다.
+- generic: 수익계좌 및 판매자 정보를 등록해 주세요
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- link "URL litt.ly/munjanggun.com/page1":
+  - /url: https://litt.ly/munjanggun.com/page1
+  - generic: URL
+  - text: litt.ly/munjanggun.com/page1
+- button:
+- generic: 페이지 추가
+- text: 홈화면
+- text: 페이지
+- button "페이지" [disabled]:
+  - generic: 페이지
+- button "디자인":
+  - generic: 디자인
+- button "분석":
+  - generic: 분석
+- button "관리":
+  - generic: 관리
+- button "마케팅":
+  - generic: 마케팅
+- generic: 프로필
+- button:
+- button:
+- button "ON OFF 멤버십":
+  - generic: "ON"
+  - generic: "OFF"
+  - switch [checked]
+  - generic: 멤버십
+- button "강조":
+  - generic: 강조
+- button "예약":
+  - generic: 예약
+- button:
+- generic: 대표문구*
+- textbox "대표문구":
+  - /placeholder: 판매 블럭 제목을 입력하세요
+- generic: 이미지
+- generic: 상세문구*
+- button "미리보기" [disabled]
+- radio "심플뷰" [checked]
+- generic: 심플뷰
+- radio "디테일뷰"
+- generic: 디테일뷰
+- textbox "거래 조건과 상품설명, 교환 및 환불 규정 등을 자세히 입력해주세요. 최대 3,000자까지 입력할 수 있습니다.":
+  - /placeholder: "거래 조건과 상품설명, 교환 및 환불 규정 등을 자세히 입력해주세요.\n최대 3,000자까지 입력할 수 있습니다."
+- generic: 상품 목록*
+- button "+상품 등록": +상품 등록
+- generic: 전달 메세지
+- 'textbox "구매 완료시, 구매자만 볼 수 있게 전달되는 메시지입니다. (ex: 단톡방 링크 및 비번, 사용 방법, 오시는 길 안내, 안내사항 등)"':
+  - /placeholder: "구매 완료시, 구매자만 볼 수 있게 전달되는 메시지입니다.\n(ex: 단톡방 링크 및 비번, 사용 방법, 오시는 길 안내, 안내사항 등)"
+- generic: 계좌 연결*
+- text: 상품 판매를 하기 위해서는 계좌 연결이 필수입니다.
+- button "+수익계좌 등록": +수익계좌 등록
+- button "옵션 보기":
+  - generic: 옵션 보기
+- button "+블럭 추가" [active]: +블럭 추가
+- button:
+- img "Live Chat Button"

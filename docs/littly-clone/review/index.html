@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>리틀리 클론 직접 조사 검수판</title>
+  <style>
+    :root { color-scheme: light; --ink:#141414; --muted:#6b7280; --line:#e5e7eb; --soft:#f5f6f8; --blue:#315ee7; --green:#087f5b; --amber:#a15c00; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:SUIT,"Pretendard","Noto Sans KR",system-ui,sans-serif; color:var(--ink); background:#eef1f4; }
+    header { padding:48px 24px 32px; background:#111; color:#fff; }
+    header .wrap, main { max-width:1180px; margin:auto; }
+    h1 { margin:0 0 12px; font-size:clamp(30px,5vw,54px); letter-spacing:-.04em; }
+    h2 { margin:52px 0 18px; font-size:28px; letter-spacing:-.03em; }
+    p { line-height:1.7; }
+    .sub { max-width:760px; color:#cfd3da; }
+    nav { display:flex; flex-wrap:wrap; gap:10px; margin-top:24px; }
+    nav a, .button { display:inline-flex; align-items:center; min-height:40px; padding:0 16px; border-radius:999px; background:#fff; color:#111; text-decoration:none; font-weight:700; }
+    main { padding:28px 24px 72px; }
+    .notice { padding:18px 20px; background:#fff5d6; border:1px solid #f0d27a; border-radius:16px; line-height:1.65; }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:26px 0; }
+    .stat { padding:22px; background:#fff; border:1px solid var(--line); border-radius:18px; box-shadow:0 8px 24px rgba(0,0,0,.04); }
+    .stat strong { display:block; font-size:34px; }
+    .stat span { color:var(--muted); }
+    .panel { overflow:hidden; background:#fff; border:1px solid var(--line); border-radius:18px; }
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    th, td { padding:12px 14px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { position:sticky; top:0; background:#f8fafc; }
+    tr:last-child td { border-bottom:0; }
+    .tag { display:inline-block; padding:4px 9px; border-radius:999px; font-size:12px; font-weight:800; white-space:nowrap; }
+    .verified { color:var(--green); background:#dcfce7; }
+    .partial { color:var(--amber); background:#fff1c2; }
+    .intentional { color:#4c2aa8; background:#eee7ff; }
+    .gallery { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+    figure { margin:0; overflow:hidden; background:#fff; border:1px solid var(--line); border-radius:18px; }
+    figure a { display:block; background:#dde2e8; }
+    figure img { display:block; width:100%; max-height:520px; object-fit:contain; }
+    figcaption { padding:14px 16px 16px; }
+    figcaption strong { display:block; margin-bottom:5px; }
+    figcaption span { color:var(--muted); font-size:13px; }
+    .evidence { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .evidence a { padding:16px; border:1px solid var(--line); border-radius:14px; background:#fff; color:var(--blue); text-decoration:none; font-weight:700; }
+    footer { margin-top:54px; padding-top:24px; border-top:1px solid #cfd5dc; color:var(--muted); }
+    @media (max-width:800px) { .stats { grid-template-columns:repeat(2,1fr); } .gallery { grid-template-columns:1fr; } .evidence { grid-template-columns:1fr; } .panel { overflow:auto; } table { min-width:900px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>리틀리 클론 직접 조사 검수판</h1>
+      <p class="sub">5개 전역 화면, 페이지 생명주기, 실제 블록 24종을 현재 주 세션이 직접 다시 열어 확인했습니다. 이 화면은 사람이 빠르게 검수하는 보기이며 원본 권위는 Markdown 보고서와 원시 증거입니다.</p>
+      <nav>
+        <a href="../DIRECT_RESEARCH_REPORT.md">최종 보고서</a>
+        <a href="../IMPLEMENTATION_MATRIX.md">30개 상태표</a>
+        <a href="../direct-research/manifest.json">기계 판독 매니페스트</a>
+        <a href="../direct-research/observations.md">증거 번호 인덱스</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="notice"><strong>SUPERSEDED (2026-08-14)</strong><br>이 HTML은 1차 조사 검수본이며 현재 완료 판정이나 구현 권위가 아닙니다. 최신 상태는 <code>full-product-research/RESEARCH_STATE.md</code>와 <code>COVERAGE.md</code>를 확인하세요.</div>
+    <div class="notice"><strong>캡처 출처 안내</strong><br>인앱 브라우저 직접 스크린샷은 CDP 제한시간 초과로 저장되지 않았습니다. 아래 이미지는 사용자가 제공한 화면과 이전 조사 세션에서 선별·검수한 보조 캡처입니다. 현재 주 세션의 직접 증거는 142개 DOM·접근성·치수 파일이며, 두 증거군을 섞어 표기하지 않습니다.</div>
+
+    <section class="stats" aria-label="조사 요약">
+      <div class="stat"><strong>30/30</strong><span>조사 단위</span></div>
+      <div class="stat"><strong>24</strong><span>실제 블록 유형</span></div>
+      <div class="stat"><strong>142</strong><span>직접 원시 증거 파일</span></div>
+      <div class="stat"><strong>50</strong><span>출처 구분 캡처</span></div>
+    </section>
+
+    <h2>조사 상태</h2>
+    <div class="panel">
+      <table>
+        <thead><tr><th>ID</th><th>영역</th><th>판정</th><th>직접 확인한 핵심</th><th>안전 경계/남은 항목</th></tr></thead>
+        <tbody>
+          <tr><td>G01</td><td>페이지</td><td><span class="tag partial">VERIFIED/PARTIAL</span></td><td>3열 편집기, 레일, page1, 프로필</td><td>무료 한도 1/1로 추가 페이지 CRUD 미실행</td></tr>
+          <tr><td>G02</td><td>디자인</td><td><span class="tag partial">VERIFIED/PARTIAL</span></td><td>색, 사진, 버튼, 폰트, 상단메뉴, 로고와 치수</td><td>모든 값을 바꾸고 복원하는 회귀는 구현 QA</td></tr>
+          <tr><td>G03</td><td>분석</td><td><span class="tag partial">PARTIAL</span></td><td>지표, 유입, 블록 순위, 전체보기 유료 모달</td><td>계정 수치 마스킹, 다운로드 미실행</td></tr>
+          <tr><td>G04</td><td>관리</td><td><span class="tag partial">PARTIAL</span></td><td>고객/매출 요약과 고객 상세 표</td><td>실제 고객 행 조작 미실행</td></tr>
+          <tr><td>G05</td><td>마케팅</td><td><span class="tag partial">PARTIAL</span></td><td>이메일 수신자 선택, 인스타 자동화 모달</td><td>실제 발송·계정 연결 미실행</td></tr>
+          <tr><td>B01</td><td>페이지 생명주기</td><td><span class="tag partial">VERIFIED/PARTIAL</span></td><td>편집/공개 직접 진입과 빈 페이지</td><td>플랜 제한</td></tr>
+          <tr><td>B02</td><td>단일 링크</td><td><span class="tag verified">VERIFIED</span></td><td>입력, 3레이아웃, 옵션, 강조, 예약, 메뉴, 삭제, 공개</td><td>OG 경합 회귀</td></tr>
+          <tr><td>B03</td><td>그룹 링크</td><td><span class="tag partial">VERIFIED/PARTIAL</span></td><td>5레이아웃, 접기, 하위 링크 모달</td><td>다중 공개 레이아웃 재검증</td></tr>
+          <tr><td>B04</td><td>SNS</td><td><span class="tag partial">PARTIAL</span></td><td>기본 행과 전체 채널 선택기</td><td>실제 채널별 공개 링크</td></tr>
+          <tr><td>B05</td><td>동영상</td><td><span class="tag partial">PARTIAL</span></td><td>YouTube·Vimeo·TikTok 안내, 3레이아웃, 자동재생</td><td>Instagram·Naver Clip은 확장</td></tr>
+          <tr><td>B06</td><td>텍스트</td><td><span class="tag verified">VERIFIED</span></td><td>실제 ON/OFF와 공개 노출 동기화</td><td>긴 문구 경계</td></tr>
+          <tr><td>B07</td><td>갤러리</td><td><span class="tag partial">PARTIAL</span></td><td>필수 이미지와 5레이아웃 활성 조건</td><td>실제 다중 업로드</td></tr>
+          <tr><td>B08</td><td>여백</td><td><span class="tag partial">VERIFIED/PARTIAL</span></td><td>5스타일과 50px 기본값</td><td>정확한 저장 debounce</td></tr>
+          <tr><td>B09</td><td>음악</td><td><span class="tag verified">VERIFIED</span></td><td>3제공자, 중복, 예약, 오류, 공개, 모바일, 삭제</td><td>외부 임베드 장애 fallback</td></tr>
+          <tr><td>B10</td><td>지도</td><td><span class="tag partial">PARTIAL</span></td><td>주소 검색 구조</td><td>실제 위치 선택</td></tr>
+          <tr><td>B11</td><td>파일 공유</td><td><span class="tag partial">PARTIAL</span></td><td>설명·이미지·필수 파일·옵션</td><td>업로드/다운로드</td></tr>
+          <tr><td>B12</td><td>문의</td><td><span class="tag partial">VERIFIED/PARTIAL</span></td><td>수집 필드와 문의목록 모달</td><td>실제 제출</td></tr>
+          <tr><td>B13</td><td>일정</td><td><span class="tag partial">VERIFIED/PARTIAL</span></td><td>일정명·시작/종료·링크 모달</td><td>실제 일정 공개/알림</td></tr>
+          <tr><td>B14</td><td>고객정보</td><td><span class="tag partial">PARTIAL</span></td><td>이메일·휴대폰·이름 수집</td><td>실제 제출/동의</td></tr>
+          <tr><td>B15</td><td>연락처</td><td><span class="tag partial">VERIFIED/PARTIAL</span></td><td>전화·이메일·메신저 전체 채널 선택기</td><td>채널별 URL 정규화</td></tr>
+          <tr><td>B16</td><td>공지</td><td><span class="tag partial">VERIFIED/PARTIAL</span></td><td>한줄형/팝업형과 연결 URL</td><td>실제 팝업 타이밍</td></tr>
+          <tr><td>B17</td><td>검색</td><td><span class="tag partial">VERIFIED/PARTIAL</span></td><td>가이드 문구와 기본 검색창</td><td>검색 범위·결과</td></tr>
+          <tr><td>B18</td><td>방명록</td><td><span class="tag partial">VERIFIED/PARTIAL</span></td><td>글쓰기 화면과 답글/삭제 빈 모달</td><td>실제 작성·권한</td></tr>
+          <tr><td>B19</td><td>국내 판매</td><td><span class="tag partial">VERIFIED/PARTIAL</span></td><td>4유형, 상품/VOD 등록 모달, 실물 배송비</td><td>계좌·결제</td></tr>
+          <tr><td>B20</td><td>해외 판매</td><td><span class="tag partial">PARTIAL</span></td><td>USD/JPY와 4판매 유형</td><td>통화별 결제</td></tr>
+          <tr><td>B21</td><td>후원</td><td><span class="tag partial">PARTIAL</span></td><td>최소 3,000원, 버튼, 계좌</td><td>결제·환불</td></tr>
+          <tr><td>B22</td><td>예약</td><td><span class="tag partial">VERIFIED/PARTIAL</span></td><td>1:1/그룹과 요일별 시간표</td><td>구매·중복·타임존</td></tr>
+          <tr><td>B23</td><td>광고</td><td><span class="tag partial">PARTIAL</span></td><td>작은/큰/2열 카드</td><td>계좌·정산</td></tr>
+          <tr><td>B24</td><td>멤버십</td><td><span class="tag partial">PARTIAL</span></td><td>상품·설명·전달메시지·계좌</td><td>정기결제·해지</td></tr>
+          <tr><td>B25</td><td>스마트스토어</td><td><span class="tag partial">VERIFIED/PARTIAL</span></td><td>실제 상품, 상품별 ON/OFF, 5레이아웃</td><td>동기화 실패 fallback</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>화면 증거</h2>
+    <div class="gallery">
+      <figure><a href="../evidence/supplemental-screenshots/user-provided/01-page-editor-profile.png"><img src="../evidence/supplemental-screenshots/user-provided/01-page-editor-profile.png" alt="사용자가 제공한 페이지 편집기와 프로필 화면"></a><figcaption><strong>페이지 편집기와 프로필</strong><span>사용자 제공 캡처</span></figcaption></figure>
+      <figure><a href="../evidence/supplemental-screenshots/single-link/OPS-A-022-editor-inventory.png"><img src="../evidence/supplemental-screenshots/single-link/OPS-A-022-editor-inventory.png" alt="단일 링크 편집기"></a><figcaption><strong>단일 링크 편집 상태</strong><span>이전 조사 보조 캡처, 직접 DOM DIR-005~022로 재검증</span></figcaption></figure>
+      <figure><a href="../evidence/supplemental-screenshots/global-ui/20260813-005-design-settled.jpg"><img src="../evidence/supplemental-screenshots/global-ui/20260813-005-design-settled.jpg" alt="디자인 편집 화면"></a><figcaption><strong>디자인 색·버튼 설정</strong><span>이전 조사 보조 캡처, 직접 치수 DIR-061</span></figcaption></figure>
+      <figure><a href="../evidence/supplemental-screenshots/global-ui/20260813-009-design-lower.png"><img src="../evidence/supplemental-screenshots/global-ui/20260813-009-design-lower.png" alt="디자인 하단 설정"></a><figcaption><strong>디자인 하단 설정</strong><span>폰트·상단메뉴·공유/구독·로고</span></figcaption></figure>
+      <figure><a href="../evidence/supplemental-screenshots/user-provided/02-music-editor-soundcloud.png"><img src="../evidence/supplemental-screenshots/user-provided/02-music-editor-soundcloud.png" alt="음악 블록 SoundCloud와 Spotify"></a><figcaption><strong>음악 편집기</strong><span>사용자 제공 캡처</span></figcaption></figure>
+      <figure><a href="../evidence/supplemental-screenshots/music-detailed/20260813-09-music-public-desktop-soundcloud-current.jpg"><img src="../evidence/supplemental-screenshots/music-detailed/20260813-09-music-public-desktop-soundcloud-current.jpg" alt="음악 공개 데스크톱"></a><figcaption><strong>음악 공개 페이지</strong><span>이전 상세 조사 보조 캡처</span></figcaption></figure>
+      <figure><a href="../evidence/supplemental-screenshots/music-detailed/20260813-14-music-modal-channel-picker-search-exact.jpg"><img src="../evidence/supplemental-screenshots/music-detailed/20260813-14-music-modal-channel-picker-search-exact.jpg" alt="음악 채널 목록 검색과 추가 요청"></a><figcaption><strong>음악 채널 목록 검색</strong><span>일치 항목이 없을 때 채널 추가 요청 경로 노출</span></figcaption></figure>
+      <figure><a href="../evidence/supplemental-screenshots/music-detailed/20260813-39-music-public-mobile-empty-after-delete.jpg"><img src="../evidence/supplemental-screenshots/music-detailed/20260813-39-music-public-mobile-empty-after-delete.jpg" alt="음악 삭제 후 모바일 빈 페이지"></a><figcaption><strong>삭제 후 모바일 빈 상태</strong><span>새로고침 뒤 잔여물 없음</span></figcaption></figure>
+    </div>
+
+    <h2>원시 증거 바로가기</h2>
+    <div class="evidence">
+      <a href="../direct-research/dom/DIR-004-block-picker.txt">24개 블록 선택기</a>
+      <a href="../direct-research/dom/DIR-060-page1-profile-open.txt">프로필 펼침 상태</a>
+      <a href="../direct-research/dom/DIR-061-design-controls.json">디자인 치수·색·상태</a>
+      <a href="../direct-research/dom/DIR-064-manage-customer-detail.txt">고객 관리 상세 모달</a>
+      <a href="../direct-research/dom/DIR-065-marketing-email.txt">단체 이메일 수신자 선택</a>
+      <a href="../direct-research/dom/DIR-070-inquiry-list-dialog.txt">문의목록 추가 모달</a>
+      <a href="../direct-research/dom/DIR-071-schedule-add-dialog.txt">일정 추가 모달</a>
+      <a href="../direct-research/dom/DIR-073-contact-second-row.txt">연락처 채널 선택기</a>
+      <a href="../direct-research/dom/DIR-082-product-register-dialog.txt">상품 등록 모달</a>
+      <a href="../direct-research/dom/DIR-083-vod-register-dialog.txt">VOD 강의 등록 모달</a>
+      <a href="../direct-research/dom/DIR-084-reservation-slot-dialog.txt">예약 시간표 모달</a>
+      <a href="../direct-research/dom/DIR-094-final-cleanup-audit.json">최종 원상복구 감사</a>
+    </div>
+
+    <h2>문장군 의도적 확장</h2>
+    <div class="panel">
+      <table>
+        <thead><tr><th>항목</th><th>판정</th><th>확정 구현 규칙</th></tr></thead>
+        <tbody>
+          <tr><td>페이지 트리</td><td><span class="tag intentional">INTENTIONAL</span></td><td><code>parent_id</code>, <code>sort_order</code>로 쇼룸식 탐색 계층</td></tr>
+          <tr><td>공개 URL</td><td><span class="tag intentional">INTENTIONAL</span></td><td>계층과 무관한 <code>/l/{slug}</code></td></tr>
+          <tr><td>독립 진입</td><td><span class="tag intentional">INTENTIONAL</span></td><td>모든 노드는 부모를 거치지 않아도 완전한 페이지</td></tr>
+          <tr><td>동영상</td><td><span class="tag intentional">EXTENSION</span></td><td>원형 완성 뒤 Instagram·Naver Clip 제공자 추가</td></tr>
+          <tr><td>유료 잠금</td><td><span class="tag intentional">INTENTIONAL</span></td><td>문장군 관리자에서는 제한 없이 제공</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer>Generated presentation of <code>DIRECT_RESEARCH_REPORT.md</code> · 2026-08-13 · 원본 권위는 Markdown과 raw evidence입니다.</footer>
+  </main>
+</body>
+</html>

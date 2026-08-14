@@ -1,0 +1,85 @@
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- generic: 그룹 링크 블록이 생성될 위치입니다.
+- generic: 링크를 하나 이상 추가해 주세요
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- link "URL litt.ly/munjanggun.com/page1":
+  - /url: https://litt.ly/munjanggun.com/page1
+  - generic: URL
+  - text: litt.ly/munjanggun.com/page1
+- button:
+- generic: 페이지 추가
+- text: 홈화면
+- text: 페이지
+- button "페이지" [disabled]:
+  - generic: 페이지
+- button "디자인":
+  - generic: 디자인
+- button "분석":
+  - generic: 분석
+- button "관리":
+  - generic: 관리
+- button "마케팅":
+  - generic: 마케팅
+- generic: 프로필
+- button:
+- button:
+- button "ON OFF 그룹 링크":
+  - generic: "ON"
+  - generic: "OFF"
+  - switch [checked]
+  - generic: 그룹 링크
+- button "강조":
+  - generic: 강조
+- button "예약":
+  - generic: 예약
+- button:
+- generic: 대표 문구
+- textbox "대표 문구":
+  - /placeholder: 그룹 링크 상단에 문구가 노출됩니다
+- generic: 링크 목록*
+- button "+ 링크 추가": + 링크 추가
+- button "옵션 접기":
+  - generic: 옵션 접기
+- generic: 레이아웃
+- radio "기본 배치" [checked]
+- generic: 기본 배치
+- radio "2열 배치"
+- generic: 2열 배치
+- radio "3열 배치"
+- generic: 3열 배치
+- radio "1 캐러셀"
+- generic: 1 캐러셀
+- radio "2 캐러셀"
+- generic: 2 캐러셀
+- generic: 링크 나열
+- radio "전부 나열" [checked]
+- generic: 전부 나열
+- radio "접기 적용"
+- generic: 접기 적용
+- button "+블럭 추가": +블럭 추가
+- button:
+- dialog [active]:
+  - generic: 링크 추가
+  - button:
+  - generic: 연결 URL*
+  - textbox "https://"
+  - generic: 대표문구*
+  - textbox "대표문구":
+    - /placeholder: 버튼에 문구가 노출됩니다
+  - generic: 판매가격
+  - textbox
+  - generic: 원
+  - generic: 정가
+  - textbox
+  - generic: 원
+  - generic: 이미지*
+  - generic: 강조 태그
+  - textbox "입력 후 엔터를 눌러 추가"
+  - button "# Ai생성": "# Ai생성"
+  - button "취소"
+  - button "생성" [disabled]

@@ -1,0 +1,47 @@
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- generic: 공지 블록이 생성될 위치입니다.
+- generic: 대표문구를 입력해 주세요
+- textbox "검색"
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- link "URL litt.ly/munjanggun.com/page1":
+  - /url: https://litt.ly/munjanggun.com/page1
+  - generic: URL
+  - text: litt.ly/munjanggun.com/page1
+- button:
+- generic: 페이지 추가
+- text: 홈화면
+- text: 페이지
+- button "페이지" [disabled]:
+  - generic: 페이지
+- button "디자인":
+  - generic: 디자인
+- button "분석":
+  - generic: 분석
+- button "관리":
+  - generic: 관리
+- button "마케팅":
+  - generic: 마케팅
+- generic: 공지
+- button:
+- generic: 프로필
+- button:
+- button:
+- button "ON OFF 검색":
+  - generic: "ON"
+  - generic: "OFF"
+  - switch [checked]
+  - generic: 검색
+- button "예약":
+  - generic: 예약
+- button:
+- generic: 가이드 문구
+- textbox "가이드 문구":
+  - /placeholder: 검색창 내부에 문구 노출 (미입력시 ‘검색’)
+- button "+블럭 추가" [active]: +블럭 추가
+- button:
+- img "Live Chat Button"

@@ -1,0 +1,75 @@
+- button:
+- button:
+- heading "문장군" [level=1]
+- heading "문이 바뀌는 체험을 아름답게" [level=2]
+- generic: 홈화면
+- generic: 페이지
+- link "네이버예약 무료방문실측 견적상담":
+  - /url: https://booking.naver.com/booking/5/bizes/654913/items/6032347
+  - generic: 네이버예약
+  - heading "무료방문실측 견적상담" [level=2]
+- link "네이버 브랜드스토어 문장군 스토어":
+  - /url: https://brand.naver.com/munjanggun
+  - generic: 네이버
+  - generic: 브랜드스토어
+  - heading "문장군 스토어" [level=2]
+- link "현관중문 슬라이딩 3연동중문 아파트 시공설치/베이직 풀윈도우 투명강화유리 35% 550,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/4610364765
+  - generic: 현관중문 슬라이딩 3연동중문 아파트 시공설치/베이직 풀윈도우 투명강화유리
+  - generic: 35%
+  - generic: 550,000원
+- link "슬라이딩 양개형중문 미서기 4연동중문 아파트 현관 거실 부엌 확장형 드레스룸 시공설치 30% 950,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/12404021912
+  - generic: 슬라이딩 양개형중문 미서기 4연동중문 아파트 현관 거실 부엌 확장형 드레스룸 시공설치
+  - generic: 30%
+  - generic: 950,000원
+- link "[올인원시공] 겨울철 난방비 잡는 프리미엄 현관문 단열 방화문 시공 도어교체 34% 390,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/11819259996
+  - generic: "[올인원시공] 겨울철 난방비 잡는 프리미엄 현관문 단열 방화문 시공 도어교체"
+  - generic: 34%
+  - generic: 390,000원
+- link "자동문 현관중문 3연동 슬라이딩 자동중문 아파트 시공설치/베이직 풀윈도우 화이트 34% 990,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/11390026743
+  - generic: 자동문 현관중문 3연동 슬라이딩 자동중문 아파트 시공설치/베이직 풀윈도우 화이트
+  - generic: 34%
+  - generic: 990,000원
+- generic: 더보기
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- link "URL litt.ly/munjanggun.com":
+  - /url: https://litt.ly/munjanggun.com
+  - generic: URL
+  - text: litt.ly/munjanggun.com
+- button:
+- generic: 페이지 추가
+- text: 홈화면
+- text: 페이지
+- button "페이지" [disabled]:
+  - generic: 페이지
+- button "디자인":
+  - generic: 디자인
+- button "분석":
+  - generic: 분석
+- button "관리":
+  - generic: 관리
+- button "마케팅":
+  - generic: 마케팅
+- generic: 프로필
+- button:
+- button:
+- button "단일 링크 무료방문실측 견적상담":
+  - generic: 단일 링크
+  - generic: 무료방문실측 견적상담
+- button:
+- button:
+- button "단일 링크 문장군 스토어":
+  - generic: 단일 링크
+  - generic: 문장군 스토어
+- button:
+- button:
+- button "스마트 스토어 연동":
+  - generic: 스마트 스토어 연동
+- button:
+- button "+블럭 추가": +블럭 추가
+- button:
+- img "Live Chat Button"

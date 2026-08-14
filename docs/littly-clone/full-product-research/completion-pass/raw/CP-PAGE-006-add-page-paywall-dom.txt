@@ -1,0 +1,52 @@
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- link "URL litt.ly/munjanggun.com/page1":
+  - /url: https://litt.ly/munjanggun.com/page1
+  - generic: URL
+  - text: litt.ly/munjanggun.com/page1
+- button:
+- generic: 페이지 추가
+- text: 홈화면
+- text: 페이지
+- button "페이지" [disabled]:
+  - generic: 페이지
+- button "디자인":
+  - generic: 디자인
+- button "분석":
+  - generic: 분석
+- button "관리":
+  - generic: 관리
+- button "마케팅":
+  - generic: 마케팅
+- generic: 프로필
+- button:
+- button:
+- button "+블럭 추가": +블럭 추가
+- button:
+- dialog [active]:
+  - generic: 브랜드 플랜 둘러보기
+  - button:
+  - button "연 결제 (50%할인)": 연 결제 (50%할인)
+  - button "월 결제"
+  - generic: 월 9,450원으로 빠르게 매출을 성장시키세요!
+  - generic: 5개 페이지 기본 제공 (페이지 추가 가능)
+  - generic: 브랜드 로고 적용
+  - generic: 브랜드 도메인 적용
+  - generic: 브랜드 인증 뱃지
+  - generic: 무제한 인스타 DM 자동화 + 워터마크 삭제
+  - generic: 무제한 데이터 + 팀멤버 + 이메일 + 알림톡 제공
+  - generic: 리틀리팀 CS 최우선 대응
+  - generic: 😊 추가하실 페이지 수는?
+  - button:
+  - generic: "0"
+  - button:
+  - tooltip "페이지를 추가할 수 있어요":
+    - generic: 페이지를 추가할 수 있어요
+  - button "50% 할인 받고, 브랜드 플랜 사용하기": 50% 할인 받고, 브랜드 플랜 사용하기
+  - generic: 팔로워와 잠재고객들에게 일관된 브랜딩으로 노출하세요!
+  - generic: 무료 페이지보다, 매출이 20배 높아요!

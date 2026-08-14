@@ -1,0 +1,434 @@
+[
+    {
+        "old":  "screenshots/analytics/CHR-ANALYTICS-001-viewport.png",
+        "new":  "screenshots/analytics/CHR-ANALYTICS-001-viewport.jpg"
+    },
+    {
+        "old":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-01.png",
+        "new":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-01.jpg"
+    },
+    {
+        "old":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-02.png",
+        "new":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-02.jpg"
+    },
+    {
+        "old":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-03.png",
+        "new":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-03.jpg"
+    },
+    {
+        "old":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-04.png",
+        "new":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-04.jpg"
+    },
+    {
+        "old":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-05.png",
+        "new":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-05.jpg"
+    },
+    {
+        "old":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-06.png",
+        "new":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-06.jpg"
+    },
+    {
+        "old":  "screenshots/analytics/CHR-ANALYTICS-PERIOD-001-open.png",
+        "new":  "screenshots/analytics/CHR-ANALYTICS-PERIOD-001-open.jpg"
+    },
+    {
+        "old":  "screenshots/analytics/CHR-ANALYTICS-PERIOD-003-key-open.png",
+        "new":  "screenshots/analytics/CHR-ANALYTICS-PERIOD-003-key-open.jpg"
+    },
+    {
+        "old":  "screenshots/design/CHR-DESIGN-001-viewport.png",
+        "new":  "screenshots/design/CHR-DESIGN-001-viewport.jpg"
+    },
+    {
+        "old":  "screenshots/design/CHR-DESIGN-RECOMMEND-001-modal.png",
+        "new":  "screenshots/design/CHR-DESIGN-RECOMMEND-001-modal.jpg"
+    },
+    {
+        "old":  "screenshots/design/CHR-DESIGN-RECOMMEND-003-restored.png",
+        "new":  "screenshots/design/CHR-DESIGN-RECOMMEND-003-restored.jpg"
+    },
+    {
+        "old":  "screenshots/design/CHR-DESIGN-RECOMMEND-004-restored-reload.png",
+        "new":  "screenshots/design/CHR-DESIGN-RECOMMEND-004-restored-reload.jpg"
+    },
+    {
+        "old":  "screenshots/manage/CHR-MANAGE-001-viewport.png",
+        "new":  "screenshots/manage/CHR-MANAGE-001-viewport.jpg"
+    },
+    {
+        "old":  "screenshots/manage/CHR-MANAGE-ADS-001-modal.png",
+        "new":  "screenshots/manage/CHR-MANAGE-ADS-001-modal.jpg"
+    },
+    {
+        "old":  "screenshots/manage/CHR-MANAGE-CUSTOMER-001-modal.png",
+        "new":  "screenshots/manage/CHR-MANAGE-CUSTOMER-001-modal.jpg"
+    },
+    {
+        "old":  "screenshots/manage/CHR-MANAGE-SALES-001-modal.png",
+        "new":  "screenshots/manage/CHR-MANAGE-SALES-001-modal.jpg"
+    },
+    {
+        "old":  "screenshots/marketing/CHR-MARKETING-001-viewport.png",
+        "new":  "screenshots/marketing/CHR-MARKETING-001-viewport.jpg"
+    },
+    {
+        "old":  "screenshots/marketing/CHR-MARKETING-DM-001-list.png",
+        "new":  "screenshots/marketing/CHR-MARKETING-DM-001-list.jpg"
+    },
+    {
+        "old":  "screenshots/marketing/CHR-MARKETING-DM-002-connect.png",
+        "new":  "screenshots/marketing/CHR-MARKETING-DM-002-connect.jpg"
+    },
+    {
+        "old":  "screenshots/marketing/CHR-MARKETING-EMAIL-001-history.png",
+        "new":  "screenshots/marketing/CHR-MARKETING-EMAIL-001-history.jpg"
+    },
+    {
+        "old":  "screenshots/marketing/CHR-MARKETING-EMAIL-002-recipients.png",
+        "new":  "screenshots/marketing/CHR-MARKETING-EMAIL-002-recipients.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-01-SINGLE-001-editor.png",
+        "new":  "screenshots/page/CHR-BLOCK-01-SINGLE-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-01-SINGLE-002-options.png",
+        "new":  "screenshots/page/CHR-BLOCK-01-SINGLE-002-options.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-01-SINGLE-003-collapsed.png",
+        "new":  "screenshots/page/CHR-BLOCK-01-SINGLE-003-collapsed.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-01-SINGLE-004-more.png",
+        "new":  "screenshots/page/CHR-BLOCK-01-SINGLE-004-more.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-02-GROUP-001-editor.png",
+        "new":  "screenshots/page/CHR-BLOCK-02-GROUP-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-02-GROUP-002-link-row.png",
+        "new":  "screenshots/page/CHR-BLOCK-02-GROUP-002-link-row.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-03-SNS-001-editor.png",
+        "new":  "screenshots/page/CHR-BLOCK-03-SNS-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-03-SNS-002-add.png",
+        "new":  "screenshots/page/CHR-BLOCK-03-SNS-002-add.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-04-VIDEO-001-editor.png",
+        "new":  "screenshots/page/CHR-BLOCK-04-VIDEO-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-05-TEXT-001-editor.png",
+        "new":  "screenshots/page/CHR-BLOCK-05-TEXT-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-05-TEXT-002-options.png",
+        "new":  "screenshots/page/CHR-BLOCK-05-TEXT-002-options.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-06-GALLERY-001-editor.png",
+        "new":  "screenshots/page/CHR-BLOCK-06-GALLERY-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-07-SPACER-001-editor.png",
+        "new":  "screenshots/page/CHR-BLOCK-07-SPACER-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-08-MUSIC-001-editor.png",
+        "new":  "screenshots/page/CHR-BLOCK-08-MUSIC-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-08-MUSIC-002-soundcloud-rendered.png",
+        "new":  "screenshots/page/CHR-BLOCK-08-MUSIC-002-soundcloud-rendered.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-08-MUSIC-003-multi-channel.png",
+        "new":  "screenshots/page/CHR-BLOCK-08-MUSIC-003-multi-channel.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-09-MAP-001-editor.png",
+        "new":  "screenshots/page/CHR-BLOCK-09-MAP-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-09-MAP-002-search-results.png",
+        "new":  "screenshots/page/CHR-BLOCK-09-MAP-002-search-results.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-09-MAP-003-rendered.png",
+        "new":  "screenshots/page/CHR-BLOCK-09-MAP-003-rendered.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-10-FILE-001-editor.png",
+        "new":  "screenshots/page/CHR-BLOCK-10-FILE-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-10-FILE-002-options.png",
+        "new":  "screenshots/page/CHR-BLOCK-10-FILE-002-options.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-11-INQUIRY-001-editor.png",
+        "new":  "screenshots/page/CHR-BLOCK-11-INQUIRY-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-11-INQUIRY-002b-current-dialog.png",
+        "new":  "screenshots/page/CHR-BLOCK-11-INQUIRY-002b-current-dialog.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-11-INQUIRY-003-form-enabled.png",
+        "new":  "screenshots/page/CHR-BLOCK-11-INQUIRY-003-form-enabled.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-12-SCHEDULE-001-editor.png",
+        "new":  "screenshots/page/CHR-BLOCK-12-SCHEDULE-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-12-SCHEDULE-002-add-dialog.png",
+        "new":  "screenshots/page/CHR-BLOCK-12-SCHEDULE-002-add-dialog.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-12-SCHEDULE-003-options.png",
+        "new":  "screenshots/page/CHR-BLOCK-12-SCHEDULE-003-options.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-13-CUSTOMER-001-editor.png",
+        "new":  "screenshots/page/CHR-BLOCK-13-CUSTOMER-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-14-CONTACT-001-editor.png",
+        "new":  "screenshots/page/CHR-BLOCK-14-CONTACT-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-14-CONTACT-002-add-dialog.png",
+        "new":  "screenshots/page/CHR-BLOCK-14-CONTACT-002-add-dialog.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-15-NOTICE-001b-editor-stable.png",
+        "new":  "screenshots/page/CHR-BLOCK-15-NOTICE-001b-editor-stable.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-15-NOTICE-002-popup-layout.png",
+        "new":  "screenshots/page/CHR-BLOCK-15-NOTICE-002-popup-layout.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-16-SEARCH-001b-editor-stable.png",
+        "new":  "screenshots/page/CHR-BLOCK-16-SEARCH-001b-editor-stable.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-17-GUESTBOOK-001-editor.png",
+        "new":  "screenshots/page/CHR-BLOCK-17-GUESTBOOK-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-17-GUESTBOOK-002-manage.png",
+        "new":  "screenshots/page/CHR-BLOCK-17-GUESTBOOK-002-manage.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-001-result.png",
+        "new":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-001-result.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-002-digital.png",
+        "new":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-002-digital.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-002b-digital-product.png",
+        "new":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-002b-digital-product.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-002c-current.png",
+        "new":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-002c-current.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-002d-top.png",
+        "new":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-002d-top.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-003-vod.png",
+        "new":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-003-vod.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-004-talent.png",
+        "new":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-004-talent.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-005-physical.png",
+        "new":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-005-physical.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-19-OVERSEAS-SALE-002-usd.png",
+        "new":  "screenshots/page/CHR-BLOCK-19-OVERSEAS-SALE-002-usd.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-19-OVERSEAS-SALE-003-usd-digital.png",
+        "new":  "screenshots/page/CHR-BLOCK-19-OVERSEAS-SALE-003-usd-digital.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-19-OVERSEAS-SALE-004-jpy.png",
+        "new":  "screenshots/page/CHR-BLOCK-19-OVERSEAS-SALE-004-jpy.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-20-DONATION-002-options.png",
+        "new":  "screenshots/page/CHR-BLOCK-20-DONATION-002-options.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-21-RESERVATION-002-one-to-one.png",
+        "new":  "screenshots/page/CHR-BLOCK-21-RESERVATION-002-one-to-one.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-21-RESERVATION-003-one-to-one-time.png",
+        "new":  "screenshots/page/CHR-BLOCK-21-RESERVATION-003-one-to-one-time.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-21-RESERVATION-003b-top.png",
+        "new":  "screenshots/page/CHR-BLOCK-21-RESERVATION-003b-top.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-21-RESERVATION-003c-top-expanded.png",
+        "new":  "screenshots/page/CHR-BLOCK-21-RESERVATION-003c-top-expanded.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-21-RESERVATION-004-group.png",
+        "new":  "screenshots/page/CHR-BLOCK-21-RESERVATION-004-group.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-21-RESERVATION-005-group-time.png",
+        "new":  "screenshots/page/CHR-BLOCK-21-RESERVATION-005-group-time.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-21-RESERVATION-005b-delete-position.png",
+        "new":  "screenshots/page/CHR-BLOCK-21-RESERVATION-005b-delete-position.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-22-AD-001-result.png",
+        "new":  "screenshots/page/CHR-BLOCK-22-AD-001-result.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-22-AD-001b-delete-position.png",
+        "new":  "screenshots/page/CHR-BLOCK-22-AD-001b-delete-position.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-23-MEMBERSHIP-001-editor.png",
+        "new":  "screenshots/page/CHR-BLOCK-23-MEMBERSHIP-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-23-MEMBERSHIP-002-product-dialog.png",
+        "new":  "screenshots/page/CHR-BLOCK-23-MEMBERSHIP-002-product-dialog.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-23-MEMBERSHIP-002b-delete-position.png",
+        "new":  "screenshots/page/CHR-BLOCK-23-MEMBERSHIP-002b-delete-position.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-24-SMARTSTORE-001b-result-stable.png",
+        "new":  "screenshots/page/CHR-BLOCK-24-SMARTSTORE-001b-result-stable.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-BLOCK-PICKER-001-modal.png",
+        "new":  "screenshots/page/CHR-BLOCK-PICKER-001-modal.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-PAGE-001-viewport.png",
+        "new":  "screenshots/page/CHR-PAGE-001-viewport.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-PAGE-ADD-001-modal.png",
+        "new":  "screenshots/page/CHR-PAGE-ADD-001-modal.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-PAGE-ADD-002-result.png",
+        "new":  "screenshots/page/CHR-PAGE-ADD-002-result.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-PAGE-ADD-MULTI-001.png",
+        "new":  "screenshots/page/CHR-PAGE-ADD-MULTI-001.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-PAGE-ADD-SUB-001.png",
+        "new":  "screenshots/page/CHR-PAGE-ADD-SUB-001.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-PAGE-CARD-OPTIONS-001.png",
+        "new":  "screenshots/page/CHR-PAGE-CARD-OPTIONS-001.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-PAGE-CARD-OPTIONS-002-hover.png",
+        "new":  "screenshots/page/CHR-PAGE-CARD-OPTIONS-002-hover.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-PAGE-CARD-OPTIONS-003-open.png",
+        "new":  "screenshots/page/CHR-PAGE-CARD-OPTIONS-003-open.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-PAGE-EDIT-001-modal.png",
+        "new":  "screenshots/page/CHR-PAGE-EDIT-001-modal.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-PAGE-TEST-SELECT-001.png",
+        "new":  "screenshots/page/CHR-PAGE-TEST-SELECT-001.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-PROFILE-000-position.png",
+        "new":  "screenshots/page/CHR-PROFILE-000-position.jpg"
+    },
+    {
+        "old":  "screenshots/page/CHR-PROFILE-001-editor.png",
+        "new":  "screenshots/page/CHR-PROFILE-001-editor.jpg"
+    },
+    {
+        "old":  "screenshots/shell/CHR-PUBLIC-BELL-001.png",
+        "new":  "screenshots/shell/CHR-PUBLIC-BELL-001.jpg"
+    },
+    {
+        "old":  "screenshots/shell/CHR-PUBLIC-HOME-002-desktop.png",
+        "new":  "screenshots/shell/CHR-PUBLIC-HOME-002-desktop.jpg"
+    },
+    {
+        "old":  "screenshots/shell/CHR-PUBLIC-HOME-003-mobile390.png",
+        "new":  "screenshots/shell/CHR-PUBLIC-HOME-003-mobile390.jpg"
+    },
+    {
+        "old":  "screenshots/shell/CHR-PUBLIC-HOME-003b-mobile390-stable.png",
+        "new":  "screenshots/shell/CHR-PUBLIC-HOME-003b-mobile390-stable.jpg"
+    },
+    {
+        "old":  "screenshots/shell/CHR-PUBLIC-HOME-004-desktop-full.png",
+        "new":  "screenshots/shell/CHR-PUBLIC-HOME-004-desktop-full.jpg"
+    },
+    {
+        "old":  "screenshots/shell/CHR-PUBLIC-NAV-001-child.png",
+        "new":  "screenshots/shell/CHR-PUBLIC-NAV-001-child.jpg"
+    },
+    {
+        "old":  "screenshots/shell/CHR-PUBLIC-SHARE-001.png",
+        "new":  "screenshots/shell/CHR-PUBLIC-SHARE-001.jpg"
+    },
+    {
+        "old":  "screenshots/shell/CHR-SHELL-SETTINGS-001-modal.png",
+        "new":  "screenshots/shell/CHR-SHELL-SETTINGS-001-modal.jpg"
+    },
+    {
+        "old":  "screenshots/shell/CHR-SHELL-SETTINGS-LINK-MODE-001-expanded.png",
+        "new":  "screenshots/shell/CHR-SHELL-SETTINGS-LINK-MODE-001-expanded.jpg"
+    },
+    {
+        "old":  "screenshots/shell/CHR-SHELL-SETTINGS-QR-001-expanded.png",
+        "new":  "screenshots/shell/CHR-SHELL-SETTINGS-QR-001-expanded.jpg"
+    },
+    {
+        "old":  "screenshots/shell/CHR-SHELL-SETTINGS-SUBSCRIBE-001-expanded.png",
+        "new":  "screenshots/shell/CHR-SHELL-SETTINGS-SUBSCRIBE-001-expanded.jpg"
+    },
+    {
+        "old":  "screenshots/shell/CHR-SHELL-SETTINGS-TIKTOK-EXTERNAL-001-expanded.png",
+        "new":  "screenshots/shell/CHR-SHELL-SETTINGS-TIKTOK-EXTERNAL-001-expanded.jpg"
+    },
+    {
+        "old":  "screenshots/shell/CHR-SHELL-SETTINGS-VISIBILITY-001-expanded.png",
+        "new":  "screenshots/shell/CHR-SHELL-SETTINGS-VISIBILITY-001-expanded.jpg"
+    }
+]

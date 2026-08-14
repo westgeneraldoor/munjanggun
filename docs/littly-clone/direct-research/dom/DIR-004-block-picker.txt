@@ -1,0 +1,111 @@
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- link "URL litt.ly/munjanggun.com/page1":
+  - /url: https://litt.ly/munjanggun.com/page1
+  - generic: URL
+  - text: litt.ly/munjanggun.com/page1
+- button:
+- generic: 페이지 추가
+- text: 홈화면
+- text: 페이지
+- button "페이지" [disabled]:
+  - generic: 페이지
+- button "디자인":
+  - generic: 디자인
+- button "분석":
+  - generic: 분석
+- button "관리":
+  - generic: 관리
+- button "마케팅":
+  - generic: 마케팅
+- tooltip "무료 DM자동화 제공 중!":
+  - generic: 무료 DM자동화 제공 중!
+- generic: 프로필
+- button:
+- button:
+- button "+블럭 추가": +블럭 추가
+- button:
+- dialog [active]:
+  - generic: 블럭 추가
+  - button:
+  - generic: 콘텐츠
+  - button "단일 링크 하나의 URL 강조":
+    - generic: 단일 링크
+    - generic: 하나의 URL 강조
+  - button "그룹 링크 여러개의 URL 폴더화":
+    - generic: 그룹 링크
+    - generic: 여러개의 URL 폴더화
+  - button "SNS 연결 소셜 채널 연결":
+    - generic: SNS 연결
+    - generic: 소셜 채널 연결
+  - button "동영상 영상 채널 지원":
+    - generic: 동영상
+    - generic: 영상 채널 지원
+  - button "텍스트 글 작성":
+    - generic: 텍스트
+    - generic: 글 작성
+  - button "갤러리 이미지 배치":
+    - generic: 갤러리
+    - generic: 이미지 배치
+  - button "여백 블럭 간격 조절":
+    - generic: 여백
+    - generic: 블럭 간격 조절
+  - button "음악 음악 채널 지원":
+    - generic: 음악
+    - generic: 음악 채널 지원
+  - button "지도 주소 지도 표현":
+    - generic: 지도
+    - generic: 주소 지도 표현
+  - button "파일공유 PDF, 자료 업로드":
+    - generic: 파일공유
+    - generic: PDF, 자료 업로드
+  - generic: 커뮤니케이션
+  - button "문의 고객 문의 접수":
+    - generic: 문의
+    - generic: 고객 문의 접수
+  - button "일정 달력, 이벤트 알림":
+    - generic: 일정
+    - generic: 달력, 이벤트 알림
+  - button "고객정보 메일, 번호 수집":
+    - generic: 고객정보
+    - generic: 메일, 번호 수집
+  - button "연락처 연락처 공유":
+    - generic: 연락처
+    - generic: 연락처 공유
+  - button "공지 주요 소식 노출":
+    - generic: 공지
+    - generic: 주요 소식 노출
+  - button "검색 페이지 내부 검색":
+    - generic: 검색
+    - generic: 페이지 내부 검색
+  - button "방명록 고객 소통창":
+    - generic: 방명록
+    - generic: 고객 소통창
+  - generic: 수익화
+  - button "국내 판매 파일, 강의, 재능, 실물":
+    - generic: 국내 판매
+    - generic: 파일, 강의, 재능, 실물
+  - button "해외 판매 달러, 엔화":
+    - generic: 해외 판매
+    - generic: 달러, 엔화
+  - button "후원 후원, 모금":
+    - generic: 후원
+    - generic: 후원, 모금
+  - button "예약 수업, 모임, 상담, 대여":
+    - generic: 예약
+    - generic: 수업, 모임, 상담, 대여
+  - button "광고 배너 수익화":
+    - generic: 광고
+    - generic: 배너 수익화
+  - button "멤버십 월 정기 결제":
+    - generic: 멤버십
+    - generic: 월 정기 결제
+  - generic: 외부 연동
+  - button "스마트 스토어 연동 상품 일괄 진열":
+    - generic: 스마트 스토어 연동
+    - generic: 상품 일괄 진열

@@ -1,0 +1,390 @@
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- generic: SNS 연결 블록이 생성될 위치입니다.
+- generic: SNS 채널을 하나 이상 입력해 주세요
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- link "URL litt.ly/munjanggun.com/page1":
+  - /url: https://litt.ly/munjanggun.com/page1
+  - generic: URL
+  - text: litt.ly/munjanggun.com/page1
+- button:
+- generic: 페이지 추가
+- text: 홈화면
+- text: 페이지
+- button "페이지" [disabled]:
+  - generic: 페이지
+- button "디자인":
+  - generic: 디자인
+- button "분석":
+  - generic: 분석
+- button "관리":
+  - generic: 관리
+- button "마케팅":
+  - generic: 마케팅
+- generic: 프로필
+- button:
+- button:
+- button "ON OFF SNS 연결":
+  - generic: "ON"
+  - generic: "OFF"
+  - switch [checked]
+  - generic: SNS 연결
+- button "예약":
+  - generic: 예약
+- button:
+- button:
+- textbox "url 또는 인스타그램 ID"
+- button:
+- button:
+- combobox
+- generic: "+82"
+- textbox "휴대폰번호"
+- button:
+- button "+SNS 연결추가": +SNS 연결추가
+- button "+블럭 추가": +블럭 추가
+- button:
+- dialog [active]:
+  - generic: SNS 목록
+  - button:
+  - button "홈페이지":
+    - generic: 홈페이지
+  - button "이메일":
+    - generic: 이메일
+  - button "휴대폰번호":
+    - generic: 휴대폰번호
+  - button "리틀리":
+    - generic: 리틀리
+  - button "블로그":
+    - generic: 블로그
+  - button "인스타그램":
+    - generic: 인스타그램
+  - button "유튜브":
+    - generic: 유튜브
+  - button "X (트위터)":
+    - generic: X (트위터)
+  - button "카카오톡":
+    - generic: 카카오톡
+  - button "카카오스토리":
+    - generic: 카카오스토리
+  - button "카카오 채널":
+    - generic: 카카오 채널
+  - button "카카오 지도":
+    - generic: 카카오 지도
+  - button "티스토리":
+    - generic: 티스토리
+  - button "브런치":
+    - generic: 브런치
+  - button "네이버 블로그":
+    - generic: 네이버 블로그
+  - button "네이버 카페":
+    - generic: 네이버 카페
+  - button "네이버 밴드":
+    - generic: 네이버 밴드
+  - button "네이버 포스트":
+    - generic: 네이버 포스트
+  - button "네이버 지도":
+    - generic: 네이버 지도
+  - button "네이버 예약":
+    - generic: 네이버 예약
+  - button "네이버 톡톡":
+    - generic: 네이버 톡톡
+  - button "네이버 티비":
+    - generic: 네이버 티비
+  - button "네이버 인플루언서":
+    - generic: 네이버 인플루언서
+  - button "그라폴리오":
+    - generic: 그라폴리오
+  - button "스마트 스토어":
+    - generic: 스마트 스토어
+  - button "라인":
+    - generic: 라인
+  - button "페이스북":
+    - generic: 페이스북
+  - button "페이스북 메신저":
+    - generic: 페이스북 메신저
+  - button "핀터레스트":
+    - generic: 핀터레스트
+  - button "비메오":
+    - generic: 비메오
+  - button "링크드인":
+    - generic: 링크드인
+  - button "비헨스":
+    - generic: 비헨스
+  - button "텔레그램":
+    - generic: 텔레그램
+  - button "틱톡":
+    - generic: 틱톡
+  - button "스냅챗":
+    - generic: 스냅챗
+  - button "트위치":
+    - generic: 트위치
+  - button "텀블러":
+    - generic: 텀블러
+  - button "깃허브":
+    - generic: 깃허브
+  - button "디스콰이엇":
+    - generic: 디스콰이엇
+  - button "커리어리":
+    - generic: 커리어리
+  - button "디스코드":
+    - generic: 디스코드
+  - button "에스크":
+    - generic: 에스크
+  - button "페잉":
+    - generic: 페잉
+  - button "다음카페":
+    - generic: 다음카페
+  - button "오픈씨":
+    - generic: 오픈씨
+  - button "포스타입":
+    - generic: 포스타입
+  - button "배달의민족":
+    - generic: 배달의민족
+  - button "요기요":
+    - generic: 요기요
+  - button "쿠팡이츠":
+    - generic: 쿠팡이츠
+  - button "쿠팡":
+    - generic: 쿠팡
+  - button "노션":
+    - generic: 노션
+  - button "미디엄":
+    - generic: 미디엄
+  - button "애플 뮤직":
+    - generic: 애플 뮤직
+  - button "애플 팟캐스트":
+    - generic: 애플 팟캐스트
+  - button "앱스토어":
+    - generic: 앱스토어
+  - button "클럽하우스":
+    - generic: 클럽하우스
+  - button "싸이월드":
+    - generic: 싸이월드
+  - button "이벤터스":
+    - generic: 이벤터스
+  - button "아이디어스":
+    - generic: 아이디어스
+  - button "픽시브":
+    - generic: 픽시브
+  - button "팟빵":
+    - generic: 팟빵
+  - button "푸슝":
+    - generic: 푸슝
+  - button "사운드 클라우드":
+    - generic: 사운드 클라우드
+  - button "스포티파이":
+    - generic: 스포티파이
+  - button "탤런트 프로토콜":
+    - generic: 탤런트 프로토콜
+  - button "벨로그":
+    - generic: 벨로그
+  - button "왓츠앱":
+    - generic: 왓츠앱
+  - button "젠리":
+    - generic: 젠리
+  - button "지그재그":
+    - generic: 지그재그
+  - button "숲(SOOP)":
+    - generic: 숲(SOOP)
+  - button "캐치테이블":
+    - generic: 캐치테이블
+  - button "크립토닷컴":
+    - generic: 크립토닷컴
+  - button "땡겨요":
+    - generic: 땡겨요
+  - button "500px (오백픽셀)":
+    - generic: 500px (오백픽셀)
+  - button "플로":
+    - generic: 플로
+  - button "홀릭스":
+    - generic: 홀릭스
+  - button "아이엠":
+    - generic: 아이엠
+  - button "이프랜드":
+    - generic: 이프랜드
+  - button "크몽":
+    - generic: 크몽
+  - button "라이키":
+    - generic: 라이키
+  - button "모닥불":
+    - generic: 모닥불
+  - button "마이포트폴리오":
+    - generic: 마이포트폴리오
+  - button "노트폴리오":
+    - generic: 노트폴리오
+  - button "패들렛":
+    - generic: 패들렛
+  - button "로블록스":
+    - generic: 로블록스
+  - button "셔터스톡":
+    - generic: 셔터스톡
+  - button "솔브드":
+    - generic: 솔브드
+  - button "스티비":
+    - generic: 스티비
+  - button "서브스택":
+    - generic: 서브스택
+  - button "VK (브이케이)":
+    - generic: VK (브이케이)
+  - button "웨이보":
+    - generic: 웨이보
+  - button "본디":
+    - generic: 본디
+  - button "제페토":
+    - generic: 제페토
+  - button "채널톡":
+    - generic: 채널톡
+  - button "구글지도":
+    - generic: 구글지도
+  - button "구글플레이":
+    - generic: 구글플레이
+  - button "구글 팟캐스트":
+    - generic: 구글 팟캐스트
+  - button "피플카":
+    - generic: 피플카
+  - button "에브리타임":
+    - generic: 에브리타임
+  - button "팬심":
+    - generic: 팬심
+  - button "채티":
+    - generic: 채티
+  - button "투비컨티뉴드":
+    - generic: 투비컨티뉴드
+  - button "마켓컬리":
+    - generic: 마켓컬리
+  - button "에어비앤비":
+    - generic: 에어비앤비
+  - button "아마존":
+    - generic: 아마존
+  - button "비고라이브":
+    - generic: 비고라이브
+  - button "당근비즈니스":
+    - generic: 당근비즈니스
+  - button "그로로":
+    - generic: 그로로
+  - button "제프":
+    - generic: 제프
+  - button "문토":
+    - generic: 문토
+  - button "롤링페이퍼":
+    - generic: 롤링페이퍼
+  - button "숨고":
+    - generic: 숨고
+  - button "배달특급":
+    - generic: 배달특급
+  - button "오디오클립":
+    - generic: 오디오클립
+  - button "블로거":
+    - generic: 블로거
+  - button "블루스카이":
+    - generic: 블루스카이
+  - button "고스트":
+    - generic: 고스트
+  - button "서핏":
+    - generic: 서핏
+  - button "스레드":
+    - generic: 스레드
+  - button "텀블벅":
+    - generic: 텀블벅
+  - button "와디즈":
+    - generic: 와디즈
+  - button "위챗":
+    - generic: 위챗
+  - button "위버":
+    - generic: 위버
+  - button "위플레이":
+    - generic: 위플레이
+  - button "위트":
+    - generic: 위트
+  - button "흐름":
+    - generic: 흐름
+  - button "나무위키":
+    - generic: 나무위키
+  - button "스핀스핀":
+    - generic: 스핀스핀
+  - button "스푼":
+    - generic: 스푼
+  - button "유튜브 뮤직":
+    - generic: 유튜브 뮤직
+  - button "요즘라이브":
+    - generic: 요즘라이브
+  - button "셀러비":
+    - generic: 셀러비
+  - button "게더타운":
+    - generic: 게더타운
+  - button "마스토돈":
+    - generic: 마스토돈
+  - button "멜론":
+    - generic: 멜론
+  - button "스테디오":
+    - generic: 스테디오
+  - button "벅스뮤직":
+    - generic: 벅스뮤직
+  - button "치지직":
+    - generic: 치지직
+  - button "긱마켓":
+    - generic: 긱마켓
+  - button "사람인":
+    - generic: 사람인
+  - button "큐리어스":
+    - generic: 큐리어스
+  - button "필름메이커스":
+    - generic: 필름메이커스
+  - button "마플샵":
+    - generic: 마플샵
+  - button "엠넷":
+    - generic: 엠넷
+  - button "뉴웨이즈":
+    - generic: 뉴웨이즈
+  - button "엔지엘 (NGL)":
+    - generic: 엔지엘 (NGL)
+  - button "오늘의집":
+    - generic: 오늘의집
+  - button "페이팔":
+    - generic: 페이팔
+  - button "타이달":
+    - generic: 타이달
+  - button "왓챠피디아":
+    - generic: 왓챠피디아
+  - button "에딧샵":
+    - generic: 에딧샵
+  - button "아고다":
+    - generic: 아고다
+  - button "빌리빌리":
+    - generic: 빌리빌리
+  - button "부킹닷컴":
+    - generic: 부킹닷컴
+  - button "카라":
+    - generic: 카라
+  - button "달라라이브":
+    - generic: 달라라이브
+  - button "지니":
+    - generic: 지니
+  - button "카카오톡 선물하기":
+    - generic: 카카오톡 선물하기
+  - button "카카오톡 스토어":
+    - generic: 카카오톡 스토어
+  - button "킥(kick)":
+    - generic: 킥(kick)
+  - button "코피(ko-fi)":
+    - generic: 코피(ko-fi)
+  - button "토스":
+    - generic: 토스
+  - button "트립어드바이저":
+    - generic: 트립어드바이저
+  - button "우리의식탁":
+    - generic: 우리의식탁
+  - button "샤오홍슈":
+    - generic: 샤오홍슈
+  - button "잘로":
+    - generic: 잘로
+  - button "국번 없는 전화번호":
+    - generic: 국번 없는 전화번호
+  - textbox "SNS를 검색하세요"
+  - link "+ SNS 추가 요청":
+    - /url: https://tally.so/r/mevG4x
+    - text: + SNS 추가 요청

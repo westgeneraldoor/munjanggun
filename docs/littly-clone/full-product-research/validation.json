@@ -1,0 +1,29 @@
+{
+    "validated_at_kst":  "2026-08-14T09:51:15+09:00",
+    "image_count":  106,
+    "valid_png":  1,
+    "valid_jpeg":  105,
+    "invalid_image":  [
+
+                      ],
+    "invalid_json":  [
+
+                     ],
+    "empty_raw":  [
+
+                  ],
+    "public_desktop_full":  {
+                                "path":  "screenshots/shell/CHR-PUBLIC-HOME-004-desktop-full.jpg",
+                                "width":  1266,
+                                "height":  1325,
+                                "bytes":  78963,
+                                "magic":  "FFD8FFE000104A46"
+                            },
+    "public_mobile_390":  {
+                              "path":  "screenshots/shell/CHR-PUBLIC-HOME-003b-mobile390-stable.jpg",
+                              "width":  390,
+                              "height":  844,
+                              "bytes":  42810,
+                              "magic":  "FFD8FFE000104A46"
+                          }
+}

@@ -1,0 +1,17 @@
+{
+  "homeEditorMarkers": [],
+  "page1EditorMarkers": [],
+  "page1BlockPlaceholders": [],
+  "page1PublicMarkers": [],
+  "homePublicMarkers": [],
+  "homeLegitimate": {
+    "consultation": true,
+    "store": true,
+    "smartstore": true
+  },
+  "screenshot": {
+    "saved": false,
+    "error": "Error: Timed out running CDP command \"Page.captureScreenshot\" for tab 106"
+  },
+  "tabs": []
+}

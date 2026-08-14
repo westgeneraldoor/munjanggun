@@ -1,0 +1,263 @@
+- generic: 저장
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- link "슬라이딩 양개형중문 미서기 4연동중문 아파트 현관 거실 부엌 확장형 드레스룸 시공설치 30% 950,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/12404021912
+  - generic: 슬라이딩 양개형중문 미서기 4연동중문 아파트 현관 거실 부엌 확장형 드레스룸 시공설치
+  - generic: 30%
+  - generic: 950,000원
+- link "[올인원시공] 겨울철 난방비 잡는 프리미엄 현관문 단열 방화문 시공 도어교체 34% 390,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/11819259996
+  - generic: "[올인원시공] 겨울철 난방비 잡는 프리미엄 현관문 단열 방화문 시공 도어교체"
+  - generic: 34%
+  - generic: 390,000원
+- link "자동문 현관중문 3연동 슬라이딩 자동중문 아파트 시공설치/베이직 풀윈도우 화이트 34% 990,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/11390026743
+  - generic: 자동문 현관중문 3연동 슬라이딩 자동중문 아파트 시공설치/베이직 풀윈도우 화이트
+  - generic: 34%
+  - generic: 990,000원
+- link "더 모던 아파트 현관중문 3연동중문 시공설치 / 풀윈도우 오리지널컬러 투명강화유리 33% 600,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/10958142457
+  - generic: 더 모던 아파트 현관중문 3연동중문 시공설치 / 풀윈도우 오리지널컬러 투명강화유리
+  - generic: 33%
+  - generic: 600,000원
+- link "더 클래식 아파트 현관중문 3연동중문 시공설치/풀윈도우 오리지널컬러 투명강화유리 33% 600,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/10958141533
+  - generic: 더 클래식 아파트 현관중문 3연동중문 시공설치/풀윈도우 오리지널컬러 투명강화유리
+  - generic: 33%
+  - generic: 600,000원
+- link "디 아트 아치형 아파트 현관중문 3연동중문 시공설치/ 소프트아치 오리지널컬러 투명강화유리 33% 600,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/10003952906
+  - generic: 디 아트 아치형 아파트 현관중문 3연동중문 시공설치/ 소프트아치 오리지널컬러 투명강화유리
+  - generic: 33%
+  - generic: 600,000원
+- link "인테리어 걸레받이 평몰딩 슬림한 마이너스 철거포함 /천장몰딩 거실+부엌+방2개기준 38% 500,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/9810417261
+  - generic: 인테리어 걸레받이 평몰딩 슬림한 마이너스 철거포함 /천장몰딩 거실+부엌+방2개기준
+  - generic: 38%
+  - generic: 500,000원
+- link "방문교체 ABS도어 화장실문 시공설치 / ABS도어 교체 23% 230,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/8638789659
+  - generic: 방문교체 ABS도어 화장실문 시공설치 / ABS도어 교체
+  - generic: 23%
+  - generic: 230,000원
+- link "원슬라이딩중문 현관중문 슬라이딩 아파트 시공설치/스탠다드 투명강화유리 35% 550,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/8631435024
+  - generic: 원슬라이딩중문 현관중문 슬라이딩 아파트 시공설치/스탠다드 투명강화유리
+  - generic: 35%
+  - generic: 550,000원
+- link "폴딩도어 스윙중문 아파트 현관중문 접이식 양방향 풀윈도우 오리지널컬러 26% 850,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/8278418417
+  - generic: 폴딩도어 스윙중문 아파트 현관중문 접이식 양방향 풀윈도우 오리지널컬러
+  - generic: 26%
+  - generic: 850,000원
+- link "3연동중문 ㄱ자 현관중문 가벽파티션 아파트 시공설치/ 베이직 풀윈도우 투명강화유리 24% 950,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/4730309628
+  - generic: 3연동중문 ㄱ자 현관중문 가벽파티션 아파트 시공설치/ 베이직 풀윈도우 투명강화유리
+  - generic: 24%
+  - generic: 950,000원
+- link "현관중문 슬라이딩 3연동중문 아파트 시공설치/베이직 풀윈도우 투명강화유리 35% 550,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/4610364765
+  - generic: 현관중문 슬라이딩 3연동중문 아파트 시공설치/베이직 풀윈도우 투명강화유리
+  - generic: 35%
+  - generic: 550,000원
+- link "슬라이딩도어 헹거 ABS도어 드레스룸 펜트리 미닫이문 / 양방향댐퍼 기본구성 31% 550,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/4515791893
+  - generic: 슬라이딩도어 헹거 ABS도어 드레스룸 펜트리 미닫이문 / 양방향댐퍼 기본구성
+  - generic: 31%
+  - generic: 550,000원
+- link "셀프실측 방문교체 ABS도어 화장실문 문짝 욕실문 시공설치 / 민자도어 중백색 17% 125,000원":
+  - /url: https://smartstore.naver.com/doorgeneral/products/4511628910
+  - generic: 셀프실측 방문교체 ABS도어 화장실문 문짝 욕실문 시공설치 / 민자도어 중백색
+  - generic: 17%
+  - generic: 125,000원
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- link "URL litt.ly/munjanggun.com/page1":
+  - /url: https://litt.ly/munjanggun.com/page1
+  - generic: URL
+  - text: litt.ly/munjanggun.com/page1
+- generic: 저장
+- button:
+- generic: 페이지 추가
+- text: 홈화면
+- text: 페이지
+- button "페이지" [disabled]:
+  - generic: 페이지
+- button "디자인":
+  - generic: 디자인
+- button "분석":
+  - generic: 분석
+- button "관리":
+  - generic: 관리
+- button "마케팅":
+  - generic: 마케팅
+- generic: 프로필
+- button:
+- button:
+- button "ON OFF 스마트 스토어 연동":
+  - generic: "ON"
+  - generic: "OFF"
+  - switch [checked]
+  - generic: 스마트 스토어 연동
+- button "강조":
+  - generic: 강조
+- button "예약":
+  - generic: 예약
+- button:
+- generic: 대표 문구
+- textbox "대표 문구":
+  - /placeholder: 스마트 스토어 연동 상단에 문구가 노출됩니다
+- generic: 링크 목록*
+- button "+ 상품 동기화": + 상품 동기화
+- generic: "* 솔루션이 연동되었습니다. 솔루션 연동 해지는 네이버 스마트스토어센터에서 직접 가능합니다."
+- button:
+- generic: 슬라이딩 양개형중문 미서기 4연동중문 아파트 현관 거실 부엌 확장형 드레스룸 시공설치
+- generic: 950,000원
+- generic: 1,350,000원
+- generic: 스마트스토어
+- generic: "ON"
+- generic: "OFF"
+- switch [checked]
+- button:
+- button:
+- generic: "[올인원시공] 겨울철 난방비 잡는 프리미엄 현관문 단열 방화문 시공 도어교체"
+- generic: 390,000원
+- generic: 590,000원
+- generic: 스마트스토어
+- generic: "ON"
+- generic: "OFF"
+- switch [checked]
+- button:
+- button:
+- generic: 자동문 현관중문 3연동 슬라이딩 자동중문 아파트 시공설치/베이직 풀윈도우 화이트
+- generic: 990,000원
+- generic: 1,490,000원
+- generic: 스마트스토어
+- generic: "ON"
+- generic: "OFF"
+- switch [checked]
+- button:
+- button:
+- generic: 더 모던 아파트 현관중문 3연동중문 시공설치 / 풀윈도우 오리지널컬러 투명강화유리
+- generic: 600,000원
+- generic: 900,000원
+- generic: 스마트스토어
+- generic: "ON"
+- generic: "OFF"
+- switch [checked]
+- button:
+- button:
+- generic: 더 클래식 아파트 현관중문 3연동중문 시공설치/풀윈도우 오리지널컬러 투명강화유리
+- generic: 600,000원
+- generic: 900,000원
+- generic: 스마트스토어
+- generic: "ON"
+- generic: "OFF"
+- switch [checked]
+- button:
+- button:
+- generic: 디 아트 아치형 아파트 현관중문 3연동중문 시공설치/ 소프트아치 오리지널컬러 투명강화유리
+- generic: 600,000원
+- generic: 900,000원
+- generic: 스마트스토어
+- generic: "ON"
+- generic: "OFF"
+- switch [checked]
+- button:
+- button:
+- generic: 인테리어 걸레받이 평몰딩 슬림한 마이너스 철거포함 /천장몰딩 거실+부엌+방2개기준
+- generic: 500,000원
+- generic: 800,000원
+- generic: 스마트스토어
+- generic: "ON"
+- generic: "OFF"
+- switch [checked]
+- button:
+- button:
+- generic: 방문교체 ABS도어 화장실문 시공설치 / ABS도어 교체
+- generic: 230,000원
+- generic: 300,000원
+- generic: 스마트스토어
+- generic: "ON"
+- generic: "OFF"
+- switch [checked]
+- button:
+- button:
+- generic: 원슬라이딩중문 현관중문 슬라이딩 아파트 시공설치/스탠다드 투명강화유리
+- generic: 550,000원
+- generic: 850,000원
+- generic: 스마트스토어
+- generic: "ON"
+- generic: "OFF"
+- switch [checked]
+- button:
+- button:
+- generic: 폴딩도어 스윙중문 아파트 현관중문 접이식 양방향 풀윈도우 오리지널컬러
+- generic: 850,000원
+- generic: 1,150,000원
+- generic: 스마트스토어
+- generic: "ON"
+- generic: "OFF"
+- switch [checked]
+- button:
+- button:
+- generic: 3연동중문 ㄱ자 현관중문 가벽파티션 아파트 시공설치/ 베이직 풀윈도우 투명강화유리
+- generic: 950,000원
+- generic: 1,250,000원
+- generic: 스마트스토어
+- generic: "ON"
+- generic: "OFF"
+- switch [checked]
+- button:
+- button:
+- generic: 현관중문 슬라이딩 3연동중문 아파트 시공설치/베이직 풀윈도우 투명강화유리
+- generic: 550,000원
+- generic: 850,000원
+- generic: 스마트스토어
+- generic: "ON"
+- generic: "OFF"
+- switch [checked]
+- button:
+- button:
+- generic: 슬라이딩도어 헹거 ABS도어 드레스룸 펜트리 미닫이문 / 양방향댐퍼 기본구성
+- generic: 550,000원
+- generic: 800,000원
+- generic: 스마트스토어
+- generic: "ON"
+- generic: "OFF"
+- switch [checked]
+- button:
+- button:
+- generic: 셀프실측 방문교체 ABS도어 화장실문 문짝 욕실문 시공설치 / 민자도어 중백색
+- generic: 125,000원
+- generic: 150,000원
+- generic: 스마트스토어
+- generic: "ON"
+- generic: "OFF"
+- switch [checked]
+- button:
+- button "옵션 접기":
+  - generic: 옵션 접기
+- generic: 레이아웃
+- radio "기본 배치" [checked]
+- generic: 기본 배치
+- radio "2열 배치"
+- generic: 2열 배치
+- radio "3열 배치"
+- generic: 3열 배치
+- radio "1 캐러셀"
+- generic: 1 캐러셀
+- radio "2 캐러셀"
+- generic: 2 캐러셀
+- generic: 링크 나열
+- radio "전부 나열" [checked]
+- generic: 전부 나열
+- radio "접기 적용"
+- generic: 접기 적용
+- button "+블럭 추가" [active]: +블럭 추가
+- button:
+- img "Live Chat Button"

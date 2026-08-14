@@ -1,0 +1,1553 @@
+{
+    "schema_version":  1,
+    "research":  "Littly full-product research v2",
+    "generated_at_kst":  "2026-08-14T09:51:46+09:00",
+    "browser":  "Chrome",
+    "authority":  "new full-product evidence only",
+    "counts":  {
+                   "screenshots":  106,
+                   "raw":  153,
+                   "measurements":  40,
+                   "documents":  7
+               },
+    "artifacts":  {
+                      "screenshots":  [
+                                          {
+                                              "path":  "screenshots/analytics/CHR-ANALYTICS-001-viewport.jpg",
+                                              "bytes":  113077,
+                                              "sha256":  "afa5084002bd9a9acc22ed7e5ed1d210601cf42b201d6f7884d500ce157bb6e9"
+                                          },
+                                          {
+                                              "path":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-01.jpg",
+                                              "bytes":  107777,
+                                              "sha256":  "1c8a795a6ccf03a351e6226180e4a2586a56293e9c084ba7ad5218bea2ab0b90"
+                                          },
+                                          {
+                                              "path":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-02.jpg",
+                                              "bytes":  104003,
+                                              "sha256":  "a1960dad7900dfe005787f72efa20dab4d1e6e39accc03a44efec1b7ab473a13"
+                                          },
+                                          {
+                                              "path":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-03.jpg",
+                                              "bytes":  102468,
+                                              "sha256":  "ab94fafcea22b0c66775cc8a252bc1ff6e106fe8d65786fb89f272b403b7e5f4"
+                                          },
+                                          {
+                                              "path":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-04.jpg",
+                                              "bytes":  103235,
+                                              "sha256":  "d5c3a671be7e0a17d4da40abf71e47fc133fd62232abddbb431340036b32e7db"
+                                          },
+                                          {
+                                              "path":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-05.jpg",
+                                              "bytes":  101949,
+                                              "sha256":  "082db4b89c6d83ea76c93a374b8995abaa554ebf0350e8c41a4aebc4711baa05"
+                                          },
+                                          {
+                                              "path":  "screenshots/analytics/CHR-ANALYTICS-DETAIL-06.jpg",
+                                              "bytes":  103516,
+                                              "sha256":  "c71270bfc3239bf91524fc196dd62ff30504e81d6eb00330d87e6f465f639c5f"
+                                          },
+                                          {
+                                              "path":  "screenshots/analytics/CHR-ANALYTICS-PERIOD-004-fresh-open.jpg",
+                                              "bytes":  111716,
+                                              "sha256":  "95c1df300fbbcc9438d7db7ed4dc5bd46ba558879cda1b582f010a6cd9db1c6b"
+                                          },
+                                          {
+                                              "path":  "screenshots/design/CHR-DESIGN-001-viewport.jpg",
+                                              "bytes":  118995,
+                                              "sha256":  "93a31fb1998a059561b6065ce04ef131b2cd9cc29c33d66b519e396e7a76b667"
+                                          },
+                                          {
+                                              "path":  "screenshots/design/CHR-DESIGN-RECOMMEND-001-post-action.jpg",
+                                              "bytes":  122885,
+                                              "sha256":  "87aa8d72df8c33a8bce59c3e3722c3b02a54eba5ed4c16933d6dcb8e7850b556"
+                                          },
+                                          {
+                                              "path":  "screenshots/design/CHR-DESIGN-RECOMMEND-003-restored.jpg",
+                                              "bytes":  108595,
+                                              "sha256":  "63c0898609c2811d97b241f898cde2f2e19d1f436361c7aa6919a59701d2297d"
+                                          },
+                                          {
+                                              "path":  "screenshots/design/CHR-DESIGN-RECOMMEND-004-restored-reload.jpg",
+                                              "bytes":  119106,
+                                              "sha256":  "3338177691fa28f17766653df2f7e8cbeb2f90491d3f186ceea130e32f315b51"
+                                          },
+                                          {
+                                              "path":  "screenshots/manage/CHR-MANAGE-001-viewport.jpg",
+                                              "bytes":  114936,
+                                              "sha256":  "3f4123a6c17f460300b557e8ca534beaf9afc243ff1f228f1d8d93f16ec7bc47"
+                                          },
+                                          {
+                                              "path":  "screenshots/manage/CHR-MANAGE-ADS-001-modal.jpg",
+                                              "bytes":  38969,
+                                              "sha256":  "e2ca378f0449f24c408272ff5bd3fe7803b2acf7b037c5d42bed387e302044f0"
+                                          },
+                                          {
+                                              "path":  "screenshots/manage/CHR-MANAGE-CUSTOMER-001-modal.jpg",
+                                              "bytes":  60933,
+                                              "sha256":  "28626d9bc902a1fa6c9aa58e67654b09daccbfdb66643b8883ddabd305ce7ac6"
+                                          },
+                                          {
+                                              "path":  "screenshots/manage/CHR-MANAGE-SALES-001-modal.jpg",
+                                              "bytes":  48103,
+                                              "sha256":  "436253853749ef83cc0f62574dcb4789965eb169332245432ccb6171a2b2112c"
+                                          },
+                                          {
+                                              "path":  "screenshots/marketing/CHR-MARKETING-001-viewport.jpg",
+                                              "bytes":  102164,
+                                              "sha256":  "03e3156d8a25ebae6dcbd4b06d14b89e24ed197e94bd4062ff4509752afc7686"
+                                          },
+                                          {
+                                              "path":  "screenshots/marketing/CHR-MARKETING-DM-001-list.jpg",
+                                              "bytes":  99121,
+                                              "sha256":  "ac669e8a9f086edcf6368dab3d15f769d1db420a5f8a0a846833471a9310c14c"
+                                          },
+                                          {
+                                              "path":  "screenshots/marketing/CHR-MARKETING-DM-002-connect.jpg",
+                                              "bytes":  74601,
+                                              "sha256":  "fca8285a750fbc72e21464f06668c9419ffa0bd1faeb1406504e9b11ca21069f"
+                                          },
+                                          {
+                                              "path":  "screenshots/marketing/CHR-MARKETING-EMAIL-001-history.jpg",
+                                              "bytes":  43820,
+                                              "sha256":  "3e5d68e7734da15aa1cc247b943df46a15daf22a1aee258b877f20c0eb394b8f"
+                                          },
+                                          {
+                                              "path":  "screenshots/marketing/CHR-MARKETING-EMAIL-002-recipients.jpg",
+                                              "bytes":  43644,
+                                              "sha256":  "5b5732cc6cb5d7c26283bc12aed89ece2615598025ed26f1a2f8186ab3b60f64"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-01-SINGLE-001-editor.jpg",
+                                              "bytes":  73119,
+                                              "sha256":  "98def14a24f8e19a60427abba2839ab57b6f681acd6ca5489ae2b3ead1ff4df5"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-01-SINGLE-002-options.jpg",
+                                              "bytes":  77955,
+                                              "sha256":  "7001e94263db07e3c8a478cad90627a19ce97a3c6703b497d3d555d6035a182b"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-01-SINGLE-003-collapsed.jpg",
+                                              "bytes":  67633,
+                                              "sha256":  "c96511ff1f9619002ac8e9f508c7f1961f220f5511a4b4dd04f8f2ad457004a2"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-01-SINGLE-004-more.jpg",
+                                              "bytes":  68233,
+                                              "sha256":  "c8b49f92c09c3908ea4a10be4c96a0172d97d255db9f97c16dac0b6f1bb60d22"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-02-GROUP-001-editor.jpg",
+                                              "bytes":  81620,
+                                              "sha256":  "0ac9d6e489f6a6b00b93aa2dbbdfa8428007caeb53957ded71659cfbc6d9cd80"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-02-GROUP-002-link-row.jpg",
+                                              "bytes":  60005,
+                                              "sha256":  "6b9682f25df83cfc601f17b7f828eb20e85475f02e9207fc21ef3acf6b2b8334"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-03-SNS-001-editor.jpg",
+                                              "bytes":  63789,
+                                              "sha256":  "c6f603b330593c401f832d3ec59961bca82f3d290a5fe73d3d98c8d8cd1bdf68"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-03-SNS-002-add.jpg",
+                                              "bytes":  63843,
+                                              "sha256":  "8180f3261a8738d36cad01841766c4e6f341f0a2ed94290898604554f51a1724"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-04-VIDEO-001-editor.jpg",
+                                              "bytes":  66998,
+                                              "sha256":  "1ed8eacfd468fa38a998c4c8c68d4ee2906230546c8e359b9e3193bd8ec81016"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-05-TEXT-001-editor.jpg",
+                                              "bytes":  61058,
+                                              "sha256":  "47ec9690bffe21be06939952040c29d34292ae1e520ba28ccbd3cbb83cc5db4f"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-05-TEXT-002-options.jpg",
+                                              "bytes":  60429,
+                                              "sha256":  "026b68fc239853d7fb235bb22368843b95d7aa277a89988cc5e456ce22178603"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-06-GALLERY-001-editor.jpg",
+                                              "bytes":  70831,
+                                              "sha256":  "cc8db7e3161d6339baeba07e70e537bb9779e9edb992ffe43c533dfd1a56f083"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-07-SPACER-001-editor.jpg",
+                                              "bytes":  55728,
+                                              "sha256":  "ce6493d9e597d66b05a57e99aff75deee9c10062f5f3a42fa10693734bc59791"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-08-MUSIC-001-editor.jpg",
+                                              "bytes":  68744,
+                                              "sha256":  "4eefd3a6555fa1407473b05ba125cddff8b57d7215330544e697ac93f49af2f6"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-08-MUSIC-002-soundcloud-rendered.jpg",
+                                              "bytes":  58507,
+                                              "sha256":  "a9d8428a910cdb70b072e817097dfdb23cd6e06cd4006c969793f370834b3e4e"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-08-MUSIC-003-multi-channel.jpg",
+                                              "bytes":  75754,
+                                              "sha256":  "2815e6f7f0ba177fd6615a4fd97f600519341cee5dd1c227a084c70be7a8ac3f"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-09-MAP-001-editor.jpg",
+                                              "bytes":  77031,
+                                              "sha256":  "a47ea03e81e77131c36dc1a2be13912abf23e36e0b9a947ad6093cfe2471c09a"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-09-MAP-002-search-results.jpg",
+                                              "bytes":  57797,
+                                              "sha256":  "9b83090fc8689626ca02d202bbd06d337203a071344b2baa83a3274168a401e2"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-09-MAP-003-rendered.jpg",
+                                              "bytes":  54600,
+                                              "sha256":  "e4a0812cfd83a7e4d60f25118f172ab38be48ab2c93e91456ffe51e5a05d2680"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-10-FILE-001-editor.jpg",
+                                              "bytes":  64137,
+                                              "sha256":  "e78c8d23d2d17c215ffd0155eefd86f3bbdcde001721117014f3cdbb20b0dc50"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-10-FILE-002-options.jpg",
+                                              "bytes":  64114,
+                                              "sha256":  "a5b6bc79d935f53751990c0b3b53a84e3adb4819e3049294dda36b47c1e00230"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-11-INQUIRY-001-editor.jpg",
+                                              "bytes":  65008,
+                                              "sha256":  "97ec6111192f6c48be0aadb34009a477a232f0387aff348fc199b6fdb3961755"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-11-INQUIRY-002b-current-dialog.jpg",
+                                              "bytes":  49823,
+                                              "sha256":  "67a476c0399ab72c37e226c74618690b129be329a694195dd3fee2decf8ba370"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-11-INQUIRY-003-form-enabled.jpg",
+                                              "bytes":  49923,
+                                              "sha256":  "1dcc826d10c51a1d5cfceeaefc770f9c799a354b26680a89744fadf850b5c605"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-12-SCHEDULE-001-editor.jpg",
+                                              "bytes":  62836,
+                                              "sha256":  "537228f4937da3be8b6e7f085088244de79ab4ec35e6c00234e942eceabee0a5"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-12-SCHEDULE-002-add-dialog.jpg",
+                                              "bytes":  62834,
+                                              "sha256":  "e62fa913a2ee5e045c0441d7df9b3ba786a8449837cb0e22191c19725e781ae6"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-12-SCHEDULE-003-options.jpg",
+                                              "bytes":  63203,
+                                              "sha256":  "d88358e931d39b311986c29e8f1a170602d5f5b61caf027a610bdc5e4353d125"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-13-CUSTOMER-001-editor.jpg",
+                                              "bytes":  65521,
+                                              "sha256":  "5b930bf4f9ed0e4fd1b41dcab5257962a93198358bdd08118608f7f0bc2dce2a"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-14-CONTACT-001-editor.jpg",
+                                              "bytes":  59713,
+                                              "sha256":  "dc48c1d1bf50a4417b77f5a695b0bde9725643de31d7ad18e72a1725e0d0a434"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-14-CONTACT-002-add-dialog.jpg",
+                                              "bytes":  59731,
+                                              "sha256":  "1193ec2f8dab5407f4138542df4336f0cb7a6254790a21a9af652ca51e4e280c"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-15-NOTICE-001b-editor-stable.jpg",
+                                              "bytes":  60420,
+                                              "sha256":  "66d9047d30b608fa10123ed587ec1d37c4582e1f9c88b846fb3fc95c2e9e9ad1"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-15-NOTICE-002-popup-layout.jpg",
+                                              "bytes":  61432,
+                                              "sha256":  "27917d379d3d9ed001bc43fbff88b30c1803a4f31e5a5e5f4ed029f5ae0c0146"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-16-SEARCH-001b-editor-stable.jpg",
+                                              "bytes":  81588,
+                                              "sha256":  "80e8e04d74d5d2298c766d81f0d25ec740d9ff1d052c4fb70e8d400d5a9516f4"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-17-GUESTBOOK-001-editor.jpg",
+                                              "bytes":  78267,
+                                              "sha256":  "dbde239b88294cceb41fa18a5ba528de25a08bbe133cb0cd9c6fa53413f22ec9"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-17-GUESTBOOK-002-manage.jpg",
+                                              "bytes":  58928,
+                                              "sha256":  "e02bd33118924a8363b044f6e9b672322ebadcc27a874fcc6fe5af3c410595b8"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-001-result.jpg",
+                                              "bytes":  78297,
+                                              "sha256":  "e15bf67e267c357bb9911b14e5cb017fe0b34b99fa18a6eb377aeb9ac2d7f2e5"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-002b-digital-product.jpg",
+                                              "bytes":  72502,
+                                              "sha256":  "4c4a310926ff54aaf64e29dcc5aea6821d56933fd3cf2125571358778698b788"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-002c-current.jpg",
+                                              "bytes":  73391,
+                                              "sha256":  "57812b174964d4e781cfc3c7aab82e44576e60c1aae079f188814b0ad4d15065"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-002-digital.jpg",
+                                              "bytes":  61888,
+                                              "sha256":  "2b2ed8a2cbeb584f2618de3ae6130f51d70429e706f3f694acd87a8f063a27c1"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-003-vod.jpg",
+                                              "bytes":  60736,
+                                              "sha256":  "e3aa6da8bc29cd00b9749f480cfdb7bbd9f4b26093e7748d83bff309c5fee5ad"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-004-talent.jpg",
+                                              "bytes":  60701,
+                                              "sha256":  "2cf68d768ac1364060e0f60a7057e038815cc6b02dd901ff8a6226da8e4cce7b"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-18-DOMESTIC-SALE-005-physical.jpg",
+                                              "bytes":  60723,
+                                              "sha256":  "50fa3d918c55b6b7d7a60a57b5797d067b790b6450ce8ad14181ccbdb327509a"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-19-OVERSEAS-SALE-002-usd.jpg",
+                                              "bytes":  59453,
+                                              "sha256":  "0785b6d59e55dd8bacd1f8e2529e1037136e9b61f76d0d7ddcc123e59efe2aca"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-19-OVERSEAS-SALE-003-usd-digital.jpg",
+                                              "bytes":  62236,
+                                              "sha256":  "6ee5467f63ce9f5115070c3e95a02e93c9d0e809e3f210c3c36ad4295b9e2440"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-19-OVERSEAS-SALE-004-jpy.jpg",
+                                              "bytes":  60387,
+                                              "sha256":  "f54fa9d4ffcc0137d7984ee7ad018f81e7f31d44a2e6512f12bf215c1c9f9b2e"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-20-DONATION-002-options.jpg",
+                                              "bytes":  70344,
+                                              "sha256":  "a94505e0d105a24107ce50b4af74b03685543feb15a15c6607fba30cc558a75a"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-21-RESERVATION-002-one-to-one.jpg",
+                                              "bytes":  59370,
+                                              "sha256":  "512f32beaee1ab2a7ec30cbcb5aa2bd87483d3d18a2892ef4504b98d3e2c2406"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-21-RESERVATION-003c-top-expanded.jpg",
+                                              "bytes":  70621,
+                                              "sha256":  "4671b298c5f1dd680a7b1c3962e32201c3101582321242ae7c1df4770cd3ea7b"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-21-RESERVATION-003-one-to-one-time.jpg",
+                                              "bytes":  71978,
+                                              "sha256":  "a6aa3a36906bd9deb4686cbd98d49d33054a427c58183d7e4054f0c9bf175327"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-21-RESERVATION-004-group.jpg",
+                                              "bytes":  57941,
+                                              "sha256":  "a45ee6e761fbe0e0ec67c16c859fdeec1122406b850cec1e83de0f6a9e4849b1"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-21-RESERVATION-005b-delete-position.jpg",
+                                              "bytes":  71395,
+                                              "sha256":  "2ecf077d93d086b9f09f9335712d7098f8c457730d5a654d288eb47a1abab182"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-21-RESERVATION-005-group-time.jpg",
+                                              "bytes":  74862,
+                                              "sha256":  "96b611934a981e44211911c1afa766b8d8a94ff20760509df555e526a0ea0115"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-22-AD-001b-delete-position.jpg",
+                                              "bytes":  77067,
+                                              "sha256":  "4fcd3e07a1b3e316c92db37cc6bb7375f2957367e1c461452b6bb20196e36cc0"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-22-AD-001-result.jpg",
+                                              "bytes":  81178,
+                                              "sha256":  "4a908db71d7ced8aa38b0ede538779242dfb2cdd62930f13ed246154859b94e8"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-23-MEMBERSHIP-001-editor.jpg",
+                                              "bytes":  74578,
+                                              "sha256":  "283ef983353724bda14bb842825f6be6689547367b605b26210df715ab98cdd9"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-23-MEMBERSHIP-002b-delete-position.jpg",
+                                              "bytes":  71049,
+                                              "sha256":  "ab5742ea44f1254c44f88bc29d8b31be25b13bef8a4d0b962cd9616d87555c58"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-23-MEMBERSHIP-002-product-dialog.jpg",
+                                              "bytes":  71208,
+                                              "sha256":  "fd027a9a11ff962ffceb0c4f2ae26252d909276fe153f76f2dfb66738c8cf3b1"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-24-SMARTSTORE-001b-result-stable.jpg",
+                                              "bytes":  108480,
+                                              "sha256":  "f44d5cbfddd8d94a46a2fdc5f9415d199d424151f245104e65d1eb04787eca5e"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-BLOCK-PICKER-001-modal.jpg",
+                                              "bytes":  77654,
+                                              "sha256":  "778e70ef7d031e03ca40c8d4d89d89e49d7dd6674ada5130f9b410eeeb682b99"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-PAGE-001-viewport.jpg",
+                                              "bytes":  80944,
+                                              "sha256":  "80784ece0eac6d28721a69e722f046ad9886120fb75ad58a9cec42d233737424"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-PAGE-ADD-001-modal.jpg",
+                                              "bytes":  80608,
+                                              "sha256":  "47d1dad30aa6bed9de2efb27b1cd716ded144e10bc3dbba637b149860cff061f"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-PAGE-ADD-002-result.jpg",
+                                              "bytes":  68290,
+                                              "sha256":  "86e3ccbaa35c24a4ebb8839507aa2a3ac2805653ca9b1c2f19f472c3f6ea2ab7"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-PAGE-ADD-MULTI-001.jpg",
+                                              "bytes":  65445,
+                                              "sha256":  "857bf6f7a1e2505e9f2fa9a19f96bdb862a5386e5618260791edf77fd6140d4f"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-PAGE-ADD-SUB-001.jpg",
+                                              "bytes":  99247,
+                                              "sha256":  "cc5657c5a90a01d870ec4ca68f45d3d007071800b25842792ff336c87538e6da"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-PAGE-CARD-OPTIONS-001.jpg",
+                                              "bytes":  81369,
+                                              "sha256":  "ff641af89acd5b6667e9a5f2960305cab077d517b90a4ad0fc20428cec27bd2d"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-PAGE-CARD-OPTIONS-002-hover.jpg",
+                                              "bytes":  80857,
+                                              "sha256":  "78d7fb60713bd15e1a2361cbb54fd4191e98f6981b1956eeb0ad57c826dd7d2a"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-PAGE-CARD-OPTIONS-003-open.jpg",
+                                              "bytes":  81795,
+                                              "sha256":  "103e4e0b61e4c49eba0f169f2dd4ae75473639de585defb50e546e721a84170e"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-PAGE-EDIT-001-modal.jpg",
+                                              "bytes":  62755,
+                                              "sha256":  "c43ad8f1f19648ff5df3c6610eacbf2b048096fecfd2f9944c5464f49b897cf3"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-PAGE-ROOT-002-home-selected.jpg",
+                                              "bytes":  78165,
+                                              "sha256":  "2dd04c63d27c31cf2fbd8a96415ec01a9b29b9575f049ad893e8c6ecd7e3b58c"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-PAGE-TEST-SELECT-001.jpg",
+                                              "bytes":  44088,
+                                              "sha256":  "08d60225acd316b94642ffc0b5405728d2f87b865101443770975a198150e058"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-PROFILE-000-position.jpg",
+                                              "bytes":  41989,
+                                              "sha256":  "d1fa97c2aa7d3cda809122cecc0251a6162f081873927cb6932a3f8f53924ccb"
+                                          },
+                                          {
+                                              "path":  "screenshots/page/CHR-PROFILE-001-editor.jpg",
+                                              "bytes":  41834,
+                                              "sha256":  "38fb9a872ff6d77c755629857d9e70ae1547fc60137cefb9f48a1388396da78e"
+                                          },
+                                          {
+                                              "path":  "screenshots/shell/CHR-PUBLIC-BELL-001.jpg",
+                                              "bytes":  58069,
+                                              "sha256":  "db22f081436cf41ce1e4983809aa5e7bda8e191389702a66039c7f118f0f25b0"
+                                          },
+                                          {
+                                              "path":  "screenshots/shell/CHR-PUBLIC-HOME-002-desktop.jpg",
+                                              "bytes":  53386,
+                                              "sha256":  "55f738a20e78664106c13408349e68718b44fea36c3a1101a142ab377ef2674c"
+                                          },
+                                          {
+                                              "path":  "screenshots/shell/CHR-PUBLIC-HOME-003b-mobile390-stable.jpg",
+                                              "bytes":  42810,
+                                              "sha256":  "b49f52c4ee8bdc860bb7950b130627ba9d28c098725b5c4d658002406995a5ec"
+                                          },
+                                          {
+                                              "path":  "screenshots/shell/CHR-PUBLIC-HOME-004-desktop-full.jpg",
+                                              "bytes":  78963,
+                                              "sha256":  "548e605b81fa041fb5d7d5404404abb2c7bdc2ec4231864b1d40972fa9c49ec5"
+                                          },
+                                          {
+                                              "path":  "screenshots/shell/CHR-PUBLIC-NAV-001-child.jpg",
+                                              "bytes":  22856,
+                                              "sha256":  "bd5a299c49e7ca57716baaf52c8b15062584a39e3696ea70dcfd13dd6b0fc915"
+                                          },
+                                          {
+                                              "path":  "screenshots/shell/CHR-PUBLIC-SHARE-001.jpg",
+                                              "bytes":  58106,
+                                              "sha256":  "a13a627afc6c5c0ce4efe5185e29ebaf383b9d5d4699036469b59696c2afff24"
+                                          },
+                                          {
+                                              "path":  "screenshots/shell/CHR-SHELL-SETTINGS-001-modal.jpg",
+                                              "bytes":  82705,
+                                              "sha256":  "b2be6a01c4537093a71decd0046c4065a65e36aaffa69a9b496cf1aeb4904dca"
+                                          },
+                                          {
+                                              "path":  "screenshots/shell/CHR-SHELL-SETTINGS-LINK-MODE-001-expanded.jpg",
+                                              "bytes":  78011,
+                                              "sha256":  "6e1acce767296396644c15af03d55929d603b5aad7b9999b8d5f0692b125f72d"
+                                          },
+                                          {
+                                              "path":  "screenshots/shell/CHR-SHELL-SETTINGS-QR-001-expanded.jpg",
+                                              "bytes":  78464,
+                                              "sha256":  "bae3032eb2025dd3c3bebbb31cb6b0862f973b8c839e4e6242a4f9480852caa2"
+                                          },
+                                          {
+                                              "path":  "screenshots/shell/CHR-SHELL-SETTINGS-SUBSCRIBE-001-expanded.jpg",
+                                              "bytes":  79228,
+                                              "sha256":  "432231579afda49505a794475513b0139007388bc682d584a1512fb9d3b310a6"
+                                          },
+                                          {
+                                              "path":  "screenshots/shell/CHR-SHELL-SETTINGS-TIKTOK-EXTERNAL-001-expanded.jpg",
+                                              "bytes":  81948,
+                                              "sha256":  "ea7fc14e516684645a47c0f5410054ceb7c3e79391dcb50d6a27ff284737369f"
+                                          },
+                                          {
+                                              "path":  "screenshots/shell/CHR-SHELL-SETTINGS-VISIBILITY-001-expanded.jpg",
+                                              "bytes":  74457,
+                                              "sha256":  "f239809df823fe6fd16791b0b682b35133af22e39638be7fed66f292debbffd5"
+                                          },
+                                          {
+                                              "path":  "screenshots/shell/USER-001-global-shell-page.png",
+                                              "bytes":  204436,
+                                              "sha256":  "cf4a3ee47c6d513ce8820c004fec636ce116112dfbcba58689bb77567d9b9aa1"
+                                          }
+                                      ],
+                      "raw":  [
+                                  {
+                                      "path":  "raw/CHR-ANALYTICS-001-dom.txt",
+                                      "bytes":  10167,
+                                      "sha256":  "df1839c61f1e1663103272171d5f6cf01624cc824eb2da731dbcd9ebb59491b1"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-ANALYTICS-DETAIL-01-dom.txt",
+                                      "bytes":  11205,
+                                      "sha256":  "0c5472b58b05370b23e8705fb1e806149cfcd92f162396b0d6b3cb00d35860b3"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-ANALYTICS-DETAIL-02-dom.txt",
+                                      "bytes":  11205,
+                                      "sha256":  "0c5472b58b05370b23e8705fb1e806149cfcd92f162396b0d6b3cb00d35860b3"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-ANALYTICS-DETAIL-03-dom.txt",
+                                      "bytes":  11205,
+                                      "sha256":  "0c5472b58b05370b23e8705fb1e806149cfcd92f162396b0d6b3cb00d35860b3"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-ANALYTICS-DETAIL-04-dom.txt",
+                                      "bytes":  11205,
+                                      "sha256":  "0c5472b58b05370b23e8705fb1e806149cfcd92f162396b0d6b3cb00d35860b3"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-ANALYTICS-DETAIL-05-dom.txt",
+                                      "bytes":  11205,
+                                      "sha256":  "0c5472b58b05370b23e8705fb1e806149cfcd92f162396b0d6b3cb00d35860b3"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-ANALYTICS-DETAIL-06-dom.txt",
+                                      "bytes":  11205,
+                                      "sha256":  "0c5472b58b05370b23e8705fb1e806149cfcd92f162396b0d6b3cb00d35860b3"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-ANALYTICS-PERIOD-004-fresh-open-dom.txt",
+                                      "bytes":  10584,
+                                      "sha256":  "38a5c49039638058409ac6fe7d6016a6f34c62a4cb1e9aff2e2d6e00e2dbd420"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-01-SINGLE-001-dom.txt",
+                                      "bytes":  1519,
+                                      "sha256":  "120aef228b267464c861fd19c90d1e480b81f8ff0cf3d8c863e857e702cb22e0"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-01-SINGLE-002-options-dom.txt",
+                                      "bytes":  1683,
+                                      "sha256":  "b52a8b93c814b22acae7a82476ff14de5ca960f3e086d00c61663f4bb53c736f"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-01-SINGLE-003-collapsed-dom.txt",
+                                      "bytes":  1483,
+                                      "sha256":  "e07d711eb08404d124c607ee8be1df3217cdf1c6cc992e96d1d105eb943fa4a2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-01-SINGLE-004-deleted-dom.txt",
+                                      "bytes":  2512,
+                                      "sha256":  "9b9c2fcf9ed89f23d89378aea0b569f2ccb4fe30a6df48ca46b66274d2783a15"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-01-SINGLE-004-more-dom.txt",
+                                      "bytes":  1474,
+                                      "sha256":  "48898da3023dbe046b2add0fc3fa109be892768ba21d0710824d589e5222f46d"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-01-SINGLE-005-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-02-GROUP-001-dom.txt",
+                                      "bytes":  1767,
+                                      "sha256":  "c1d7f5dd2ec6085a70ff400f95c00df588748edfbd43827f5dee09c399f23a5a"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-02-GROUP-002-link-row-dom.txt",
+                                      "bytes":  2207,
+                                      "sha256":  "7e62a4813cd3b8708679b5eab538c962988104613e618d4fdd1267402fc76ade"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-02-GROUP-003-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-03-SNS-001-dom.txt",
+                                      "bytes":  1234,
+                                      "sha256":  "72e57b3bbeb1434a9981b62841e3c23239166d1586ec9906e1846f85bd38d898"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-03-SNS-002-add-dom.txt",
+                                      "bytes":  10517,
+                                      "sha256":  "40b7fc207cf02cf127def3da4cbf0f8de71eb7d1033b7d630243650705d8176b"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-03-SNS-003-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-04-VIDEO-001-editor-dom.txt",
+                                      "bytes":  1486,
+                                      "sha256":  "4ea469b5d715ca562d5431de847eac7780606eb99a2e797206cce81f6152173f"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-04-VIDEO-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-05-TEXT-001-editor-dom.txt",
+                                      "bytes":  1293,
+                                      "sha256":  "fc23e6575aea1b26f227595e9dcdacb2a6d44f99f2ec628eab8d0c8e4bcf9156"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-05-TEXT-002-options-dom.txt",
+                                      "bytes":  1611,
+                                      "sha256":  "ea9fbb3562643f7a8dd2b9dcaa9d03dc256199e10ee4ab961978a936daee6336"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-05-TEXT-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-06-GALLERY-001-editor-dom.txt",
+                                      "bytes":  1550,
+                                      "sha256":  "562337236a4b9b8901af5e1a6a624c3818b6c04da85b10deed0ace05c2afe7e6"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-06-GALLERY-002-file-inputs.json",
+                                      "bytes":  98,
+                                      "sha256":  "7bd1fd6cff3e2c515673a66effe3e5b144bd7b85e7ebb419ffa741fc5d4a8189"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-06-GALLERY-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-07-SPACER-001-editor-dom.txt",
+                                      "bytes":  1197,
+                                      "sha256":  "3bfe1659cbc0f609acc7f364ec150d1c1dbc98eb525ab62809a7de0c1d01d224"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-07-SPACER-002-range.json",
+                                      "bytes":  263,
+                                      "sha256":  "8399bac98b37e25da3f5263e48cb46b7761a53ddfef35b44edbc591aea3845d4"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-07-SPACER-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-08-MUSIC-001-editor-dom.txt",
+                                      "bytes":  1334,
+                                      "sha256":  "150438f08dfa1e3911239fffdabef2e485f5a05df5187b11d447f2d1455c9bf3"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-08-MUSIC-002-soundcloud-rendered-dom.txt",
+                                      "bytes":  1449,
+                                      "sha256":  "2ee8bae82b199ba04b8ad32eb479c9c9aa6db569d1cb44cd47d85bee995be84a"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-08-MUSIC-003-multi-channel-dom.txt",
+                                      "bytes":  3040,
+                                      "sha256":  "7a6bc20744a344fc4d629643d648711e203551723cf1ce11ce208a44db8b2212"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-08-MUSIC-099-deleted-proof.txt",
+                                      "bytes":  822,
+                                      "sha256":  "2d69f140deed8bb34af5469bc6fd78433f36267bfb44a22f54bfc9f2e5e6ab3c"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-09-MAP-001-editor-dom.txt",
+                                      "bytes":  1132,
+                                      "sha256":  "23f448a084c25cc8932b93ef91e11ac8f132451412a1c0e2d224a2bb26d59572"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-09-MAP-002-search-results-dom.txt",
+                                      "bytes":  1479,
+                                      "sha256":  "5692e1fcb17c68fa6753e603d748787fb9d70aac51e0e231ce54301115f656df"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-09-MAP-003-rendered-dom.txt",
+                                      "bytes":  1883,
+                                      "sha256":  "e4c49cbf0154f67928507cfa98eea40111af7d47b232e43295e71e6afdd948da"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-09-MAP-099-deleted-proof.txt",
+                                      "bytes":  822,
+                                      "sha256":  "2d69f140deed8bb34af5469bc6fd78433f36267bfb44a22f54bfc9f2e5e6ab3c"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-10-FILE-001-editor-dom.txt",
+                                      "bytes":  1409,
+                                      "sha256":  "cdde6badce50ea89b514d4d0427040af3d60e7bddb28c5a0e5fcd174d627833d"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-10-FILE-002-options-dom.txt",
+                                      "bytes":  1578,
+                                      "sha256":  "3cbc240d8e770cd631dbcf67ada9c9796e6f98376cb43f02bbd8a845ec21be1d"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-10-FILE-003-inputs.json",
+                                      "bytes":  129,
+                                      "sha256":  "63ff4d4440fa3d00112b66190225bf680eb93a06da22b737af8709db7666c9bb"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-10-FILE-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-11-INQUIRY-001-editor-dom.txt",
+                                      "bytes":  1491,
+                                      "sha256":  "f5f6bfb8d6a5d353c24b10571251672fca494c4bf9fe4562c3d529063b293eff"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-11-INQUIRY-002-item-dialog-dom.txt",
+                                      "bytes":  1736,
+                                      "sha256":  "c00b5c5003968293478a421a2e8713bff50a733e0cef4cef49103796877089f1"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-11-INQUIRY-003-form-enabled-dom.txt",
+                                      "bytes":  1981,
+                                      "sha256":  "fdd968d27847fe6f2b52779d83cb53c8040107849a59670744bf89c3bb6dc78b"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-11-INQUIRY-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-12-SCHEDULE-001-editor-dom.txt",
+                                      "bytes":  1319,
+                                      "sha256":  "6c2aae3ba1fc6832f5da3f9bbd863a857eba5e076e0a0b8e11881f9832b2bf86"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-12-SCHEDULE-002-add-dialog-dom.txt",
+                                      "bytes":  1732,
+                                      "sha256":  "f61562af67a09e3aeed4e2bd001d400df6e0393a6315cf63bbd016f52ae52a7b"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-12-SCHEDULE-003-options-dom.txt",
+                                      "bytes":  1455,
+                                      "sha256":  "7b1e8bc767b239e800adba156ae2b0074cbfbf4eeec70875b00d5f106ec0d258"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-12-SCHEDULE-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-13-CUSTOMER-001-editor-dom.txt",
+                                      "bytes":  1544,
+                                      "sha256":  "7cad5ffad74041bb5361aa04d730e35278c01947572894c7f576384ead8bb266"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-13-CUSTOMER-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-14-CONTACT-001-editor-dom.txt",
+                                      "bytes":  1204,
+                                      "sha256":  "246941a48f554fec3503dd080301d6e7d21dd5bf76aa9ce9ec0118bd98362410"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-14-CONTACT-002-add-dialog-dom.txt",
+                                      "bytes":  2230,
+                                      "sha256":  "d94892601dc91cc4b96c933addc5b8b6b2f06c92b6b6e483201f1be518700323"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-14-CONTACT-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-15-NOTICE-001-editor-dom.txt",
+                                      "bytes":  1305,
+                                      "sha256":  "c9ca4df99bc51963a75c257c70c0ea4b8ef1eb208d38b34b5ac6ebf20bf0c69f"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-15-NOTICE-002-popup-layout-dom.txt",
+                                      "bytes":  1326,
+                                      "sha256":  "1d3d240552b23fbddfb39c1da9860b9e3790d864050cc8d81fcdff3f91edaea4"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-15-NOTICE-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-16-SEARCH-001b-editor-stable-dom.txt",
+                                      "bytes":  1115,
+                                      "sha256":  "a3811d064ebc5c4d1a29f89176a7c345d26a5cd13b2498b627fda813df7f49d8"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-16-SEARCH-001-editor-dom.txt",
+                                      "bytes":  1115,
+                                      "sha256":  "a3811d064ebc5c4d1a29f89176a7c345d26a5cd13b2498b627fda813df7f49d8"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-16-SEARCH-099b-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-16-SEARCH-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-17-GUESTBOOK-001-editor-dom.txt",
+                                      "bytes":  1293,
+                                      "sha256":  "edcbc89756150f8d6c5d5cdbaf8c8b53580f32ae75a43db96d57314a5aa2fb50"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-17-GUESTBOOK-002-manage-dom.txt",
+                                      "bytes":  1356,
+                                      "sha256":  "e88856f7b0d7b0a3cd395ee8b975f2b647501d87fec286328a6e0b943a3fd2a3"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-17-GUESTBOOK-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-18-DOMESTIC-SALE-001-result-dom.txt",
+                                      "bytes":  1373,
+                                      "sha256":  "150865e0348f5b13fd881ebf304c170e5583451ad6f690305412486fcab3f977"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-18-DOMESTIC-SALE-002b-digital-product-dom.txt",
+                                      "bytes":  2912,
+                                      "sha256":  "ee192e1c3f7106250b895a0d225bec722704e9de121168594e8419961c1aabdc"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-18-DOMESTIC-SALE-002-digital-dom.txt",
+                                      "bytes":  2440,
+                                      "sha256":  "e3613a77ec5fccd0187847cae5699de8f81dddccc70db16eb7ba119b70b97598"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-18-DOMESTIC-SALE-003-vod-dom.txt",
+                                      "bytes":  2420,
+                                      "sha256":  "c3ee632ee783ebd866ffaa4eb40409d90ea61305944049900ceee0d5cf61540f"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-18-DOMESTIC-SALE-004-talent-dom.txt",
+                                      "bytes":  2420,
+                                      "sha256":  "4137c149667fcd9a364ef3cfd5ec6b8834afb5a904b0ba1334e7d14221145a6b"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-18-DOMESTIC-SALE-005-physical-dom.txt",
+                                      "bytes":  2528,
+                                      "sha256":  "544f75e3749ba55a335102ff53b13df740d0563f884b061f6a6627caf7922d2f"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-18-DOMESTIC-SALE-091-vod-deleted.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-18-DOMESTIC-SALE-092-talent-deleted.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-18-DOMESTIC-SALE-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-19-OVERSEAS-SALE-001-result-dom.txt",
+                                      "bytes":  1251,
+                                      "sha256":  "3f1b83a0d887778cc7581b23c1fd9e4e7d9faf936b32a22d5d6c5548790351da"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-19-OVERSEAS-SALE-002-usd-dom.txt",
+                                      "bytes":  1378,
+                                      "sha256":  "72237276f664ac12cd85eb572a849d74692131fe67badc13648d13d8b4764e8d"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-19-OVERSEAS-SALE-003-usd-digital-dom.txt",
+                                      "bytes":  2454,
+                                      "sha256":  "cbf5f85e87be3ff8991a4cbfe469bb890cb9c8f34ae0f5853a3790bf72e470db"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-19-OVERSEAS-SALE-004-jpy-dom.txt",
+                                      "bytes":  1378,
+                                      "sha256":  "470ae14c35d2a1b36837c6f983fd1bb97a20656790768eec80cdb5d5699917c6"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-19-OVERSEAS-SALE-090-usd-deleted.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-19-OVERSEAS-SALE-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-20-DONATION-001-editor-dom.txt",
+                                      "bytes":  1654,
+                                      "sha256":  "8d5ace3128e722319953c2ee35a77bb68bd94d96956dcfe12815e1734db41e77"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-20-DONATION-002-options-dom.txt",
+                                      "bytes":  2161,
+                                      "sha256":  "6014638a35068c6145e211f65815954d59e733e9b29b4bb00b0dbe2675808c20"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-20-DONATION-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-21-RESERVATION-001-editor-dom.txt",
+                                      "bytes":  1246,
+                                      "sha256":  "49375bf618fd9ad156113bc7606117f6d3078446c4d0b5c77520f485c02ca02d"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-21-RESERVATION-002-one-to-one-dom.txt",
+                                      "bytes":  2523,
+                                      "sha256":  "5c9a91d59d06fb3bba6584b42024c7eba9c22a63e010aa6fbb442f48c347e5a6"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-21-RESERVATION-003-one-to-one-time-dom.txt",
+                                      "bytes":  3598,
+                                      "sha256":  "7a114b67ec29330ff8a9cce5959c6edeed225c34abd40c91c1704126d26ddf45"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-21-RESERVATION-004-group-dom.txt",
+                                      "bytes":  2529,
+                                      "sha256":  "d62ff64c62d604d5f1f1763d203412ae9caa01ae118f2ed41f00a2fa4ce29a57"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-21-RESERVATION-005-group-time-dom.txt",
+                                      "bytes":  3672,
+                                      "sha256":  "e5367788e27b2a71403fdb85c9629978466161fd44557577ca1f73b288bf0ec8"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-21-RESERVATION-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-22-AD-001-result-dom.txt",
+                                      "bytes":  1533,
+                                      "sha256":  "abba6065cc89231553ec2a4046c5f26081f049fd4a499b3d5f436ec93ca9888d"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-22-AD-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-23-MEMBERSHIP-001-editor-dom.txt",
+                                      "bytes":  2417,
+                                      "sha256":  "a0920e8940d239d6453131d3d65b1d6312a4f5bbfac55b23fac570a3fb6b70f0"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-23-MEMBERSHIP-002-product-dialog-dom.txt",
+                                      "bytes":  2858,
+                                      "sha256":  "8fef6c1cdbbb76cc88bf9cf887ac2de8df0e53182fb5cca35e0560fcaaabaa10"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-23-MEMBERSHIP-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-24-SMARTSTORE-001-result-dom.txt",
+                                      "bytes":  10675,
+                                      "sha256":  "9b3a37914d92759b89518e8560b0eeeda4a05cd7ab486265d66a5a3d3e972ca3"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-24-SMARTSTORE-002-count.json",
+                                      "bytes":  23,
+                                      "sha256":  "0d48d656bba46b7faf0439cbecbbc8eec900f2115e251fcc5e0c1fbd0b7e02db"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-24-SMARTSTORE-099-deleted-proof.txt",
+                                      "bytes":  796,
+                                      "sha256":  "b09c991f9cc2c29bd0d8b08be83ebb3ee2a067bd9c0a18ae1a371a156d01bee2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-BLOCK-PICKER-001-dom.txt",
+                                      "bytes":  5780,
+                                      "sha256":  "7466b1734701db05c1df6931d2cb64de2f96596e8ae709e1827f096b8d5b1f27"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-DESIGN-001-dom.txt",
+                                      "bytes":  4649,
+                                      "sha256":  "a387fac6100ff072c8af1bdc931b30d1f6a5b2375bdeb8aaa222f4f1f960375c"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-DESIGN-RECOMMEND-001-dom.txt",
+                                      "bytes":  4694,
+                                      "sha256":  "f5efa64027f9b21e7e9b7f6c0299ae08f993bf7fc0d426d8711019d3d3c8a9d2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-DESIGN-RECOMMEND-002-inputs.json",
+                                      "bytes":  1928,
+                                      "sha256":  "fc53f156321b5e2b37a7766c89d1de7619ecd673d2f7d00aaf1fbf868c8bb60a"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-DESIGN-RECOMMEND-003-restored-dom.txt",
+                                      "bytes":  4685,
+                                      "sha256":  "00ec8f791d184300fb2705e4c9ca24513d956010bfb682287d5c61b63daf33d4"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-DESIGN-RECOMMEND-004-restored-reload-dom.txt",
+                                      "bytes":  4649,
+                                      "sha256":  "a387fac6100ff072c8af1bdc931b30d1f6a5b2375bdeb8aaa222f4f1f960375c"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-MANAGE-001-dom.txt",
+                                      "bytes":  3535,
+                                      "sha256":  "3365605901b69ca4cdcb896b39c545a194687a717db7fd089fddb423d7eae4f4"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-MANAGE-ADS-001-dom.txt",
+                                      "bytes":  4295,
+                                      "sha256":  "66984d25965ca591010fb23ac553c52725f801c995ec0cdb9df410744cba51af"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-MANAGE-CUSTOMER-001-dom.txt",
+                                      "bytes":  4940,
+                                      "sha256":  "c75a469adf73b87740c77fdc2d2cb2f973822b83928b6ab2b3ea75e92eac2a62"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-MANAGE-SALES-001-dom.txt",
+                                      "bytes":  4751,
+                                      "sha256":  "89cebb5339482c632436d33c9279d4bcc04642fb147c3216278483bd92d08f55"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-MARKETING-001-dom.txt",
+                                      "bytes":  3469,
+                                      "sha256":  "5775a5ff94f541abee93917fbcdc36f1b1714fee5eb6681e84888cbd9a562479"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-MARKETING-DM-001-list-dom.txt",
+                                      "bytes":  3754,
+                                      "sha256":  "25cc4537276497ba542bf532a421c8f278f3af2ba5f8fe12fa6af180fd53e814"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-MARKETING-DM-002-connect-dom.txt",
+                                      "bytes":  4025,
+                                      "sha256":  "a8868f85cc0779b83e8ec341ebf431e569b709687026b18bd04eaf29ae3ed935"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-MARKETING-EMAIL-001-history-dom.txt",
+                                      "bytes":  5650,
+                                      "sha256":  "1522488deca7bfd92a9858e2055c857ab85a56b78dcaf5fa8098edca2487e015"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-MARKETING-EMAIL-002-recipients-dom.txt",
+                                      "bytes":  5650,
+                                      "sha256":  "1522488deca7bfd92a9858e2055c857ab85a56b78dcaf5fa8098edca2487e015"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PAGE-001-dom.txt",
+                                      "bytes":  3090,
+                                      "sha256":  "f6a0ea3bc0b2af98cf515c1fafd437c3b98d1907073ac938125dc49fb897f7bf"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PAGE-ADD-001-dom.txt",
+                                      "bytes":  3090,
+                                      "sha256":  "f6a0ea3bc0b2af98cf515c1fafd437c3b98d1907073ac938125dc49fb897f7bf"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PAGE-ADD-002-result-dom.txt",
+                                      "bytes":  3439,
+                                      "sha256":  "20ff51ea6bf41000e33c7d27d10e2c2efac2e044bc4826c7c901bf3c0ac047c4"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PAGE-ADD-MULTI-001-dom.txt",
+                                      "bytes":  825,
+                                      "sha256":  "e1371ecdf8beb5ab5d45ef4c88e37ce1e494f5d13018b3a5aecfc2cc7200a335"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PAGE-ADD-SUB-001-dom.txt",
+                                      "bytes":  4128,
+                                      "sha256":  "f71a3b69ba925fa924c8f4d002bbcfddc65b629361e3ec5d2ab5d5b83b493840"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PAGE-CARD-OPTIONS-001-dom.txt",
+                                      "bytes":  3090,
+                                      "sha256":  "f6a0ea3bc0b2af98cf515c1fafd437c3b98d1907073ac938125dc49fb897f7bf"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PAGE-CARD-OPTIONS-002-hover-dom.txt",
+                                      "bytes":  3090,
+                                      "sha256":  "f6a0ea3bc0b2af98cf515c1fafd437c3b98d1907073ac938125dc49fb897f7bf"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PAGE-CARD-OPTIONS-003-open-dom.txt",
+                                      "bytes":  3207,
+                                      "sha256":  "df891dd06e6cfbadb168533cbda7e3f0cd12da4c62a312a2570d5f520c62e3d2"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PAGE-EDIT-001-dom.txt",
+                                      "bytes":  3435,
+                                      "sha256":  "74df00f12f9c2d15bc56f6de3609e9a9db78eed4887dd8eb6f3402a742486c54"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PAGE-TEST-SELECT-001-dom.txt",
+                                      "bytes":  760,
+                                      "sha256":  "4eb4e2e16cc9527ec34e34742b445622ef09afab5b6854f4c3d94a1ce4b15691"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PROFILE-001-editor-dom.txt",
+                                      "bytes":  1289,
+                                      "sha256":  "5a75edfed1af547896fecebd82dab885276ddb4d4baaeff9840a18e4489a4c3b"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PROFILE-002-file-inputs.json",
+                                      "bytes":  82,
+                                      "sha256":  "a573ab107a9cb1eb8432d916555526a943ddc47fd85be7cd2ff2a6cb5a1b07a8"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PUBLIC-BELL-001-dom.txt",
+                                      "bytes":  2504,
+                                      "sha256":  "d48964eddb22a457d6c1090857607edc47367608157d2859c8906f6bc8c51d18"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PUBLIC-HOME-002-desktop-dom.txt",
+                                      "bytes":  2181,
+                                      "sha256":  "d108f68c957504f8f897a267170f59cd02d377b4d274fb8fa6e002350d4d678a"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PUBLIC-HOME-003-mobile390-dom.txt",
+                                      "bytes":  2190,
+                                      "sha256":  "139e9747589b5a443a1d7d6ac348584562bf598d6990853061660165634bf40e"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PUBLIC-NAV-001-child-dom.txt",
+                                      "bytes":  198,
+                                      "sha256":  "1c5496e0bab5ea1733e25bec25ed56c3d87399e6cef82ede9a211935052a7387"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PUBLIC-NAV-002-home-return.json",
+                                      "bytes":  816,
+                                      "sha256":  "b728be01f6af66f1b245823b92bd6202d0eae52cbb994824a1cf4ce0a17e8494"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-PUBLIC-SHARE-001-dom.txt",
+                                      "bytes":  2491,
+                                      "sha256":  "9aac629527c82b4ea02892208016375708741423525ddc171d2bf1360d99211c"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-SHELL-ICONS-001.json",
+                                      "bytes":  2514,
+                                      "sha256":  "af05299353997eb91dc1ddf416098909ef239a56be28e0e1535d4c1544fef710"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-SHELL-SETTINGS-001-dom.txt",
+                                      "bytes":  4497,
+                                      "sha256":  "574e3de027075a858a0a42b324a5c825f9d3132fb8bebb69cd606ffbbee0c6cc"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-SHELL-SETTINGS-002-item-chains.json",
+                                      "bytes":  37508,
+                                      "sha256":  "47cfb8ccf6b02bfddeb7286844df63363ceaef9c4cb5a5cfa9e99d92a73f2c4d"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-SHELL-SETTINGS-003-controls.json",
+                                      "bytes":  10691,
+                                      "sha256":  "4fa6653b14fd8236fb4113c53b08aacec094cfb7db07febccbc13c1accca7aee"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-SHELL-SETTINGS-LINK-MODE-001-dom.txt",
+                                      "bytes":  4587,
+                                      "sha256":  "b18edfd268239b62b7e09540eedf5fd93f2ab8d11c35f8475d59b8a58db929a3"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-SHELL-SETTINGS-QR-001-dom.txt",
+                                      "bytes":  4485,
+                                      "sha256":  "ef0984f0f718b502a6042c8e3c9170108e6657734c339e8a684558bd84f78bae"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-SHELL-SETTINGS-SUBSCRIBE-001-dom.txt",
+                                      "bytes":  4555,
+                                      "sha256":  "dc33632562d1593ee193528e52391f777a021dc02dcd361a5d25a8cef9e1118a"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-SHELL-SETTINGS-TIKTOK-EXTERNAL-001-dom.txt",
+                                      "bytes":  4683,
+                                      "sha256":  "137183da1c8aeb061dbd3cfe49a92decdbd1d8c3c79d0a5c360e5b578943ce41"
+                                  },
+                                  {
+                                      "path":  "raw/CHR-SHELL-SETTINGS-VISIBILITY-001-dom.txt",
+                                      "bytes":  4573,
+                                      "sha256":  "ef46875ac8fae7b3380fb0f03352260e68e3e855d5927a92681d46e42837ce1b"
+                                  },
+                                  {
+                                      "path":  "raw/IAB-ANALYTICS-001-dom.txt",
+                                      "bytes":  10167,
+                                      "sha256":  "df1839c61f1e1663103272171d5f6cf01624cc824eb2da731dbcd9ebb59491b1"
+                                  },
+                                  {
+                                      "path":  "raw/IAB-DESIGN-001-dom.txt",
+                                      "bytes":  4649,
+                                      "sha256":  "a387fac6100ff072c8af1bdc931b30d1f6a5b2375bdeb8aaa222f4f1f960375c"
+                                  },
+                                  {
+                                      "path":  "raw/IAB-MANAGE-001-dom.txt",
+                                      "bytes":  3535,
+                                      "sha256":  "3365605901b69ca4cdcb896b39c545a194687a717db7fd089fddb423d7eae4f4"
+                                  },
+                                  {
+                                      "path":  "raw/IAB-MANAGE-ADS-001-dom.txt",
+                                      "bytes":  4383,
+                                      "sha256":  "a23dd869dbd35d5220c1323142b9c7defa3057f57a7505479ecff8ddefc917d4"
+                                  },
+                                  {
+                                      "path":  "raw/IAB-MANAGE-CUSTOMER-001-dom.txt",
+                                      "bytes":  4940,
+                                      "sha256":  "c75a469adf73b87740c77fdc2d2cb2f973822b83928b6ab2b3ea75e92eac2a62"
+                                  },
+                                  {
+                                      "path":  "raw/IAB-MANAGE-SALES-001-dom.txt",
+                                      "bytes":  4839,
+                                      "sha256":  "c52cd88027f8a78f79a712f7d285047cb9c2d65ae7fc4450872bc506dfefd5a6"
+                                  },
+                                  {
+                                      "path":  "raw/IAB-MARKETING-001-dom.txt",
+                                      "bytes":  3469,
+                                      "sha256":  "5775a5ff94f541abee93917fbcdc36f1b1714fee5eb6681e84888cbd9a562479"
+                                  },
+                                  {
+                                      "path":  "raw/IAB-MARKETING-DM-001-dom.txt",
+                                      "bytes":  3842,
+                                      "sha256":  "8852745e417a5449290c3f1258ba32287ebaf011d319f183f13c7f9dacadbe99"
+                                  },
+                                  {
+                                      "path":  "raw/IAB-MARKETING-DM-002-create-dom.txt",
+                                      "bytes":  4113,
+                                      "sha256":  "130e3717534f4a8b95cb84932debb39b3ce9a8acdac998b3dbd1c2847d1ec464"
+                                  },
+                                  {
+                                      "path":  "raw/IAB-MARKETING-EMAIL-001-dom.txt",
+                                      "bytes":  5650,
+                                      "sha256":  "1522488deca7bfd92a9858e2055c857ab85a56b78dcaf5fa8098edca2487e015"
+                                  },
+                                  {
+                                      "path":  "raw/IAB-MARKETING-EMAIL-002-dialogs.json",
+                                      "bytes":  2405,
+                                      "sha256":  "e8b735db1839436398c7577805f894005a0696589d0c37522566073b4de54cfc"
+                                  },
+                                  {
+                                      "path":  "raw/IAB-PAGE-001-dom.txt",
+                                      "bytes":  3090,
+                                      "sha256":  "f6a0ea3bc0b2af98cf515c1fafd437c3b98d1907073ac938125dc49fb897f7bf"
+                                  },
+                                  {
+                                      "path":  "raw/IAB-PAGE-003-buttons.json",
+                                      "bytes":  23836,
+                                      "sha256":  "ef69111eee157a7228836a9fc2e854325f8e8b05524312474881fb05cab4cea7"
+                                  }
+                              ],
+                      "measurements":  [
+                                           {
+                                               "path":  "measurements/CHR-ANALYTICS-001-ui.json",
+                                               "bytes":  54401,
+                                               "sha256":  "57d5f9983f9290a43168edef498b1a343c1b0af4586fd596294d1712792de9ce"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-01-SINGLE-001-ui.json",
+                                               "bytes":  25583,
+                                               "sha256":  "077e2baac721ed1460a142aa1a59a874056a894df0bde07c49b2906381b0c30e"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-02-GROUP-001-ui.json",
+                                               "bytes":  28581,
+                                               "sha256":  "03314d4b4788a357487bf9973b74a7a1d069d53f19f30b49d676af537aec6438"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-03-SNS-001-ui.json",
+                                               "bytes":  27912,
+                                               "sha256":  "e0451e6d36965899a2ee6074da5a82a65b61a5776e9884675fd89e5c0e51553c"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-04-VIDEO-001-editor-ui.json",
+                                               "bytes":  27948,
+                                               "sha256":  "ea1822a6984c92a8b0b760f23e3559b7c1af3efee227dea61e6c11aee35c7f55"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-05-TEXT-001-editor-ui.json",
+                                               "bytes":  22630,
+                                               "sha256":  "d2c0729f1c81f3990f8c44c65934fcadbb07467ae981219df8b33273bce715f1"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-06-GALLERY-001-editor-ui.json",
+                                               "bytes":  26113,
+                                               "sha256":  "914f4ebc4d6731171bfb13e820a59660298ac7085f121ab1eeb5113456ec04a3"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-07-SPACER-001-editor-ui.json",
+                                               "bytes":  25680,
+                                               "sha256":  "7817f4e7fd67b94549285cf51ea9fef3b9de11484691a8b3d3324f26b87ea213"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-08-MUSIC-001-editor-ui.json",
+                                               "bytes":  22662,
+                                               "sha256":  "689abe50af184e2d9bb3404dd0d11601dcaaeb923b31627e0fcc3b6e762e16ee"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-09-MAP-001-editor-ui.json",
+                                               "bytes":  20857,
+                                               "sha256":  "995e78ec14dbf4baa4058165f775b2c0babb5244604ffa0df541375d697890ab"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-10-FILE-001-editor-ui.json",
+                                               "bytes":  23839,
+                                               "sha256":  "e60548f4004fc7eec92fc3e6be512201a852d23dd9524b6edfa8c60cdacb9f23"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-11-INQUIRY-001-editor-ui.json",
+                                               "bytes":  26231,
+                                               "sha256":  "807b1d850139d42570dcce193abf101a8ca22b88a84db83cc8ce423e8e5fadb0"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-12-SCHEDULE-001-editor-ui.json",
+                                               "bytes":  23816,
+                                               "sha256":  "1528c5a81301bdb468d972dbbcb9d70cdf8e992c682c0b5fdf5c0a7faf3dff51"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-13-CUSTOMER-001-editor-ui.json",
+                                               "bytes":  25608,
+                                               "sha256":  "c327ad5ed35ddda312341960b4f4400261f568c98fd3c1a9d7a12510b096c8ae"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-14-CONTACT-001-editor-ui.json",
+                                               "bytes":  26209,
+                                               "sha256":  "f1b865598aeb6d869e75912629a0e75b47993d61cc37690a82a02577ef7c7e8c"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-15-NOTICE-001-editor-ui.json",
+                                               "bytes":  21442,
+                                               "sha256":  "4950db5a72d93b6da6ae78f0fad6367b2fad71eafd25ba62d700a30d2bff5fc0"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-16-SEARCH-001-editor-ui.json",
+                                               "bytes":  21446,
+                                               "sha256":  "16fa8ffde45b79b64b654ece1785ae49c05752d866f17a5c79ef552713991023"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-17-GUESTBOOK-001-editor-ui.json",
+                                               "bytes":  23843,
+                                               "sha256":  "ee21ad42d20b32dcd7219643d8ef623e7be66260815b6fbbacfa70a81fd8c08c"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-18-DOMESTIC-SALE-001-result-ui.json",
+                                               "bytes":  26388,
+                                               "sha256":  "1145edcf30ba093ed2417deca67c80127f087268b7f40ffc38b8379c51c7589a"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-19-OVERSEAS-SALE-001-result-ui.json",
+                                               "bytes":  23900,
+                                               "sha256":  "1ba9a467b66687eda4d09e63ef832c8742f25eb7b7f0829f358847baf342987c"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-20-DONATION-001-editor-ui.json",
+                                               "bytes":  26223,
+                                               "sha256":  "b15ca1089d7e3f31f593623ebabf181d2f5a5c6d2545b470f705355a119e89f2"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-21-RESERVATION-001-editor-ui.json",
+                                               "bytes":  23902,
+                                               "sha256":  "3889330e629beb0de5001da5bcd96d9eb58e6bf1433910dc4cc9059f6faa1d79"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-22-AD-001-result-ui.json",
+                                               "bytes":  23363,
+                                               "sha256":  "8b7311144f194ca2d07575df2d167091a63cfb49da649b8113abc75f93bc8a6f"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-23-MEMBERSHIP-001-editor-ui.json",
+                                               "bytes":  29326,
+                                               "sha256":  "b1fed55d8c026de7663fe1156c343fc4a8d769bdf9f2a97248b33839527e627b"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-BLOCK-24-SMARTSTORE-001-result-ui.json",
+                                               "bytes":  69586,
+                                               "sha256":  "763619462532a76bf412ff87a3fbbc603f30a5da272eb15156fe6016b2329fea"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-DESIGN-001-ui.json",
+                                               "bytes":  63576,
+                                               "sha256":  "bfd68d2a18cfa1042b92a7441cdaf84878bd396475f3acda9fb6015e0542fb40"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-MANAGE-001-ui.json",
+                                               "bytes":  15631,
+                                               "sha256":  "95c0447efc6f50da4070bb4e9152b54995b89134babf17b4b518a6389cdb2903"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-MARKETING-001-ui.json",
+                                               "bytes":  19550,
+                                               "sha256":  "a16ddd46664ef69651c0cd89f746c336d31777281a5af56b1b9db63478d105af"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-PAGE-001-ui.json",
+                                               "bytes":  27429,
+                                               "sha256":  "c6d50bd71ba0d5ced742ee16207c81875b4b7daf082037a383526d29dd12a889"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-PROFILE-001-editor-ui.json",
+                                               "bytes":  24447,
+                                               "sha256":  "e100725fea3d449b191cb3b5a71775ae73f317b849ba4e2c4dbd61d7975db66c"
+                                           },
+                                           {
+                                               "path":  "measurements/CHR-PUBLIC-HOME-003-mobile390-layout.json",
+                                               "bytes":  743,
+                                               "sha256":  "5457bb4e6ecc85aed89aefc3ca2d325fa6d5cd5a20e7aee2c596f5839e1de0f4"
+                                           },
+                                           {
+                                               "path":  "measurements/IAB-ANALYTICS-002-ui.json",
+                                               "bytes":  54370,
+                                               "sha256":  "5022b67c99b55c3385e891e7e2c9b1270979ef39c10ff439a1df132fca9039c9"
+                                           },
+                                           {
+                                               "path":  "measurements/IAB-DESIGN-002-ui.json",
+                                               "bytes":  63532,
+                                               "sha256":  "582c1491dca688f0056e3ec8ca225c89d27760bb171148363265fc8443f8589b"
+                                           },
+                                           {
+                                               "path":  "measurements/IAB-MANAGE-002-ui.json",
+                                               "bytes":  15618,
+                                               "sha256":  "58ecaa834d2865094d41d63d8aba59635522d5f2823c00e3f15381f63853cddc"
+                                           },
+                                           {
+                                               "path":  "measurements/IAB-MARKETING-001-ui.json",
+                                               "bytes":  19537,
+                                               "sha256":  "abef9ac1e786de2fa16428480d7725dd9332559dc76e389045d79ba4dbdb473b"
+                                           },
+                                           {
+                                               "path":  "measurements/IAB-MARKETING-002-ui.json",
+                                               "bytes":  19537,
+                                               "sha256":  "abef9ac1e786de2fa16428480d7725dd9332559dc76e389045d79ba4dbdb473b"
+                                           },
+                                           {
+                                               "path":  "measurements/IAB-MARKETING-EMAIL-001-ui.json",
+                                               "bytes":  53448,
+                                               "sha256":  "ca0b53d1608092361e6667f986978058630224fccf03f0ea684e471d75c6951d"
+                                           },
+                                           {
+                                               "path":  "measurements/IAB-PAGE-001-shell.json",
+                                               "bytes":  3417,
+                                               "sha256":  "1073b0a7ff119a152cd35905a4ae8effd52cdd2f35c73451952282dba0f97a67"
+                                           },
+                                           {
+                                               "path":  "measurements/IAB-PAGE-002-ui.json",
+                                               "bytes":  27418,
+                                               "sha256":  "fd69b2a446678fa46bfc3130dc8385f4689f6ce9b5f42c18d4077912eac74da6"
+                                           },
+                                           {
+                                               "path":  "measurements/IAB-PAGE-004-1920-ui.json",
+                                               "bytes":  27349,
+                                               "sha256":  "fd426ea077640d478ad013792fcaaee9b8e2912deabafdedf3c2db77f07fc74c"
+                                           }
+                                       ],
+                      "documents":  [
+                                        {
+                                            "path":  "BLOCK_EVIDENCE.md",
+                                            "bytes":  4510,
+                                            "sha256":  "2f0a9d926c0e09b2b56e30062c9b74acaa0255436237a03f9b8b70c7e302430c"
+                                        },
+                                        {
+                                            "path":  "COVERAGE.md",
+                                            "bytes":  3265,
+                                            "sha256":  "92629986c49e81c589a6a91c131e7134482aa1fcd57eba4d1bfd002910e26797"
+                                        },
+                                        {
+                                            "path":  "FULL_PRODUCT_MAP.md",
+                                            "bytes":  7144,
+                                            "sha256":  "f18bbe8a8a6bff4ee1643fcac00e4a4f40d62f739c6bb90c59e870cb3f858b5e"
+                                        },
+                                        {
+                                            "path":  "image-extension-renames.json",
+                                            "bytes":  17587,
+                                            "sha256":  "abf9f218f9dabfa5b060e874d61b042e3f0fea99c92bf77b9ebdd7cc796032c0"
+                                        },
+                                        {
+                                            "path":  "observations.md",
+                                            "bytes":  4129,
+                                            "sha256":  "5e104f9bfbd19bc3da6848d3a73f4e29462dbb9ba9376f5867e26445f9b3fbdf"
+                                        },
+                                        {
+                                            "path":  "README.md",
+                                            "bytes":  1964,
+                                            "sha256":  "6f61ae881ebad086a8507ecec1df9573bae8de895c542442814257313886bfbe"
+                                        },
+                                        {
+                                            "path":  "RESEARCH_STATE.md",
+                                            "bytes":  538,
+                                            "sha256":  "0bc51e51cd2cae6376ef435a336ab55bde7817f9bc28d505c25c086e0ade6436"
+                                        }
+                                    ]
+                  }
+}

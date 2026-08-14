@@ -1,0 +1,63 @@
+- button:
+- button:
+- heading "문장군 매니저" [level=1]
+- generic: 홈화면
+- generic: 페이지
+- iframe:
+  - link "지도에서 열기(새 탭에서 열기)":
+    - /url: https://maps.google.com/maps?ll=37.566585,126.978204&z=14&t=m&hl=ko-KR&gl=US&mapclient=embed&cid=16801646719980597416
+    - text: 지도에서 열기
+  - button "키보드 단축키"
+  - region "지도"
+  - iframe
+  - button "지도 카메라 컨트롤"
+  - button "위성 이미지 보기":
+    - region
+    - iframe
+  - img "Google"
+  - button "키보드 단축키"
+  - generic: 지도 데이터 ©2026 TMap Mobility
+  - link "약관(새 탭에서 열기)":
+    - /url: https://www.google.com/intl/ko-KR_US/help/terms_maps.html
+    - text: 약관
+- generic: 서울시청
+- button "길찾기":
+  - text: 길찾기
+- button "MY 페이지 무료로 만들기 >":
+  - generic: MY 페이지 무료로 만들기 >
+- link "URL litt.ly/munjanggun.com/page1":
+  - /url: https://litt.ly/munjanggun.com/page1
+  - generic: URL
+  - text: litt.ly/munjanggun.com/page1
+- button:
+- generic: 페이지 추가
+- text: 홈화면
+- text: 페이지
+- button "페이지" [disabled]:
+  - generic: 페이지
+- button "디자인":
+  - generic: 디자인
+- button "분석":
+  - generic: 분석
+- button "관리":
+  - generic: 관리
+- button "마케팅":
+  - generic: 마케팅
+- generic: 프로필
+- button:
+- button:
+- button "ON OFF 지도":
+  - generic: "ON"
+  - generic: "OFF"
+  - switch [checked]
+  - generic: 지도
+- button "예약":
+  - generic: 예약
+- button:
+- generic: 주소 입력*
+- generic: option 대한민국 서울특별시 중구 세종대로 서울시청, selected. Select is focused ,type to refine list, press Down to open the menu,
+- generic: 대한민국 서울특별시 중구 세종대로 서울시청
+- combobox [active]
+- button "+블럭 추가": +블럭 추가
+- button:
+- img "Live Chat Button"
