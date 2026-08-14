@@ -1,12 +1,21 @@
 .page {
   --link-page-bg: #eef1f4;
+  --link-page-surface: #fff;
+  --link-page-text: #171717;
   --link-page-button: #171717;
+  --link-page-button-text: #fff;
+  position: relative;
+  isolation: isolate;
   min-height: 100%;
   padding: 18px 14px 44px;
-  color: #171717;
+  color: var(--link-page-text);
   background: var(--link-page-bg);
   font-family: var(--mg-font-body);
 }
+
+.page > :not(.themeBackground) { position: relative; z-index: 1; }
+.themeBackground { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .28; pointer-events: none; }
+.themeLogo { display: block; width: auto; max-width: 112px; height: 34px; margin: 0 auto 12px; object-fit: contain; }
 
 .public {
   width: min(500px, 100%);
@@ -20,9 +29,13 @@
   min-height: 720px;
 }
 
-.fontpretendard { font-family: var(--mg-font-body); }
-.fontroundwind { font-family: var(--mg-font-display); }
-.fontserif { font-family: Georgia, 'Times New Roman', serif; }
+.typeclean { font-family: var(--mg-font-body); }
+.typeeditorial { font-family: var(--mg-font-body); }
+.typeeditorial h1,
+.typeeditorial h2,
+.typeeditorial strong { font-family: var(--mg-font-display); }
+.typecompact { font-family: var(--mg-font-body); letter-spacing: -.015em; }
+.typecompact .blocks { gap: 9px; }
 
 .utilityBar {
   display: flex;
@@ -107,7 +120,7 @@
   padding: 3px;
   overflow-x: auto;
   border-radius: 15px;
-  background: white;
+  background: var(--link-page-surface);
   box-shadow: 0 8px 24px rgba(18, 20, 22, 0.05);
 }
 
@@ -126,7 +139,11 @@
   white-space: nowrap;
 }
 
-.pageNavigation a[aria-current='page'] { background: var(--link-page-button); color: white; }
+.pageNavigation a[aria-current='page'] { background: var(--link-page-button); color: var(--link-page-button-text); }
+.menuink .pageNavigation { background: #171717; }
+.menuink .pageNavigation a { color: #fff; }
+.menuminimal .pageNavigation { background: transparent; box-shadow: none; }
+.menuminimal .pageNavigation a { color: var(--link-page-text); }
 .blocks { display: grid; gap: 13px; }
 
 .singleLink,
@@ -135,7 +152,7 @@
 .textToggle {
   border: 0;
   border-radius: 15px;
-  background: white;
+  background: var(--link-page-surface);
   box-shadow: 0 8px 24px rgba(18, 20, 22, 0.05);
 }
 
@@ -146,14 +163,14 @@
   min-height: 96px;
   align-items: center;
   padding: 10px;
-  color: #171717;
+  color: var(--link-page-text);
   text-decoration: none;
 }
 
 .singlesmall { grid-template-columns: 48px minmax(0, 1fr) 24px; min-height: 68px; }
 .singlelarge { grid-template-columns: 1fr; padding: 12px; }
 .singlelarge .linkImage { width: 100%; height: 210px; }
-.highlighted { outline: 2px solid color-mix(in srgb, var(--link-page-button) 72%, white); }
+.highlighted { outline: 0; }
 .linkImage { width: 78px; height: 78px; border-radius: 12px; object-fit: cover; }
 .singlesmall .linkImage { width: 48px; height: 48px; border-radius: 9px; }
 .linkCopy { display: grid; gap: 4px; min-width: 0; }
@@ -173,7 +190,7 @@
 .textToggle p { color: #4e5154; font-size: 14px; line-height: 1.65; white-space: pre-wrap; }
 
 .linkGroup { display: grid; gap: 9px; }
-.linkGroup a { display: flex; min-width: 0; gap: 10px; align-items: center; padding: 8px; border: 1px solid #eceef0; border-radius: 11px; color: #171717; text-decoration: none; }
+.linkGroup a { display: flex; min-width: 0; gap: 10px; align-items: center; padding: 8px; border: 0; border-radius: 11px; color: var(--link-page-text); background: color-mix(in srgb, var(--link-page-surface) 92%, var(--link-page-text)); text-decoration: none; }
 .linkGroup a span { display: grid; min-width: 0; }
 .linkGroup a strong { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 .linkGroup a small { color: #5e5e59; font-size: 10px; }
@@ -224,6 +241,54 @@
 .fileShare button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .emptyBlock { padding: 16px; border-radius: 10px; background: #f3f4f5; text-align: center; }
 .imageFallback { background: linear-gradient(135deg, #e1e4e6, #f5f6f7); }
+
+.shapetidy .singleLink,
+.shapetidy .linkGroup a,
+.shapetidy .moreButton { border-radius: 8px; }
+.shapesoft .singleLink,
+.shapesoft .linkGroup a,
+.shapesoft .moreButton { border-radius: 16px; }
+.shapepill .singleLink,
+.shapepill .linkGroup a,
+.shapepill .moreButton { border-radius: 999px; }
+.shapepill .singlelarge { border-radius: 28px; }
+
+.actionlift .singleLink,
+.actionlift .linkGroup a { transition: transform .16s ease, box-shadow .16s ease; }
+.actionlift .singleLink:hover,
+.actionlift .singleLink:focus-visible,
+.actionlift .linkGroup a:hover,
+.actionlift .linkGroup a:focus-visible { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(16,16,15,.14); }
+.actionpress .singleLink:active,
+.actionpress .linkGroup a:active { transform: translateY(1px) scale(.985); box-shadow: inset 0 2px 6px rgba(16,16,15,.16); }
+.actionarrow .singleLink > svg:last-child,
+.actionarrow .linkGroup a::after { opacity: .45; transition: transform .16s ease, opacity .16s ease; }
+.actionarrow .linkGroup a::after { content: '→'; margin-left: auto; }
+.actionarrow .singleLink:hover > svg:last-child,
+.actionarrow .singleLink:focus-visible > svg:last-child,
+.actionarrow .linkGroup a:hover::after,
+.actionarrow .linkGroup a:focus-visible::after { opacity: 1; transform: translateX(4px); }
+.actionoutline .singleLink:hover,
+.actionoutline .singleLink:focus-visible,
+.actionoutline .linkGroup a:hover,
+.actionoutline .linkGroup a:focus-visible { box-shadow: inset 0 0 0 2px var(--link-page-text); }
+
+@media (prefers-reduced-motion: reduce) {
+  .actionlift .singleLink,
+  .actionlift .linkGroup a,
+  .actionarrow .singleLink > svg:last-child,
+  .actionarrow .linkGroup a::after { transition: none; }
+  .actionlift .singleLink:hover,
+  .actionlift .singleLink:focus-visible,
+  .actionlift .linkGroup a:hover,
+  .actionlift .linkGroup a:focus-visible,
+  .actionpress .singleLink:active,
+  .actionpress .linkGroup a:active,
+  .actionarrow .singleLink:hover > svg:last-child,
+  .actionarrow .singleLink:focus-visible > svg:last-child,
+  .actionarrow .linkGroup a:hover::after,
+  .actionarrow .linkGroup a:focus-visible::after { transform: none; }
+}
 
 @media (max-width: 540px) {
   .public { width: 100%; box-shadow: none; }

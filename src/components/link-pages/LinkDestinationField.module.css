@@ -1,0 +1,11 @@
+.fieldset { display: grid; gap: 10px; }
+.legend, .control > span { color: #777f86; font-size: 13px; font-weight: 700; }
+.mode { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; }
+.mode button { min-height: 46px; display: flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid #d4d9dd; border-radius: 9px; background: #fff; color: #555e64; font-weight: 700; }
+.mode button[aria-checked='true'] { border: 2px solid #171717; background: #f7f7f4; color: #171717; }
+.control { display: grid; gap: 7px; }
+.control input, .control select { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid #aab1b7; border-radius: 7px; background: #fff; color: #171717; }
+.status { min-height: 34px; display: flex; align-items: center; gap: 7px; margin: 0; padding: 8px 10px; border-radius: 7px; background: #f1f3f4; color: #596168; font-size: 12px; line-height: 1.45; }
+.spinner { animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }

@@ -6,8 +6,10 @@ import {
   LINK_PAGE_STORAGE_KEY,
   LinkPageEvent,
   LinkPageState,
+  UnrecognizedLinkPageStateError,
   createInitialLinkPageState,
-  isLinkPageState,
+  isLinkPageStateV2,
+  migrateLinkPageState,
 } from './model'
 
 export interface LinkPageRepository {
@@ -44,11 +46,15 @@ export function createBrowserLinkPageRepository(): LinkPageRepository {
       }
       try {
         const parsed = JSON.parse(raw)
-        if (isLinkPageState(parsed)) return parsed
+        const migrated = migrateLinkPageState(parsed)
+        if (!isLinkPageStateV2(migrated)) throw new UnrecognizedLinkPageStateError()
+        const serialized = JSON.stringify(migrated)
+        if (serialized !== raw) window.localStorage.setItem(LINK_PAGE_STORAGE_KEY, serialized)
+        return migrated
       } catch {
-        // Invalid prototype state falls back to the safe seed below.
+        // Preserve the raw value so recovery remains possible until reset is explicit.
+        throw new UnrecognizedLinkPageStateError()
       }
-      return this.reset()
     },
     save(state) {
       if (!canUseStorage()) return

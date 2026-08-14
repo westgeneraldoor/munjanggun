@@ -15,14 +15,11 @@ import {
   Menu,
   MoreHorizontal,
   Palette,
-  Pencil,
   Plus,
   RotateCcw,
-  Settings,
   Share2,
   Trash2,
   Type,
-  UserRound,
   UsersRound,
   Video,
   X,
@@ -36,18 +33,15 @@ import {
   LinkBlockKind,
   LinkItem,
   LinkPage,
+  LinkPageRole,
   LinkPageState,
   LinkPageTab,
-  canSetPageParent,
   createBlock,
   createId,
   createInitialLinkPageState,
   createPage,
   duplicateBlock,
-  getNavigationPages,
-  getPageDepth,
-  getPageDescendantIds,
-  getOrderedPageTree,
+  isLinkPageStateV2,
   isSlugAvailable,
   isValidHttpUrl,
   isValidSlug,
@@ -55,7 +49,13 @@ import {
   normalizePageOrders,
   updatePageSlug,
 } from '@/lib/link-pages/model'
+import { getInboundPageReferences, getNavigationPages } from '@/lib/link-pages/navigation'
+import { canSetPageParent, getPageDepth, getPageDescendantIds } from '@/lib/link-pages/tree'
+import { DesignStudio } from './DesignStudio'
+import { LinkDestinationField } from './LinkDestinationField'
 import { LinkPageRenderer } from './LinkPageRenderer'
+import { PageTree } from './PageTree'
+import { PageTypeSelector } from './PageTypeSelector'
 import styles from './LinkPageStudio.module.css'
 
 const repository = createBrowserLinkPageRepository()
@@ -87,7 +87,10 @@ const BLOCK_LABELS: Record<LinkBlockKind, string> = {
   fileShare: '파일공유',
 }
 
-type PageDialogState = { mode: 'add' | 'edit'; pageId?: string } | null
+type PageDialogState =
+  | { mode: 'add'; step: 'type' | 'details'; role?: LinkPageRole }
+  | { mode: 'edit'; pageId: string }
+  | null
 
 function Field({ label, hint, error, children }: { label: string; hint?: string; error?: string; children: ReactNode }) {
   return (
@@ -157,7 +160,7 @@ function FileUploadButton({ label, accept, multiple, onChange, file = false }: {
   )
 }
 
-function BlockFields({ block, onChange }: { block: LinkBlock; onChange: (content: LinkBlockContent) => void }) {
+function BlockFields({ block, pages, currentPageId, onChange }: { block: LinkBlock; pages: LinkPage[]; currentPageId: string; onChange: (content: LinkBlockContent) => void }) {
   const content = block.content
   const [groupItemDraft, setGroupItemDraft] = useState<LinkItem | null>(null)
 
@@ -191,12 +194,30 @@ function BlockFields({ block, onChange }: { block: LinkBlock; onChange: (content
   }
 
   if (content.kind === 'singleLink') {
-    const invalid = content.url !== 'https://' && !isValidHttpUrl(content.url)
+    const destination = content.destination ?? { kind: 'external' as const, url: content.url ?? '' }
+    const invalid = destination.kind === 'external' && destination.url !== 'https://' && !isValidHttpUrl(destination.url)
     return (
       <div className={styles.fields}>
-        <Field label="연결 URL *" error={invalid ? 'http:// 또는 https://로 시작하는 URL을 입력하세요.' : undefined}>
-          <input value={content.url} onChange={(event) => onChange({ ...content, url: event.target.value })} />
-        </Field>
+        <LinkDestinationField
+          value={destination}
+          pages={pages}
+          currentPageId={currentPageId}
+          onChange={(nextDestination) => onChange({
+            ...content,
+            destination: nextDestination,
+            url: nextDestination.kind === 'external' ? nextDestination.url : '',
+          })}
+          onMetadata={(suggestion, requestedUrl) => {
+            if (destination.kind !== 'external' || destination.url !== requestedUrl) return
+            onChange({
+              ...content,
+              destination,
+              title: (!content.title || content.title === '새 링크') && suggestion.title ? suggestion.title : content.title,
+              imageUrl: !content.image && !content.imageUrl && suggestion.imageUrl ? suggestion.imageUrl : content.imageUrl,
+            })
+          }}
+        />
+        {invalid ? <p className={styles.fieldError}>http:// 또는 https://로 시작하는 URL을 입력하세요.</p> : null}
         <Field label="이미지"><FileUploadButton label="링크 이미지" accept="image/*" onChange={(event) => void upload(event, 'image')} /></Field>
         <Field label="대표문구 *"><input value={content.title} onChange={(event) => onChange({ ...content, title: event.target.value })} /></Field>
         <Field label="크기"><LayoutPicker value={content.layout} options={[{ value: 'small', label: '소' }, { value: 'medium', label: '중' }, { value: 'large', label: '대' }]} onChange={(layout) => onChange({ ...content, layout })} /></Field>
@@ -223,12 +244,12 @@ function BlockFields({ block, onChange }: { block: LinkBlock; onChange: (content
           {content.items.map((item, index) => (
             <div className={styles.itemSummary} key={item.id} data-item-id={item.id}>
               <GripVertical size={17} aria-hidden="true" />
-              <button className={styles.itemEditButton} type="button" onClick={() => setGroupItemDraft(structuredClone(item))}><b>{item.title || `${index + 1}번 링크`}</b><small>{item.url}</small></button>
+              <button className={styles.itemEditButton} type="button" onClick={() => setGroupItemDraft(structuredClone(item))}><b>{item.title || `${index + 1}번 링크`}</b><small>{item.destination?.kind === 'page' ? '내부 페이지' : item.url}</small></button>
               <button type="button" aria-label={`${index + 1}번 링크 삭제`} onClick={() => onChange({ ...content, items: content.items.filter((candidate) => candidate.id !== item.id) })}><Trash2 size={17} /></button>
             </div>
           ))}
           <button className={styles.addSubItem} type="button" onClick={() => {
-            setGroupItemDraft({ id: createId(), title: '', url: 'https://' })
+            setGroupItemDraft({ id: createId(), title: '', url: 'https://', destination: { kind: 'external', url: 'https://' } })
           }}>+ 링크 추가</button>
         </div>
         {groupItemDraft ? (() => {
@@ -237,7 +258,9 @@ function BlockFields({ block, onChange }: { block: LinkBlock; onChange: (content
             const file = event.target.files?.[0]
             if (file) updateItem({ image: await saveAsset(file) })
           }
-          const valid = isValidHttpUrl(groupItemDraft.url) && Boolean(groupItemDraft.title.trim()) && Boolean(groupItemDraft.image || groupItemDraft.imageUrl)
+          const draftDestination = groupItemDraft.destination ?? { kind: 'external' as const, url: groupItemDraft.url ?? '' }
+          const validDestination = draftDestination.kind === 'page' ? Boolean(draftDestination.pageId) : isValidHttpUrl(draftDestination.url)
+          const valid = validDestination && Boolean(groupItemDraft.title.trim()) && Boolean(groupItemDraft.image || groupItemDraft.imageUrl)
           const saveItem = () => {
             if (!valid) return
             const exists = content.items.some((item) => item.id === groupItemDraft.id)
@@ -247,7 +270,7 @@ function BlockFields({ block, onChange }: { block: LinkBlock; onChange: (content
           return (
             <Dialog title="그룹 링크 편집" onClose={() => setGroupItemDraft(null)}>
               <div className={styles.fields}>
-                <Field label="연결 URL *"><input value={groupItemDraft.url} onChange={(event) => updateItem({ url: event.target.value })} /></Field>
+                <LinkDestinationField value={draftDestination} pages={pages} currentPageId={currentPageId} onChange={(nextDestination) => updateItem({ destination: nextDestination, url: nextDestination.kind === 'external' ? nextDestination.url : '' })} />
                 <Field label="대표문구 *"><input value={groupItemDraft.title} onChange={(event) => updateItem({ title: event.target.value })} /></Field>
                 <Field label="이미지 *"><FileUploadButton label="링크 이미지" accept="image/*" onChange={(event) => void uploadItemImage(event)} /></Field>
                 <div className={styles.twoFields}>
@@ -293,11 +316,38 @@ function BlockFields({ block, onChange }: { block: LinkBlock; onChange: (content
         <Toggle checked={content.slideshow} label="이미지 슬라이드" onChange={(slideshow) => onChange({ ...content, slideshow })} />
         <Toggle checked={content.keepRatio} label="이미지 비율 유지" onChange={(keepRatio) => onChange({ ...content, keepRatio })} />
         {content.items.map((item, index) => (
-          <div className={styles.itemEditor} key={item.id} data-item-id={item.id}>
-            <GripVertical size={17} />
-            <input aria-label={`${index + 1}번 이미지 설명`} value={item.alt} onChange={(event) => onChange({ ...content, items: content.items.map((candidate) => candidate.id === item.id ? { ...candidate, alt: event.target.value } : candidate) })} />
-            <input aria-label={`${index + 1}번 연결 URL`} placeholder="연결 URL (선택)" value={item.url ?? ''} onChange={(event) => onChange({ ...content, items: content.items.map((candidate) => candidate.id === item.id ? { ...candidate, url: event.target.value } : candidate) })} />
-            <button type="button" aria-label={`${index + 1}번 이미지 삭제`} onClick={() => onChange({ ...content, items: content.items.filter((candidate) => candidate.id !== item.id) })}><Trash2 size={17} /></button>
+          <div className={styles.galleryItemEditor} key={item.id} data-item-id={item.id}>
+            <div className={styles.galleryItemHeader}>
+              <GripVertical size={17} />
+              <input aria-label={`${index + 1}번 이미지 설명`} value={item.alt} onChange={(event) => onChange({ ...content, items: content.items.map((candidate) => candidate.id === item.id ? { ...candidate, alt: event.target.value } : candidate) })} />
+              <button type="button" aria-label={`${index + 1}번 이미지 삭제`} onClick={() => onChange({ ...content, items: content.items.filter((candidate) => candidate.id !== item.id) })}><Trash2 size={17} /></button>
+            </div>
+            {item.destination ? (
+              <>
+                <LinkDestinationField
+                  value={item.destination}
+                  pages={pages}
+                  currentPageId={currentPageId}
+                  onChange={(destination) => onChange({
+                    ...content,
+                    items: content.items.map((candidate) => candidate.id === item.id ? {
+                      ...candidate,
+                      destination,
+                      url: destination.kind === 'external' ? destination.url : undefined,
+                    } : candidate),
+                  })}
+                />
+                <button className={styles.removeDestination} type="button" onClick={() => onChange({
+                  ...content,
+                  items: content.items.map((candidate) => candidate.id === item.id ? { ...candidate, destination: undefined, url: undefined } : candidate),
+                })}>이미지 연결 제거</button>
+              </>
+            ) : (
+              <button className={styles.addDestination} type="button" onClick={() => onChange({
+                ...content,
+                items: content.items.map((candidate) => candidate.id === item.id ? { ...candidate, destination: { kind: 'external', url: 'https://' } } : candidate),
+              })}>이미지 연결 추가</button>
+            )}
           </div>
         ))}
       </div>
@@ -346,6 +396,8 @@ function BlockFields({ block, onChange }: { block: LinkBlock; onChange: (content
 
 function BlockCard({
   block,
+  pages,
+  currentPageId,
   index,
   count,
   onUpdate,
@@ -355,6 +407,8 @@ function BlockCard({
   onDelete,
 }: {
   block: LinkBlock
+  pages: LinkPage[]
+  currentPageId: string
   index: number
   count: number
   onUpdate: (block: LinkBlock) => void
@@ -406,7 +460,7 @@ function BlockCard({
           <button type="button" aria-label={open ? '접기' : '펼치기'} onClick={() => setOpen((value) => !value)}>{open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</button>
         </div>
       </header>
-      {open ? <BlockFields block={block} onChange={(content) => onUpdate({ ...block, content })} /> : null}
+      {open ? <BlockFields block={block} pages={pages} currentPageId={currentPageId} onChange={(content) => onUpdate({ ...block, content })} /> : null}
     </section>
   )
 }
@@ -425,19 +479,27 @@ function Dialog({ title, onClose, children }: { title: string; onClose: () => vo
 export function LinkPageStudio() {
   const [state, setState] = useState<LinkPageState>(() => createInitialLinkPageState())
   const [hydrated, setHydrated] = useState(false)
+  const [loadError, setLoadError] = useState(false)
   const [activeTab, setActiveTab] = useState<LinkPageTab>('page')
   const [blockPickerOpen, setBlockPickerOpen] = useState(false)
   const [blockInsertAfterId, setBlockInsertAfterId] = useState<string | null>(null)
   const [pageDialog, setPageDialog] = useState<PageDialogState>(null)
   const [deleteBlockId, setDeleteBlockId] = useState<string | null>(null)
   const [deletePageId, setDeletePageId] = useState<string | null>(null)
+  const [resetRequested, setResetRequested] = useState(false)
   const [savedFlash, setSavedFlash] = useState(false)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     queueMicrotask(() => {
-      setState(repository.load())
-      setHydrated(true)
+      try {
+        setState(repository.load())
+        setLoadError(false)
+        setHydrated(true)
+      } catch {
+        setLoadError(true)
+        setHydrated(false)
+      }
     })
   }, [])
 
@@ -453,7 +515,50 @@ export function LinkPageStudio() {
   }, [hydrated, state])
 
   const selectedPage = state.pages.find((page) => page.id === state.selectedPageId) ?? state.pages[0]
-  const navigationPages = useMemo(() => getNavigationPages(state, selectedPage), [state, selectedPage])
+  const navigationPages = useMemo(() => getNavigationPages(state), [state])
+  const blockingDeleteReferences = useMemo(() => {
+    if (!deletePageId) return []
+    return getInboundPageReferences(state, deletePageId)
+      .filter((reference) => reference.kind !== 'parent')
+      .map((reference) => {
+        const sourcePage = state.pages.find((page) => page.id === reference.sourcePageId)
+        const sourceBlock = sourcePage?.blocks.find((block) => block.id === reference.blockId)
+        return {
+          ...reference,
+          label: `${sourcePage?.title ?? '알 수 없는 페이지'} · ${sourceBlock ? BLOCK_LABELS[sourceBlock.kind] : '페이지 연결'}`,
+        }
+      })
+  }, [deletePageId, state])
+
+  const confirmReset = () => {
+    const initial = repository.reset()
+    setState(initial)
+    setLoadError(false)
+    setHydrated(true)
+    setResetRequested(false)
+  }
+
+  if (loadError) {
+    return (
+      <main className={styles.recoveryState} data-mg-theme="admin" data-hydrated="false">
+        <section>
+          <RotateCcw size={34} aria-hidden="true" />
+          <h1>저장된 링크 페이지를 열 수 없어요.</h1>
+          <p>원본 데이터는 그대로 보존되어 있습니다. 예시 데이터로 초기화하려면 아래 버튼을 누른 뒤 한 번 더 확인해주세요.</p>
+          <button type="button" onClick={() => setResetRequested(true)}>예시 데이터로 초기화</button>
+        </section>
+        {resetRequested ? (
+          <ConfirmDialog
+            title="예시 데이터로 초기화할까요?"
+            description="현재 페이지와 편집 내용이 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
+            confirmLabel="초기화"
+            onCancel={() => setResetRequested(false)}
+            onConfirm={confirmReset}
+          />
+        ) : null}
+      </main>
+    )
+  }
 
   const updateSelectedPage = (updater: (page: LinkPage) => LinkPage) => {
     setState((current) => ({ ...current, pages: current.pages.map((page) => page.id === current.selectedPageId ? { ...updater(page), updatedAt: new Date().toISOString() } : page) }))
@@ -520,10 +625,11 @@ export function LinkPageStudio() {
   const addOrEditPage = (form: FormData) => {
     const title = String(form.get('title') ?? '').trim()
     const slug = String(form.get('slug') ?? '').trim()
+    const role = String(form.get('role') ?? '') as LinkPageRole
     const parentIdValue = String(form.get('parentId') ?? '')
-    const currentId = pageDialog?.pageId
-    const nextParentId = parentIdValue || null
-    if (!title || !isValidSlug(slug) || !isSlugAvailable(state, slug, currentId)) return
+    const currentId = pageDialog?.mode === 'edit' ? pageDialog.pageId : undefined
+    const nextParentId = role === 'child' ? parentIdValue || null : null
+    if (!title || !['navigation', 'child'].includes(role) || (role === 'child' && !nextParentId) || !isValidSlug(slug) || !isSlugAvailable(state, slug, currentId)) return
     if (currentId && !canSetPageParent(state, currentId, nextParentId)) return
 
     if (pageDialog?.mode === 'edit' && currentId) {
@@ -535,6 +641,7 @@ export function LinkPageStudio() {
         const pages = current.pages.map((page) => page.id === currentId ? updatePageSlug({
           ...page,
           title,
+          role,
           parentId: nextParentId,
           sortOrder: nextSortOrder,
           updatedAt: new Date().toISOString(),
@@ -542,9 +649,9 @@ export function LinkPageStudio() {
         return { ...current, pages: normalizePageOrders(pages) }
       })
     } else {
-      const parentId = nextParentId
+      const parentId = role === 'child' ? nextParentId : null
       const siblingCount = state.pages.filter((page) => page.parentId === parentId).length
-      const page = createPage(title, slug, parentId, siblingCount)
+      const page = createPage(title, slug, parentId, siblingCount, role)
       setState((current) => ({ ...current, pages: normalizePageOrders([...current.pages, page]), selectedPageId: page.id }))
     }
     setPageDialog(null)
@@ -567,40 +674,47 @@ export function LinkPageStudio() {
   }
 
   const confirmDeletePage = () => {
-    if (!deletePageId || state.pages.length === 1) return
-    const deletedPage = state.pages.find((page) => page.id === deletePageId)
-    const fallbackParentId = deletedPage?.parentId ?? null
-    const remaining = state.pages.filter((page) => page.id !== deletePageId).map((page) => page.parentId === deletePageId ? { ...page, parentId: fallbackParentId } : page)
-    setState((current) => ({ ...current, pages: normalizePageOrders(remaining), selectedPageId: remaining[0].id }))
+    if (!deletePageId || state.pages.length === 1 || blockingDeleteReferences.length > 0) return
+    setState((current) => {
+      const deletedPage = current.pages.find((page) => page.id === deletePageId)
+      if (!deletedPage || current.pages.length === 1) return current
+      const hasBlockingReference = getInboundPageReferences(current, deletePageId).some((reference) => reference.kind !== 'parent')
+      if (hasBlockingReference) return current
+
+      const fallbackParentId = deletedPage.parentId
+      const pages = current.pages
+        .filter((page) => page.id !== deletePageId)
+        .map((page) => {
+          if (page.parentId !== deletePageId) return page
+          return fallbackParentId === null
+            ? { ...page, parentId: null, role: 'navigation' as const }
+            : { ...page, parentId: fallbackParentId, role: 'child' as const }
+        })
+      const normalizedPages = normalizePageOrders(pages)
+      const selectedPageId = current.selectedPageId === deletePageId ? normalizedPages[0].id : current.selectedPageId
+      const nextState = { ...current, pages: normalizedPages, selectedPageId }
+      return isLinkPageStateV2(nextState) ? nextState : current
+    })
     setDeletePageId(null)
   }
 
   return (
-    <main className={styles.studio} data-mg-theme="admin">
-      <aside className={styles.pageRail} aria-label="페이지 목록">
-        <button className={styles.railIcon} type="button" aria-label="설정"><Settings /></button>
-        <button className={styles.addPageRail} type="button" onClick={() => setPageDialog({ mode: 'add' })}><Plus /><span>페이지 추가</span></button>
-        <div className={styles.pageTree}>
-          {getOrderedPageTree(state).map((page) => (
-            <div className={styles.pageThumbWrap} style={{ marginLeft: `${Math.min(getPageDepth(state, page), 4) * 14}px` }} key={page.id}>
-              <button className={`${styles.pageThumb} ${page.id === selectedPage.id ? styles.selectedPage : ''}`} type="button" onClick={() => setState((current) => ({ ...current, selectedPageId: page.id }))}>
-                <UserRound size={25} /><span>{page.parentId ? '페이지' : '홈화면'}</span>
-              </button>
-              <div className={styles.pageMiniActions}>
-                <button type="button" aria-label={`${page.title} 편집`} onClick={() => setPageDialog({ mode: 'edit', pageId: page.id })}><Pencil size={13} /></button>
-                <button type="button" aria-label={`${page.title} 복사`} onClick={() => copyPage(page.id)}><Copy size={13} /></button>
-                {state.pages.length > 1 ? <button type="button" aria-label={`${page.title} 삭제`} onClick={() => setDeletePageId(page.id)}><Trash2 size={13} /></button> : null}
-              </div>
-            </div>
-          ))}
-        </div>
-        <button className={styles.dashedAdd} type="button" aria-label="페이지 추가" onClick={() => setPageDialog({ mode: 'add' })}><Plus /></button>
-      </aside>
+    <main className={styles.studio} data-mg-theme="admin" data-hydrated={hydrated ? 'true' : 'false'}>
+      <PageTree
+        pages={state.pages}
+        selectedPageId={selectedPage.id}
+        onSelect={(pageId) => setState((current) => ({ ...current, selectedPageId: pageId }))}
+        onAdd={() => setPageDialog({ mode: 'add', step: 'type' })}
+        onEdit={(pageId) => setPageDialog({ mode: 'edit', pageId })}
+        onCopy={copyPage}
+        onDelete={setDeletePageId}
+      />
 
       <section className={styles.previewRail} aria-label="실시간 미리보기">
         <div className={`${styles.phoneFrame} ${savedFlash ? styles.savedFrame : ''}`}>
           <LinkPageRenderer
             page={selectedPage}
+            state={state}
             navigationPages={navigationPages}
             surface="preview"
             onNavigate={(pageId) => setState((current) => ({ ...current, selectedPageId: pageId }))}
@@ -627,7 +741,7 @@ export function LinkPageStudio() {
               const movableIndex = movableBlocks.findIndex((item) => item.id === block.id)
               return (
                 <Fragment key={block.id}>
-                  <BlockCard block={block} index={movableIndex} count={movableBlocks.length} onUpdate={updateBlock} onMove={(direction) => moveBlock(block.id, direction)} onDropBlock={(draggedBlockId) => moveBlockBefore(draggedBlockId, block.id)} onCopy={() => copyBlock(block.id)} onDelete={() => setDeleteBlockId(block.id)} />
+                  <BlockCard block={block} pages={state.pages} currentPageId={selectedPage.id} index={movableIndex} count={movableBlocks.length} onUpdate={updateBlock} onMove={(direction) => moveBlock(block.id, direction)} onDropBlock={(draggedBlockId) => moveBlockBefore(draggedBlockId, block.id)} onCopy={() => copyBlock(block.id)} onDelete={() => setDeleteBlockId(block.id)} />
                   <button className={styles.insertBlock} type="button" aria-label={`${BLOCK_LABELS[block.kind]} 다음에 블록 삽입`} onClick={() => { setBlockInsertAfterId(block.id); setBlockPickerOpen(true) }}><Plus size={17} /></button>
                 </Fragment>
               )
@@ -638,14 +752,7 @@ export function LinkPageStudio() {
 
         {activeTab === 'design' ? (
           <div className={styles.editorContent}>
-            <section className={styles.designPanel}>
-              <header><Palette size={20} /><h2>페이지 디자인</h2></header>
-              <Field label="배경색"><input type="color" value={selectedPage.theme.backgroundColor} onChange={(event) => updateSelectedPage((page) => ({ ...page, theme: { ...page.theme, backgroundColor: event.target.value } }))} /></Field>
-              <Field label="버튼색"><input type="color" value={selectedPage.theme.buttonColor} onChange={(event) => updateSelectedPage((page) => ({ ...page, theme: { ...page.theme, buttonColor: event.target.value } }))} /></Field>
-              <Field label="폰트">
-                <Segmented value={selectedPage.theme.fontKey} options={[{ value: 'pretendard', label: '기본' }, { value: 'roundwind', label: '라운드' }, { value: 'serif', label: '세리프' }]} onChange={(fontKey) => updateSelectedPage((page) => ({ ...page, theme: { ...page.theme, fontKey } }))} />
-              </Field>
-            </section>
+            <DesignStudio theme={selectedPage.theme} onChange={(theme) => updateSelectedPage((page) => ({ ...page, theme }))} />
           </div>
         ) : null}
 
@@ -664,13 +771,46 @@ export function LinkPageStudio() {
       ) : null}
 
       {pageDialog ? (
-        <PageFormDialog state={state} dialog={pageDialog} onClose={() => setPageDialog(null)} onSubmit={addOrEditPage} />
+        pageDialog.mode === 'add' && pageDialog.step === 'type' ? (
+          <Dialog title="페이지 추가" onClose={() => setPageDialog(null)}>
+            <PageTypeSelector onSelect={(role) => setPageDialog({ mode: 'add', step: 'details', role })} />
+          </Dialog>
+        ) : (
+          <PageFormDialog state={state} dialog={pageDialog} onClose={() => setPageDialog(null)} onSubmit={addOrEditPage} />
+        )
       ) : null}
 
       {deleteBlockId ? <ConfirmDialog title="블럭을 삭제할까요?" description="삭제한 블럭은 복구할 수 없습니다." onCancel={() => setDeleteBlockId(null)} onConfirm={confirmDeleteBlock} /> : null}
-      {deletePageId ? <ConfirmDialog title="페이지를 삭제할까요?" description="자식 페이지는 삭제할 페이지의 상위로 이동하고 해당 페이지만 삭제됩니다." onCancel={() => setDeletePageId(null)} onConfirm={confirmDeletePage} /> : null}
+      {deletePageId ? blockingDeleteReferences.length > 0 ? (
+        <Dialog title="페이지를 삭제할 수 없어요." onClose={() => setDeletePageId(null)}>
+          <p className={styles.confirmDescription}>이 페이지를 가리키는 연결이 있습니다. 아래 위치에서 연결을 제거하거나 다른 페이지로 바꾼 뒤 다시 시도해주세요.</p>
+          <ul className={styles.referenceList}>
+            {blockingDeleteReferences.map((reference) => <li key={`${reference.sourcePageId}:${reference.blockId}:${reference.itemId}`}>{reference.label}</li>)}
+          </ul>
+          <div className={styles.dialogActions}><button type="button" onClick={() => setDeletePageId(null)}>확인</button></div>
+        </Dialog>
+      ) : (
+        <ConfirmDialog
+          title="페이지를 삭제할까요?"
+          description={state.pages.find((page) => page.id === deletePageId)?.parentId === null
+            ? '직접 연결된 자식 페이지는 네비게이션 페이지로 전환되고 해당 페이지만 삭제됩니다.'
+            : '자식 페이지는 삭제할 페이지의 상위로 이동하고 해당 페이지만 삭제됩니다.'}
+          onCancel={() => setDeletePageId(null)}
+          onConfirm={confirmDeletePage}
+        />
+      ) : null}
 
-      <button className={styles.resetButton} type="button" onClick={() => setState(repository.reset())}><RotateCcw size={16} /> 예시 복구</button>
+      {resetRequested ? (
+        <ConfirmDialog
+          title="예시 데이터로 초기화할까요?"
+          description="현재 페이지와 편집 내용이 모두 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
+          confirmLabel="초기화"
+          onCancel={() => setResetRequested(false)}
+          onConfirm={confirmReset}
+        />
+      ) : null}
+
+      <button className={styles.resetButton} type="button" onClick={() => setResetRequested(true)}><RotateCcw size={16} /> 예시 복구</button>
     </main>
   )
 }
@@ -679,31 +819,38 @@ function Placeholder({ icon, title, description }: { icon: ReactNode; title: str
   return <div className={styles.placeholder}>{icon}<h2>{title}</h2><p>{description}</p><span>프로토타입 비대상</span></div>
 }
 
-function ConfirmDialog({ title, description, onCancel, onConfirm }: { title: string; description: string; onCancel: () => void; onConfirm: () => void }) {
+function ConfirmDialog({ title, description, confirmLabel = '삭제', onCancel, onConfirm }: { title: string; description: string; confirmLabel?: string; onCancel: () => void; onConfirm: () => void }) {
   return (
     <Dialog title={title} onClose={onCancel}>
       <p className={styles.confirmDescription}>{description}</p>
-      <div className={styles.dialogActions}><button type="button" onClick={onCancel}>취소</button><button className={styles.dangerButton} type="button" onClick={onConfirm}>삭제</button></div>
+      <div className={styles.dialogActions}><button type="button" onClick={onCancel}>취소</button><button className={styles.dangerButton} type="button" onClick={onConfirm}>{confirmLabel}</button></div>
     </Dialog>
   )
 }
 
 function PageFormDialog({ state, dialog, onClose, onSubmit }: { state: LinkPageState; dialog: NonNullable<PageDialogState>; onClose: () => void; onSubmit: (form: FormData) => void }) {
-  const existing = dialog.pageId ? state.pages.find((page) => page.id === dialog.pageId) : undefined
+  const existing = dialog.mode === 'edit' ? state.pages.find((page) => page.id === dialog.pageId) : undefined
   const descendants = existing ? getPageDescendantIds(state, existing.id) : new Set<string>()
   const [slug, setSlug] = useState(existing?.slug ?? `page-${state.pages.length + 1}`)
+  const [role, setRole] = useState<LinkPageRole>(existing?.role ?? (dialog.mode === 'add' ? dialog.role ?? 'navigation' : 'navigation'))
   const slugError = !isValidSlug(slug) ? '4~50자 영문·숫자·-·_·.만 사용하세요.' : !isSlugAvailable(state, slug, existing?.id) ? '이미 사용했던 slug입니다.' : undefined
   return (
     <Dialog title={dialog.mode === 'add' ? '페이지 추가' : '페이지 편집'} onClose={onClose}>
       <form className={styles.pageForm} action={(form) => { if (!slugError) onSubmit(form) }}>
+        <input type="hidden" name="role" value={role} />
+        {dialog.mode === 'edit' ? (
+          <Field label="페이지 종류">
+            <Segmented value={role} options={[{ value: 'navigation', label: '네비게이션 페이지' }, { value: 'child', label: '자식 페이지' }]} onChange={setRole} />
+          </Field>
+        ) : <p className={styles.pageRoleSummary}>{role === 'navigation' ? '네비게이션 페이지' : '자식 페이지'}</p>}
         <Field label="페이지 이름"><input name="title" required defaultValue={existing?.title ?? ''} /></Field>
         <Field label="공개 URL" hint={`/l/${slug}`} error={slugError}><input name="slug" value={slug} onChange={(event) => setSlug(event.target.value)} /></Field>
-        <Field label="상위 페이지">
-          <select name="parentId" defaultValue={existing?.parentId ?? ''}>
-            <option value="">없음 (루트)</option>
+        {role === 'child' ? <Field label="상위 페이지">
+          <select name="parentId" aria-label="상위 페이지" required defaultValue={existing?.parentId ?? ''}>
+            <option value="">상위 페이지를 선택하세요</option>
             {state.pages.filter((page) => page.id !== existing?.id && !descendants.has(page.id)).map((page) => <option key={page.id} value={page.id}>{'— '.repeat(getPageDepth(state, page))}{page.title}</option>)}
           </select>
-        </Field>
+        </Field> : null}
         <div className={styles.dialogActions}><button type="button" onClick={onClose}>취소</button><button type="submit" disabled={Boolean(slugError)}>설정 완료</button></div>
       </form>
     </Dialog>

@@ -1,5 +1,35 @@
 export type LinkPageTab = 'page' | 'design' | 'analytics' | 'manage' | 'marketing'
 
+export type LinkPageRole = 'navigation' | 'child'
+
+export type LinkDestination =
+  | { kind: 'external'; url: string }
+  | { kind: 'page'; pageId: string }
+
+export type LinkPageTheme = {
+  recipeId?: string
+  backgroundColor: string
+  backgroundImage?: AssetReference
+  backgroundImageUrl?: string
+  surfaceColor: string
+  textColor: string
+  buttonColor: string
+  buttonTextColor: string
+  buttonShape: 'tidy' | 'soft' | 'pill'
+  buttonAction: 'none' | 'lift' | 'press' | 'arrow' | 'outline'
+  buttonScope: 'all' | 'highlighted'
+  typographyPreset: 'editorial' | 'clean' | 'compact'
+  topMenuStyle: 'light' | 'ink' | 'minimal'
+  showNavigation: boolean
+  showShare: boolean
+  showSubscribe: boolean
+  logoMode: 'default' | 'custom' | 'hidden'
+  logo?: AssetReference
+  logoUrl?: string
+  /** @deprecated V1 renderer compatibility; use typographyPreset. */
+  fontKey: 'pretendard' | 'roundwind' | 'serif'
+}
+
 export type LinkBlockKind =
   | 'profile'
   | 'singleLink'
@@ -19,7 +49,8 @@ export type AssetReference = {
 export type LinkItem = {
   id: string
   title: string
-  url: string
+  url?: string
+  destination?: LinkDestination
   tag?: string
   price?: string
   originalPrice?: string
@@ -31,6 +62,7 @@ export type GalleryItem = {
   id: string
   alt: string
   url?: string
+  destination?: LinkDestination
   asset?: AssetReference
   imageUrl?: string
 }
@@ -60,7 +92,8 @@ export type LinkBlockContent =
   | {
       kind: 'singleLink'
       title: string
-      url: string
+      url?: string
+      destination?: LinkDestination
       layout: 'small' | 'medium' | 'large'
       highlighted: boolean
       tag?: string
@@ -125,12 +158,9 @@ export type LinkPage = {
   parentId: string | null
   sortOrder: number
   status: 'draft' | 'published'
+  role: LinkPageRole
   title: string
-  theme: {
-    backgroundColor: string
-    buttonColor: string
-    fontKey: 'pretendard' | 'roundwind' | 'serif'
-  }
+  theme: LinkPageTheme
   blocks: LinkBlock[]
   createdAt: string
   updatedAt: string
@@ -146,10 +176,12 @@ export type LinkPageEvent = {
 }
 
 export type LinkPageState = {
-  version: 1
+  version: 2
   pages: LinkPage[]
   selectedPageId: string
 }
+
+export type LinkPageStateV2 = LinkPageState
 
 export const LINK_PAGE_STORAGE_KEY = 'munjanggun:link-pages:v1'
 export const LINK_PAGE_EVENT_KEY = 'munjanggun:link-page-events:v1'
@@ -158,6 +190,29 @@ export const LINK_PAGE_CHANNEL = 'munjanggun:link-pages'
 const ROOT_PAGE_ID = '7f6a220a-4ca8-48c3-9bca-0fcf43f0e101'
 const CHILD_PAGE_ID = '7f6a220a-4ca8-48c3-9bca-0fcf43f0e102'
 const NOW = '2026-08-14T00:00:00.000Z'
+
+export function createDefaultLinkPageTheme(
+  legacy: Partial<Pick<LinkPageTheme, 'backgroundColor' | 'buttonColor' | 'fontKey'>> = {},
+): LinkPageTheme {
+  const fontKey = legacy.fontKey ?? 'pretendard'
+  return {
+    backgroundColor: legacy.backgroundColor ?? '#eef1f4',
+    surfaceColor: '#ffffff',
+    textColor: '#171717',
+    buttonColor: legacy.buttonColor ?? '#171717',
+    buttonTextColor: '#ffffff',
+    buttonShape: 'soft',
+    buttonAction: 'none',
+    buttonScope: 'all',
+    typographyPreset: fontKey === 'serif' ? 'editorial' : fontKey === 'roundwind' ? 'compact' : 'clean',
+    topMenuStyle: 'light',
+    showNavigation: true,
+    showShare: true,
+    showSubscribe: false,
+    logoMode: 'default',
+    fontKey,
+  }
+}
 
 export function createId() {
   return crypto.randomUUID()
@@ -168,7 +223,7 @@ export function createBlock(pageId: string, kind: Exclude<LinkBlockKind, 'profil
   const base = { id, pageId, kind, enabled: true, sortOrder }
 
   if (kind === 'singleLink') {
-    return { ...base, content: { kind, title: '새 링크', url: 'https://', layout: 'medium', highlighted: false } }
+    return { ...base, content: { kind, title: '새 링크', url: 'https://', destination: { kind: 'external', url: 'https://' }, layout: 'medium', highlighted: false } }
   }
   if (kind === 'groupLink') {
     return { ...base, content: { kind, title: '관련 자료 모음', layout: 'list', collapsible: false, items: [] } }
@@ -185,17 +240,26 @@ export function createBlock(pageId: string, kind: Exclude<LinkBlockKind, 'profil
   return { ...base, content: { kind: 'fileShare', title: '자료 다운로드', description: '', files: [], collectFields: false } }
 }
 
-export function createPage(title: string, slug: string, parentId: string | null, sortOrder: number): LinkPage {
+export function createPage(
+  title: string,
+  slug: string,
+  parentId: string | null,
+  sortOrder: number,
+  role: LinkPageRole = parentId ? 'child' : 'navigation',
+): LinkPage {
   const id = createId()
+  const normalizedParentId = role === 'navigation' ? null : parentId
+  if (role === 'child' && !normalizedParentId) throw new Error('Child pages require a parent.')
   return {
     id,
     slug,
     slugAliases: [],
-    parentId,
+    parentId: normalizedParentId,
     sortOrder,
     status: 'published',
+    role,
     title,
-    theme: { backgroundColor: '#eef1f4', buttonColor: '#171717', fontKey: 'pretendard' },
+    theme: createDefaultLinkPageTheme(),
     blocks: [
       {
         id: createId(),
@@ -244,6 +308,7 @@ export function createInitialLinkPageState(): LinkPageState {
         kind: 'singleLink',
         title: '무료방문실측 견적상담',
         url: 'https://munjanggun.com/measure',
+        destination: { kind: 'external', url: 'https://munjanggun.com/measure' },
         layout: 'medium',
         highlighted: true,
         tag: '네이버예약',
@@ -304,7 +369,7 @@ export function createInitialLinkPageState(): LinkPageState {
   ]
 
   return {
-    version: 1,
+    version: 2,
     selectedPageId: ROOT_PAGE_ID,
     pages: [
       {
@@ -314,8 +379,9 @@ export function createInitialLinkPageState(): LinkPageState {
         parentId: null,
         sortOrder: 0,
         status: 'published',
+        role: 'navigation',
         title: '문장군 상담',
-        theme: { backgroundColor: '#eef1f4', buttonColor: '#171717', fontKey: 'pretendard' },
+        theme: createDefaultLinkPageTheme({ backgroundColor: '#eef1f4', buttonColor: '#171717', fontKey: 'pretendard' }),
         blocks: rootBlocks,
         createdAt: NOW,
         updatedAt: NOW,
@@ -327,8 +393,9 @@ export function createInitialLinkPageState(): LinkPageState {
         parentId: ROOT_PAGE_ID,
         sortOrder: 0,
         status: 'published',
+        role: 'child',
         title: '중문 상담 자료',
-        theme: { backgroundColor: '#eef1f4', buttonColor: '#274237', fontKey: 'pretendard' },
+        theme: createDefaultLinkPageTheme({ backgroundColor: '#eef1f4', buttonColor: '#274237', fontKey: 'pretendard' }),
         blocks: childBlocks,
         createdAt: NOW,
         updatedAt: NOW,
@@ -350,6 +417,16 @@ function hasValidOptionalAsset(content: Record<string, unknown>, key: string) {
   return content[key] === undefined || isAssetReference(content[key])
 }
 
+function isValidDestination(value: unknown): value is LinkDestination {
+  if (!isRecord(value)) return false
+  if (value.kind === 'external') return typeof value.url === 'string'
+  return value.kind === 'page' && typeof value.pageId === 'string'
+}
+
+function hasValidOptionalDestination(content: Record<string, unknown>) {
+  return content.destination === undefined || isValidDestination(content.destination)
+}
+
 function isValidBlockContent(value: unknown, kind: LinkBlockKind): value is LinkBlockContent {
   if (!isRecord(value) || value.kind !== kind) return false
 
@@ -360,13 +437,14 @@ function isValidBlockContent(value: unknown, kind: LinkBlockKind): value is Link
       && hasValidOptionalAsset(value, 'image') && hasValidOptionalAsset(value, 'cover')
   }
   if (kind === 'singleLink') {
-    return typeof value.title === 'string' && typeof value.url === 'string' && typeof value.highlighted === 'boolean'
+    return typeof value.title === 'string' && (value.url === undefined || typeof value.url === 'string') && typeof value.highlighted === 'boolean'
       && ['small', 'medium', 'large'].includes(String(value.layout)) && hasValidOptionalAsset(value, 'image')
+      && hasValidOptionalDestination(value) && (typeof value.url === 'string' || value.destination !== undefined)
   }
   if (kind === 'groupLink') {
     return typeof value.title === 'string' && typeof value.collapsible === 'boolean'
       && ['list', 'twoColumn', 'threeColumn', 'carousel', 'doubleCarousel'].includes(String(value.layout))
-      && Array.isArray(value.items) && value.items.every((item) => isRecord(item) && typeof item.id === 'string' && typeof item.title === 'string' && typeof item.url === 'string' && hasValidOptionalAsset(item, 'image'))
+      && Array.isArray(value.items) && value.items.every((item) => isRecord(item) && typeof item.id === 'string' && typeof item.title === 'string' && (item.url === undefined || typeof item.url === 'string') && hasValidOptionalAsset(item, 'image') && hasValidOptionalDestination(item) && (typeof item.url === 'string' || item.destination !== undefined))
   }
   if (kind === 'text') {
     return typeof value.title === 'string' && typeof value.body === 'string'
@@ -376,7 +454,7 @@ function isValidBlockContent(value: unknown, kind: LinkBlockKind): value is Link
   if (kind === 'gallery') {
     return typeof value.title === 'string' && typeof value.keepRatio === 'boolean' && typeof value.slideshow === 'boolean'
       && ['single', 'carousel', 'list', 'thumbnail', 'masonry'].includes(String(value.layout))
-      && Array.isArray(value.items) && value.items.every((item) => isRecord(item) && typeof item.id === 'string' && typeof item.alt === 'string' && hasValidOptionalAsset(item, 'asset'))
+      && Array.isArray(value.items) && value.items.every((item) => isRecord(item) && typeof item.id === 'string' && typeof item.alt === 'string' && hasValidOptionalAsset(item, 'asset') && hasValidOptionalDestination(item))
   }
   if (kind === 'video') {
     return typeof value.title === 'string' && typeof value.autoplayMuted === 'boolean'
@@ -388,10 +466,122 @@ function isValidBlockContent(value: unknown, kind: LinkBlockKind): value is Link
     && value.files.every((item) => isRecord(item) && typeof item.id === 'string' && isAssetReference(item.asset))
 }
 
-export function isLinkPageState(value: unknown): value is LinkPageState {
+function isValidTheme(value: unknown): value is LinkPageTheme {
+  if (!isRecord(value)) return false
+  return (value.recipeId === undefined || typeof value.recipeId === 'string')
+    && typeof value.backgroundColor === 'string'
+    && hasValidOptionalAsset(value, 'backgroundImage')
+    && (value.backgroundImageUrl === undefined || typeof value.backgroundImageUrl === 'string')
+    && typeof value.surfaceColor === 'string'
+    && typeof value.textColor === 'string'
+    && typeof value.buttonColor === 'string'
+    && typeof value.buttonTextColor === 'string'
+    && ['tidy', 'soft', 'pill'].includes(String(value.buttonShape))
+    && ['none', 'lift', 'press', 'arrow', 'outline'].includes(String(value.buttonAction))
+    && ['all', 'highlighted'].includes(String(value.buttonScope))
+    && ['editorial', 'clean', 'compact'].includes(String(value.typographyPreset))
+    && ['light', 'ink', 'minimal'].includes(String(value.topMenuStyle))
+    && typeof value.showNavigation === 'boolean'
+    && typeof value.showShare === 'boolean'
+    && typeof value.showSubscribe === 'boolean'
+    && ['default', 'custom', 'hidden'].includes(String(value.logoMode))
+    && hasValidOptionalAsset(value, 'logo')
+    && (value.logoUrl === undefined || typeof value.logoUrl === 'string')
+    && (value.fontKey === undefined || ['pretendard', 'roundwind', 'serif'].includes(String(value.fontKey)))
+}
+
+function isRecognizedV1State(value: unknown): value is Record<string, unknown> & { version: 1; pages: Array<Record<string, unknown>>; selectedPageId: string } {
+  if (!isRecord(value) || value.version !== 1 || !Array.isArray(value.pages) || value.pages.length === 0 || typeof value.selectedPageId !== 'string') return false
+  for (const page of value.pages) {
+    if (!isRecord(page) || typeof page.id !== 'string' || typeof page.slug !== 'string' || !Array.isArray(page.slugAliases)) return false
+    if ((typeof page.parentId !== 'string' && page.parentId !== null) || !Array.isArray(page.blocks) || !isRecord(page.theme)) return false
+    if (typeof page.theme.backgroundColor !== 'string' || typeof page.theme.buttonColor !== 'string' || !['pretendard', 'roundwind', 'serif'].includes(String(page.theme.fontKey))) return false
+    for (const block of page.blocks) {
+      if (!isRecord(block) || typeof block.kind !== 'string' || !isValidBlockContent(block.content, block.kind as LinkBlockKind)) return false
+    }
+  }
+  return true
+}
+
+function migrateBlockContent(content: LinkBlockContent): LinkBlockContent {
+  if (content.kind === 'singleLink') {
+    return { ...content, destination: content.destination ?? { kind: 'external', url: content.url ?? '' } }
+  }
+  if (content.kind === 'groupLink') {
+    return {
+      ...content,
+      items: content.items.map((item) => ({
+        ...item,
+        destination: item.destination ?? { kind: 'external', url: item.url ?? '' },
+      })),
+    }
+  }
+  if (content.kind === 'gallery') {
+    return {
+      ...content,
+      items: content.items.map((item) => item.destination || !item.url
+        ? item
+        : { ...item, destination: { kind: 'external' as const, url: item.url } }),
+    }
+  }
+  return content
+}
+
+export class UnrecognizedLinkPageStateError extends Error {
+  constructor() {
+    super('Stored link-page data is not a recognized V1 or V2 state. Reset is required explicitly.')
+    this.name = 'UnrecognizedLinkPageStateError'
+  }
+}
+
+function backfillV2NavigationVisibility(raw: unknown): unknown {
+  if (!isRecord(raw) || raw.version !== 2 || !Array.isArray(raw.pages)) return raw
+
+  let changed = false
+  const pages = raw.pages.map((page) => {
+    if (!isRecord(page) || !isRecord(page.theme) || page.theme.showNavigation !== undefined) return page
+    changed = true
+    return { ...page, theme: { ...page.theme, showNavigation: true } }
+  })
+
+  return changed ? { ...raw, pages } : raw
+}
+
+export function migrateLinkPageState(raw: unknown): LinkPageStateV2 {
+  if (isLinkPageStateV2(raw)) return raw
+  const backfilledV2 = backfillV2NavigationVisibility(raw)
+  if (isLinkPageStateV2(backfilledV2)) return backfilledV2
+  if (!isRecognizedV1State(raw)) throw new UnrecognizedLinkPageStateError()
+
+  const pages = raw.pages.map((legacyPage) => {
+    const parentId = legacyPage.parentId as string | null
+    const legacyTheme = legacyPage.theme as Pick<LinkPageTheme, 'backgroundColor' | 'buttonColor' | 'fontKey'>
+    const blocks = (legacyPage.blocks as LinkBlock[]).map((block) => ({
+      ...block,
+      content: migrateBlockContent(block.content),
+    }))
+    return {
+      ...legacyPage,
+      parentId,
+      role: parentId === null ? 'navigation' as const : 'child' as const,
+      theme: createDefaultLinkPageTheme(legacyTheme),
+      blocks,
+    } as LinkPage
+  })
+
+  const migrated: LinkPageStateV2 = {
+    version: 2,
+    pages,
+    selectedPageId: raw.selectedPageId,
+  }
+  if (!isLinkPageStateV2(migrated)) throw new UnrecognizedLinkPageStateError()
+  return migrated
+}
+
+export function isLinkPageStateV2(value: unknown): value is LinkPageStateV2 {
   if (!value || typeof value !== 'object') return false
   const candidate = value as Partial<LinkPageState>
-  if (candidate.version !== 1 || !Array.isArray(candidate.pages) || candidate.pages.length === 0 || typeof candidate.selectedPageId !== 'string') return false
+  if (candidate.version !== 2 || !Array.isArray(candidate.pages) || candidate.pages.length === 0 || typeof candidate.selectedPageId !== 'string') return false
 
   const pageIds = new Set<string>()
   const blockIds = new Set<string>()
@@ -406,7 +596,8 @@ export function isLinkPageState(value: unknown): value is LinkPageState {
     if (typeof page.parentId !== 'string' && page.parentId !== null) return false
     if (typeof page.sortOrder !== 'number' || !Number.isInteger(page.sortOrder) || page.sortOrder < 0 || !Array.isArray(page.blocks)) return false
     if (typeof page.title !== 'string' || (page.status !== 'draft' && page.status !== 'published')) return false
-    if (!isRecord(page.theme) || typeof page.theme.backgroundColor !== 'string' || typeof page.theme.buttonColor !== 'string' || !['pretendard', 'roundwind', 'serif'].includes(String(page.theme.fontKey))) return false
+    if ((page.role !== 'navigation' && page.role !== 'child') || !isValidTheme(page.theme)) return false
+    if ((page.role === 'navigation' && page.parentId !== null) || (page.role === 'child' && page.parentId === null)) return false
     if (!Array.isArray(page.slugAliases) || page.slugAliases.some((slug) => typeof slug !== 'string' || !isValidSlug(slug))) return false
     pageIds.add(page.id)
     for (const slug of [page.slug, ...page.slugAliases]) {
@@ -449,6 +640,8 @@ export function isLinkPageState(value: unknown): value is LinkPageState {
 
   return true
 }
+
+export const isLinkPageState = isLinkPageStateV2
 
 export function resolvePageBySlug(state: LinkPageState, slug: string) {
   const canonical = state.pages.find((page) => page.slug === slug)
@@ -522,85 +715,13 @@ export function updatePageSlug(page: LinkPage, slug: string) {
   }
 }
 
-export function getPageDescendantIds(state: LinkPageState, pageId: string) {
-  const descendants = new Set<string>()
-  const pending = [pageId]
-
-  while (pending.length > 0) {
-    const parentId = pending.shift()
-    for (const page of state.pages) {
-      if (page.parentId === parentId && !descendants.has(page.id)) {
-        descendants.add(page.id)
-        pending.push(page.id)
-      }
-    }
-  }
-
-  return descendants
-}
-
-export function canSetPageParent(state: LinkPageState, pageId: string, parentId: string | null) {
-  if (!parentId) return true
-  return parentId !== pageId && !getPageDescendantIds(state, pageId).has(parentId)
-}
-
-export function getPageDepth(state: LinkPageState, page: LinkPage) {
-  let depth = 0
-  let parentId = page.parentId
-  const visited = new Set([page.id])
-
-  while (parentId && !visited.has(parentId)) {
-    visited.add(parentId)
-    depth += 1
-    parentId = state.pages.find((candidate) => candidate.id === parentId)?.parentId ?? null
-  }
-
-  return depth
-}
-
-export function getOrderedPageTree(state: LinkPageState) {
-  const ordered: LinkPage[] = []
-  const visited = new Set<string>()
-
-  const visit = (parentId: string | null) => {
-    const children = state.pages
-      .filter((page) => page.parentId === parentId)
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-    for (const child of children) {
-      if (visited.has(child.id)) continue
-      visited.add(child.id)
-      ordered.push(child)
-      visit(child.id)
-    }
-  }
-
-  visit(null)
-  return ordered
-}
-
-function getPageLineage(state: LinkPageState, page: LinkPage) {
-  const lineage: LinkPage[] = []
-  let current: LinkPage | undefined = page
-  const visited = new Set<string>()
-
-  while (current && !visited.has(current.id)) {
-    visited.add(current.id)
-    lineage.unshift(current)
-    current = current.parentId ? state.pages.find((candidate) => candidate.id === current?.parentId) : undefined
-  }
-
-  return lineage
-}
-
-export function getNavigationPages(state: LinkPageState, page: LinkPage) {
-  const lineage = getPageLineage(state, page).filter((item) => item.status === 'published')
-  const siblings = state.pages
-    .filter((item) => item.parentId === page.parentId && item.status === 'published')
-    .sort((a, b) => a.sortOrder - b.sortOrder)
-  const children = state.pages
-    .filter((item) => item.parentId === page.id && item.status === 'published')
-    .sort((a, b) => a.sortOrder - b.sortOrder)
-  const unique = new Map<string, LinkPage>()
-  for (const item of [...lineage, ...siblings, ...children]) unique.set(item.id, item)
-  return [...unique.values()]
-}
+export {
+  canSetPageParent,
+  createPageTreeIndex,
+  getAncestorIds,
+  getOrderedPageTree,
+  getPageDepth,
+  getPageDescendantIds,
+  getVisibleTreeRows,
+} from './tree'
+export { getInboundPageReferences, getNavigationPages, resolveDestination } from './navigation'

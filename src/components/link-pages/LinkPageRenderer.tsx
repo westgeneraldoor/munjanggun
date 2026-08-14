@@ -11,15 +11,18 @@ import {
   LinkBlock,
   LinkItem,
   LinkPage,
+  LinkPageState,
   VideoItem,
   isValidHttpUrl,
 } from '@/lib/link-pages/model'
+import { resolveDestination } from '@/lib/link-pages/navigation'
 import styles from './LinkPageRenderer.module.css'
 
 type NavigationPage = Pick<LinkPage, 'id' | 'slug' | 'title'>
 
 export type LinkPageRendererProps = {
   page: LinkPage
+  state: LinkPageState
   navigationPages: NavigationPage[]
   surface: 'public' | 'preview'
   onNavigate?: (pageId: string) => void
@@ -84,27 +87,35 @@ function handlePreviewLink(event: MouseEvent<HTMLAnchorElement>, surface: 'publi
 
 function SingleLinkBlock({
   block,
+  state,
   surface,
   onInteract,
+  onNavigate,
 }: {
   block: Extract<LinkBlock, { content: { kind: 'singleLink' } }> | LinkBlock
+  state: LinkPageState
   surface: 'public' | 'preview'
   onInteract?: (itemId?: string) => void
+  onNavigate?: (pageId: string) => void
 }) {
   if (block.content.kind !== 'singleLink') return null
   const content = block.content
-  const valid = isValidHttpUrl(content.url)
+  const resolved = resolveDestination(state, content.destination ?? { kind: 'external', url: content.url ?? '' })
+  const valid = Boolean(resolved)
   return (
     <a
       className={`${styles.singleLink} ${styles[`single${content.layout}`]} ${content.highlighted ? styles.highlighted : ''}`}
-      href={valid ? content.url : '#'}
-      target={surface === 'public' && valid ? '_blank' : undefined}
+      href={resolved?.href ?? '#'}
+      target={surface === 'public' && resolved?.external ? '_blank' : undefined}
       rel="noreferrer"
       aria-disabled={!valid}
       onClick={(event) => {
         handlePreviewLink(event, surface)
         if (!valid) event.preventDefault()
-        else onInteract?.()
+        else {
+          if (resolved?.pageId && onNavigate) onNavigate(resolved.pageId)
+          onInteract?.()
+        }
       }}
     >
       <AssetImage asset={content.image} fallbackUrl={content.imageUrl} alt="" className={styles.linkImage} />
@@ -125,12 +136,16 @@ function SingleLinkBlock({
 
 function GroupLinkBlock({
   block,
+  state,
   surface,
   onInteract,
+  onNavigate,
 }: {
   block: LinkBlock
+  state: LinkPageState
   surface: 'public' | 'preview'
   onInteract?: (itemId?: string) => void
+  onNavigate?: (pageId: string) => void
 }) {
   const [expanded, setExpanded] = useState(false)
   if (block.content.kind !== 'groupLink') return null
@@ -141,17 +156,21 @@ function GroupLinkBlock({
       {content.title ? <h2>{content.title}</h2> : null}
       <div className={`${styles.linkGroup} ${styles[`group${content.layout}`]}`}>
         {visibleItems.map((item: LinkItem) => {
-          const valid = isValidHttpUrl(item.url)
+          const resolved = resolveDestination(state, item.destination ?? { kind: 'external', url: item.url ?? '' })
+          const valid = Boolean(resolved)
           return (
             <a
-              href={valid ? item.url : '#'}
+              href={resolved?.href ?? '#'}
               key={item.id}
-              target={surface === 'public' && valid ? '_blank' : undefined}
+              target={surface === 'public' && resolved?.external ? '_blank' : undefined}
               rel="noreferrer"
               onClick={(event) => {
                 handlePreviewLink(event, surface)
                 if (!valid) event.preventDefault()
-                else onInteract?.(item.id)
+                else {
+                  if (resolved?.pageId && onNavigate) onNavigate(resolved.pageId)
+                  onInteract?.(item.id)
+                }
               }}
             >
               <AssetImage asset={item.image} fallbackUrl={item.imageUrl} alt="" className={styles.groupImage} />
@@ -193,7 +212,7 @@ function TextBlock({ block }: { block: LinkBlock }) {
   return inner
 }
 
-function GalleryBlock({ block, surface, onInteract }: { block: LinkBlock; surface: 'public' | 'preview'; onInteract?: (itemId?: string) => void }) {
+function GalleryBlock({ block, state, surface, onInteract, onNavigate }: { block: LinkBlock; state: LinkPageState; surface: 'public' | 'preview'; onInteract?: (itemId?: string) => void; onNavigate?: (pageId: string) => void }) {
   const galleryRef = useRef<HTMLDivElement | null>(null)
   const content = block.content.kind === 'gallery' ? block.content : null
 
@@ -217,14 +236,16 @@ function GalleryBlock({ block, surface, onInteract }: { block: LinkBlock; surfac
         <div ref={galleryRef} className={`${styles.gallery} ${styles[`gallery${content.layout}`]} ${content.keepRatio ? styles.galleryKeepRatio : ''}`}>
           {content.items.map((item: GalleryItem) => {
             const image = <AssetImage asset={item.asset} fallbackUrl={item.imageUrl} alt={item.alt || '갤러리 이미지'} />
-            return item.url && isValidHttpUrl(item.url) ? (
+            const resolved = resolveDestination(state, item.destination ?? (item.url ? { kind: 'external', url: item.url } : undefined))
+            return resolved ? (
               <a
                 key={item.id}
-                href={item.url}
-                target={surface === 'public' ? '_blank' : undefined}
+                href={resolved.href}
+                target={surface === 'public' && resolved.external ? '_blank' : undefined}
                 rel="noreferrer"
                 onClick={(event) => {
                   handlePreviewLink(event, surface)
+                  if (resolved.pageId && onNavigate) onNavigate(resolved.pageId)
                   onInteract?.(item.id)
                 }}
               >
@@ -322,18 +343,22 @@ function FileShareBlock({ block, onInteract }: { block: LinkBlock; onInteract?: 
 
 function BlockRenderer({
   block,
+  state,
   surface,
   onInteract,
+  onNavigate,
 }: {
   block: LinkBlock
+  state: LinkPageState
   surface: 'public' | 'preview'
   onInteract?: (itemId?: string) => void
+  onNavigate?: (pageId: string) => void
 }) {
   if (!block.enabled || block.kind === 'profile') return null
-  if (block.content.kind === 'singleLink') return <SingleLinkBlock block={block} surface={surface} onInteract={onInteract} />
-  if (block.content.kind === 'groupLink') return <GroupLinkBlock block={block} surface={surface} onInteract={onInteract} />
+  if (block.content.kind === 'singleLink') return <SingleLinkBlock block={block} state={state} surface={surface} onInteract={onInteract} onNavigate={onNavigate} />
+  if (block.content.kind === 'groupLink') return <GroupLinkBlock block={block} state={state} surface={surface} onInteract={onInteract} onNavigate={onNavigate} />
   if (block.content.kind === 'text') return <TextBlock block={block} />
-  if (block.content.kind === 'gallery') return <GalleryBlock block={block} surface={surface} onInteract={onInteract} />
+  if (block.content.kind === 'gallery') return <GalleryBlock block={block} state={state} surface={surface} onInteract={onInteract} onNavigate={onNavigate} />
   if (block.content.kind === 'video') return <VideoBlock block={block} surface={surface} onInteract={onInteract} />
   if (block.content.kind === 'fileShare') return <FileShareBlock block={block} onInteract={onInteract} />
   return null
@@ -341,6 +366,7 @@ function BlockRenderer({
 
 export function LinkPageRenderer({
   page,
+  state,
   navigationPages,
   surface,
   onNavigate,
@@ -356,20 +382,28 @@ export function LinkPageRenderer({
     [page.blocks],
   )
   const profileContent = profile?.content.kind === 'profile' ? profile.content : null
-  const fontClass = styles[`font${page.theme.fontKey}`]
+  const fontClass = styles[`type${page.theme.typographyPreset}`]
   const utilityBar = (
     <div className={styles.utilityBar}>
-      <button type="button" aria-label="페이지 공유" onClick={onShare}><Share2 size={18} /></button>
-      <button type="button" aria-label="알림"><Bell size={18} /></button>
+      {page.theme.showShare ? <button type="button" aria-label="페이지 공유" onClick={onShare}><Share2 size={18} /></button> : null}
+      {page.theme.showSubscribe ? <button type="button" aria-label="알림"><Bell size={18} /></button> : null}
     </div>
   )
 
   return (
     <article
-      className={`${styles.page} ${styles[surface]} ${fontClass}`}
-      style={{ '--link-page-bg': page.theme.backgroundColor, '--link-page-button': page.theme.buttonColor } as React.CSSProperties}
+      className={`${styles.page} ${styles[surface]} ${fontClass} ${styles[`shape${page.theme.buttonShape}`]} ${styles[`action${page.theme.buttonAction}`]} ${styles[`menu${page.theme.topMenuStyle}`]}`}
+      style={{
+        '--link-page-bg': page.theme.backgroundColor,
+        '--link-page-surface': page.theme.surfaceColor,
+        '--link-page-text': page.theme.textColor,
+        '--link-page-button': page.theme.buttonColor,
+        '--link-page-button-text': page.theme.buttonTextColor,
+      } as React.CSSProperties}
       data-testid={`link-page-renderer-${surface}`}
     >
+      {page.theme.backgroundImage || page.theme.backgroundImageUrl ? <AssetImage asset={page.theme.backgroundImage} fallbackUrl={page.theme.backgroundImageUrl} alt="" className={styles.themeBackground} /> : null}
+      {page.theme.logoMode === 'custom' && (page.theme.logo || page.theme.logoUrl) ? <AssetImage asset={page.theme.logo} fallbackUrl={page.theme.logoUrl} alt="" className={styles.themeLogo} /> : null}
       {profileContent ? (
         <header className={`${styles.profile} ${styles[`profile${profileContent.layout}`]} ${styles[`profileSize${profileContent.size}`]}`}>
           {utilityBar}
@@ -384,7 +418,7 @@ export function LinkPageRenderer({
         </header>
       ) : utilityBar}
 
-      {navigationPages.length > 1 ? (
+      {page.theme.showNavigation && navigationPages.length > 1 ? (
         <nav className={styles.pageNavigation} aria-label="자료 페이지">
           {navigationPages.map((item) => (
             <Link
@@ -398,7 +432,7 @@ export function LinkPageRenderer({
                 }
               }}
             >
-              {item.id === navigationPages[0].id ? '홈화면' : item.title.replace(' 상담 자료', '')}
+              {item.title}
             </Link>
           ))}
         </nav>
@@ -409,7 +443,9 @@ export function LinkPageRenderer({
           <BlockRenderer
             key={block.id}
             block={block}
+            state={state}
             surface={surface}
+            onNavigate={onNavigate}
             onInteract={(itemId) => onBlockInteract?.(block.id, itemId)}
           />
         ))}
