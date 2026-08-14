@@ -14,9 +14,11 @@ import { readUploadReviewChecks, type UploadReviewChecks } from '@/lib/content-a
 import { createPlatformClient } from '@/lib/supabase/platform-server'
 import { createShowroomAdminClient } from '@/lib/supabase/showroom-admin-server'
 import type { Database, Json } from '@/types/database'
+import { assetLibraryRpcArgs, type AssetLibraryQuery } from './query-state'
 
 const MAX_FILES_PER_UPLOAD = 12
 const MAX_UPLOAD_TOTAL_BYTES = 120 * 1024 * 1024
+const CONTENT_ASSET_ID_PATTERN = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i
 
 type ContentAssetInsert = Database['showroom']['Tables']['content_assets']['Insert']
 type ContentAssetFileInsert = Database['showroom']['Tables']['content_asset_files']['Insert']
@@ -80,6 +82,13 @@ export type ArchiveContentAssetsResult = {
   ok: boolean
   message: string
   results: ArchiveContentAssetItemResult[]
+}
+
+export type PrepareContentAssetSearchSelectionResult = {
+  ok: boolean
+  message: string
+  totalCount?: number
+  selectionToken?: string
 }
 
 function cleanText(value: FormDataEntryValue | string | null | undefined) {
@@ -573,17 +582,74 @@ async function invokeArchiveRpc(assetIds: string[], actorId: string, restore: bo
   })
 }
 
+async function invokeArchiveSearchResultsRpc(
+  query: AssetLibraryQuery,
+  expectedCount: number,
+  expectedToken: string,
+  actorId: string,
+  restore: boolean,
+) {
+  const showroom = createShowroomAdminClient() as unknown as {
+    rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>
+  }
+  const args = assetLibraryRpcArgs(query)
+  return showroom.rpc('archive_content_asset_search_results_safely', {
+    p_search: args.p_search,
+    p_view: args.p_view,
+    p_category: args.p_category,
+    p_product_type: args.p_product_type,
+    p_space_type: args.p_space_type,
+    p_region: args.p_region,
+    p_usage_purpose: args.p_usage_purpose,
+    p_tag_id: args.p_tag_id,
+    p_expected_count: expectedCount,
+    p_expected_token: expectedToken,
+    p_actor_id: actorId,
+    p_restore: restore,
+  })
+}
+
+async function invokePrepareSearchSelectionRpc(query: AssetLibraryQuery) {
+  const showroom = createShowroomAdminClient() as unknown as {
+    rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>
+  }
+  return showroom.rpc('prepare_content_asset_search_results_selection', assetLibraryRpcArgs(query))
+}
+
+export async function prepareContentAssetSearchSelection(
+  query: AssetLibraryQuery,
+): Promise<PrepareContentAssetSearchSelectionResult> {
+  try {
+    await requireAdministrator()
+    const { data, error } = await invokePrepareSearchSelectionRpc(query)
+    if (error || !data || typeof data !== 'object') {
+      return { ok: false, message: '검색 결과를 다시 확인하지 못했습니다.' }
+    }
+
+    const payload = data as Record<string, unknown>
+    const totalCount = Number(payload.totalCount)
+    const selectionToken = typeof payload.selectionToken === 'string' ? payload.selectionToken : ''
+    if (!Number.isSafeInteger(totalCount) || totalCount < 1 || !/^[0-9a-f]{32}$/.test(selectionToken)) {
+      return { ok: false, message: '검색 결과가 바뀌었거나 선택 범위를 확인할 수 없습니다. 새로고침 후 다시 선택해 주세요.' }
+    }
+
+    return { ok: true, message: `${totalCount}장의 검색 결과를 선택했습니다.`, totalCount, selectionToken }
+  } catch {
+    return { ok: false, message: '검색 결과 전체를 선택하는 중 오류가 발생했습니다. 다시 시도해 주세요.' }
+  }
+}
+
 export async function archiveContentAssets(assetIds: string[]): Promise<ArchiveContentAssetsResult> {
   try {
     const actorId = await requireAdministrator()
-    const ids = [...new Set(assetIds.filter(value => /^[0-9a-f]{8}-[0-9a-f-]{35}$/i.test(value)))].slice(0, 300)
-    if (ids.length === 0) return { ok: false, message: '보관할 사진을 선택해 주세요.', results: [] }
+    const ids = [...new Set(assetIds.filter(value => CONTENT_ASSET_ID_PATTERN.test(value)))].slice(0, 300)
+    if (ids.length === 0) return { ok: false, message: '휴지통으로 이동할 사진을 선택해 주세요.', results: [] }
 
     const { data, error } = await invokeArchiveRpc(ids, actorId, false)
-    if (error) return { ok: false, message: '사진 보관 여부를 확인하지 못했습니다.', results: [] }
+    if (error) return { ok: false, message: '사진의 휴지통 이동 가능 여부를 확인하지 못했습니다.', results: [] }
     const rawResults = (data as { results?: unknown } | null)?.results
     const results = Array.isArray(rawResults) ? rawResults.filter(isArchiveResult) : []
-    if (results.length !== ids.length) return { ok: false, message: '사진 보관 결과를 안전하게 확인하지 못했습니다.', results: [] }
+    if (results.length !== ids.length) return { ok: false, message: '사진 휴지통 이동 결과를 안전하게 확인하지 못했습니다.', results: [] }
 
     revalidatePath('/admin/platform/assets')
     const archived = results.filter(item => item.changed).length
@@ -591,19 +657,19 @@ export async function archiveContentAssets(assetIds: string[]): Promise<ArchiveC
     return {
       ok: true,
       message: blocked > 0
-        ? `${archived}장을 보관했습니다. ${blocked}장은 사용 중이라 보관하지 않았습니다.`
-        : `${archived}장을 보관했습니다. 사진 파일은 삭제하지 않았습니다.`,
+        ? `${archived}장을 휴지통으로 이동했습니다. ${blocked}장은 사용 중이라 이동하지 않았습니다.`
+        : `${archived}장을 휴지통으로 이동했습니다. 사진 파일은 삭제하지 않았습니다.`,
       results,
     }
   } catch {
-    return { ok: false, message: '사진 보관 중 오류가 발생했습니다. 다시 시도해 주세요.', results: [] }
+    return { ok: false, message: '사진을 휴지통으로 이동하는 중 오류가 발생했습니다. 다시 시도해 주세요.', results: [] }
   }
 }
 
 export async function restoreContentAssets(assetIds: string[]): Promise<ArchiveContentAssetsResult> {
   try {
     const actorId = await requireAdministrator()
-    const ids = [...new Set(assetIds.filter(value => /^[0-9a-f]{8}-[0-9a-f-]{35}$/i.test(value)))].slice(0, 300)
+    const ids = [...new Set(assetIds.filter(value => CONTENT_ASSET_ID_PATTERN.test(value)))].slice(0, 300)
     if (ids.length === 0) return { ok: false, message: '복원할 사진을 선택해 주세요.', results: [] }
 
     const { data, error } = await invokeArchiveRpc(ids, actorId, true)
@@ -616,5 +682,62 @@ export async function restoreContentAssets(assetIds: string[]): Promise<ArchiveC
     return { ok: true, message: `${results.filter(item => item.changed).length}장을 복원했습니다.`, results }
   } catch {
     return { ok: false, message: '사진 복원 중 오류가 발생했습니다. 다시 시도해 주세요.', results: [] }
+  }
+}
+
+export async function archiveContentAssetSearchResults(
+  query: AssetLibraryQuery,
+  expectedCount: number,
+  expectedToken: string,
+  restore: boolean,
+): Promise<ArchiveContentAssetsResult> {
+  try {
+    const actorId = await requireAdministrator()
+    if (!Number.isSafeInteger(expectedCount) || expectedCount < 1 || !/^[0-9a-f]{32}$/.test(expectedToken)) {
+      return { ok: false, message: '검색 결과 수를 다시 확인해 주세요.', results: [] }
+    }
+
+    const { data, error } = await invokeArchiveSearchResultsRpc(query, expectedCount, expectedToken, actorId, restore)
+    if (error || !data || typeof data !== 'object') {
+      return { ok: false, message: '검색 결과의 사진 상태를 확인하지 못했습니다.', results: [] }
+    }
+
+    const payload = data as Record<string, unknown>
+    const rawResults = payload.results
+    const results = Array.isArray(rawResults) ? rawResults.filter(isArchiveResult) : []
+    const currentCount = Number(payload.currentCount)
+    if (payload.ok !== true) {
+      return {
+        ok: false,
+        message: Number.isSafeInteger(currentCount)
+          ? `검색 결과가 ${currentCount}장으로 바뀌었습니다. 현재 결과를 다시 확인해 주세요.`
+          : '검색 결과가 바뀌었습니다. 현재 결과를 다시 확인해 주세요.',
+        results: [],
+      }
+    }
+    if (results.length !== expectedCount) {
+      return { ok: false, message: '전체 검색 결과 처리 범위를 안전하게 확인하지 못했습니다.', results: [] }
+    }
+
+    revalidatePath('/admin/platform/assets')
+    const changed = results.filter(item => item.changed).length
+    const blocked = results.filter(item => item.reason === 'in_use').length
+    return {
+      ok: true,
+      message: restore
+        ? `${changed}장을 복원했습니다.`
+        : blocked > 0
+          ? `${changed}장을 휴지통으로 이동했습니다. ${blocked}장은 사용 중이라 이동하지 않았습니다.`
+          : `${changed}장을 휴지통으로 이동했습니다. 사진 파일은 삭제하지 않았습니다.`,
+      results,
+    }
+  } catch {
+    return {
+      ok: false,
+      message: restore
+        ? '검색 결과를 복원하는 중 오류가 발생했습니다.'
+        : '검색 결과를 휴지통으로 이동하는 중 오류가 발생했습니다.',
+      results: [],
+    }
   }
 }

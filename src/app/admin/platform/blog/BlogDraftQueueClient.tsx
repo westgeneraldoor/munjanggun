@@ -1,11 +1,13 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
-import Link from 'next/link'
-import { Archive, ArchiveRestore, Eye, FilePlus2, Search, ShieldAlert } from 'lucide-react'
+import { Eye, FilePlus2, Search, ShieldAlert } from 'lucide-react'
+import { IntentPrefetchLink } from '@/components/admin/IntentPrefetchLink'
 import {
   PlatformLinkButton,
+  PlatformButton,
   PlatformList,
+  PlatformModal,
   PlatformPageHeader,
   PlatformPanel,
   PlatformSegmentedControl,
@@ -14,55 +16,28 @@ import {
   PlatformTable,
   type PlatformStatusBadgeTone,
 } from '@/components/platform/ui'
-import type { BlogContentCategory, BlogMediaUsageStatus, BlogPostStatus } from '@/types/database'
+import type { BlogContentCategory, BlogPostStatus } from '@/types/database'
 import styles from './blog-draft-queue.module.css'
-import { updateBlogPostStatus } from './[id]/actions'
+import { permanentlyDeleteBlogPost, retryPendingBlogMediaCleanup, updateBlogPostStatus } from './[id]/actions'
 
 export type BlogDraftQueueRow = {
   id: string
   title: string
-  slug: string
   status: BlogPostStatus
   category: BlogContentCategory
-  targetQuestion: string | null
-  primaryKeyword: string | null
-  serviceArea: string | null
-  productType: string | null
-  summaryAnswer: string | null
-  seoTitle: string | null
-  metaDescription: string | null
-  mediaMissingReason: string | null
-  mediaSummary: {
-    total: number
-    byStatus: Record<BlogMediaUsageStatus, number>
-    altMissing: boolean
-    coverReady: boolean
-    approvalGateIncomplete: boolean
-    hasCandidate: boolean
-    hasApprovedOrPublished: boolean
-  }
   updatedAt: string
-  createdAt: string
-  latestEvent: {
-    type: string
-    memo: string | null
-    createdAt: string
-  } | null
-  risks: {
-    forbiddenExpression: boolean
-    mediaApprovalNeeded: boolean
-    altMissing: boolean
-    ctaMissing: boolean
-  }
 }
 
 type StatusFilter = 'all' | 'draft' | 'published' | 'archived'
+type QueueAction =
+  | { kind: 'trash'; row: BlogDraftQueueRow }
+  | { kind: 'permanent-delete'; row: BlogDraftQueueRow }
 
 const STATUS_TABS: Array<{ key: StatusFilter; label: string }> = [
   { key: 'all', label: '전체' },
   { key: 'draft', label: '초안' },
   { key: 'published', label: '발행' },
-  { key: 'archived', label: '보관' },
+  { key: 'archived', label: '휴지통' },
 ]
 
 const CATEGORY_LABEL: Record<BlogContentCategory, string> = {
@@ -118,30 +93,72 @@ export default function BlogDraftQueueClient({
   initialRows: BlogDraftQueueRow[]
   loadError: string | null
 }) {
+  const [rows, setRows] = useState(initialRows)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
-  const [, setActionMessage] = useState<string | null>(null)
+  const [actionMessage, setActionMessage] = useState<{ ok: boolean; text: string } | null>(null)
+  const [queueAction, setQueueAction] = useState<QueueAction | null>(null)
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
   const [isPending, startTransition] = useTransition()
   const [search, setSearch] = useState('')
   const filteredRows = useMemo(() => {
     const keyword = search.trim().toLowerCase()
-    return initialRows
+    return rows
       .filter(row => matchesStatusFilter(row, statusFilter))
       .filter(row => !keyword || getSearchHaystack(row).includes(keyword))
       .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)))
-  }, [initialRows, search, statusFilter])
+  }, [rows, search, statusFilter])
 
   const updateStatus = (next: StatusFilter) => {
     setStatusFilter(next)
   }
 
-  const changeStatus = (id: string, status: 'archived' | 'reviewing', currentStatus: BlogPostStatus) => {
-    if (status === 'archived' && !window.confirm(currentStatus === 'published'
-      ? '발행 글을 보관하면 현재 공개 URL과 검색 노출이 사라집니다. 글과 자산은 삭제되지 않습니다. 보관할까요?'
-      : '글은 삭제되지 않으며 나중에 초안으로 복원할 수 있습니다. 보관할까요?')) return
+  const openQueueAction = (action: QueueAction) => {
+    setActionMessage(null)
+    setDeleteConfirmation('')
+    setQueueAction(action)
+  }
+
+  const closeQueueAction = () => {
+    if (isPending) return
+    setQueueAction(null)
+    setDeleteConfirmation('')
+  }
+
+  const changeStatus = (row: BlogDraftQueueRow, status: 'archived' | 'reviewing') => {
+    setActionMessage(null)
     startTransition(async () => {
-      const result = await updateBlogPostStatus(id, status)
-      setActionMessage(result.message)
-      if (result.ok) window.location.reload()
+      const result = await updateBlogPostStatus(row.id, status)
+      setActionMessage({ ok: result.ok, text: result.message })
+      if (!result.ok) return
+
+      setRows(current => current.map(item => item.id === row.id
+        ? { ...item, status, updatedAt: new Date().toISOString() }
+        : item))
+      setQueueAction(null)
+      setDeleteConfirmation('')
+    })
+  }
+
+  const permanentlyDelete = () => {
+    if (!queueAction || queueAction.kind !== 'permanent-delete') return
+    const { row } = queueAction
+    setActionMessage(null)
+    startTransition(async () => {
+      const result = await permanentlyDeleteBlogPost(row.id, deleteConfirmation)
+      setActionMessage({ ok: result.ok, text: result.message })
+      if (!result.ok) return
+
+      setRows(current => current.filter(item => item.id !== row.id))
+      setQueueAction(null)
+      setDeleteConfirmation('')
+    })
+  }
+
+  const retryCleanup = () => {
+    setActionMessage(null)
+    startTransition(async () => {
+      const result = await retryPendingBlogMediaCleanup()
+      setActionMessage({ ok: result.ok, text: result.message })
     })
   }
 
@@ -178,8 +195,23 @@ export default function BlogDraftQueueClient({
           value={statusFilter}
           onChange={updateStatus}
         />
+        {statusFilter === 'archived' ? (
+          <PlatformButton type="button" variant="secondary" size="sm" onClick={retryCleanup} disabled={isPending}>
+            공개 사진 정리 재시도
+          </PlatformButton>
+        ) : null}
 
       </PlatformPanel>
+
+      {actionMessage ? (
+        <div
+          className={styles.actionMessage}
+          data-tone={actionMessage.ok ? 'success' : 'error'}
+          role={actionMessage.ok ? 'status' : 'alert'}
+        >
+          {actionMessage.text}
+        </div>
+      ) : null}
 
       <div className={styles.queueLayout}>
         <section className={styles.queueListPanel}>
@@ -223,20 +255,22 @@ export default function BlogDraftQueueClient({
                         className={styles.row}
                       >
                         <td className={styles.titleCell}>
-                          <Link
+                          <IntentPrefetchLink
                             href={`/admin/platform/blog/${row.id}`}
                             className={styles.titleLink}
-                            prefetch={false}
                             aria-label={`${row.title} 에디터 열기`}
                           >
                             <strong>{row.title}</strong>
-                          </Link>
+                          </IntentPrefetchLink>
                           <div className={styles.rowActions} aria-label={`${row.title} 작업`}>
-                            <Link href={`/admin/platform/blog/${row.id}`} aria-label={`${row.title} 편집`}>편집</Link>
-                            <Link href={`/admin/platform/blog/${row.id}/preview`} aria-label={`${row.title} 미리보기`}><Eye size={15} aria-hidden="true" />미리보기</Link>
+                            <IntentPrefetchLink href={`/admin/platform/blog/${row.id}`} aria-label={`${row.title} 편집`}>편집</IntentPrefetchLink>
+                            <IntentPrefetchLink href={`/admin/platform/blog/${row.id}/preview`} aria-label={`${row.title} 미리보기`}><Eye size={15} aria-hidden="true" />미리보기</IntentPrefetchLink>
                             {row.status === 'archived'
-                              ? <button type="button" onClick={() => changeStatus(row.id, 'reviewing', row.status)} disabled={isPending}><ArchiveRestore size={15} aria-hidden="true" />복원</button>
-                              : <button type="button" onClick={() => changeStatus(row.id, 'archived', row.status)} disabled={isPending}><Archive size={15} aria-hidden="true" />보관</button>}
+                              ? <>
+                                  <button type="button" onClick={() => changeStatus(row, 'reviewing')} disabled={isPending}>복원</button>
+                                  <button type="button" className={styles.dangerAction} onClick={() => openQueueAction({ kind: 'permanent-delete', row })} disabled={isPending}>영구삭제</button>
+                                </>
+                              : <button type="button" onClick={() => openQueueAction({ kind: 'trash', row })} disabled={isPending}>삭제</button>}
                           </div>
                         </td>
                         <td>
@@ -256,10 +290,9 @@ export default function BlogDraftQueueClient({
               <PlatformList className={styles.mobileList} aria-label="블로그 콘텐츠 모바일 목록">
                 {filteredRows.map(row => (
                   <li key={row.id} className={styles.mobileCard}>
-                    <Link
+                    <IntentPrefetchLink
                       href={`/admin/platform/blog/${row.id}`}
                       className={styles.mobileCardButton}
-                      prefetch={false}
                       aria-label={`${row.title} 에디터 열기`}
                     >
                       <div className={styles.mobileCardTop}>
@@ -270,13 +303,16 @@ export default function BlogDraftQueueClient({
                       </div>
                       <strong>{row.title}</strong>
                       <span className={styles.mobileCategory}>{CATEGORY_LABEL[row.category]}</span>
-                    </Link>
+                    </IntentPrefetchLink>
                     <div className={styles.mobileRowActions} aria-label={`${row.title} 작업`}>
-                      <Link href={`/admin/platform/blog/${row.id}`} aria-label={`${row.title} 편집`}>편집</Link>
-                      <Link href={`/admin/platform/blog/${row.id}/preview`} aria-label={`${row.title} 미리보기`}><Eye size={15} aria-hidden="true" />미리보기</Link>
+                      <IntentPrefetchLink href={`/admin/platform/blog/${row.id}`} aria-label={`${row.title} 편집`}>편집</IntentPrefetchLink>
+                      <IntentPrefetchLink href={`/admin/platform/blog/${row.id}/preview`} aria-label={`${row.title} 미리보기`}><Eye size={15} aria-hidden="true" />미리보기</IntentPrefetchLink>
                       {row.status === 'archived'
-                        ? <button type="button" onClick={() => changeStatus(row.id, 'reviewing', row.status)} disabled={isPending}><ArchiveRestore size={15} aria-hidden="true" />복원</button>
-                        : <button type="button" onClick={() => changeStatus(row.id, 'archived', row.status)} disabled={isPending}><Archive size={15} aria-hidden="true" />보관</button>}
+                        ? <>
+                            <button type="button" onClick={() => changeStatus(row, 'reviewing')} disabled={isPending}>복원</button>
+                            <button type="button" className={styles.dangerAction} onClick={() => openQueueAction({ kind: 'permanent-delete', row })} disabled={isPending}>영구삭제</button>
+                          </>
+                        : <button type="button" onClick={() => openQueueAction({ kind: 'trash', row })} disabled={isPending}>삭제</button>}
                     </div>
                   </li>
                 ))}
@@ -286,6 +322,63 @@ export default function BlogDraftQueueClient({
         </section>
 
       </div>
+
+      <PlatformModal
+        isOpen={Boolean(queueAction)}
+        title={queueAction?.kind === 'permanent-delete' ? '글을 영구삭제할까요?' : '글을 휴지통으로 이동할까요?'}
+        description={queueAction?.kind === 'permanent-delete'
+          ? '영구삭제한 글은 복원할 수 없습니다.'
+          : queueAction?.row.status === 'published'
+            ? '발행 글을 삭제하면 현재 공개 URL과 검색 노출이 사라집니다.'
+            : '휴지통으로 이동한 글은 나중에 복원할 수 있습니다.'}
+        onClose={closeQueueAction}
+        closeDisabled={isPending}
+        closeOnBackdrop
+        showCloseButton
+        footer={queueAction?.kind === 'permanent-delete' ? (
+          <>
+            <button type="button" className={styles.modalButton} onClick={closeQueueAction} disabled={isPending}>취소</button>
+            <button
+              type="button"
+              className={`${styles.modalButton} ${styles.dangerButton}`}
+              onClick={permanentlyDelete}
+              disabled={isPending || deleteConfirmation.trim() !== queueAction.row.title.trim()}
+            >
+              {isPending ? '삭제 중' : '영구삭제'}
+            </button>
+          </>
+        ) : (
+          <>
+            <button type="button" className={styles.modalButton} onClick={closeQueueAction} disabled={isPending}>취소</button>
+            <button
+              type="button"
+              className={`${styles.modalButton} ${styles.dangerButton}`}
+              onClick={() => queueAction && changeStatus(queueAction.row, 'archived')}
+              disabled={isPending}
+            >
+              {isPending ? '이동 중' : '휴지통으로 이동'}
+            </button>
+          </>
+        )}
+      >
+        {queueAction?.kind === 'permanent-delete' ? (
+          <label className={styles.confirmationField}>
+            <span>확인하려면 글 제목을 그대로 입력하세요.</span>
+            <strong>{queueAction.row.title}</strong>
+            <input
+              type="text"
+              value={deleteConfirmation}
+              onChange={event => setDeleteConfirmation(event.target.value)}
+              disabled={isPending}
+              autoComplete="off"
+              data-modal-initial-focus
+            />
+          </label>
+        ) : null}
+        {actionMessage && !actionMessage.ok ? (
+          <p className={styles.modalError} role="alert">{actionMessage.text}</p>
+        ) : null}
+      </PlatformModal>
     </div>
   )
 }

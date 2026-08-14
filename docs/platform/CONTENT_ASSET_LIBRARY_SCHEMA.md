@@ -405,3 +405,18 @@ Aligned remote versions are `20260715090227`, `20260715233310`, `20260715235109`
 `20260720074955` removes bucket-wide anon `SELECT` policies for `blog-media` and `content-assets-public`, adds the `blog_editor_save_leases(actor_id)` index, and keeps leases service-role-only. Verified behavior is known public URL HTTP 200, anon listing 0 rows, and private signed URL HTTP 200.
 
 The detach RPC locks an unpublished `reviewing` post, requires exactly one active non-cover/non-body-linked private bridge and one post usage, removes only that usage, rejects the bridge, and writes audit events. The first post remains `reviewing`, `published_at = null`, with 27 blocks, 2 image blocks, and 3 active private media. Detaching `mg-3panel-thumbnail-basic-001` preserved its central asset and all 3 file rows; no publish, public promotion, or Storage deletion occurred.
+
+## 11. 2026-07-23 휴지통 상태 보존 계약
+
+`20260723070034_preserve_content_asset_trash_state_v2.sql`은 적용 전 migration 코드다.
+
+- `library_state_before_archive`와 `trashed_at`을 기록한다.
+- `available -> archived -> available`뿐 아니라 `hidden -> archived -> hidden`을 보장한다.
+- 이전 상태가 기록되기 전의 legacy 휴지통 행은 노출을 피하기 위해 보수적으로 `hidden`으로 복원한다.
+- archive RPC는 asset, blog media, usage rows를 잠근 뒤 참조를 다시 계산한다.
+- 발행 글 대표사진·본문사진을 포함해 참조가 하나라도 있으면 휴지통 이동을 차단한다.
+- 일반 관리자 Data API의 `content_assets DELETE`와 `library_state` 직접 `UPDATE` 권한을 제거한다.
+- Storage 원본이나 파생본은 이 휴지통 동작에서 삭제하지 않는다.
+- 이미 Production에 적용된 `20260723062040_allow_hidden_content_asset_draft_references.sql`의 available/hidden draft allowlist를 유지하며 중복 정의하거나 되돌리지 않는다.
+
+Production/shared DB 적용과 실제 두 세션 참조 경쟁 검증은 별도 승인 게이트다.
