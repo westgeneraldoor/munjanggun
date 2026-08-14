@@ -70,6 +70,8 @@
     "test:showroom-image-policy-contract": "node scripts/test-showroom-image-policy-contract.mjs",
     "test:showroom-image-delivery-browser": "playwright test tests/showroom-image-delivery.spec.ts",
     "test:production-fixture-boundary": "node scripts/test-production-fixture-boundary.mjs",
+    "test:link-page-prototype": "node scripts/test-link-page-prototype.mjs",
+    "test:link-page-prototype-browser": "node scripts/run-playwright-e2e.mjs tests/link-page-prototype.spec.ts --project=chromium",
     "test:server-actions-origin": "node scripts/test-server-actions-origin-contract.mjs",
     "test:supabase-stabilization-migrations": "node scripts/test-supabase-stabilization-migrations.mjs",
     "test:official-asset-detach": "node scripts/test-official-asset-detach.mjs",
