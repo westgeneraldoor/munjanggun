@@ -36,9 +36,12 @@ export async function proxy(request: NextRequest) {
   }
 
   const isAdminPrivateMediaRoute = pathname.startsWith('/admin/platform/blog/media/')
-  const isAdminRoute = pathname.startsWith('/admin') && !isAdminPrivateMediaRoute
-  // Private media is deliberately excluded above so its route handler can
-  // authenticate and return a non-enumerating response itself.
+  const isAdminAssetPreviewRoute = /^\/admin\/platform\/assets\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/preview$/i.test(pathname)
+  const isSelfAuthorizedAdminMediaRoute = isAdminPrivateMediaRoute || isAdminAssetPreviewRoute
+  const isAdminRoute = pathname.startsWith('/admin') && !isSelfAuthorizedAdminMediaRoute
+  // Opaque media is deliberately excluded above so each route handler can
+  // authenticate and return a non-enumerating response itself without paying
+  // for the same administrator lookup twice per image.
   const isAdminPlatformRoute = isAdminRoute && pathname.startsWith('/admin/platform')
   const isAdminLoginRoute = pathname === '/admin/login'
   const isManagerRoute = pathname.startsWith('/manager')

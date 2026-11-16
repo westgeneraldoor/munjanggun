@@ -295,8 +295,26 @@ assert.match(assetActionsSource, /mergeContentAssetLabelsWithTags\(currentAsset\
 assert.match(blogEditorClientSource, /image\/gif/, 'blog editor file input must allow GIF selection')
 assert.match(actionsSource, /centralBrandMediaPublicationIssues/, 'approval and publish must enforce central claim state')
 assert.match(actionsSource, /centralBrandBlocker = centralBrandPublicationBlocker\(asset\.labels\)/, 'asset attachment must enforce central claim state')
-assert.match(actionsSource, /Promise\.allSettled\([\s\S]*rollbackPublishedMedia[\s\S]*cleanupPublicObjects/, 'publish compensation must attempt both rollback operations')
-assert.match(actionsSource, /if \(error\) throw new Error\(`공개 사진 정리 실패:/, 'public object cleanup errors must be surfaced')
-assert.match(actionsSource, /Promise\.allSettled\([\s\S]*rollbackPublishedPost/, 'publish compensation must verify post rollback too')
+assert.match(actionsSource, /\.rpc\('save_and_publish_blog_post'/, 'post, media, and audit publication changes must share one DB transaction')
+assert.match(
+  actionsSource,
+  /if \(publishError\)[\s\S]*resolveAmbiguousPublication[\s\S]*resolution\.kind === 'published'/,
+  'an ambiguous publication response must resolve the durable attempt before storage cleanup',
+)
+assert.match(
+  actionsSource,
+  /resolution\.kind === 'unknown'[\s\S]*공개 사진은 삭제하지 않았습니다/,
+  'unknown transaction outcomes must retain public objects instead of breaking a committed post',
+)
+assert.match(
+  actionsSource,
+  /return Boolean\(cleanupError \|\| ledgerError \|\| jobUpdateError\)/,
+  'storage, ledger, and cleanup-job failures must all remain visible to the administrator',
+)
+assert.doesNotMatch(
+  actionsSource,
+  /rollbackPublishedMedia|rollbackPublishedPost/,
+  'application-level DB compensation must not replace the atomic publication transaction',
+)
 
 console.log('official brand asset import contract passed')

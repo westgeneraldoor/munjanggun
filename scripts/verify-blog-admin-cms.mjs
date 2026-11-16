@@ -339,7 +339,7 @@ for (const tab of [
   "{ key: 'all', label: '전체' }",
   "{ key: 'draft', label: '초안' }",
   "{ key: 'published', label: '발행' }",
-  "{ key: 'archived', label: '보관' }",
+  "{ key: 'archived', label: '휴지통' }",
 ]) {
   assert.ok(queue.includes(tab), `queue must expose the simplified ${tab} filter`)
 }
@@ -361,7 +361,7 @@ for (const transition of [
 }
 assert.match(blogStatusTransitions, /toStatus === 'published'/, 'manual status changes must never publish')
 
-assert.match(queue, /<Link[\s\S]*?href=\{`\/admin\/platform\/blog\/\$\{row\.id\}`\}[\s\S]*?에디터 열기/)
+assert.match(queue, /<IntentPrefetchLink[\s\S]*?href=\{`\/admin\/platform\/blog\/\$\{row\.id\}`\}[\s\S]*?에디터 열기/)
 assert.doesNotMatch(queue, /<tr[^>]*\bonClick=/, 'queue rows themselves must not change state on click')
 assert.match(queue, /블로그 콘텐츠 큐/)
 assert.match(queue, /href="\/admin\/platform\/blog\/new"/)

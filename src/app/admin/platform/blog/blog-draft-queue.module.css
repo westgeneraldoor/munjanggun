@@ -61,6 +61,24 @@
   gap: var(--space-4);
 }
 
+.actionMessage {
+  margin: calc(var(--space-5) * -1 + var(--space-3)) 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  color: var(--mg-state-success);
+  background: var(--mg-state-success-surface);
+  border: var(--mg-border-width) solid var(--mg-state-success-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  line-height: 1.5;
+}
+
+.actionMessage[data-tone='error'] {
+  color: var(--mg-state-danger);
+  background: var(--mg-state-danger-surface);
+  border-color: var(--mg-state-danger-border);
+}
+
 @media (min-width: 1180px) {
   .queueLayoutSelected {
     grid-template-columns: minmax(0, 1fr) minmax(calc(var(--mg-layout-section) * 2 + var(--mg-space-8) + var(--mg-space-6) + var(--mg-space-2)), calc(var(--mg-layout-section) * 3 + var(--mg-space-8) + var(--mg-space-3)));
@@ -101,10 +119,6 @@
 .queueTable th:nth-child(2) { width: 16%; }
 .queueTable th:nth-child(3) { width: 20%; }
 .queueTable th:nth-child(4) { width: 16%; }
-
-.row {
-  cursor: pointer;
-}
 
 .row:hover td {
   background: var(--admin-surface-elevated);
@@ -158,6 +172,11 @@
 .rowActions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
 .rowActions a, .rowActions button { min-height: var(--mg-admin-choice-control-size); display: inline-flex; align-items: center; gap: var(--space-1); background: transparent; border: var(--mg-border-width) solid var(--admin-border); border-radius: var(--radius-md); padding: var(--space-1) var(--space-2); color: inherit; text-decoration: none; cursor: pointer; }
 .rowActions a:focus-visible, .rowActions button:focus-visible { outline: var(--mg-focus-ring-width) solid var(--admin-ring); outline-offset: var(--admin-focus-offset); }
+.rowActions .dangerAction,
+.mobileRowActions .dangerAction {
+  color: var(--mg-state-danger);
+  border-color: var(--mg-state-danger-border);
+}
 
 .dateCell {
   color: var(--admin-text-muted);
@@ -314,7 +333,7 @@
 }
 
 @media (min-width: 980px) {
-  .mobileList {
+  .mobileList[data-platform-list] {
     display: none;
   }
 }
@@ -398,6 +417,83 @@
   outline-offset: var(--admin-focus-offset);
 }
 
+.modalButton {
+  min-height: var(--mg-control-size-min);
+  padding: 0 var(--space-4);
+  color: var(--admin-text);
+  background: var(--admin-surface);
+  border: var(--mg-border-width) solid var(--admin-border);
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-weight: var(--font-bold);
+  cursor: pointer;
+}
+
+.modalButton:hover:not(:disabled) {
+  background: var(--admin-surface-elevated);
+}
+
+.modalButton:focus-visible {
+  outline: var(--mg-focus-ring-width) solid var(--admin-ring);
+  outline-offset: var(--admin-focus-offset);
+}
+
+.modalButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+}
+
+.dangerButton {
+  color: var(--mg-color-neutral-0);
+  background: var(--mg-state-danger);
+  border-color: var(--mg-state-danger);
+}
+
+.dangerButton:hover:not(:disabled) {
+  background: var(--mg-state-danger-hover);
+  border-color: var(--mg-state-danger-hover);
+}
+
+.confirmationField {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--admin-text-sub);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.confirmationField strong {
+  color: var(--admin-text);
+  overflow-wrap: anywhere;
+}
+
+.confirmationField input {
+  width: 100%;
+  min-height: var(--mg-control-size-min);
+  padding: 0 var(--space-3);
+  color: var(--admin-text);
+  background: var(--admin-surface);
+  border: var(--mg-border-width) solid var(--admin-border);
+  border-radius: var(--radius-md);
+  font: inherit;
+}
+
+.confirmationField input:focus-visible {
+  outline: var(--mg-focus-ring-width) solid var(--admin-ring);
+  outline-offset: var(--admin-focus-offset);
+}
+
+.modalError {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  color: var(--mg-state-danger);
+  background: var(--mg-state-danger-surface);
+  border: var(--mg-border-width) solid var(--mg-state-danger-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
 
 .mobileDetailScreen {
   display: none;
@@ -428,5 +524,10 @@
 
   .infoRow {
     grid-template-columns: calc(var(--mg-space-8) + var(--mg-space-4) + var(--mg-space-1) + var(--mg-border-width-strong)) minmax(0, 1fr);
+  }
+
+  .mobileRowActions a,
+  .mobileRowActions button {
+    min-height: var(--mg-control-size-min);
   }
 }

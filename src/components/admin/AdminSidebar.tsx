@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Settings, LogOut, Menu, X, FolderTree, ClipboardList, Sliders, Newspaper, Images } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { PlatformIconButton } from '@/components/platform/ui'
+import { IntentPrefetchLink } from './IntentPrefetchLink'
 import styles from './AdminSidebar.module.css'
 
 export default function AdminSidebar() {
@@ -155,7 +155,7 @@ export default function AdminSidebar() {
 
               return (
                 <li key={item.path}>
-                  <Link
+                  <IntentPrefetchLink
                     href={item.path}
                     className={`${styles.navItem} ${isActive || isPending ? styles.active : ''} ${isPending ? styles.pending : ''}`}
                     aria-current={isActive ? 'page' : undefined}
@@ -166,7 +166,7 @@ export default function AdminSidebar() {
                   >
                     <Icon size={24} />
                     <span>{item.name}</span>
-                  </Link>
+                  </IntentPrefetchLink>
                 </li>
               )
             })}

@@ -2,7 +2,17 @@
 
 /* eslint-disable @next/next/no-img-element -- 사진보관함은 서버에서 이미 정리한 WebP/썸네일만 렌더링합니다. */
 
-import { useEffect, useMemo, useRef, useState, useTransition, type ChangeEvent, type FormEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type ChangeEvent,
+  type FormEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 import { useRouter } from 'next/navigation'
 import {
   AlertTriangle,
@@ -17,7 +27,6 @@ import {
   PlatformButton,
   PlatformCheckbox,
   PlatformField,
-  PlatformIconButton,
   PlatformModal,
   PlatformPageHeader,
   PlatformPanel,
@@ -27,7 +36,9 @@ import {
   PlatformStatusBadge,
 } from '@/components/platform/ui'
 import {
+  archiveContentAssetSearchResults,
   archiveContentAssets,
+  prepareContentAssetSearchSelection,
   restoreContentAssets,
   updateContentAsset,
   uploadContentAssets,
@@ -35,6 +46,14 @@ import {
   type ContentAssetReference,
   type UploadContentAssetsResult,
 } from './actions'
+import type { AssetLibraryFilterOptions } from './library-data'
+import {
+  assetLibraryQueryKey,
+  buildAssetLibraryUrl,
+  type AssetLibraryQuery,
+  type AssetLibrarySort,
+  type AssetLibraryView,
+} from './query-state'
 import styles from './assets.module.css'
 
 type AssetFileSummary = {
@@ -65,8 +84,6 @@ export type ContentAssetLibraryItem = {
   web: AssetFileSummary
 }
 
-type LibraryView = 'active' | 'archived'
-
 export type ContentAssetTagOption = {
   id: string
   name: string
@@ -94,6 +111,16 @@ type SelectedUpload = {
   description: string
 }
 
+type LifecycleSelection =
+  | { kind: 'items'; items: ContentAssetLibraryItem[] }
+  | { kind: 'query'; query: AssetLibraryQuery; totalCount: number; selectionToken: string }
+
+type AllResultsSelection = {
+  queryKey: string
+  totalCount: number
+  selectionToken: string
+}
+
 const FILTER_LABELS: Record<FilterKey, string> = {
   category: '분류',
   productType: '제품군',
@@ -103,6 +130,14 @@ const FILTER_LABELS: Record<FilterKey, string> = {
 }
 
 const MAX_UPLOAD_TOTAL_BYTES = 120 * 1024 * 1024
+const SORT_OPTIONS: Array<{ value: AssetLibrarySort; label: string }> = [
+  { value: 'newest', label: '최신순' },
+  { value: 'oldest', label: '오래된순' },
+  { value: 'nameAsc', label: '파일명 오름차순' },
+  { value: 'nameDesc', label: '파일명 내림차순' },
+  { value: 'sizeDesc', label: '용량 큰순' },
+  { value: 'sizeAsc', label: '용량 작은순' },
+]
 
 function fileTitle(fileName: string) {
   return fileName.replace(/\.[^.]+$/, '').trim() || fileName
@@ -155,29 +190,6 @@ function splitTags(value: string) {
     .split(/[\n,]/)
     .map(item => item.trim())
     .filter(Boolean))]
-}
-
-function includesSearch(item: ContentAssetLibraryItem, search: string) {
-  if (!search) return true
-  const haystack = [
-    item.title,
-    item.description,
-    item.category,
-    item.productType,
-    item.spaceType,
-    item.region,
-    item.usagePurpose,
-    ...item.tags,
-  ].filter(Boolean).join(' ').toLowerCase()
-
-  return haystack.includes(search.toLowerCase())
-}
-
-function optionValues(items: ContentAssetLibraryItem[], key: FilterKey) {
-  return [...new Set(items
-    .map(item => item[key])
-    .filter((value): value is string => Boolean(value)))]
-    .sort((a, b) => a.localeCompare(b, 'ko-KR'))
 }
 
 function uploadId(file: File) {
@@ -446,6 +458,7 @@ function AssetThumbnail({ item }: { item: ContentAssetLibraryItem }) {
     <img
       src={`${image}${image.includes('?') ? '&' : '?'}retry=${attempt}`}
       alt={item.title || item.description || '보관함 사진'}
+      draggable={false}
       loading="lazy"
       className={styles.thumbImage}
       onError={() => { setFailed(true); void explainImageFailure() }}
@@ -454,7 +467,17 @@ function AssetThumbnail({ item }: { item: ContentAssetLibraryItem }) {
 }
 
 function referenceStatus(status: string) {
-  const labels: Record<string, string> = { draft: '초안', reviewing: '검토', approved: '승인', published: '발행', archived: '보관', linked: '연결됨' }
+  const labels: Record<string, string> = {
+    draft: '초안',
+    ai_draft: 'AI 초안',
+    needs_media: '사진 필요',
+    ready: '발행 준비',
+    reviewing: '검토',
+    approved: '승인',
+    published: '발행',
+    archived: '휴지통',
+    linked: '연결됨',
+  }
   return labels[status] ?? status
 }
 
@@ -464,41 +487,49 @@ function referenceLocation(location: string) {
 }
 
 function ArchiveDialog({
-  items,
+  selection,
   restore,
   onClose,
   onComplete,
 }: {
-  items: ContentAssetLibraryItem[]
+  selection: LifecycleSelection
   restore: boolean
   onClose: () => void
   onComplete: (result: ArchiveContentAssetsResult) => void
 }) {
   const [result, setResult] = useState<ArchiveContentAssetsResult | null>(null)
-  const [isPending, startTransition] = useTransition()
+  const [isPending, setIsPending] = useState(false)
   const blocked = result?.results.filter(item => item.reason === 'in_use') ?? []
   const changed = result?.results.filter(item => item.changed) ?? []
+  const items = selection.kind === 'items' ? selection.items : []
+  const targetCount = selection.kind === 'items' ? selection.items.length : selection.totalCount
 
-  function submit() {
-    startTransition(async () => {
-      const next = restore
-        ? await restoreContentAssets(items.map(item => item.id))
-        : await archiveContentAssets(items.map(item => item.id))
+  async function submit() {
+    setIsPending(true)
+    try {
+      const next = selection.kind === 'query'
+        ? await archiveContentAssetSearchResults(selection.query, selection.totalCount, selection.selectionToken, restore)
+        : restore
+          ? await restoreContentAssets(items.map(item => item.id))
+          : await archiveContentAssets(items.map(item => item.id))
       setResult(next)
       onComplete(next)
-    })
+    } finally {
+      setIsPending(false)
+    }
   }
 
   return (
-    <PlatformModal isOpen title={restore ? '사진 복원' : '사진 보관'} onClose={onClose} closeDisabled={isPending}>
+    <PlatformModal isOpen title={restore ? '사진 복원' : '휴지통 이동'} onClose={onClose} closeDisabled={isPending}>
       <PlatformPanel as="section" className={styles.archiveDialog}>
-        <h2 id="asset-archive-title">{restore ? '사진 보관함에서 복원' : '사진 보관함으로 이동'}</h2>
+        <h2 id="asset-archive-title">{restore ? '휴지통에서 복원' : '휴지통으로 이동'}</h2>
         {!result ? (
           <>
-            <p>{restore ? `${items.length}장을 다시 사진보관함에 표시합니다.` : `${items.length}장의 사용처를 서버에서 다시 확인합니다. 사용 중인 사진은 보관하지 않으며, 사진 파일은 삭제하지 않습니다.`}</p>
+            <p>{restore ? `${targetCount}장을 다시 사진보관함에 표시합니다.` : `${targetCount}장의 사용처와 검색 결과 수를 서버에서 다시 확인합니다. 사용 중인 사진은 휴지통으로 이동하지 않으며, 사진 파일은 삭제하지 않습니다.`}</p>
+            {selection.kind === 'query' ? <p>대상: 현재 검색·필터 결과 전체 {selection.totalCount}장</p> : <p>대상: 현재 페이지에서 선택한 {items.length}장</p>}
             <div className={styles.dialogActions}>
               <PlatformButton type="button" variant="secondary" onClick={onClose} disabled={isPending}>취소</PlatformButton>
-              <PlatformButton type="button" variant={restore ? 'primary' : 'danger'} onClick={submit} isLoading={isPending} loadingLabel="확인 중…">{restore ? '복원' : '사용처 확인 후 보관'}</PlatformButton>
+              <PlatformButton type="button" variant={restore ? 'primary' : 'danger'} onClick={submit} isLoading={isPending} loadingLabel="확인 중…">{restore ? '복원' : '사용처 확인 후 휴지통으로 이동'}</PlatformButton>
             </div>
           </>
         ) : (
@@ -507,7 +538,7 @@ function ArchiveDialog({
             {changed.length > 0 ? <p className={styles.resultSuccess}>{changed.length}장은 안전하게 처리했습니다.</p> : null}
             {blocked.length > 0 ? (
               <section id="asset-usage-results" tabIndex={-1} className={styles.blockedReferences} aria-label="사용 중인 사진">
-                <h3>사용 중인 사진은 보관할 수 없습니다</h3>
+                <h3>사용 중인 사진은 휴지통으로 이동할 수 없습니다</h3>
                 {blocked.map(item => {
                   const asset = items.find(candidate => candidate.id === item.assetId)
                   return (
@@ -533,13 +564,9 @@ function ArchiveDialog({
 
 function AssetDetailPanel({
   item,
-  mode,
-  onClose,
   onRequestLifecycle,
 }: {
   item: ContentAssetLibraryItem
-  mode: 'desktop' | 'mobile'
-  onClose?: () => void
   onRequestLifecycle: (item: ContentAssetLibraryItem) => void
 }) {
   const router = useRouter()
@@ -575,24 +602,6 @@ function AssetDetailPanel({
 
   return (
     <PlatformPanel as="aside" className={styles.detailPanel} aria-label="사진 상세 정보">
-      {onClose ? (
-        mode === 'mobile' ? (
-          <PlatformButton type="button" variant="secondary" fullWidth autoFocus onClick={onClose}>
-            <X aria-hidden="true" size={16} />
-            목록으로
-          </PlatformButton>
-        ) : (
-          <PlatformIconButton
-            type="button"
-            className={styles.detailCloseButton}
-            onClick={onClose}
-            aria-label="사진 상세 닫기"
-          >
-            <X aria-hidden="true" size={16} />
-          </PlatformIconButton>
-        )
-      ) : null}
-
       <div className={styles.detailPreview}>
         <AssetThumbnail item={item} />
       </div>
@@ -626,7 +635,7 @@ function AssetDetailPanel({
 
         <PlatformButton type="submit" isLoading={isPending} loadingLabel="저장 중…">저장</PlatformButton>
         <PlatformButton type="button" variant={item.libraryState === 'archived' ? 'primary' : 'danger'} onClick={() => onRequestLifecycle(item)}>
-          {item.libraryState === 'archived' ? '사진 보관함으로 복원' : '사진 보관함으로 이동'}
+          {item.libraryState === 'archived' ? '휴지통에서 복원' : '휴지통으로 이동'}
         </PlatformButton>
         {feedback ? (
           <p className={styles.saveMessage} role="status" aria-live="polite" data-tone={feedback.ok ? 'success' : 'error'}>
@@ -640,100 +649,316 @@ function AssetDetailPanel({
 
 export default function ContentAssetsClient({
   initialItems,
+  query,
+  totalCount,
+  totalPages,
+  filterOptions,
   tagOptions,
   loadError,
 }: {
   initialItems: ContentAssetLibraryItem[]
+  query: AssetLibraryQuery
+  totalCount: number
+  totalPages: number
+  filterOptions: AssetLibraryFilterOptions
   tagOptions: ContentAssetTagOption[]
   loadError: string | null
 }) {
   const router = useRouter()
+  const queryKey = assetLibraryQueryKey(query)
+  const [isPagePending, startPageTransition] = useTransition()
+  const serverItemsKey = initialItems.map(item => `${item.id}:${item.updatedAt}`).join('|')
+  const [optimisticallyRemoved, setOptimisticallyRemoved] = useState<{ serverItemsKey: string; ids: Set<string> } | null>(null)
   const [uploadOpen, setUploadOpen] = useState(false)
-  const [search, setSearch] = useState('')
-  const [filters, setFilters] = useState<Record<FilterKey, string>>({
-    category: '',
-    productType: '',
-    spaceType: '',
-    region: '',
-    usagePurpose: '',
-  })
-  const [tagFilter, setTagFilter] = useState('')
-  const [libraryView, setLibraryView] = useState<LibraryView>('active')
+  const [searchDraft, setSearchDraft] = useState(query.search)
+  const [selectionMode, setSelectionMode] = useState(false)
   const [selectedForAction, setSelectedForAction] = useState<Set<string>>(() => new Set())
-  const [lifecycleItems, setLifecycleItems] = useState<ContentAssetLibraryItem[] | null>(null)
+  const [allResultsSelection, setAllResultsSelection] = useState<AllResultsSelection | null>(null)
+  const [lifecycleSelection, setLifecycleSelection] = useState<LifecycleSelection | null>(null)
   const [lifecycleResult, setLifecycleResult] = useState<ArchiveContentAssetsResult | null>(null)
   const [selectedId, setSelectedId] = useState('')
-  const [mobileDetailOpen, setMobileDetailOpen] = useState(false)
-  const returnFocusRef = useRef<HTMLButtonElement | null>(null)
+  const [dragRect, setDragRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null)
+  const selectionAnchorRef = useRef('')
+  const checkboxRangeSelectionRef = useRef('')
+  const suppressCardClickRef = useRef(false)
+  const lastServerQueryKeyRef = useRef(queryKey)
+  const externalSearchNavigationRef = useRef(false)
+  const searchNavigationEpochRef = useRef(0)
+  const dragSelectionRef = useRef<{
+    pointerId: number
+    startX: number
+    startY: number
+    baseSelection: Set<string>
+    active: boolean
+  } | null>(null)
 
-  const filteredItems = useMemo(() => {
-    return initialItems.filter(item => {
-      if (libraryView === 'archived' ? item.libraryState !== 'archived' : item.libraryState === 'archived') return false
-      if (!includesSearch(item, search.trim())) return false
-      if (tagFilter && !item.tags.includes(tagFilter)) return false
-      return (Object.entries(filters) as Array<[FilterKey, string]>).every(([key, value]) => {
-        return !value || item[key] === value
-      })
-    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  }, [filters, initialItems, libraryView, search, tagFilter])
+  const locallyRemovedIds = optimisticallyRemoved?.serverItemsKey === serverItemsKey
+    ? optimisticallyRemoved.ids
+    : new Set<string>()
+  const libraryItems = initialItems.filter(item => !locallyRemovedIds.has(item.id))
+  const pageItems = libraryItems
+  const normalizedSearchDraft = searchDraft.trim().replace(/\s+/g, ' ').slice(0, 120)
+  const selectionScopeStable = normalizedSearchDraft === query.search && !isPagePending
+  const currentAllResultsSelection = allResultsSelection?.queryKey === queryKey
+    ? allResultsSelection
+    : null
+  const allResultsSelected = Boolean(currentAllResultsSelection)
 
   const selectedItem = selectedId
-    ? filteredItems.find(item => item.id === selectedId) ?? null
+    ? libraryItems.find(item => item.id === selectedId) ?? null
     : null
 
-  const options = useMemo(() => ({
-    category: optionValues(initialItems, 'category'),
-    productType: optionValues(initialItems, 'productType'),
-    spaceType: optionValues(initialItems, 'spaceType'),
-    region: optionValues(initialItems, 'region'),
-    usagePurpose: optionValues(initialItems, 'usagePurpose'),
-  }), [initialItems])
+  useEffect(() => {
+    lastServerQueryKeyRef.current = queryKey
+  }, [queryKey])
 
-  function chooseItem(id: string, trigger: HTMLButtonElement) {
-    const isClosingCurrent = selectedId === id
-    returnFocusRef.current = trigger
-    setSelectedId(isClosingCurrent ? '' : id)
-    setMobileDetailOpen(!isClosingCurrent)
+  useEffect(() => {
+    const handlePopState = () => {
+      externalSearchNavigationRef.current = true
+      searchNavigationEpochRef.current += 1
+      lastServerQueryKeyRef.current = ''
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
+  useEffect(() => {
+    if (!externalSearchNavigationRef.current) return
+    externalSearchNavigationRef.current = false
+    const timer = window.setTimeout(() => setSearchDraft(query.search), 0)
+    return () => window.clearTimeout(timer)
+  }, [query.search])
+
+  useEffect(() => {
+    const nextSearch = normalizedSearchDraft
+    if (nextSearch === query.search) return
+    const navigationEpoch = searchNavigationEpochRef.current
+    const timer = window.setTimeout(() => {
+      if (searchNavigationEpochRef.current !== navigationEpoch) return
+      startPageTransition(() => {
+        router.replace(buildAssetLibraryUrl({ ...query, search: nextSearch, page: 1 }), { scroll: false })
+      })
+    }, 350)
+    return () => window.clearTimeout(timer)
+  }, [normalizedSearchDraft, query, queryKey, router])
+
+  function handleSearchDraftChange(value: string) {
+    setSearchDraft(value)
+    const nextSearch = value.trim().replace(/\s+/g, ' ').slice(0, 120)
+    if (nextSearch === query.search) return
+    setSelectedForAction(new Set())
+    setAllResultsSelection(null)
+    setSelectionMode(false)
+    setLifecycleSelection(null)
+    selectionAnchorRef.current = ''
+    setSelectedId('')
+    lastServerQueryKeyRef.current = assetLibraryQueryKey({ ...query, search: nextSearch, page: 1 })
+  }
+
+  function navigateQuery(patch: Partial<AssetLibraryQuery>, replace = true) {
+    const nextQuery = {
+      ...query,
+      ...patch,
+      page: patch.page ?? 1,
+    }
+    setSelectedForAction(new Set())
+    setAllResultsSelection(null)
+    setSelectionMode(false)
+    selectionAnchorRef.current = ''
+    closeDetail()
+    lastServerQueryKeyRef.current = assetLibraryQueryKey(nextQuery)
+    startPageTransition(() => {
+      const href = buildAssetLibraryUrl(nextQuery)
+      if (replace) router.replace(href, { scroll: false })
+      else router.push(href, { scroll: false })
+    })
   }
 
   function closeDetail() {
-    const returnTarget = returnFocusRef.current
     setSelectedId('')
-    setMobileDetailOpen(false)
-    window.requestAnimationFrame(() => returnTarget?.focus())
   }
 
-  function toggleActionSelection(id: string) {
+  function toggleActionSelection(id: string, range = false) {
+    if (allResultsSelected) return
+    const selectionAnchorId = selectionAnchorRef.current
     setSelectedForAction(current => {
       const next = new Set(current)
+      if (range && selectionAnchorId) {
+        const anchorIndex = pageItems.findIndex(item => item.id === selectionAnchorId)
+        const targetIndex = pageItems.findIndex(item => item.id === id)
+        if (anchorIndex >= 0 && targetIndex >= 0) {
+          const start = Math.min(anchorIndex, targetIndex)
+          const end = Math.max(anchorIndex, targetIndex)
+          pageItems.slice(start, end + 1).forEach(item => next.add(item.id))
+          return next
+        }
+      }
       if (next.has(id)) next.delete(id)
       else next.add(id)
       return next
     })
+    selectionAnchorRef.current = id
   }
 
-  function selectFiltered() {
-    setSelectedForAction(new Set(filteredItems.map(item => item.id)))
+  function selectCurrentPage() {
+    setAllResultsSelection(null)
+    setSelectedForAction(new Set(pageItems.map(item => item.id)))
+  }
+
+  function clearCurrentPageSelection() {
+    const pageIds = new Set(pageItems.map(item => item.id))
+    setSelectedForAction(current => new Set([...current].filter(id => !pageIds.has(id))))
+    selectionAnchorRef.current = ''
+  }
+
+  function selectAllResults() {
+    if (totalCount < 1 || !selectionScopeStable) return
+    const requestedQueryKey = queryKey
+    setSelectedForAction(new Set())
+    selectionAnchorRef.current = ''
+    startPageTransition(async () => {
+      const result = await prepareContentAssetSearchSelection(query)
+      if (lastServerQueryKeyRef.current !== requestedQueryKey) return
+      if (!result.ok || !result.selectionToken || !result.totalCount) {
+        setAllResultsSelection(null)
+        setLifecycleResult({ ok: false, message: result.message, results: [] })
+        return
+      }
+      setAllResultsSelection({
+        queryKey: requestedQueryKey,
+        totalCount: result.totalCount,
+        selectionToken: result.selectionToken,
+      })
+      setLifecycleResult({ ok: true, message: result.message, results: [] })
+    })
+  }
+
+  function clearAllResultsSelection() {
+    setSelectedForAction(new Set())
+    setAllResultsSelection(null)
+    selectionAnchorRef.current = ''
+  }
+
+  function handleCardClick(item: ContentAssetLibraryItem, event: ReactMouseEvent<HTMLButtonElement>) {
+    if (suppressCardClickRef.current) return
+    if (selectionMode) {
+      toggleActionSelection(item.id, event.shiftKey)
+      return
+    }
+    setSelectedId(item.id)
+  }
+
+  function handleCardKeyDown(item: ContentAssetLibraryItem, event: ReactKeyboardEvent<HTMLButtonElement>) {
+    if (!selectionMode || !event.shiftKey || (event.key !== 'Enter' && event.key !== ' ')) return
+    event.preventDefault()
+    toggleActionSelection(item.id, true)
+  }
+
+  function handleCardCheckboxClick(id: string, event: ReactMouseEvent<HTMLInputElement>) {
+    checkboxRangeSelectionRef.current = event.shiftKey ? id : ''
+  }
+
+  function handleCardCheckboxChange(id: string) {
+    const range = checkboxRangeSelectionRef.current === id
+    checkboxRangeSelectionRef.current = ''
+    toggleActionSelection(id, range)
+  }
+
+  function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!selectionMode || event.pointerType !== 'mouse' || event.button !== 0) return
+    const target = event.target as HTMLElement
+    if (target.closest('[data-selection-control]')) return
+    if (allResultsSelected) return
+    dragSelectionRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      baseSelection: event.ctrlKey || event.metaKey ? new Set(selectedForAction) : new Set(),
+      active: false,
+    }
+  }
+
+  function handlePointerMove(event: ReactPointerEvent<HTMLDivElement>) {
+    const drag = dragSelectionRef.current
+    if (!drag || drag.pointerId !== event.pointerId) return
+    const deltaX = event.clientX - drag.startX
+    const deltaY = event.clientY - drag.startY
+    if (!drag.active) {
+      if (Math.hypot(deltaX, deltaY) < 8) return
+      drag.active = true
+      event.currentTarget.setPointerCapture(event.pointerId)
+    }
+    event.preventDefault()
+
+    const left = Math.min(drag.startX, event.clientX)
+    const top = Math.min(drag.startY, event.clientY)
+    const right = Math.max(drag.startX, event.clientX)
+    const bottom = Math.max(drag.startY, event.clientY)
+    setDragRect({ left, top, width: right - left, height: bottom - top })
+
+    const next = new Set(drag.baseSelection)
+    event.currentTarget.querySelectorAll<HTMLElement>('[data-asset-id]').forEach(card => {
+      const rect = card.getBoundingClientRect()
+      if (rect.left <= right && rect.right >= left && rect.top <= bottom && rect.bottom >= top) {
+        const id = card.dataset.assetId
+        if (id) next.add(id)
+      }
+    })
+    setSelectedForAction(next)
+  }
+
+  function handlePointerUp(event: ReactPointerEvent<HTMLDivElement>) {
+    const drag = dragSelectionRef.current
+    if (!drag || drag.pointerId !== event.pointerId) return
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+    if (drag.active) {
+      suppressCardClickRef.current = true
+      window.setTimeout(() => { suppressCardClickRef.current = false }, 0)
+    }
+    dragSelectionRef.current = null
+    setDragRect(null)
   }
 
   function requestLifecycle(items: ContentAssetLibraryItem[]) {
-    if (items.length > 0) setLifecycleItems(items)
+    if (items.length === 0) return
+    closeDetail()
+    setLifecycleSelection({ kind: 'items', items })
+  }
+
+  function requestAllResultsLifecycle() {
+    if (!currentAllResultsSelection || !selectionScopeStable) return
+    closeDetail()
+    setLifecycleSelection({
+      kind: 'query',
+      query,
+      totalCount: currentAllResultsSelection.totalCount,
+      selectionToken: currentAllResultsSelection.selectionToken,
+    })
   }
 
   function completeLifecycle(result: ArchiveContentAssetsResult) {
     setLifecycleResult(result)
     if (result.ok) {
+      const changedIds = new Set(result.results.filter(item => item.changed).map(item => item.assetId))
+      setOptimisticallyRemoved(current => ({
+        serverItemsKey,
+        ids: new Set([...(current?.serverItemsKey === serverItemsKey ? current.ids : []), ...changedIds]),
+      }))
       setSelectedForAction(current => {
         const next = new Set(current)
         result.results.filter(item => item.changed).forEach(item => next.delete(item.assetId))
         return next
       })
+      setAllResultsSelection(null)
       if (result.results.some(item => item.changed && item.assetId === selectedId)) closeDetail()
-      router.refresh()
+      if (changedIds.size > 0) router.refresh()
     }
   }
 
-  const actionItems = filteredItems.filter(item => selectedForAction.has(item.id))
+  const actionItems = pageItems.filter(item => selectedForAction.has(item.id))
+  const actionCount = currentAllResultsSelection?.totalCount ?? actionItems.length
 
   return (
     <div className={styles.page}>
@@ -758,123 +983,196 @@ export default function ContentAssetsClient({
       <PlatformPanel as="section" className={styles.toolbar} aria-label="사진 검색과 필터">
         <PlatformSegmentedControl
           label="사진 보관함 보기"
-          value={libraryView}
-          onChange={value => { setLibraryView(value); setSelectedForAction(new Set()); closeDetail() }}
-          items={[{ value: 'active', label: '사진보관함' }, { value: 'archived', label: '보관된 사진' }]}
+          value={query.view}
+          onChange={value => {
+            navigateQuery({ view: value as AssetLibraryView })
+          }}
+          items={[{ value: 'active', label: '사진보관함' }, { value: 'archived', label: '휴지통' }]}
         />
-        <PlatformField
-          type="search"
-          label="사진 검색"
-          value={search}
-          onChange={event => setSearch(event.target.value)}
-          placeholder="사진명, 설명, 태그로 검색"
-        />
+        <div className={styles.toolbarControls}>
+          <PlatformField
+            type="search"
+            label="사진 검색"
+            value={searchDraft}
+            onChange={event => handleSearchDraftChange(event.target.value)}
+            placeholder="사진명, 설명, 태그로 검색"
+          />
+          <PlatformSelect
+            label="정렬"
+            value={query.sort}
+            onChange={event => navigateQuery({ sort: event.target.value as AssetLibrarySort })}
+            options={SORT_OPTIONS}
+          />
+          <PlatformButton
+            type="button"
+            variant={selectionMode ? 'primary' : 'secondary'}
+            aria-pressed={selectionMode}
+            disabled={!selectionScopeStable}
+            onClick={() => {
+              const next = !selectionMode
+              setSelectionMode(next)
+              if (!next) {
+                setSelectedForAction(new Set())
+                setAllResultsSelection(null)
+                selectionAnchorRef.current = ''
+              } else {
+                closeDetail()
+              }
+            }}
+          >
+            {selectionMode ? '선택 끝내기' : '선택'}
+          </PlatformButton>
+        </div>
         <details className={styles.filterDetails}>
           <summary>
-            <span>상세 필터</span>
-            <small>분류, 제품군, 공간, 지역, 목적, 태그로 좁혀보기</small>
+            <span>필터</span>
+            <small>분류, 제품군, 공간, 지역, 목적, 태그</small>
           </summary>
           <div className={styles.filterGrid}>
             {(Object.keys(FILTER_LABELS) as FilterKey[]).map(key => (
               <PlatformSelect
                 key={key}
                 label={FILTER_LABELS[key]}
-                value={filters[key]}
-                onChange={event => setFilters(current => ({ ...current, [key]: event.target.value }))}
+                value={query[key]}
+                onChange={event => navigateQuery({ [key]: event.target.value })}
                 options={[
                   { value: '', label: '전체' },
-                  ...options[key].map(value => ({ value, label: value })),
+                  ...filterOptions[key].map(value => ({ value, label: value })),
                 ]}
               />
             ))}
           </div>
-          {tagOptions.length > 0 ? (
-            <PlatformSegmentedControl
-              className={styles.tagFilters}
-              label="태그 필터"
-              value={tagFilter}
-              onChange={setTagFilter}
-              items={[{ value: '', label: '전체 태그' }, ...tagOptions.map(tag => ({ value: tag.name, label: tag.name }))]}
-            />
-          ) : null}
+          <PlatformSegmentedControl
+            className={styles.tagFilters}
+            label="태그 필터"
+            value={query.tagId}
+            onChange={value => navigateQuery({ tagId: value })}
+            items={[{ value: '', label: '전체 태그' }, ...tagOptions.map(tag => ({ value: tag.id, label: tag.name }))]}
+          />
         </details>
       </PlatformPanel>
 
-      {mobileDetailOpen && selectedItem ? (
-        <div className={styles.mobileDetail}>
-          <AssetDetailPanel key={`mobile-${selectedItem.id}`} item={selectedItem} mode="mobile" onClose={closeDetail} onRequestLifecycle={item => requestLifecycle([item])} />
-        </div>
-      ) : null}
-
-      <div className={`${styles.libraryLayout} ${selectedItem ? styles.libraryLayoutSelected : ''}`}>
+      <div className={styles.libraryLayout}>
         <section className={styles.libraryList} aria-label="사진 목록">
           <div className={styles.listSummary}>
-            <strong>{filteredItems.length}장</strong>
-            <span>{libraryView === 'archived' ? '복원할 수 있는 보관함' : '최근 업로드 순'}</span>
+            <strong>전체 결과 {totalCount}장</strong>
+            <span>{totalCount > 0 ? `${query.page}/${totalPages} 페이지 · 현재 ${pageItems.length}장 · ${SORT_OPTIONS.find(option => option.value === query.sort)?.label}` : query.view === 'archived' ? '복원할 수 있는 휴지통' : '조건에 맞는 사진이 없습니다'}</span>
           </div>
+          {isPagePending ? <p className={styles.pageLoading} role="status" aria-live="polite">사진 결과를 불러오는 중…</p> : null}
 
-          {filteredItems.length > 0 ? (
+          {selectionMode && pageItems.length > 0 ? (
             <div className={styles.selectionControls}>
-              <PlatformButton type="button" variant="secondary" size="sm" onClick={selectFiltered}>현재 필터 결과 전체 선택</PlatformButton>
-              <PlatformButton type="button" variant="ghost" size="sm" onClick={() => setSelectedForAction(new Set())} disabled={selectedForAction.size === 0}>선택 해제</PlatformButton>
-              <span role="status" aria-live="polite">{actionItems.length}장 선택</span>
+              <PlatformButton type="button" variant="secondary" size="sm" onClick={selectCurrentPage}>현재 페이지 전체 선택 ({pageItems.length}장)</PlatformButton>
+              {!allResultsSelected ? (
+                <PlatformButton type="button" variant="ghost" size="sm" onClick={clearCurrentPageSelection} disabled={actionItems.length === 0}>현재 페이지 전체 해제</PlatformButton>
+              ) : null}
+              <PlatformButton type="button" variant={allResultsSelected ? 'primary' : 'secondary'} size="sm" onClick={selectAllResults} disabled={!selectionScopeStable || allResultsSelected}>검색 결과 전체 선택 ({totalCount}장)</PlatformButton>
+              {allResultsSelected ? <PlatformButton type="button" variant="ghost" size="sm" onClick={clearAllResultsSelection}>검색 결과 전체 해제</PlatformButton> : null}
+              <span role="status" aria-live="polite">{actionCount}장 선택</span>
             </div>
           ) : null}
 
-          {filteredItems.length === 0 && !loadError ? (
+          {pageItems.length === 0 && !loadError ? (
             <PlatformStatePanel
               tone="empty"
               icon={<Images size={24} />}
               title="아직 조건에 맞는 사진이 없습니다."
               description="사진을 추가하거나 검색 조건을 줄여보세요."
             />
-          ) : filteredItems.length > 0 ? (
-            <div className={styles.assetGrid}>
-              {filteredItems.map((item, index) => {
-                const isSelected = selectedItem?.id === item.id
+          ) : pageItems.length > 0 ? (
+            <>
+              <div
+                className={`${styles.assetGrid} ${selectionMode ? styles.assetGridSelecting : ''}`}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerUp}
+              >
+              {pageItems.map((item, index) => {
+                const isSelected = allResultsSelected || selectedForAction.has(item.id)
                 return (
                   <article
                     key={item.id}
+                    data-asset-id={item.id}
                     className={`${styles.assetCard} ${isSelected ? styles.assetCardSelected : ''}`}
                   >
-                    <div className={styles.cardThumb}>
-                      <AssetThumbnail item={item} />
-                    </div>
-                    <div className={styles.cardBody}>
+                    <button
+                      type="button"
+                      className={styles.cardButton}
+                      data-asset-card-button
+                      aria-label={selectionMode
+                        ? allResultsSelected
+                          ? `${displayAssetTitle(item)} 검색 결과 전체 선택됨`
+                          : `${displayAssetTitle(item)} ${isSelected ? '선택 해제' : '선택'}`
+                        : `${displayAssetTitle(item)} 상세 보기`}
+                      aria-pressed={selectionMode ? isSelected : undefined}
+                      onClick={event => handleCardClick(item, event)}
+                      onKeyDown={event => handleCardKeyDown(item, event)}
+                    >
+                      <span className={styles.cardThumb}>
+                        <AssetThumbnail item={item} />
+                      </span>
+                      <strong className={styles.cardTitle}>{displayAssetTitle(item, index)}</strong>
+                    </button>
+                    {selectionMode ? (
+                      <div className={styles.cardSelection} data-selection-control>
                       <PlatformCheckbox
-                        checked={selectedForAction.has(item.id)}
-                        onChange={() => toggleActionSelection(item.id)}
+                        checked={isSelected}
+                        disabled={allResultsSelected}
+                        onClick={event => handleCardCheckboxClick(item.id, event)}
+                        onChange={() => handleCardCheckboxChange(item.id)}
                       >
-                        {displayAssetTitle(item, index)} 선택
+                          <span className={styles.srOnly}>{displayAssetTitle(item, index)} 선택</span>
                       </PlatformCheckbox>
-                      <strong>{displayAssetTitle(item, index)}</strong>
-                      <span>{item.description || '설명을 추가해 주세요.'}</span>
-                      <time dateTime={item.createdAt}>{formatDateTime(item.createdAt)}</time>
-                      <PlatformButton type="button" variant="secondary" size="sm" onClick={event => chooseItem(item.id, event.currentTarget)} aria-pressed={isSelected}>상세 보기</PlatformButton>
-                    </div>
+                      </div>
+                    ) : null}
                   </article>
                 )
               })}
-            </div>
+              {dragRect ? (
+                <div
+                  aria-hidden="true"
+                  className={styles.dragSelectionRect}
+                  data-selection-drag-rect
+                  style={dragRect}
+                />
+              ) : null}
+              </div>
+            </>
+          ) : null}
+          {totalPages > 1 ? (
+            <nav className={styles.pagination} aria-label="사진 페이지">
+              <PlatformButton type="button" variant="secondary" disabled={query.page <= 1 || isPagePending} onClick={() => navigateQuery({ page: query.page - 1 }, false)}>이전 페이지</PlatformButton>
+              <span aria-current="page">{query.page} / {totalPages}</span>
+              <PlatformButton type="button" variant="secondary" disabled={query.page >= totalPages || isPagePending} onClick={() => navigateQuery({ page: query.page + 1 }, false)}>다음 페이지</PlatformButton>
+            </nav>
           ) : null}
         </section>
-
-        {selectedItem ? (
-          <div className={styles.desktopDetail}>
-            <AssetDetailPanel key={`desktop-${selectedItem.id}`} item={selectedItem} mode="desktop" onClose={closeDetail} onRequestLifecycle={item => requestLifecycle([item])} />
-          </div>
-        ) : null}
       </div>
-      {actionItems.length > 0 ? (
+      {selectionMode && actionCount > 0 ? (
         <PlatformPanel as="section" className={styles.selectionBar} aria-label="선택한 사진 작업">
-          <strong>{actionItems.length}장 선택</strong>
-          <PlatformButton type="button" variant={libraryView === 'archived' ? 'primary' : 'danger'} onClick={() => requestLifecycle(actionItems)}>
-            {libraryView === 'archived' ? '선택한 사진 복원' : '선택한 사진 보관'}
+          <strong>{allResultsSelected ? `검색 결과 전체 ${actionCount}장 선택` : `현재 페이지 ${actionItems.length}장 선택`}</strong>
+          <PlatformButton type="button" variant={query.view === 'archived' ? 'primary' : 'danger'} disabled={!selectionScopeStable} onClick={() => allResultsSelected ? requestAllResultsLifecycle() : requestLifecycle(actionItems)}>
+            {query.view === 'archived' ? '선택한 사진 복원' : '선택한 사진 휴지통으로 이동'}
           </PlatformButton>
         </PlatformPanel>
       ) : null}
-      {lifecycleResult && !lifecycleItems ? <p className={styles.saveMessage} role="status">{lifecycleResult.message}</p> : null}
-      {lifecycleItems ? <ArchiveDialog items={lifecycleItems} restore={libraryView === 'archived' || lifecycleItems.every(item => item.libraryState === 'archived')} onClose={() => setLifecycleItems(null)} onComplete={completeLifecycle} /> : null}
+      {selectedItem ? (
+        <PlatformModal
+          isOpen
+          title={`${displayAssetTitle(selectedItem)} 사진 상세`}
+          onClose={closeDetail}
+          size="wide"
+          closeOnBackdrop
+          showCloseButton
+          closeLabel="사진 상세 닫기"
+          className={styles.detailModal}
+        >
+          <AssetDetailPanel key={selectedItem.id} item={selectedItem} onRequestLifecycle={item => requestLifecycle([item])} />
+        </PlatformModal>
+      ) : null}
+      {lifecycleResult && !lifecycleSelection ? <p className={styles.saveMessage} role="status">{lifecycleResult.message}</p> : null}
+      {lifecycleSelection ? <ArchiveDialog selection={lifecycleSelection} restore={query.view === 'archived' || (lifecycleSelection.kind === 'items' && lifecycleSelection.items.every(item => item.libraryState === 'archived'))} onClose={() => setLifecycleSelection(null)} onComplete={completeLifecycle} /> : null}
     </div>
   )
 }

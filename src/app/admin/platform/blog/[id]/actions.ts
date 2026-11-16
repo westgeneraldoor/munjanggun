@@ -54,9 +54,15 @@ export type SaveBlogEditorPayload = {
 }
 
 export type SaveBlogEditorResult = {
-  ok: boolean
+  ok: true
   message: string
-  savedAt?: string
+  updatedAt: string
+  blockIds: string[]
+  code?: undefined
+} | {
+  ok: false
+  message: string
+  code?: 'stale_revision'
 }
 
 export type MediaActionResult = {
@@ -85,18 +91,37 @@ export type AttachContentAssetResult = {
 }
 
 export type PublishBlogPostResult = {
+  ok: true
+  message: string
+  publishedAt: string
+  updatedAt: string
+  slug: string
+  issues?: string[]
+  code?: undefined
+} | {
+  ok: false
+  message: string
+  issues?: string[]
+  code?: 'stale_revision' | 'publication_unknown'
+}
+
+export type PermanentlyDeleteBlogPostResult = {
   ok: boolean
   message: string
-  publishedAt?: string
-  slug?: string
-  issues?: string[]
 }
 
 export type UpdateBlogPostStatusResult = {
-  ok: boolean
+  ok: true
   message: string
-  status?: BlogPostStatus
+  status: BlogPostStatus
+  updatedAt: string
   issues?: string[]
+  code?: never
+} | {
+  ok: false
+  message: string
+  issues?: string[]
+  code?: 'revision_unknown'
 }
 
 export type UpdateBlogMediaPayload = {
@@ -117,13 +142,6 @@ const PRIVATE_MEDIA_BUCKET = 'blog-media-private'
 const PUBLIC_MEDIA_BUCKET = 'blog-media'
 const MAX_UPLOAD_SIZE = 50 * 1024 * 1024
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'])
-const BLOG_BODY_BLOCK_EXPANSION_ENABLED =
-  process.env.NEXT_PUBLIC_BLOG_BODY_BLOCK_EXPANSION === 'enabled' &&
-  (
-    process.env.BLOG_BODY_BLOCK_EXPANSION_DB_CONFIRMED === 'enabled' ||
-    process.env.NEXT_PUBLIC_BLOG_BODY_BLOCK_EXPANSION_DB_CONFIRMED === 'enabled'
-  )
-
 type BlogPost = Database['showroom']['Tables']['blog_posts']['Row']
 type BlogBlock = Database['showroom']['Tables']['blog_blocks']['Row']
 type BlogMedia = Database['showroom']['Tables']['blog_media']['Row']
@@ -165,15 +183,6 @@ function hasForbiddenExpression(value: Json) {
     jsonString(value.status) === 'blocked' ||
     warningCount > 0
   )
-}
-
-function isExpansionBlockType(type: BlogBlockType) {
-  return type === 'quote'
-    || type === 'video'
-    || type === 'related_post'
-    || type === 'place'
-    || type === 'quiz'
-    || type === 'checklist'
 }
 
 function blockTextSegments(blocks: BlogBlock[]) {
@@ -264,10 +273,6 @@ function validatePayload(payload: SaveBlogEditorPayload) {
   }
 
   for (const block of payload.blocks) {
-    if (isExpansionBlockType(block.type) && !BLOG_BODY_BLOCK_EXPANSION_ENABLED) {
-      return '새 확장 블록은 DB 마이그레이션 적용 후 사용할 수 있습니다.'
-    }
-
     if (block.type === 'image' && !block.mediaId) {
       return '이미지 블록에는 사진 선택이 필요합니다.'
     }
@@ -571,10 +576,15 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
       p_expected_updated_at: payload.expectedUpdatedAt,
     } as never)
     if (leaseError) {
-      return { ok: false, message: '글 또는 사진 배치가 바뀌었습니다. 새로고침 후 다시 저장해주세요.' }
+      return {
+        ok: false,
+        message: '글 또는 사진 배치가 바뀌었습니다. 최신본을 다시 불러온 뒤 변경 내용을 확인해주세요.',
+        code: 'stale_revision',
+      }
     }
     editorLease = { postId: payload.postId, actorId, token: leaseToken }
 
+    const requestedUpdatedAt = new Date().toISOString()
     const postUpdate: Database['showroom']['Tables']['blog_posts']['Update'] = {
       title: payload.post.title.trim(),
       slug: payload.post.slug.trim(),
@@ -591,7 +601,7 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
       product_type: cleanText(payload.post.productType),
       ai_citation_ready: payload.post.aiCitationReady,
       media_missing_reason: cleanText(payload.post.mediaMissingReason),
-      updated_at: new Date().toISOString(),
+      updated_at: requestedUpdatedAt,
     }
 
     const { data: updatedPostData, error: postError } = await showroomAdmin
@@ -599,15 +609,26 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
       .update(postUpdate as never)
       .eq('id', payload.postId)
       .eq('status', currentPost.status)
-      .select('id')
+      .select('id, updated_at')
 
     if (postError) {
       return { ok: false, message: '글 기본 정보를 저장하지 못했습니다.' }
     }
 
-    const updatedPostRows = (updatedPostData ?? []) as Array<{ id: string }>
+    const updatedPostRows = (updatedPostData ?? []) as Array<{ id: string; updated_at: string }>
     if (updatedPostRows.length !== 1) {
-      return { ok: false, message: '글 상태가 바뀌었습니다. 새로고침 후 다시 저장해주세요.' }
+      return {
+        ok: false,
+        message: '글 상태가 바뀌었습니다. 최신본을 다시 불러온 뒤 변경 내용을 확인해주세요.',
+        code: 'stale_revision',
+      }
+    }
+    if (typeof updatedPostRows[0].updated_at !== 'string') {
+      return {
+        ok: false,
+        code: 'stale_revision',
+        message: '임시저장은 처리됐지만 최신 revision 응답을 확인하지 못했습니다. 최신본 다시 불러오기로 상태를 확인해 주세요.',
+      }
     }
 
     const { data: existingBlocksData, error: existingBlocksError } = await showroomAdmin
@@ -666,6 +687,7 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
 
     const nextUsages: Database['showroom']['Tables']['content_asset_usages']['Insert'][] = []
     const questionApprovals: BlogQuestionApproval[] = []
+    const savedBlockIds: string[] = []
 
     for (const [index, block] of payload.blocks.entries()) {
       const blockPayload: Database['showroom']['Tables']['blog_blocks']['Insert'] = {
@@ -734,6 +756,9 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
           approvedAnswer,
         })
       }
+
+      if (!savedBlockId) return { ok: false, message: '저장한 본문 카드 ID를 확인하지 못했습니다.' }
+      savedBlockIds.push(savedBlockId)
     }
 
     if (existingBlocks.length > 0) {
@@ -789,10 +814,14 @@ export async function saveBlogEditor(payload: SaveBlogEditorPayload): Promise<Sa
       }
     }
 
-    const savedAt = new Date().toISOString()
     revalidateBlogEditorPaths(payload.postId, [currentPost.slug, payload.post.slug], false)
 
-    return { ok: true, message: '저장했습니다.', savedAt }
+    return {
+      ok: true,
+      message: '현재 내용을 임시저장했습니다. 이 저장본을 기준으로 바로 발행할 수 있습니다.',
+      updatedAt: updatedPostRows[0].updated_at,
+      blockIds: savedBlockIds,
+    }
   } catch {
     return {
       ok: false,
@@ -1221,7 +1250,9 @@ function validatePublishGate(post: BlogPost, blocks: BlogBlock[], media: BlogMed
     issues.push('검색 설명은 50-180자로 작성해야 합니다.')
   }
   if (!cleanText(post.target_question)) issues.push('대표 질문이 필요합니다.')
-  if (!cleanText(post.summary_answer)) issues.push('요약 답변이 필요합니다.')
+  if ((cleanText(post.summary_answer)?.length ?? 0) <= 20) {
+    issues.push('요약 답변은 21자 이상 작성해야 합니다.')
+  }
   if (blocks.length === 0) issues.push('본문 블록이 필요합니다.')
   if (ctaBlocks.length === 0) issues.push('CTA 블록이 필요합니다.')
   if (hasForbiddenExpression(post.brand_check_result)) issues.push('금지표현/브랜드 검수 blocker가 남아 있습니다.')
@@ -1295,7 +1326,9 @@ function validateReadyGate(post: BlogPost, blocks: BlogBlock[], media: BlogMedia
     issues.push('검색 설명은 50-180자로 작성해야 합니다.')
   }
   if (!cleanText(post.target_question)) issues.push('대표 질문이 필요합니다.')
-  if (!cleanText(post.summary_answer)) issues.push('요약 답변이 필요합니다.')
+  if ((cleanText(post.summary_answer)?.length ?? 0) <= 20) {
+    issues.push('요약 답변은 21자 이상 작성해야 합니다.')
+  }
   if (blocks.length === 0) issues.push('본문 블록이 필요합니다.')
   if (ctaBlocks.length === 0) issues.push('CTA 블록이 필요합니다.')
   if (hasForbiddenExpression(post.brand_check_result)) issues.push('금지표현/브랜드 검수 blocker가 남아 있습니다.')
@@ -1340,6 +1373,544 @@ function validateReadyGate(post: BlogPost, blocks: BlogBlock[], media: BlogMedia
   issues.push(...mediaTextSafetyBlockers(post, [...mediaToValidate.values()], 'ready'))
 
   return [...new Set(issues)]
+}
+
+type StagedPublicationMedia = {
+  id: string
+  public_bucket: string
+  public_object_path: string
+  public_url: string
+}
+
+function rpcPostPayload(payload: SaveBlogEditorPayload): Json {
+  return {
+    title: payload.post.title.trim(),
+    slug: payload.post.slug.trim(),
+    excerpt: cleanText(payload.post.excerpt),
+    category: payload.post.category,
+    seo_title: cleanText(payload.post.seoTitle),
+    meta_description: cleanText(payload.post.metaDescription),
+    canonical_url: cleanText(payload.post.canonicalUrl),
+    primary_keyword: cleanText(payload.post.primaryKeyword),
+    target_question: cleanText(payload.post.targetQuestion),
+    summary_answer: cleanText(payload.post.summaryAnswer),
+    related_questions: payload.post.relatedQuestions.map(question => question.trim()).filter(Boolean),
+    service_area: cleanText(payload.post.serviceArea),
+    product_type: cleanText(payload.post.productType),
+    ai_citation_ready: payload.post.aiCitationReady,
+    media_missing_reason: cleanText(payload.post.mediaMissingReason),
+  }
+}
+
+function rpcBlocksPayload(payload: SaveBlogEditorPayload, generatedAt: string) {
+  return payload.blocks.map((block, index) => ({
+    id: block.id ?? randomUUID(),
+    display_order: index,
+    type: block.type,
+    heading_level: block.type === 'heading' ? block.headingLevel : null,
+    text: cleanText(block.text),
+    media_id: block.type === 'image' ? block.mediaId : null,
+    metadata: toJsonObject(block.metadata),
+    created_at: generatedAt,
+  }))
+}
+
+function nextPostForPublication(currentPost: BlogPost, payload: SaveBlogEditorPayload): BlogPost {
+  return {
+    ...currentPost,
+    title: payload.post.title.trim(),
+    slug: payload.post.slug.trim(),
+    excerpt: cleanText(payload.post.excerpt),
+    category: payload.post.category,
+    seo_title: cleanText(payload.post.seoTitle),
+    meta_description: cleanText(payload.post.metaDescription),
+    canonical_url: cleanText(payload.post.canonicalUrl),
+    primary_keyword: cleanText(payload.post.primaryKeyword),
+    target_question: cleanText(payload.post.targetQuestion),
+    summary_answer: cleanText(payload.post.summaryAnswer),
+    related_questions: payload.post.relatedQuestions.map(question => question.trim()).filter(Boolean),
+    service_area: cleanText(payload.post.serviceArea),
+    product_type: cleanText(payload.post.productType),
+    ai_citation_ready: payload.post.aiCitationReady,
+    media_missing_reason: cleanText(payload.post.mediaMissingReason),
+  }
+}
+
+function nextBlocksForPublication(
+  payload: SaveBlogEditorPayload,
+  rpcBlocks: ReturnType<typeof rpcBlocksPayload>,
+): BlogBlock[] {
+  return rpcBlocks.map(block => ({
+    id: block.id,
+    post_id: payload.postId,
+    display_order: block.display_order,
+    type: block.type,
+    heading_level: block.heading_level,
+    text: block.text,
+    media_id: block.media_id,
+    metadata: block.metadata,
+    created_at: block.created_at,
+    updated_at: block.created_at,
+  }))
+}
+
+function publicObjectPathForMedia(
+  postId: string,
+  mediaId: string,
+  extension: 'gif' | 'webp',
+) {
+  return `${postId}/${mediaId}.${extension}`
+}
+
+async function stageMediaForAtomicPublication(
+  showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
+  postId: string,
+  publicationAttemptId: string,
+  actorId: string,
+  mediaRows: BlogMedia[],
+  uploadedPaths: string[],
+) {
+  const stagedMedia: StagedPublicationMedia[] = []
+  const preparedMedia: Array<{
+    media: BlogMedia
+    publicObjectPath: string
+    prepared: Awaited<ReturnType<typeof prepareBlogMediaForPublication>>
+  }> = []
+
+  for (const media of mediaRows) {
+    await heartbeatPublicationAttempt(showroomAdmin, publicationAttemptId, actorId)
+    if (!media.private_bucket || !media.private_object_path) {
+      throw new Error('사진 원본을 확인할 수 없습니다.')
+    }
+
+    const { data: privateObject, error: downloadError } = await showroomAdmin.storage
+      .from(media.private_bucket)
+      .download(media.private_object_path)
+    if (downloadError || !privateObject) {
+      throw new Error('사진 원본을 불러오지 못했습니다.')
+    }
+
+    const privateBuffer = Buffer.from(await privateObject.arrayBuffer())
+    const prepared = await prepareBlogMediaForPublication(privateBuffer, privateObject.type)
+    if (prepared.extension !== 'gif' && prepared.extension !== 'webp') {
+      throw new Error('공개용 사진 확장자를 확인하지 못했습니다.')
+    }
+    await heartbeatPublicationAttempt(showroomAdmin, publicationAttemptId, actorId)
+
+    const mediaObjectPath = publicObjectPathForMedia(postId, media.id, prepared.extension)
+    const fileName = mediaObjectPath.slice(postId.length + 1)
+    const publicObjectPath = `${postId}/${publicationAttemptId}/${fileName}`
+    preparedMedia.push({ media, publicObjectPath, prepared })
+  }
+
+  const reservedPaths = preparedMedia.map(item => item.publicObjectPath)
+  await recordPublicationAttemptPaths(showroomAdmin, publicationAttemptId, reservedPaths)
+  await heartbeatPublicationAttempt(showroomAdmin, publicationAttemptId, actorId)
+  uploadedPaths.splice(0, uploadedPaths.length, ...reservedPaths)
+
+  for (const { media, publicObjectPath, prepared } of preparedMedia) {
+    await heartbeatPublicationAttempt(showroomAdmin, publicationAttemptId, actorId)
+    const { error: uploadError } = await showroomAdmin.storage
+      .from(PUBLIC_MEDIA_BUCKET)
+      .upload(publicObjectPath, prepared.buffer, {
+        cacheControl: '31536000',
+        contentType: prepared.contentType,
+        upsert: false,
+      })
+    if (uploadError) throw new Error('공개용 사진을 준비하지 못했습니다.')
+    await heartbeatPublicationAttempt(showroomAdmin, publicationAttemptId, actorId)
+
+    const { data: publicUrlData } = showroomAdmin.storage
+      .from(PUBLIC_MEDIA_BUCKET)
+      .getPublicUrl(publicObjectPath)
+
+    stagedMedia.push({
+      id: media.id,
+      public_bucket: PUBLIC_MEDIA_BUCKET,
+      public_object_path: publicObjectPath,
+      public_url: publicUrlData.publicUrl,
+    })
+  }
+
+  return { stagedMedia }
+}
+
+async function createPublicationAttempt(
+  showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
+  attemptId: string,
+  postId: string,
+  actorId: string,
+  expectedUpdatedAt: string,
+) {
+  const { error } = await showroomAdmin.rpc('create_blog_publication_attempt' as never, {
+    p_publication_attempt_id: attemptId,
+    p_post_id: postId,
+    p_actor_id: actorId,
+    p_expected_updated_at: expectedUpdatedAt,
+  } as never)
+  if (error) {
+    const isStale = error.message.includes('changed since the editor loaded')
+      || error.message.includes('already in progress')
+    throw new PublicationAttemptError(
+      isStale
+        ? '글 또는 발행 준비 상태가 바뀌었습니다. 최신본을 다시 불러와 확인해주세요.'
+        : '안전한 발행 시도 기록을 만들지 못했습니다. DB 마이그레이션 상태를 확인해주세요.',
+      isStale ? 'stale_revision' : undefined,
+    )
+  }
+}
+
+class PublicationAttemptError extends Error {
+  constructor(
+    message: string,
+    readonly code?: 'stale_revision',
+  ) {
+    super(message)
+    this.name = 'PublicationAttemptError'
+  }
+}
+
+async function heartbeatPublicationAttempt(
+  showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
+  attemptId: string,
+  actorId: string,
+) {
+  const { error } = await showroomAdmin.rpc('heartbeat_blog_publication_attempt' as never, {
+    p_publication_attempt_id: attemptId,
+    p_actor_id: actorId,
+  } as never)
+  if (error) {
+    throw new PublicationAttemptError(
+      '발행 사진 준비 시간이 만료됐거나 다른 복구 작업이 시작됐습니다. 준비한 사진을 정리한 뒤 최신본을 다시 불러와주세요.',
+      'stale_revision',
+    )
+  }
+}
+
+async function recordPublicationAttemptPaths(
+  showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
+  attemptId: string,
+  paths: string[],
+) {
+  const { data, error } = await showroomAdmin
+    .from('blog_publication_attempts' as never)
+    .update({
+      object_paths: paths,
+      updated_at: new Date().toISOString(),
+    } as never)
+    .eq('id', attemptId)
+    .eq('status', 'staged')
+    .select('id')
+  const updatedRows = (data ?? []) as Array<{ id: string }>
+  if (error || updatedRows.length !== 1) {
+    throw new Error('발행 사진 준비 기록을 정확히 저장하지 못했습니다.')
+  }
+}
+
+async function markPublicationAttemptAfterCleanup(
+  showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
+  attemptId: string,
+  paths: string[],
+  reason: string,
+) {
+  const cleanupError = paths.length > 0
+    ? (await showroomAdmin.storage.from(PUBLIC_MEDIA_BUCKET).remove(paths)).error
+    : null
+
+  const { error: attemptUpdateError } = await showroomAdmin
+    .from('blog_publication_attempts' as never)
+    .update({
+      status: cleanupError ? 'reconcile' : 'abandoned',
+      object_paths: paths,
+      last_error: cleanupError?.message ?? reason,
+      updated_at: new Date().toISOString(),
+    } as never)
+    .eq('id', attemptId)
+    .in('status', ['staged', 'reconcile'])
+
+  return Boolean(cleanupError || attemptUpdateError)
+}
+
+type PublicationResolution =
+  | {
+    kind: 'published'
+    publishedAt: string
+    updatedAt: string
+    retiredPublicPaths: string[]
+    retiredCleanupJobId: string | null
+  }
+  | { kind: 'rolled_back'; cleanupPending: boolean }
+  | { kind: 'unknown' }
+
+async function resolveAmbiguousPublication(
+  showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
+  attemptId: string,
+  uploadedPaths: string[],
+  reason: string,
+): Promise<PublicationResolution> {
+  const { data, error } = await showroomAdmin.rpc('resolve_blog_publication_attempt' as never, {
+    p_publication_attempt_id: attemptId,
+  } as never)
+  if (error || !data) return { kind: 'unknown' }
+
+  const attempt = data as {
+    status?: string
+    post_status?: string
+    published_at?: string | null
+    updated_at?: string | null
+    object_paths?: string[]
+    retired_public_paths?: string[]
+    retired_cleanup_job_id?: string | null
+  }
+  if (
+    attempt.status === 'published'
+    && attempt.post_status === 'published'
+    && typeof attempt.published_at === 'string'
+    && typeof attempt.updated_at === 'string'
+  ) {
+    return {
+      kind: 'published',
+      publishedAt: attempt.published_at,
+      updatedAt: attempt.updated_at,
+      retiredPublicPaths: attempt.retired_public_paths ?? [],
+      retiredCleanupJobId: attempt.retired_cleanup_job_id ?? null,
+    }
+  }
+  if (attempt.status !== 'staged' && attempt.status !== 'reconcile') return { kind: 'unknown' }
+
+  const paths = attempt.object_paths?.length ? attempt.object_paths : uploadedPaths
+  const cleanupPending = await markPublicationAttemptAfterCleanup(
+    showroomAdmin,
+    attemptId,
+    paths,
+    reason,
+  )
+  return { kind: 'rolled_back', cleanupPending }
+}
+
+export async function publishBlogEditor(
+  payload: SaveBlogEditorPayload,
+): Promise<PublishBlogPostResult> {
+  let uploadedPaths: string[] = []
+  let publicationAttemptId: string | null = null
+  let publicationRpcInvoked = false
+  let showroomAdmin: ReturnType<typeof createShowroomAdminClient> | null = null
+
+  try {
+    const actorId = await requireAdministrator()
+    const validationError = validatePayload(payload)
+    if (validationError) return { ok: false, message: validationError, issues: [validationError] }
+
+    showroomAdmin = createShowroomAdminClient()
+    const relatedPostError = await validateRelatedPostBlocks(showroomAdmin, payload.blocks)
+    if (relatedPostError) return { ok: false, message: relatedPostError, issues: [relatedPostError] }
+
+    const mediaOwnershipError = await validateImageMediaOwnership(showroomAdmin, payload)
+    if (mediaOwnershipError) {
+      return { ok: false, message: mediaOwnershipError, issues: [mediaOwnershipError] }
+    }
+
+    const [postResult, mediaResult] = await Promise.all([
+      showroomAdmin
+        .from('blog_posts')
+        .select('id, title, slug, excerpt, seo_title, meta_description, canonical_url, status, category, primary_keyword, target_question, summary_answer, related_questions, service_area, product_type, source_evidence, brand_check_result, ai_citation_ready, media_missing_reason, created_by, reviewed_by, published_by, published_at, created_at, updated_at')
+        .eq('id', payload.postId)
+        .single(),
+      showroomAdmin
+        .from('blog_media')
+        .select('id, post_id, content_asset_id, source_type, source_measurement_media_id, source_as_media_id, private_bucket, private_object_path, public_bucket, public_object_path, public_url, alt_text, caption, source_label, usage_status, privacy_checked, promotion_consent_checked, used_as_cover, approved_by, approved_at, published_at, rejection_reason, created_at, updated_at')
+        .eq('post_id', payload.postId),
+    ])
+
+    const currentPost = postResult.data as BlogPost | null
+    const media = (mediaResult.data ?? []) as BlogMedia[]
+    if (postResult.error || !currentPost) {
+      return { ok: false, message: '발행할 글을 찾지 못했습니다.' }
+    }
+    if (mediaResult.error) {
+      return { ok: false, message: '사진 정보를 불러오지 못했습니다.' }
+    }
+    if (currentPost.status === 'published') {
+      return { ok: false, message: '이미 발행된 글입니다.' }
+    }
+    if (currentPost.status === 'archived') {
+      return { ok: false, message: '휴지통의 글은 발행할 수 없습니다.' }
+    }
+    if (currentPost.updated_at !== payload.expectedUpdatedAt) {
+      return {
+        ok: false,
+        message: '다른 작업에서 글이 변경되었습니다. 최신본을 다시 불러온 뒤 변경 내용을 확인해주세요.',
+        code: 'stale_revision',
+      }
+    }
+
+    const generatedAt = new Date().toISOString()
+    const rpcBlocks = rpcBlocksPayload(payload, generatedAt)
+    const nextPost = nextPostForPublication(currentPost, payload)
+    const nextBlocks = nextBlocksForPublication(payload, rpcBlocks)
+    const gate = validatePublishGate(nextPost, nextBlocks, media)
+    const centralBrandIssues = await centralBrandMediaPublicationIssues(showroomAdmin, gate.mediaToPublish)
+    const publishIssues = [...new Set([...gate.issues, ...centralBrandIssues])]
+    if (publishIssues.length > 0) {
+      return {
+        ok: false,
+        message: '발행 전 확인이 필요한 항목이 있습니다.',
+        issues: publishIssues,
+      }
+    }
+
+    publicationAttemptId = randomUUID()
+    await createPublicationAttempt(
+      showroomAdmin,
+      publicationAttemptId,
+      payload.postId,
+      actorId,
+      payload.expectedUpdatedAt,
+    )
+    const staged = await stageMediaForAtomicPublication(
+      showroomAdmin,
+      payload.postId,
+      publicationAttemptId,
+      actorId,
+      gate.mediaToPublish,
+      uploadedPaths,
+    )
+    const publishedAt = new Date().toISOString()
+
+    publicationRpcInvoked = true
+    const { data: publishData, error: publishError } = await showroomAdmin.rpc('save_and_publish_blog_post' as never, {
+      p_publication_attempt_id: publicationAttemptId,
+      p_post_id: payload.postId,
+      p_expected_updated_at: payload.expectedUpdatedAt,
+      p_actor_id: actorId,
+      p_post: rpcPostPayload(payload),
+      p_blocks: rpcBlocks,
+      p_media: staged.stagedMedia,
+      p_published_at: publishedAt,
+    } as never)
+
+    if (publishError) {
+      const resolution = await resolveAmbiguousPublication(
+        showroomAdmin,
+        publicationAttemptId,
+        uploadedPaths,
+        publishError.message,
+      )
+      if (resolution.kind === 'published') {
+        const cleanupPending = await cleanupTrackedPublicObjects(
+          showroomAdmin,
+          resolution.retiredPublicPaths,
+          resolution.retiredCleanupJobId,
+        )
+        uploadedPaths = []
+        revalidateBlogEditorPaths(payload.postId, [currentPost.slug, payload.post.slug], true)
+        return {
+          ok: true,
+          message: cleanupPending
+            ? '발행은 완료됐습니다. 교체된 이전 공개 사진 정리는 재시도 대기열에 남겼습니다.'
+            : '발행 응답이 지연됐지만 DB에서 완료 상태를 확인했습니다.',
+          publishedAt: resolution.publishedAt,
+          updatedAt: resolution.updatedAt,
+          slug: payload.post.slug.trim(),
+        }
+      }
+      if (resolution.kind === 'unknown') {
+        uploadedPaths = []
+        return {
+          ok: false,
+          message: '발행 결과를 아직 확정할 수 없습니다. 공개 사진은 삭제하지 않았습니다. 최신본 다시 불러오기로 상태를 확인해주세요.',
+          code: 'publication_unknown',
+        }
+      }
+
+      uploadedPaths = []
+      return {
+        ok: false,
+        message: resolution.cleanupPending
+          ? '발행은 반영되지 않았고 준비한 사진 정리는 재조정 대상으로 남겼습니다.'
+          : '글이 변경되었거나 발행 안전 검사를 통과하지 못했습니다. 최신본을 다시 불러와 확인해주세요.',
+      }
+    }
+    uploadedPaths = []
+    const committedPublication = publishData as {
+      published_at?: string
+      updated_at?: string
+      retired_public_paths?: string[]
+      retired_cleanup_job_id?: string | null
+    } | null
+    if (
+      typeof committedPublication?.published_at !== 'string'
+      || typeof committedPublication.updated_at !== 'string'
+    ) {
+      revalidateBlogEditorPaths(payload.postId, [currentPost.slug, payload.post.slug], true)
+      return {
+        ok: false,
+        message: '발행은 처리됐지만 최신 revision 응답을 확인하지 못했습니다. 최신본 다시 불러오기로 상태를 확인해 주세요.',
+        code: 'publication_unknown',
+      }
+    }
+    const cleanupPending = await cleanupTrackedPublicObjects(
+      showroomAdmin,
+      committedPublication?.retired_public_paths ?? [],
+      committedPublication?.retired_cleanup_job_id ?? null,
+    )
+    revalidateBlogEditorPaths(payload.postId, [currentPost.slug, payload.post.slug], true)
+    return {
+      ok: true,
+      message: cleanupPending
+        ? '현재 편집 내용을 저장하고 발행했습니다. 교체된 이전 공개 사진 정리는 재시도 대기열에 남겼습니다.'
+        : '현재 편집 내용을 저장하고 발행했습니다.',
+      publishedAt: committedPublication.published_at,
+      updatedAt: committedPublication.updated_at,
+      slug: payload.post.slug.trim(),
+    }
+  } catch (error) {
+    if (showroomAdmin && publicationAttemptId) {
+      if (publicationRpcInvoked) {
+        const resolution = await resolveAmbiguousPublication(
+          showroomAdmin,
+          publicationAttemptId,
+          uploadedPaths,
+          error instanceof Error ? error.message : 'ambiguous publication error',
+        )
+        if (resolution.kind === 'published') {
+          const cleanupPending = await cleanupTrackedPublicObjects(
+            showroomAdmin,
+            resolution.retiredPublicPaths,
+            resolution.retiredCleanupJobId,
+          )
+          return {
+            ok: true,
+            message: cleanupPending
+              ? '발행은 완료됐습니다. 교체된 이전 공개 사진 정리는 재시도 대기열에 남겼습니다.'
+              : '발행 응답이 지연됐지만 DB에서 완료 상태를 확인했습니다.',
+            publishedAt: resolution.publishedAt,
+            updatedAt: resolution.updatedAt,
+            slug: payload.post.slug.trim(),
+          }
+        }
+        if (resolution.kind === 'unknown') {
+          return {
+            ok: false,
+            message: '발행 결과를 아직 확정할 수 없습니다. 공개 사진은 삭제하지 않았습니다. 최신본 다시 불러오기로 상태를 확인해주세요.',
+            code: 'publication_unknown',
+          }
+        }
+      } else {
+        await markPublicationAttemptAfterCleanup(
+          showroomAdmin,
+          publicationAttemptId,
+          uploadedPaths,
+          error instanceof Error ? error.message : 'publication staging failed',
+        )
+      }
+    }
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : '발행 중 오류가 발생했습니다.',
+      code: error instanceof PublicationAttemptError ? error.code : undefined,
+    }
+  }
 }
 
 export async function updateBlogPostStatus(
@@ -1399,6 +1970,55 @@ export async function updateBlogPostStatus(
       }
     }
 
+    if (toStatus === 'archived' || (post.status === 'archived' && toStatus === 'reviewing')) {
+      const { data: trashTransitionData, error: trashTransitionError } = await showroomAdmin.rpc('transition_blog_post_trash' as never, {
+        p_post_id: post.id,
+        p_actor_id: actorId,
+        p_restore: toStatus === 'reviewing',
+      } as never)
+      if (trashTransitionError) {
+        return {
+          ok: false,
+          code: 'revision_unknown',
+          message: toStatus === 'archived'
+            ? '글을 휴지통으로 이동하지 못했습니다. 새로고침 후 다시 시도해주세요.'
+            : '글을 휴지통에서 복원하지 못했습니다. 새로고침 후 다시 시도해주세요.',
+        }
+      }
+
+      const transition = trashTransitionData as {
+        changed_at?: string
+        public_paths?: string[]
+        cleanup_job_id?: string | null
+      } | null
+      const cleanupPending = toStatus === 'archived'
+        ? await cleanupTrackedPublicObjects(
+          showroomAdmin,
+          transition?.public_paths ?? [],
+          transition?.cleanup_job_id ?? null,
+        )
+        : false
+
+      revalidateBlogEditorPaths(post.id, [post.slug], post.status === 'published')
+      if (typeof transition?.changed_at !== 'string') {
+        return {
+          ok: false,
+          code: 'revision_unknown',
+          message: '상태 변경은 처리됐지만 최신 revision 응답을 확인하지 못했습니다. 최신본 다시 불러오기로 상태를 확인해 주세요.',
+        }
+      }
+      return {
+        ok: true,
+        message: toStatus === 'archived'
+          ? cleanupPending
+            ? '글 공개는 중단했고, 공개 사진 정리는 안전한 재시도 대기열에 남겼습니다.'
+            : '글을 휴지통으로 이동하고 공개 사진을 정리했습니다.'
+          : '글을 초안으로 복원했습니다.',
+        status: toStatus,
+        updatedAt: transition.changed_at,
+      }
+    }
+
     if (toStatus === 'ready') {
       const issues = validateReadyGate(post, blocks, media)
       if (issues.length > 0) {
@@ -1422,15 +2042,22 @@ export async function updateBlogPostStatus(
       .update(updatePayload as never)
       .eq('id', post.id)
       .eq('status', post.status)
-      .select('id, status')
+      .select('id, status, updated_at')
 
     if (updateError) {
       return { ok: false, message: '글 상태를 저장하지 못했습니다.' }
     }
 
-    const updatedRows = (updatedPostData ?? []) as Array<{ id: string; status: BlogPostStatus }>
+    const updatedRows = (updatedPostData ?? []) as Array<{ id: string; status: BlogPostStatus; updated_at: string }>
     if (updatedRows.length !== 1) {
       return { ok: false, message: '글 상태가 바뀌었습니다. 새로고침 후 다시 시도해주세요.' }
+    }
+    if (typeof updatedRows[0].updated_at !== 'string') {
+    return {
+      ok: false,
+      code: 'revision_unknown',
+      message: '상태 변경은 처리됐지만 최신 revision 응답을 확인하지 못했습니다. 최신본 다시 불러오기로 상태를 확인해 주세요.',
+    }
     }
 
     const { error: eventError } = await showroomAdmin
@@ -1470,6 +2097,7 @@ export async function updateBlogPostStatus(
       ok: true,
       message: '상태를 변경했습니다.',
       status: toStatus,
+      updatedAt: updatedRows[0].updated_at,
     }
   } catch {
     return {
@@ -1479,309 +2107,228 @@ export async function updateBlogPostStatus(
   }
 }
 
-function publicObjectPathForMedia(postId: string, mediaId: string, extension: 'gif' | 'webp') {
-  return `${postId}/${mediaId}.${extension}`
-}
-
-async function cleanupPublicObjects(paths: string[]) {
-  if (paths.length === 0) return
-  const showroomAdmin = createShowroomAdminClient()
-  const { error } = await showroomAdmin.storage.from(PUBLIC_MEDIA_BUCKET).remove(paths)
-  if (error) throw new Error(`공개 사진 정리 실패: ${error.message}`)
-}
-
-async function rollbackPublishedMedia(mediaIds: string[]) {
-  if (mediaIds.length === 0) return
-  const showroomAdmin = createShowroomAdminClient()
-  const { data, error } = await showroomAdmin
-    .from('blog_media')
-    .update({
-      usage_status: 'approved',
-      public_bucket: null,
-      public_object_path: null,
-      public_url: null,
-      published_at: null,
-      updated_at: new Date().toISOString(),
-    } as never)
-    .in('id', mediaIds)
-    .select('id')
-  if (error) throw new Error(`공개 사진 상태 복구 실패: ${error.message}`)
-  if ((data ?? []).length !== mediaIds.length) {
-    throw new Error('공개 사진 상태 복구 실패: 일부 사진의 상태가 동시에 변경되었습니다.')
-  }
-}
-
-async function rollbackPublishedPost(postId: string | null, previousStatus: BlogPostStatus | null) {
-  if (!postId || !previousStatus) return
-  const showroomAdmin = createShowroomAdminClient()
-  const { data, error } = await showroomAdmin
-    .from('blog_posts')
-    .update({
-      status: previousStatus,
-      published_by: null,
-      published_at: null,
-      updated_at: new Date().toISOString(),
-    } as never)
-    .eq('id', postId)
-    .eq('status', 'published')
-    .select('id')
-  if (error) throw new Error(`글 공개 상태 복구 실패: ${error.message}`)
-  if ((data ?? []).length !== 1) {
-    throw new Error('글 공개 상태 복구 실패: 글 상태가 동시에 변경되었습니다.')
-  }
-}
-
-async function compensateFailedPublication(
-  mediaIds: string[],
-  paths: string[],
-  postId: string | null = null,
-  previousPostStatus: BlogPostStatus | null = null,
-) {
-  const results = await Promise.allSettled([
-    rollbackPublishedMedia(mediaIds),
-    cleanupPublicObjects(paths),
-    rollbackPublishedPost(postId, previousPostStatus),
-  ])
-  return results.flatMap(result => (
-    result.status === 'rejected'
-      ? [result.reason instanceof Error ? result.reason.message : String(result.reason)]
-      : []
-  ))
-}
-
-async function promoteMediaForPublish(
+async function cleanupTrackedPublicObjects(
   showroomAdmin: ReturnType<typeof createShowroomAdminClient>,
-  postId: string,
-  mediaRows: BlogMedia[],
-  publishedAt: string,
+  paths: string[],
+  cleanupJobId: string | null,
+  attemptCount = 1,
 ) {
-  const uploadedPaths: string[] = []
-  const publishedMediaIds: string[] = []
+  if (paths.length === 0) return false
 
-  try {
-    for (const media of mediaRows) {
-      if (!media.private_bucket || !media.private_object_path) {
-        throw new Error('사진 원본을 확인할 수 없습니다.')
-      }
+  const { error: cleanupError } = await showroomAdmin.storage
+    .from(PUBLIC_MEDIA_BUCKET)
+    .remove(paths)
 
-      const { data: privateObject, error: downloadError } = await showroomAdmin.storage
-        .from(media.private_bucket)
-        .download(media.private_object_path)
-
-      if (downloadError || !privateObject) {
-        throw new Error('사진 원본을 불러오지 못했습니다.')
-      }
-
-      const privateBuffer = Buffer.from(await privateObject.arrayBuffer())
-      const prepared = await prepareBlogMediaForPublication(privateBuffer, privateObject.type)
-      if (prepared.extension !== 'gif' && prepared.extension !== 'webp') {
-        throw new Error('공개용 사진 확장자를 확인하지 못했습니다.')
-      }
-      const publicObjectPath = publicObjectPathForMedia(postId, media.id, prepared.extension)
-      const { error: uploadError } = await showroomAdmin.storage
-        .from(PUBLIC_MEDIA_BUCKET)
-        .upload(publicObjectPath, prepared.buffer, {
-          cacheControl: '31536000',
-          contentType: prepared.contentType,
-          upsert: false,
-        })
-
-      if (uploadError) {
-        throw new Error('공개용 사진을 준비하지 못했습니다.')
-      }
-
-      uploadedPaths.push(publicObjectPath)
-
-      const { data: publicUrlData } = showroomAdmin.storage
-        .from(PUBLIC_MEDIA_BUCKET)
-        .getPublicUrl(publicObjectPath)
-
-      const { data: updatedMediaData, error: updateError } = await showroomAdmin
-        .from('blog_media')
-        .update({
-          usage_status: 'published',
-          public_bucket: PUBLIC_MEDIA_BUCKET,
-          public_object_path: publicObjectPath,
-          public_url: publicUrlData.publicUrl,
-          published_at: publishedAt,
-          updated_at: publishedAt,
-        } as never)
-        .eq('id', media.id)
-        .eq('post_id', postId)
-        .eq('usage_status', 'approved')
-        .select('id')
-
-      if (updateError) {
-        throw new Error('공개용 사진 정보를 저장하지 못했습니다.')
-      }
-
-      const updatedRows = (updatedMediaData ?? []) as Array<{ id: string }>
-      if (updatedRows.length !== 1) {
-        throw new Error('확인된 사진만 발행용으로 준비할 수 있습니다.')
-      }
-
-      publishedMediaIds.push(media.id)
-    }
-
-    return {
-      uploadedPaths,
-      publishedMediaIds,
-    }
-  } catch (error) {
-    const compensationIssues = await compensateFailedPublication(publishedMediaIds, uploadedPaths)
-    if (compensationIssues.length > 0) {
-      const originalMessage = error instanceof Error ? error.message : String(error)
-      throw new Error(`${originalMessage} 보상 처리도 실패했습니다: ${compensationIssues.join(' / ')}`)
-    }
-    throw error
+  let ledgerError: { message?: string } | null = null
+  if (!cleanupError) {
+    const { error } = await showroomAdmin
+      .from('blog_public_media_objects' as never)
+      .update({
+        state: 'deleted',
+        deleted_at: new Date().toISOString(),
+      } as never)
+      .in('object_path', paths)
+    ledgerError = error
   }
+
+  let jobUpdateError: { message?: string } | null = null
+  if (cleanupJobId) {
+    const { error } = await showroomAdmin
+      .from('storage_cleanup_jobs' as never)
+      .update({
+        status: cleanupError || ledgerError ? 'failed' : 'completed',
+        attempts: attemptCount,
+        last_error: cleanupError?.message ?? ledgerError?.message ?? null,
+        updated_at: new Date().toISOString(),
+      } as never)
+      .eq('id', cleanupJobId)
+    jobUpdateError = error
+  }
+
+  return Boolean(cleanupError || ledgerError || jobUpdateError)
 }
 
 export async function publishBlogPost(postId: string): Promise<PublishBlogPostResult> {
-  let uploadedPaths: string[] = []
-  let publishedMediaIds: string[] = []
-  let publishedPostId: string | null = null
-  let previousPostStatus: BlogPostStatus | null = null
-
   try {
-    const actorId = await requireAdministrator()
-
+    await requireAdministrator()
     if (!postId) {
       return { ok: false, message: '글 ID가 없습니다.' }
     }
+    return {
+      ok: false,
+      message: '저장 내용이 없는 이전 발행 방식은 더 이상 지원하지 않습니다. 에디터의 발행 버튼을 사용해주세요.',
+    }
+  } catch {
+    return {
+      ok: false,
+      message: '발행 권한을 확인하지 못했습니다.',
+    }
+  }
+}
+
+export async function permanentlyDeleteBlogPost(
+  postId: string,
+  confirmation: string,
+): Promise<PermanentlyDeleteBlogPostResult> {
+  try {
+    const actorId = await requireAdministrator()
+    if (!postId || !confirmation) {
+      return { ok: false, message: '영구삭제할 글과 확인용 제목이 필요합니다.' }
+    }
 
     const showroomAdmin = createShowroomAdminClient()
-    const [postResult, blocksResult, mediaResult] = await Promise.all([
-      showroomAdmin
-        .from('blog_posts')
-        .select('id, title, slug, excerpt, seo_title, meta_description, canonical_url, status, category, primary_keyword, target_question, summary_answer, related_questions, service_area, product_type, source_evidence, brand_check_result, ai_citation_ready, media_missing_reason, created_by, reviewed_by, published_by, published_at, created_at, updated_at')
-        .eq('id', postId)
-        .single(),
-      showroomAdmin
-        .from('blog_blocks')
-        .select('id, post_id, display_order, type, heading_level, text, media_id, metadata, created_at, updated_at')
-        .eq('post_id', postId)
-        .order('display_order', { ascending: true }),
-      showroomAdmin
-        .from('blog_media')
-        .select('id, post_id, content_asset_id, source_type, source_measurement_media_id, source_as_media_id, private_bucket, private_object_path, public_bucket, public_object_path, public_url, alt_text, caption, source_label, usage_status, privacy_checked, promotion_consent_checked, used_as_cover, approved_by, approved_at, published_at, rejection_reason, created_at, updated_at')
-        .eq('post_id', postId),
-    ])
-
-    const post = postResult.data as BlogPost | null
-    const blocks = (blocksResult.data ?? []) as BlogBlock[]
-    const media = (mediaResult.data ?? []) as BlogMedia[]
-
-    if (postResult.error || !post) {
-      return { ok: false, message: '발행할 글을 찾지 못했습니다.' }
-    }
-
-    if (post.status === 'published') {
-      return { ok: false, message: '이미 발행된 글입니다.' }
-    }
-
-    if (post.status === 'archived') {
-      return { ok: false, message: '보관된 글은 발행할 수 없습니다.' }
-    }
-
-    previousPostStatus = post.status
-
-    if (blocksResult.error) {
-      return { ok: false, message: '본문 정보를 불러오지 못했습니다.' }
-    }
-
-    if (mediaResult.error) {
-      return { ok: false, message: '사진 정보를 불러오지 못했습니다.' }
-    }
-
-    const gate = validatePublishGate(post, blocks, media)
-    const centralBrandIssues = await centralBrandMediaPublicationIssues(showroomAdmin, gate.mediaToPublish)
-    const publishIssues = [...new Set([...gate.issues, ...centralBrandIssues])]
-    if (publishIssues.length > 0) {
+    const { data, error } = await showroomAdmin.rpc('permanently_delete_blog_post' as never, {
+      p_post_id: postId,
+      p_actor_id: actorId,
+      p_confirmation: confirmation,
+    } as never)
+    if (error) {
+      const reason = error.message.toLowerCase()
       return {
         ok: false,
-        message: '발행 전 검수 게이트를 통과하지 못했습니다.',
-        issues: publishIssues,
+        message: reason.includes('exact post title')
+          ? '휴지통의 글 제목을 정확히 입력해야 영구삭제할 수 있습니다.'
+          : reason.includes('only a trashed post')
+            ? '휴지통에 있는 글만 영구삭제할 수 있습니다.'
+            : reason.includes('save is already in progress')
+              ? '다른 저장 작업이 진행 중입니다. 잠시 후 다시 시도해주세요.'
+              : '영구삭제 안전 검사를 완료하지 못했습니다. 글은 삭제되지 않았습니다.',
       }
     }
 
-    const publishedAt = new Date().toISOString()
-    const promotion = await promoteMediaForPublish(showroomAdmin, post.id, gate.mediaToPublish, publishedAt)
-    uploadedPaths = promotion.uploadedPaths
-    publishedMediaIds = promotion.publishedMediaIds
+    const result = data as {
+      cleanup_job_id?: string | null
+      public_paths?: string[]
+      slug?: string
+    } | null
+    const publicPaths = result?.public_paths ?? []
+    const cleanupJobId = result?.cleanup_job_id ?? null
+    let cleanupPending = false
 
-    const { data: updatedPostData, error: postUpdateError } = await showroomAdmin
-      .from('blog_posts')
-      .update({
-        status: 'published',
-        published_by: actorId,
-        published_at: publishedAt,
-        updated_at: publishedAt,
-      } as never)
-      .eq('id', post.id)
-      .eq('status', post.status)
-      .select('id, slug')
-
-    if (postUpdateError) {
-      throw new Error('글을 공개 상태로 바꾸지 못했습니다.')
+    if (publicPaths.length > 0) {
+      cleanupPending = await cleanupTrackedPublicObjects(
+        showroomAdmin,
+        publicPaths,
+        cleanupJobId,
+      )
     }
 
-    const updatedPostRows = (updatedPostData ?? []) as Array<{ id: string; slug: string }>
-    if (updatedPostRows.length !== 1) {
-      throw new Error('글 상태가 바뀌었습니다. 새로고침 후 다시 발행해주세요.')
-    }
-
-    publishedPostId = post.id
-    const { error: eventError } = await showroomAdmin
-      .from('blog_post_events')
-      .insert({
-        post_id: post.id,
-        actor_id: actorId,
-        event_type: 'published',
-        from_status: post.status,
-        to_status: 'published',
-        memo: '발행 검수를 통과해 공개용 사진 준비까지 완료했습니다.',
-        metadata: {
-          published_media_ids: publishedMediaIds,
-          public_bucket: PUBLIC_MEDIA_BUCKET,
-        },
-      } as never)
-
-    if (eventError) {
-      throw new Error('발행 기록을 남기지 못했습니다.')
-    }
-
-    publishedPostId = null
-    try {
-      revalidatePath('/blog')
-      revalidatePath(`/blog/${post.slug}`)
-      revalidatePath('/sitemap.xml')
-      revalidatePath(`/admin/platform/blog/${post.id}`)
-      revalidatePath(`/admin/platform/blog/${post.id}/preview`)
-    } catch {
-      // Publication is already committed with an audit event. A cache refresh failure must not undo it.
-    }
+    revalidatePath('/admin/platform/blog')
+    revalidatePath('/blog')
+    revalidatePath('/sitemap.xml')
+    if (result?.slug) revalidatePath(`/blog/${result.slug}`)
 
     return {
       ok: true,
-      message: '발행이 완료되었습니다.',
-      publishedAt,
-      slug: post.slug,
+      message: cleanupPending
+        ? '글은 영구삭제했고 공개 사진 정리는 재시도 대기열에 남겼습니다.'
+        : '글을 영구삭제했습니다.',
     }
-  } catch (error) {
-    const compensationIssues = await compensateFailedPublication(
-      publishedMediaIds,
-      uploadedPaths,
-      publishedPostId,
-      previousPostStatus,
-    )
-    const originalMessage = error instanceof Error ? error.message : '발행 중 오류가 발생했습니다.'
-
+  } catch {
     return {
       ok: false,
-      message: compensationIssues.length > 0
-        ? `${originalMessage} 보상 처리도 실패했습니다: ${compensationIssues.join(' / ')}`
-        : originalMessage,
+      message: '영구삭제 중 오류가 발생했습니다.',
     }
+  }
+}
+
+export async function retryPendingBlogMediaCleanup() {
+  try {
+    const actorId = await requireAdministrator()
+    const showroomAdmin = createShowroomAdminClient()
+    const now = new Date().toISOString()
+    const cutoff = new Date(Date.now() - 15 * 60 * 1000).toISOString()
+
+    const { data: expiredData, error: expiredError } = await showroomAdmin
+      .from('blog_publication_attempts' as never)
+      .select('id')
+      .eq('status', 'staged')
+      .lte('staging_expires_at', now)
+      .order('staging_expires_at', { ascending: true })
+      .limit(20)
+    if (expiredError) return { ok: false, message: '만료된 발행 사진 준비 작업을 확인하지 못했습니다.' }
+
+    let claimedAttempts = 0
+    let claimFailures = 0
+    for (const attempt of (expiredData ?? []) as Array<{ id: string }>) {
+      const { data: claimed, error: claimError } = await showroomAdmin.rpc(
+        'claim_expired_blog_publication_attempt' as never,
+        {
+          p_publication_attempt_id: attempt.id,
+          p_actor_id: actorId,
+        } as never,
+      )
+      if (claimError) claimFailures += 1
+      else if (claimed) claimedAttempts += 1
+    }
+
+    const { data: attemptData, error: attemptError } = await showroomAdmin
+      .from('blog_publication_attempts' as never)
+      .select('id, post_id, object_paths, status')
+      .eq('status', 'reconcile')
+      .lt('updated_at', cutoff)
+      .order('updated_at', { ascending: true })
+      .limit(20)
+    if (attemptError) return { ok: false, message: '발행 사진 재조정 대기열을 확인하지 못했습니다.' }
+
+    const attempts = (attemptData ?? []) as Array<{
+      id: string
+      post_id: string
+      object_paths: string[]
+      status: string
+    }>
+    let reconciledAttempts = 0
+    let failedAttempts = 0
+    for (const attempt of attempts) {
+      const resolution = await resolveAmbiguousPublication(
+        showroomAdmin,
+        attempt.id,
+        attempt.object_paths,
+        'administrator cleanup retry',
+      )
+      if (resolution.kind === 'rolled_back' && !resolution.cleanupPending) reconciledAttempts += 1
+      else if (resolution.kind === 'unknown' || (resolution.kind === 'rolled_back' && resolution.cleanupPending)) failedAttempts += 1
+    }
+
+    const { data, error } = await showroomAdmin
+      .from('storage_cleanup_jobs' as never)
+      .select('id, object_paths, attempts, reason')
+      .in('status', ['pending', 'failed'])
+      .or('reason.like.trashed_blog_post:%,reason.like.permanently_deleted_blog_post:%,reason.like.retired_blog_publication:%')
+      .order('created_at', { ascending: true })
+      .limit(20)
+    if (error) return { ok: false, message: '공개 사진 정리 대기열을 확인하지 못했습니다.' }
+
+    const jobs = (data ?? []) as Array<{
+      id: string
+      object_paths: string[]
+      attempts: number
+      reason: string
+    }>
+    let completed = 0
+    let failed = 0
+    for (const job of jobs) {
+      const cleanupPending = await cleanupTrackedPublicObjects(
+        showroomAdmin,
+        job.object_paths,
+        job.id,
+        job.attempts + 1,
+      )
+      if (cleanupPending) failed += 1
+      else completed += 1
+    }
+
+    return {
+      ok: failed === 0 && failedAttempts === 0 && claimFailures === 0,
+      message: jobs.length === 0 && attempts.length === 0 && claimedAttempts === 0
+        ? '정리할 공개 사진이 없습니다.'
+        : failed > 0 || failedAttempts > 0 || claimFailures > 0
+          ? `${completed + reconciledAttempts}건을 정리했고 ${failed + failedAttempts + claimFailures}건은 다음 재시도에 남겼습니다.`
+          : claimedAttempts > 0
+            ? `${completed + reconciledAttempts}건을 정리했고, 만료된 발행 준비 ${claimedAttempts}건은 안전 유예 후 정리 대기열로 옮겼습니다.`
+            : `${completed + reconciledAttempts}건의 공개 사진 정리를 완료했습니다.`,
+    }
+  } catch {
+    return { ok: false, message: '공개 사진 정리를 다시 시도하지 못했습니다.' }
   }
 }
